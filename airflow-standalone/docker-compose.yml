@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  airflow-standalone:
+    image: apache/airflow:2.9.1
+    container_name: airflow-standalone
+    hostname: airflow-standalone
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "
+      airflow db init &&
+      airflow users create -u admin -p admin -f Admin -l User -r Admin -e admin@example.com &&
+      airflow webserver --port 8080 & 
+      airflow scheduler
+      "
+    restart: always

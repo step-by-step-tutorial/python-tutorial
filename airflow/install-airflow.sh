@@ -1,0 +1,1 @@
+docker compose --file docker-compose.yml --project-name airflow up -d --build
