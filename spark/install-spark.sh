@@ -1,0 +1,1 @@
+docker compose --project-name spark up -d --build

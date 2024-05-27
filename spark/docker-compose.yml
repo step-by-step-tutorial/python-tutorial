@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  master:
+    image: docker.io/bitnami/spark:latest
+    container_name: master
+    hostname: master
+    user: root
+    environment:
+      SPARK_MODE: master
+      SPARK_RPC_AUTHENTICATION_ENABLED: no
+      SPARK_RPC_ENCRYPTION_ENABLED: no
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: no
+      SPARK_SSL_ENABLED: no
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+  worker:
+    image: docker.io/bitnami/spark:latest
+    container_name: worker
+    hostname: worker
+    user: root
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://master:7077
+      SPARK_RPC_AUTHENTICATION_ENABLED: no
+      SPARK_RPC_ENCRYPTION_ENABLED: no
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: no
+      SPARK_SSL_ENABLED: no
+    ports:
+      - "8081:8081"
+  #  connect-server:
+  #    image: bitnami/spark:latest
+  #    container_name: connect-server
+  #    hostname: connect-server
+  #    command: [ "./sbin/start-connect-server.sh","--packages", "org.apache.spark:spark-connect_2.12:3.5.1" ]
+  #    ports:
+  #      - "15002:15002"
+  jupyter:
+    image: jupyter/base-notebook:latest
+    container_name: jupyter
+    hostname: jupyter
+    user: root
+    ports:
+      - "8888:8888"
+    environment:
+      JUPYTER_ENABLE_LAB: yes
+      NB_UID: 1000
+      NB_GID: 100
+      GRANT_SUDO: yes
