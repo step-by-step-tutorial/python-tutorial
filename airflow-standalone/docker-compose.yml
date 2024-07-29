@@ -4,6 +4,7 @@ services:
     image: apache/airflow:2.9.1
     container_name: airflow-standalone
     hostname: airflow-standalone
+    restart: always
     environment:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
@@ -19,4 +20,3 @@ services:
       airflow webserver --port 8080 & 
       airflow scheduler
       "
-    restart: always

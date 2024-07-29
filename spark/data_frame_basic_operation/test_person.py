@@ -4,7 +4,7 @@ import pytest
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType
 
-from data_frame_basic_operation import person
+from spark.data_frame_basic_operation import person
 
 INITIALIZE_SPARK = True
 

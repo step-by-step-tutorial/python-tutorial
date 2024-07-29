@@ -1,4 +1,4 @@
-from establish_connection import session_factory
+from spark.establish_connection import session_factory
 
 
 def test_connection_establishment_between_local_machine_and_containerized_spark():

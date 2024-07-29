@@ -2,7 +2,7 @@
 
 This tutorial provides examples regarding Spark and Python.
 
-# <p align="center">Table of Content</p>
+## <p align="center">Table of Content</p>
 
 * [Spark Introduction](#spark-introduction)
     * [Key Features](#key-features)
@@ -20,8 +20,8 @@ This tutorial provides examples regarding Spark and Python.
 * [Setup](#setup)
     * [Install Python](#install-python)
     * [Install Spark On Docker](#install-spark-on-docker)
+    * [Test](#test)
 * [Steps](#steps)
-* [Pipeline](#pipeline)
 
 ## Spark Introduction
 
@@ -151,6 +151,8 @@ pip list
 
 ### Install Spark On Docker
 
+#### Docker Compose
+
 Create a file named docker-compose.yml then add the following content to the file.
 
 ```yaml
@@ -201,13 +203,15 @@ services:
       - GRANT_SUDO=yes
 ```
 
+#### Apply Docker Compose
+
 Execute the following command to create and start Spark container.
 
 ```shell
 docker compose --project-name spark up -d --build
 ```
 
-#### Test
+#### Web Console
 
 SparkUI: [http://localhost:8080](http://localhost:8080)
 
@@ -256,14 +260,6 @@ spark.stop()
 +----+------+
 ```
 
-## Steps
-
-* [step: Establish Connection](establish_connection)
-* [step: CSV Manipulation](csv_manipulation)
-* [step: DataFrame Basic Operation](data_frame_basic_operation)
-
-## Pipeline
-
 ### Test
 
 ```shell
@@ -281,6 +277,12 @@ pytest --cov --cov-report=html:report/coverage
 ```shell
 python -m http.server 8000 --directory ./report
 ```
+
+## Steps
+
+* [step: Establish Connection](establish_connection)
+* [step: CSV Manipulation](csv_manipulation)
+* [step: DataFrame Basic Operation](data_frame_basic_operation)
 
 ##
 
