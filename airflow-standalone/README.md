@@ -1,4 +1,4 @@
-# <p align="center">Standalone Airflow Tutorial</p>
+# <p align="center">Python and Standalone Airflow Tutorial</p>
 
 Apache Airflow is an open-source platform for developing, scheduling, and monitoring batch-oriented workflows. for more
 information refer to [https://airflow.apache.org](https://airflow.apache.org).
@@ -91,4 +91,4 @@ docker exec airflow-standalone pytest /opt/airflow/dags/test_hello_world.py
 
 ##
 
-**<p align="center"> [Top](#standalone-airflow-tutorial) </p>**
+**<p align="center"> [Top](#python-and-standalone-airflow-tutorial) </p>**

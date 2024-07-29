@@ -7,9 +7,9 @@
 
 ## <p align="center"> Steps </p>
 
-[step: airflow standalone](airflow-standalone)
-[step: airflow](airflow)
-[step: spark](spark)
+* [step: airflow standalone](airflow-standalone)
+* [step: airflow](airflow)
+* [step: spark](spark)
 
 ##
 
