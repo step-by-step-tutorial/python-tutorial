@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   airflow-standalone:
-    image: apache/airflow:2.9.1
+    image: apache/airflow:slim-2.9.3-python3.12
     container_name: airflow-standalone
     hostname: airflow-standalone
     restart: always
@@ -11,6 +11,8 @@ services:
     volumes:
       - ./dags:/opt/airflow/dags
       - ./plugins:/opt/airflow/plugins
+      - ./resources:/opt/airflow/resources
+
     ports:
       - "8080:8080"
     command: >
@@ -20,3 +22,12 @@ services:
       airflow webserver --port 8080 & 
       airflow scheduler
       "
+  localstack:
+    container_name: localstack
+    hostname: localstack
+    image: localstack/localstack
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - DEBUG=${DEBUG:-0}

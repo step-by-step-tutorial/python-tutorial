@@ -5,17 +5,17 @@ from airflow.operators.bash import BashOperator
 
 
 @dag(
-    dag_id="hello_world",
+    dag_id="child_dag",
     start_date=datetime.today(),
     schedule=timedelta(days=1),
 )
-def hello_world_dag():
-    hello = BashOperator(
-        task_id="hello",
-        bash_command="echo Hello World!"
+def child_dag():
+    run_task = BashOperator(
+        task_id="run_task",
+        bash_command="echo 'Child DAG is running'"
     )
 
-    hello
+    run_task
 
 
-dag = hello_world_dag()
+child_dag_instance = child_dag()
