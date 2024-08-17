@@ -6,22 +6,22 @@ from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 
 @dag(
-    dag_id="parent_dag",
+    dag_id="parent",
     start_date=datetime.today(),
     schedule=timedelta(days=1)
 )
-def parent_dag():
-    start_task = BashOperator(
-        task_id="start_task",
+def main_dag():
+    start = BashOperator(
+        task_id="start",
         bash_command="echo 'Parent DAG is running'"
     )
 
-    trigger_child_dag = TriggerDagRunOperator(
-        task_id="trigger_child_dag",
-        trigger_dag_id="child_dag"
+    trigger = TriggerDagRunOperator(
+        task_id="trigger",
+        trigger_dag_id="child"
     )
 
-    start_task >> trigger_child_dag
+    start >> trigger
 
 
-parent_dag_instance = parent_dag()
+dag = main_dag()

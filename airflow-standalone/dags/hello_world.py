@@ -9,13 +9,13 @@ from airflow.operators.bash import BashOperator
     start_date=datetime.today(),
     schedule=timedelta(days=1),
 )
-def hello_world_dag():
-    hello = BashOperator(
-        task_id="hello",
-        bash_command="echo Hello World!"
+def main_dag():
+    task = BashOperator(
+        task_id="task",
+        bash_command="echo 'Hello World!'"
     )
 
-    hello
+    task
 
 
-dag = hello_world_dag()
+dag = main_dag()

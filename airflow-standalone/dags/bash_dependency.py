@@ -5,14 +5,14 @@ from airflow.operators.bash import BashOperator
 
 
 @dag(
-    dag_id="hello_pipeline_bash_operator",
+    dag_id="bash_dependency",
     start_date=datetime.today(),
     schedule=timedelta(days=1),
 )
-def hello_pipeline():
+def main_dag():
     start = BashOperator(
         task_id="start",
-        bash_command="echo Start of pipeline",
+        bash_command="echo 'Start of dependency DAG'",
     )
 
     current_date = BashOperator(
@@ -27,10 +27,10 @@ def hello_pipeline():
 
     end = BashOperator(
         task_id="end",
-        bash_command="echo End of pipeline",
+        bash_command="echo 'End of dependency DAG'",
     )
 
     start >> current_date >> [sleep, end]
 
 
-dag = hello_pipeline()
+dag = main_dag()

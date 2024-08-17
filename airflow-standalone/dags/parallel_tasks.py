@@ -5,11 +5,11 @@ from airflow.operators.bash import BashOperator
 
 
 @dag(
-    dag_id="parallel_tasks_dag",
+    dag_id="parallel_tasks",
     start_date=datetime.today(),
     schedule=timedelta(days=1)
 )
-def parallel_tasks_dag():
+def main_dag():
     task_1 = BashOperator(
         task_id="task_1",
         bash_command="echo 'This is Task 1'"
@@ -33,4 +33,4 @@ def parallel_tasks_dag():
     [task_1, task_2, task_3] >> final_task
 
 
-dag = parallel_tasks_dag()
+dag = main_dag()

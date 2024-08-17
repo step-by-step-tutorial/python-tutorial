@@ -5,14 +5,14 @@ from airflow.decorators import dag, task
 
 
 @dag(
-    dag_id="hello_pipeline_python_operator",
+    dag_id="python_dependency",
     start_date=datetime.today(),
     schedule=timedelta(days=1),
 )
-def hello_pipeline():
+def main_dag():
     @task
     def start():
-        print("Start of pipeline")
+        print("Start of dependency DAG")
 
     @task
     def current_date():
@@ -21,13 +21,13 @@ def hello_pipeline():
     @task
     def sleep():
         time.sleep(5)
-        return "Done sleeping..."
+        print("Done sleeping...")
 
     @task
     def end():
-        print("End of pipeline")
+        print("End of dependency DAG")
 
     start() >> current_date() >> [sleep(), end()]
 
 
-dag = hello_pipeline()
+dag = main_dag()

@@ -10,15 +10,16 @@ def dagbag():
 
 
 def test_given_dag_include_bash_operation_then_return_task_no(dagbag):
-    given_dag_id = "hello_pipeline_bash_operator"
+    given_dag_id = "bash_dependency"
 
     actual = dagbag.get_dag(dag_id=given_dag_id)
 
     assert actual is not None
     assert len(actual.tasks) == 4
 
+
 def test_given_dag_include_python_operation_then_return_task_no(dagbag):
-    given_dag_id = "hello_pipeline_python_operator"
+    given_dag_id = "python_dependency"
 
     actual = dagbag.get_dag(dag_id=given_dag_id)
 

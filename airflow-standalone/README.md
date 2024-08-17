@@ -6,19 +6,16 @@ information refer to [https://airflow.apache.org](https://airflow.apache.org).
 ## Examples
 
 * [Basic DAG Creation](/airflow-standalone/dags/hello_world.py)
-* [Task Dependencies (Bash Operation)](/airflow-standalone/dags/hello_pipeline_bash.py)
-* [Task Dependencies (Python Operation)](/airflow-standalone/dags/hello_pipeline_python.py)
-* [Branching in DAGs](/airflow-standalone/dags/branching_dag.py)
-* [Triggering External Tasks (Parrent)](/airflow-standalone/dags/parent_dag.py)
-* [Triggering External Tasks (Child)](/airflow-standalone/dags/child_dag.py)
-* [XCom for Task Communication](/airflow-standalone/dags/xcom_dag.py)
-* [Task Retry and Timeout](/airflow-standalone/dags/retry_timeout_task.py)
-* [Parallel Task Execution](/airflow-standalone/dags/parallel_tasks_dag.py)
-* [Integrating with AWS](/airflow-standalone/dags/localstack_s3_integration_dag.py)
-* [Creating and Using Custom Operators](/airflow-standalone/dags/)
-* [Task Monitoring and Alerts](/airflow-standalone/dags/)
-* [SubDAGs and Task Groups](/airflow-standalone/dags/)
-* [Handling Complex Task Dependencies](/airflow-standalone/dags/)
+* [Task Dependencies (Bash)](/airflow-standalone/dags/bash_dependency.py)
+* [Task Dependencies (Python)](/airflow-standalone/dags/python_dependency.py)
+* [Branching in DAGs](/airflow-standalone/dags/branching.py)
+* [Triggering External Tasks (Parent)](/airflow-standalone/dags/parent.py)
+* [Triggering External Tasks (Child)](/airflow-standalone/dags/child.py)
+* [XCom for Task Communication](/airflow-standalone/dags/xcom.py)
+* [Task Retry and Timeout](/airflow-standalone/dags/retry_timeout.py)
+* [Parallel Task Execution](/airflow-standalone/dags/parallel_tasks.py)
+* [Integrating with AWS](/airflow-standalone/dags/s3_integration.py)
+* [Monitoring and Alerts](/airflow-standalone/dags/monitoring_alerting.py)
 * [Using Macros and Jinja Templates](/airflow-standalone/dags/)
 
 ## Prerequisites
@@ -56,6 +53,14 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      AIRFLOW__SMTP__SMTP_HOST: mailhog
+      AIRFLOW__SMTP__SMTP_STARTTLS: False
+      AIRFLOW__SMTP__SMTP_SSL: False
+      AIRFLOW__SMTP__SMTP_USER: ""
+      AIRFLOW__SMTP__SMTP_PASSWORD: ""
+      AIRFLOW__SMTP__SMTP_PORT: 1025
+      AIRFLOW__SMTP__SMTP_MAIL_FROM: airflow@example.com
+
     volumes:
       - ./dags:/opt/airflow/dags
       - ./plugins:/opt/airflow/plugins
@@ -77,6 +82,12 @@ services:
     ports:
       - "4566:4566"
       - "4510-4559:4510-4559"
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
 
 ```
 
@@ -146,6 +157,13 @@ docker exec -it localstack awslocal s3 ls
 
 ```yaml
 URL: http://s3.localhost.localstack.cloud:4566
+```
+
+### SMTP Server
+
+```shell
+docker exec -it mailhog sh
+echo -e "Subject: Test Email\n\nThis is a test email sent via sendmail using MailHog." | sendmail -S mailhog:1025 -v test@host.local
 ```
 
 ## Test
