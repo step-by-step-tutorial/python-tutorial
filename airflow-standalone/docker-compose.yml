@@ -8,19 +8,17 @@ services:
     environment:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__CORE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
-      AIRFLOW__SMTP__SMTP_HOST: mailhog
+      AIRFLOW__SMTP__SMTP_HOST: smtp-server
       AIRFLOW__SMTP__SMTP_STARTTLS: False
       AIRFLOW__SMTP__SMTP_SSL: False
       AIRFLOW__SMTP__SMTP_USER: ""
       AIRFLOW__SMTP__SMTP_PASSWORD: ""
       AIRFLOW__SMTP__SMTP_PORT: 1025
       AIRFLOW__SMTP__SMTP_MAIL_FROM: airflow@example.com
-
     volumes:
       - ./dags:/opt/airflow/dags
       - ./plugins:/opt/airflow/plugins
       - ./resources:/opt/airflow/resources
-
     ports:
       - "8080:8080"
     command: >
@@ -37,9 +35,10 @@ services:
     ports:
       - "4566:4566"
       - "4510-4559:4510-4559"
-  mailhog:
+  smtp-server:
     image: mailhog/mailhog
-    container_name: mailhog
+    container_name: smtp-server
+    hostname: smtp-server
     ports:
-      - "1025:1025" # SMTP port
-      - "8025:8025" # Web UI port
+      - "1025:1025"
+      - "8025:8025"
