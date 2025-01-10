@@ -136,6 +136,7 @@ python --version
 #### Dependencies
 
 ```shell
+python -m pip install --upgrade pip
 pip install pyspark
 pip install pytest
 pip install pytest-html
@@ -156,51 +157,53 @@ pip list
 Create a file named docker-compose.yml then add the following content to the file.
 
 ```yaml
-version: "3.8"
+version: "3.9"
 
 services:
-  spark:
+  master:
     image: docker.io/bitnami/spark:latest
-    container_name: spark
-    hostname: spark
+    container_name: master
+    hostname: master
     user: root
     environment:
-      - SPARK_MODE=master
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
+      SPARK_MODE: master
+      SPARK_RPC_AUTHENTICATION_ENABLED: no
+      SPARK_RPC_ENCRYPTION_ENABLED: no
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: no
+      SPARK_SSL_ENABLED: no
     ports:
       - "8080:8080"
       - "7077:7077"
-  spark-worker:
+    volumes:
+      - "./resources:/resources"
+  worker:
     image: docker.io/bitnami/spark:latest
-    container_name: spark-worker
-    hostname: spark-worker
+    container_name: worker
+    hostname: worker
     user: root
     environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark:7077
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://master:7077
+      SPARK_RPC_AUTHENTICATION_ENABLED: no
+      SPARK_RPC_ENCRYPTION_ENABLED: no
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: no
+      SPARK_SSL_ENABLED: no
     ports:
       - "8081:8081"
+    volumes:
+      - "./resources:/resources"
   jupyter:
-    image: jupyter/base-notebook:latest
+    image: samanalishiri/notebook:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: jupyter
     hostname: jupyter
     user: root
     ports:
       - "8888:8888"
     volumes:
-      - ./data:/home/jovyan/work
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
-      - NB_UID=1000
-      - NB_GID=100
-      - GRANT_SUDO=yes
+      - "./resources:/resources"
 ```
 
 #### Apply Docker Compose
@@ -208,7 +211,29 @@ services:
 Execute the following command to create and start Spark container.
 
 ```shell
-docker compose --project-name spark up -d --build
+docker compose --project-name spark_tutorial up -d --build
+```
+
+#### Test Tools
+
+```shell
+docker exec master spark-submit --version
+```
+
+```shell
+docker exec master java --version
+```
+
+```shell
+docker exec master python --version
+```
+
+```shell
+docker exec jupyter java --version
+```
+
+```shell
+docker exec jupyter python --version
 ```
 
 #### Web Console
@@ -219,46 +244,7 @@ JupyterUI: [http://localhost:8888](http://localhost:8888)
 
 #### Jupyter
 
-Open Jupyter via web browser and create a console then execute the following commands.
-
-```shell
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get install openjdk-17-jdk
-java -version
-
-```
-
-In order to check connectivity between Jupyter and Spark create ipynb then use the code fragment in the below.
-
-```python
-from pyspark.sql import SparkSession
-
-spark = (SparkSession.builder
-         .appName("Jupyter Application")
-         .master("spark://master:7077")
-         .getOrCreate())
-
-columns = ["text", "number"]
-data = [("row1", 1), ("row2", 2), ("row3", 3)]
-
-data_frame = spark.createDataFrame(data, schema=columns)
-
-data_frame.show()
-
-spark.stop()
-```
-
-```textmate
-# output
-+----+------+
-|text|number|
-+----+------+
-|row1|     1|
-|row2|     2|
-|row3|     3|
-+----+------+
-```
+After login into Jupyter then upload [ipynb](./spark-lab.ipynb)
 
 ### Test
 

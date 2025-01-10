@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 
-APP_NAME = "Tutorial: Establish Connection"
+APP_NAME = "Tutorial: DataFrame Basic Operation"
 MASTER_URL = "spark://localhost:7077"
 DRIVER_HOST = "host.docker.internal"
 DRIVER_BIND_ADDRESS = "0.0.0.0"
@@ -20,8 +20,10 @@ def create_session() -> SparkSession | None:
             .config("spark.driver.host", DRIVER_HOST) \
             .config("spark.driver.bindAddress", DRIVER_BIND_ADDRESS) \
             .getOrCreate()
+        session.sparkContext.setLogLevel("WARN")
         print(f"Application [{APP_NAME}] established a connection to Spark at [{DRIVER_HOST}]")
         return session
     except Exception as e:
-        print(f"Application [{APP_NAME}] could not established a connection to Spark at [{DRIVER_HOST}] due to {str(e)}")
+        print(
+            f"Application [{APP_NAME}] could not established a connection to Spark at [{DRIVER_HOST}] due to {str(e)}")
         return None

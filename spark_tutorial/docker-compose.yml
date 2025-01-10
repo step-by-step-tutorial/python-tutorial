@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.9"
 
 services:
   master:
@@ -15,6 +15,8 @@ services:
     ports:
       - "8080:8080"
       - "7077:7077"
+    volumes:
+      - "./resources:/resources"
   worker:
     image: docker.io/bitnami/spark:latest
     container_name: worker
@@ -29,22 +31,17 @@ services:
       SPARK_SSL_ENABLED: no
     ports:
       - "8081:8081"
-  #  connect-server:
-  #    image: bitnami/spark:latest
-  #    container_name: connect-server
-  #    hostname: connect-server
-  #    command: [ "./sbin/start-connect-server.sh","--packages", "org.apache.spark:spark-connect_2.12:3.5.1" ]
-  #    ports:
-  #      - "15002:15002"
+    volumes:
+      - "./resources:/resources"
   jupyter:
-    image: jupyter/base-notebook:latest
+    image: samanalishiri/notebook:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: jupyter
     hostname: jupyter
     user: root
     ports:
       - "8888:8888"
-    environment:
-      JUPYTER_ENABLE_LAB: yes
-      NB_UID: 1000
-      NB_GID: 100
-      GRANT_SUDO: yes
+    volumes:
+      - "./resources:/resources"
