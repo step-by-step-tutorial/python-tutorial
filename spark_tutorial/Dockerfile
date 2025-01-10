@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y openjdk-17-jdk && apt-get clean
 
-RUN pip install --no-cache-dir notebook jupyterlab pyspark panda
+RUN pip install --no-cache-dir notebook jupyterlab pyspark pandas
 
 EXPOSE 8888
 
