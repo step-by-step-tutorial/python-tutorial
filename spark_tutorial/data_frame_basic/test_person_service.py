@@ -4,7 +4,7 @@ import pytest
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType
 
-from spark_tutorial.data_frame_basic_operation import person_service, person_model, session_factory
+from spark_tutorial.data_frame_basic import person_service, person_model, session_factory
 
 
 def test_person_list():

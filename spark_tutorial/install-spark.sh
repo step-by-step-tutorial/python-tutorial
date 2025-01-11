@@ -1,1 +1,1 @@
-docker compose --project-name spark up -d --build
+docker compose --project-name spark_tutorial up -d --build

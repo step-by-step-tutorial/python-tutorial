@@ -1,3 +1,4 @@
+import pandas as pd
 from pyspark.sql import SparkSession
 
 APP_NAME = "Tutorial: DataFrame Basic Operation"
@@ -13,11 +14,9 @@ session = SparkSession.builder \
     .getOrCreate()
 print("Spark session established.")
 
-csv_path = "/resources/persons.csv"
-print(f"Reading CSV file from {csv_path}")
-csv = session.read.options(header=True, inferSchema=True).csv(csv_path)
-csv.createOrReplaceTempView("persons")
-csv.show(5)
+csv = pd.read_csv('../resources/persons.csv')
+data_frame = session.createDataFrame(csv)
+data_frame.show()
 
 session.stop()
 print("Spark session closed.")

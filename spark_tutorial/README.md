@@ -114,8 +114,11 @@ data streaming and machine learning.
 
 ### Install Python
 
-Download Python installer from [https://www.python.org](https://www.python.org) then run installer and for Linux/Unix
-just execute the following command.
+#### Windows
+Download Python installer from [https://www.python.org](https://www.python.org) then run installer.
+
+#### Linux/Unix
+For Linux/Unix just execute the following command.
 
 ```shell
 # ubuntu
@@ -147,12 +150,27 @@ Install from Requirements.txt
 
 ```shell
 pip install -r requirements.txt
-pip list
 ```
 
 ### Install Spark On Docker
 
 #### Docker Compose
+Creat Dockerfile for install Jupyter Notebook.
+
+```dockerfile
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y openjdk-17-jdk && apt-get clean
+RUN pip install --no-cache-dir notebook jupyterlab pyspark pandas
+
+ENV PORT=8888
+
+EXPOSE $PORT
+
+CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=$PORT", "--no-browser", "--allow-root"]
+```
 
 Create a file named docker-compose.yml then add the following content to the file.
 
@@ -204,6 +222,8 @@ services:
       - "8888:8888"
     volumes:
       - "./resources:/resources"
+    environment:
+      PORT: 8888
 ```
 
 #### Apply Docker Compose
@@ -214,7 +234,7 @@ Execute the following command to create and start Spark container.
 docker compose --project-name spark_tutorial up -d --build
 ```
 
-#### Test Tools
+#### Test Containerized Tools
 
 ```shell
 docker exec master spark-submit --version
@@ -238,13 +258,98 @@ docker exec jupyter python --version
 
 #### Web Console
 
-SparkUI: [http://localhost:8080](http://localhost:8080)
-
-JupyterUI: [http://localhost:8888](http://localhost:8888)
+Master Spark UI: [http://localhost:8080](http://localhost:8080)
+Worker Spark UI: [http://localhost:8081](http://localhost:8081)
+Jupyter UI: [http://localhost:8888](http://localhost:8888)
 
 #### Jupyter
 
 After login into Jupyter then upload [ipynb](./spark-lab.ipynb)
+
+```python
+#%%
+from pyspark.sql import SparkSession
+
+APP_NAME = "Tutorial: Jupyter Application"
+MASTER_URL = "spark://master:7077"
+DRIVER_HOST = "jupyter"
+DRIVER_BIND_ADDRESS = "0.0.0.0"
+
+session = SparkSession.builder \
+    .appName(APP_NAME) \
+    .master(MASTER_URL) \
+    .config("spark.driver.host", DRIVER_HOST) \
+    .config("spark.driver.bindAddress", DRIVER_BIND_ADDRESS) \
+    .getOrCreate()
+print("Spark session established.")
+
+columns = ["row", "number"]
+data = [("row1", 1), ("row2", 2), ("row3", 3)]
+data_frame = session.createDataFrame(data, schema=columns)
+data_frame.show()
+
+session.stop()
+print("Spark session closed.")
+#%%
+
+from IPython.display import display
+
+
+def print_table(data_frame, title="Styled Data Table"):
+    df = data_frame.toPandas()
+
+    styled_table = (
+        df.style.set_table_styles(
+            [
+                {"selector": "thead th",
+                 "props": [("background-color", "#4CAF50"), ("color", "black"), ("text-align", "center"),
+                           ("padding", "10px")]},
+                {"selector": "tbody td",
+                 "props": [("border", "1px solid #ddd"), ("text-align", "center"), ("padding", "5px")]},
+                {"selector": "caption",
+                 "props": [("caption-side", "top"), ("font-size", "24px"), ("font-weight", "bold"),
+                           ("text-align", "left")]},
+            ]
+        )
+        .set_caption(title)
+        .apply(
+            lambda x: ["background-color: white" if i % 2 == 0 else "background-color: #d4f7dc" for i in range(len(x))],
+        )
+        .hide(axis="index")
+    )
+
+    display(styled_table)
+
+#%%
+from pyspark.sql import SparkSession
+
+APP_NAME = "Tutorial: DataFrame Basic Operation"
+MASTER_URL = "spark://master:7077"
+DRIVER_HOST = "jupyter"
+DRIVER_BIND_ADDRESS = "0.0.0.0"
+
+session = SparkSession.builder \
+    .appName(APP_NAME) \
+    .master(MASTER_URL) \
+    .config("spark.driver.host", DRIVER_HOST) \
+    .config("spark.driver.bindAddress", DRIVER_BIND_ADDRESS) \
+    .getOrCreate()
+session.sparkContext.setLogLevel("WARN")
+print("Spark session established.")
+
+csv_path = "/resources/persons.csv"
+print(f"Reading CSV file from: {csv_path}")
+data_frame = session.read.options(header=True, inferSchema=True).csv(csv_path)
+data_frame.createOrReplaceTempView("persons")
+
+print_table(data_frame.limit(10), "Persons")
+
+session.stop()
+print("Spark session closed.")
+#%%
+```
+
+## Pipeline
 
 ### Test
 
@@ -268,7 +373,7 @@ python -m http.server 8000 --directory ./report
 
 * [step: Establish Connection](establish_connection)
 * [step: CSV Manipulation](csv_manipulation)
-* [step: DataFrame Basic Operation](data_frame_basic_operation)
+* [step: DataFrame Basic Operation](data_frame_basic)
 
 ##
 
