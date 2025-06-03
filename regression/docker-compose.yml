@@ -1,0 +1,16 @@
+name: notebook
+services:
+  jupyter:
+    image: samanalishiri/notebook:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jupyter
+    hostname: jupyter
+    user: root
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./resources:/resources"
+    environment:
+      PORT: 8888
