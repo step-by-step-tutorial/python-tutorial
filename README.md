@@ -7,9 +7,9 @@
 
 ## <p align="center"> Steps </p>
 
+* [step: spark](spark_tutorial)
 * [step: airflow standalone](airflow-standalone)
 * [step: airflow](airflow)
-* [step: spark](spark_tutorial)
 
 ##
 

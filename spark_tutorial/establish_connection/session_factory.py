@@ -20,6 +20,7 @@ def create_session() -> SparkSession | None:
             .config("spark_tutorial.driver.host", DRIVER_HOST) \
             .config("spark_tutorial.driver.bindAddress", DRIVER_BIND_ADDRESS) \
             .getOrCreate()
+        print(f"Spark version: {session.version}")
         print(f"Application [{APP_NAME}] established a connection to Spark at [{DRIVER_HOST}]")
         return session
     except Exception as e:
