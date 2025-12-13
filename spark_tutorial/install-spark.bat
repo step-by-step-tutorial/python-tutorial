@@ -1,1 +1,0 @@
-docker compose --project-name spark_tutorial up -d --build

@@ -1,17 +1,25 @@
-FROM python:3.12-slim-bookworm
+FROM alpine:latest
+LABEL maintainer="samanalishiri@gmail.com"
 
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openjdk-17-jre-headless \
-    build-essential \
-    curl \
+RUN apk update && apk add --no-cache \
+    openjdk21-jre-headless \
+    python3 \
+    py3-pip \
+    py3-virtualenv \
     ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+    bash \
+    && ln -sf python3 /usr/bin/python
 
-RUN pip install --no-cache-dir notebook jupyterlab pyspark pandas
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-ENV PORT=8888
-EXPOSE $PORT
+RUN apk add --no-cache --virtual .build-deps gcc g++ musl-dev linux-headers python3-dev
 
-CMD ["sh", "-c", "jupyter notebook --ip=0.0.0.0 --port=$PORT --no-browser --allow-root --NotebookApp.token=''"]
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir notebook jupyterlab pyspark pandas
+
+RUN apk del .build-deps
+
+EXPOSE 8888
+
+CMD ["sh", "-c", "jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''"]

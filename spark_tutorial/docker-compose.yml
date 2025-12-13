@@ -3,8 +3,8 @@ services:
   master:
     build:
       context: .
-      dockerfile: /spark/Dockerfile
-    image: spark-4-python312:local
+      dockerfile: spark/Dockerfile
+    image: spark-4-java21-python3:local
     container_name: master
     hostname: master
     command: >
@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: spark/Dockerfile
-    image: spark-4-python312:local
+    image: spark-4-java21-python3:local
     container_name: worker
     hostname: worker
     depends_on:
