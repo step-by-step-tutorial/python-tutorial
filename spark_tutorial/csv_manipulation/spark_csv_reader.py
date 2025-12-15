@@ -6,6 +6,8 @@ MASTER_URL = "local[*]"
 DRIVER_HOST = "host.docker.internal"
 DRIVER_BIND_ADDRESS = "0.0.0.0"
 
+PERSONS_CSV_PATH = "../resources/persons.csv"
+
 session = SparkSession.builder \
     .appName(APP_NAME) \
     .master(MASTER_URL) \
@@ -14,7 +16,7 @@ session = SparkSession.builder \
     .getOrCreate()
 print("Spark session established.")
 
-data_frame = session.read.options(header=True, inferSchema=True).csv("../resources/persons.csv")
+data_frame = session.read.options(header=True, inferSchema=True).csv(PERSONS_CSV_PATH)
 data_frame.createOrReplaceTempView("persons")
 data_frame.show(5)
 

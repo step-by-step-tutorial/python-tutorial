@@ -11,7 +11,7 @@ def insert(session: SparkSession, schema: StructType, data) -> DataFrame | None:
     Create a DataFrame and temp view to input data.
 
     :param session: Spark Session
-    :param schema: StructType include column name and column type
+    :param schema: StructType includes column name and column type
     :param data: a list of data to insert
     :return: a DataFrame containing the data
     :exception: insert failed.
