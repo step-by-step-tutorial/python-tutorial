@@ -24,7 +24,7 @@
 ## Spark Introduction
 
 Apache Spark is a multi-language and open-source engine designed for large-scale data processing and analytics. It
-supports high-performance tasks in data engineering, data science, machine learning and providing capabilities for both
+supports high-performance tasks in data engineering, data science, machine learning, and providing capabilities for both
 batch and real-time data processing.
 
 ### Key Features
@@ -72,7 +72,7 @@ minimizing unnecessary data transfers and enabling complex computation pipelines
 
 ### Lazy Evaluation
 
-Spark employs lazy evaluation to optimize the execution of data processing tasks. Computations on RDDs are only executed
+Spark uses lazy evaluation to optimize the execution of data processing tasks. Computations on RDDs are only executed
 when an action that requires an output is performed. This approach reduces computational overhead by executing multiple
 operations in a single pass over the data, thus improving performance.
 
@@ -80,12 +80,12 @@ operations in a single pass over the data, thus improving performance.
 
 Once created, RDDs cannot be changed. Every transformation on an RDD results in a new RDD, ensuring data consistency and
 fault tolerance. Immutability facilitates easy recovery from node failures and prevents data corruption by ensuring that
-errors do not propagate through subsequent operations.
+errors do not propagate through further operations.
 
 ### In-Memory Computing
 
 Spark's design emphasizes in-memory data processing, allowing it to perform operations much faster than disk-based
-systems. Therefore, by reducing the need for disk I/O, Spark accelerates data processing and offers significant
+systems. Therefore, by reducing the need for disk I/O, Spark speeds up data processing and offers significant
 performance improvements over traditional disk-based systems.
 
 ### Fault Tolerance
@@ -108,20 +108,14 @@ data streaming and machine learning.
 * [Spark](https://spark.apache.org)
 * [Docker](https://www.docker.com)
 
-## Setup
+## Set up Python
 
-### Install Python
+### Install Python on Windows
 
-#### Already Installed
-
-```shell
-python -m pip install --upgrade pip
-```
-
-#### Windows
 Download Python installer from [https://www.python.org](https://www.python.org) then run installer.
 
-#### Linux/Unix
+### Install Python on Linux/Unix
+
 For Linux/Unix, execute the following command.
 
 ```shell
@@ -134,13 +128,19 @@ sudo apt-get install python3
 sudo dnf install python3
 ```
 
-#### Test
+### If It Already Installed
+
+```shell
+python -m pip install --upgrade pip
+```
+
+### Test
 
 ```shell
 python --version
 ```
 
-#### Dependencies
+### Dependencies
 
 ```shell
 python -m pip install --upgrade pip
@@ -156,11 +156,13 @@ Install from Requirements.txt
 pip install -r requirements.txt
 ```
 
-### Docker Compose
+## Set up Dockerized Tools
 
 ```shell
 docker --version
 ```
+
+### Installations
 
 ```shell
 docker compose --project-name spark_tutorial up -d --build
@@ -170,7 +172,7 @@ docker compose --project-name spark_tutorial up -d --build
 docker compose --project-name spark_tutorial down
 ```
 
-#### Test Containerized Tools
+### Test
 
 ```shell
 docker exec master /opt/spark/bin/spark-submit --version
@@ -202,7 +204,7 @@ Jupyter UI: [http://localhost:8888](http://localhost:8888)
 
 After login into Jupyter, then upload [spark-lab](./spark-lab.ipynb)
 
-## Test
+## Test Applications
 
 ```shell
 pytest
