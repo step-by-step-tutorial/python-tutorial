@@ -1,0 +1,12 @@
+name: dev
+services:
+  app:
+    build: .
+    container_name: sales-analyzer
+    environment:
+      SALES_CSV_PATH: /data/sales_data.csv
+      SALES_OUTPUT_DIR: /output
+    volumes:
+      - ./data:/data
+      - ./output:/output
+    command: python -m app.main
