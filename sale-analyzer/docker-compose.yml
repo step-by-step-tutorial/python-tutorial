@@ -1,11 +1,14 @@
 name: dev
 services:
-  app:
-    build: .
-    container_name: sales-analyzer
+  application:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: application
+    hostname: application
     environment:
-      SALES_CSV_PATH: /app/data/sales_data.csv
-      SALES_OUTPUT_DIR: /app/output
+      DATA_DIR: /app/data
+      OUTPUT_DIR: /app/output
     volumes:
       - ./data:/app/data
       - ./output:/app/output
