@@ -1,8 +1,8 @@
-from app import config
-from app.loader import load_csv
-from app.cleaner import clean_sales_data
-from app.transformer import transform_sales_data
-from app.reporter import build_report, save_report
+from src import config
+from src.loader import load_csv
+from src.cleaner import clean_sales_data
+from src.transformer import transform_sales_data
+from src.reporter import build_report, save_report
 
 
 def main():
@@ -16,7 +16,6 @@ def main():
     df = transform_sales_data(df)
 
     print("Saving cleaned data")
-    config.CLEANED_DATA_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(config.CLEANED_DATA_OUTPUT_PATH, index=False)
 
     print("Building report")

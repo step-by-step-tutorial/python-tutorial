@@ -25,7 +25,7 @@ python -m http.server 8000 --directory ./report
 ```
 
 ```shell
-python -m app.main
+python -m src.main
 ```
 
 ```shell

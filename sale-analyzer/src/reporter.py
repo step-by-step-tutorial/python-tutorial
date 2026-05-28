@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-from app.analyzer import (
+from src.analyzer import (
     calculate_total_revenue,
     calculate_average_order_value,
     revenue_by_category,
@@ -36,6 +36,5 @@ def build_report(df: pd.DataFrame) -> str:
 
 def save_report(report: str, output_path: str) -> None:
     output_file = Path(output_path)
-    output_file.parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, "w", encoding="utf-8") as file:
         file.write(report)

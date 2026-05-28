@@ -1,6 +1,6 @@
 import pandas as pd
 
-from app.analyzer import (
+from src.analyzer import (
     calculate_total_revenue,
     calculate_average_order_value,
     revenue_by_category,

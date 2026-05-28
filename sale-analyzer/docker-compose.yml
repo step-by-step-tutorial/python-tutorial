@@ -4,9 +4,9 @@ services:
     build: .
     container_name: sales-analyzer
     environment:
-      SALES_CSV_PATH: /data/sales_data.csv
-      SALES_OUTPUT_DIR: /output
+      SALES_CSV_PATH: /app/data/sales_data.csv
+      SALES_OUTPUT_DIR: /app/output
     volumes:
-      - ./data:/data
-      - ./output:/output
-    command: python -m app.main
+      - ./data:/app/data
+      - ./output:/app/output
+    command: sh -c "python -m src.main && tail -f /dev/null"

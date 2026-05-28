@@ -1,6 +1,6 @@
 import pandas as pd
 
-from app.cleaner import clean_sales_data
+from src.cleaner import clean_sales_data
 
 
 def test_clean_sales_data_removes_invalid_date():
