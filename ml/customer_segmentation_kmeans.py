@@ -33,24 +33,20 @@ data = {
 
 df = pd.DataFrame(data)
 
-log("Customer Segmentation with K-Means", "Group customers by similar behavior without using labels.")
+log("Customer Segmentation with K-Means", "Group customers by similar behavior without using labels.", new_line=False)
 log("Dataframe", df)
 log("Shape", df.shape, new_line=False)
 
 features = ["age", "annual_income_k", "spending_score"]
 X = df[features]
 
-# K-Means uses distance, so scaling keeps income from dominating age and score.
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
 kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
 df["segment"] = kmeans.fit_predict(X_scaled)
 
-centers = pd.DataFrame(
-    scaler.inverse_transform(kmeans.cluster_centers_),
-    columns=features
-).round(2)
+centers = pd.DataFrame(scaler.inverse_transform(kmeans.cluster_centers_), columns=features).round(2)
 centers["segment"] = centers.index
 centers["segment_name"] = centers.apply(name_segment, axis=1)
 
@@ -58,10 +54,7 @@ segment_names = centers.set_index("segment")["segment_name"].to_dict()
 df["segment_name"] = df["segment"].map(segment_names)
 
 log("Cluster Centers", centers)
-log(
-    "Segmented Customers",
-    df[["customer_id", "age", "annual_income_k", "spending_score", "segment", "segment_name"]]
-)
+log("Segmented Customers", df[["customer_id", "age", "annual_income_k", "spending_score", "segment", "segment_name"]])
 
 segment_summary = df.groupby(["segment", "segment_name"])[features].mean().round(2)
 log("Segment Summary (mean values)", segment_summary)
@@ -70,20 +63,10 @@ score = silhouette_score(X_scaled, df["segment"])
 log("Silhouette Score", round(score, 3), "Closer to 1 means clusters are better separated", new_line=False)
 
 for segment, group in df.groupby("segment"):
-    plt.scatter(
-        group["annual_income_k"],
-        group["spending_score"],
-        label=segment_names[segment],
-        s=90
-    )
+    plt.scatter(group["annual_income_k"], group["spending_score"], label=segment_names[segment], s=90)
 
 for _, customer in df.iterrows():
-    plt.text(
-        customer["annual_income_k"] + 0.7,
-        customer["spending_score"] + 0.7,
-        str(customer["customer_id"]),
-        fontsize=8
-    )
+    plt.text(customer["annual_income_k"] + 0.7, customer["spending_score"] + 0.7, str(customer["customer_id"]), fontsize=8)
 
 plt.xlabel("Annual Income (k USD)")
 plt.ylabel("Spending Score")
