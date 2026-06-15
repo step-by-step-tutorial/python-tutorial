@@ -5,7 +5,7 @@ from src.transformer import transform_sales_data
 
 
 def test_transform_sales_data_adds_total_price():
-    df = pd.DataFrame({
+    given_df = pd.DataFrame({
         "order_id": [1],
         "customer_name": ["John"],
         "product": ["Desk"],
@@ -16,14 +16,15 @@ def test_transform_sales_data_adds_total_price():
         "country": ["USA"],
     })
 
-    cleaned_df = clean_sales_data(df)
-    result = transform_sales_data(cleaned_df)
+    given_cleaned_df = clean_sales_data(given_df)
 
-    assert result.iloc[0]["total_price"] == 600
+    actual = transform_sales_data(given_cleaned_df)
+
+    assert actual.iloc[0]["total_price"] == 600
 
 
 def test_transform_sales_data_adds_year_and_month():
-    df = pd.DataFrame({
+    given_df = pd.DataFrame({
         "order_id": [1],
         "customer_name": ["Anna"],
         "product": ["Mouse"],
@@ -34,8 +35,9 @@ def test_transform_sales_data_adds_year_and_month():
         "country": ["Germany"],
     })
 
-    cleaned_df = clean_sales_data(df)
-    result = transform_sales_data(cleaned_df)
+    given_cleaned_df = clean_sales_data(given_df)
 
-    assert result.iloc[0]["year"] == 2026
-    assert result.iloc[0]["month"] == 1
+    actual = transform_sales_data(given_cleaned_df)
+
+    assert actual.iloc[0]["year"] == 2026
+    assert actual.iloc[0]["month"] == 1
