@@ -1,13 +1,13 @@
 from src import config
-from src.loader import load_csv
-from src.cleaner import clean_sales_data
+from src.csv_utils import read_csv
+from src.cleaner_utils import clean_sales_data
 from src.transformer import transform_sales_data
 from src.reporter import build_report, save_report
 
 
 def main():
     print("Loading data")
-    df = load_csv(config.RAW_DATA_FILE_PATH)
+    df = read_csv(config.RAW_DATA_FILE_PATH)
 
     print("Cleaning data")
     df = clean_sales_data(df)
