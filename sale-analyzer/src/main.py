@@ -1,32 +1,41 @@
+import logging
+
 from src import config
-from src.csv_utils import read_csv
+from src.file_utils import read_csv, save_text_file
 from src.cleaner_utils import clean_sales_data
-from src.transformer import transform_sales_data
-from src.reporter import build_report, save_report
+from src.transform_utils import transform_sales_data
+from src.report_service import build_report
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 
 def main():
-    print("Loading data")
+    logger.info(f"Loading sales data from: {config.RAW_DATA_FILE_PATH}")
     df = read_csv(config.RAW_DATA_FILE_PATH)
 
-    print("Cleaning data")
+    logger.info(f"Cleaning sales data ({len(df)} rows)")
     df = clean_sales_data(df)
 
-    print("Transforming data")
+    logger.info(f"Transforming sales data ({len(df)} rows)")
     df = transform_sales_data(df)
 
-    print("Saving cleaned data")
+    logger.info(f"Saving cleaned data to: {config.CLEANED_DATA_FILE_PATH}")
     df.to_csv(config.CLEANED_DATA_FILE_PATH, index=False)
 
-    print("Building report")
+    logger.info("Building sales analysis report")
     report = build_report(df)
 
     print(report)
 
-    print("Saving report")
-    save_report(report, config.REPORT_FILE_PATH)
+    logger.info(f"Saving report to: {config.REPORT_FILE_PATH}")
+    save_text_file(report, config.REPORT_FILE_PATH)
 
-    print("Program finished successfully.")
+    logger.info("Sales data analysis pipeline completed successfully.")
 
 
 if __name__ == "__main__":
