@@ -1,4 +1,4 @@
-# Sale Analyzer
+# Sale Data Platform
 
 ## Prerequisite
 
@@ -39,7 +39,15 @@ python -m http.server 8000 --directory ./report
 ## LocalHost
 
 ```shell
+docker compose --file docker-compose-infrastructure.yml --project-name dev up --build -d
+```
+
+```shell
 python -m src.main
+```
+
+```shell
+docker compose --file docker-compose-infrastructure.yml --project-name dev down -v
 ```
 
 ## Dockerization
