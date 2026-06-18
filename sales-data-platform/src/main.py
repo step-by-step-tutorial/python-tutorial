@@ -1,60 +1,58 @@
 from src import config
-from src.loader import load_csv
-from src.cleaner import clean_sales_data
+from src.csv_utils import read_csv
+from src.cleaner_utils import clean_sales_data
 from src.transformer import transform_sales_data, build_warehouse_dataframe
-from src.postgres_loader import PostgresLoader
-from src.minio_loader import MinioLoader
-from src.clickhouse_loader import ClickHouseLoader
+from src.database_service import DatabaseService
+from src.data_lake_service import DataLakeService
+from src.fact_sales_service import FactSalesService
 
 
 def main() -> None:
-    print("Loading CSV...")
-    df = load_csv(config.CSV_PATH)
+    print("Loading data")
+    df = read_csv(config.CSV_PATH)
 
-    print("Cleaning data...")
+    print("Cleaning data")
     df = clean_sales_data(df)
 
-    print("Transforming data...")
+    print("Transforming data")
     df = transform_sales_data(df)
 
-    print("Loading OLTP data into PostgreSQL...")
-    postgres_loader = PostgresLoader(config.POSTGRES_URL)
-    postgres_loader.load(df)
+    print("Storing data into OLTP (PostgreSQL)")
+    database_service = DatabaseService(config.POSTGRES_URL)
+    database_service.populate(df)
 
-    print("Uploading cleaned Parquet to MinIO Data Lake...")
-    minio_loader = MinioLoader(
+    print("Storing cleaned Parquet to Data Lake (MinIO)")
+    data_lake_service = DataLakeService(
         endpoint=config.MINIO_ENDPOINT,
         access_key=config.MINIO_ACCESS_KEY,
         secret_key=config.MINIO_SECRET_KEY,
         bucket_name=config.MINIO_BUCKET,
     )
 
-    minio_loader.upload_parquet(
+    data_lake_service.upload_parquet(
         df=df,
-        local_path=config.PARQUET_PATH,
+        object_path=config.PARQUET_PATH,
         object_key="cleaned/sales/cleaned_sales_data.parquet",
     )
 
-    print("Preparing warehouse dataframe...")
-    warehouse_df = build_warehouse_dataframe(df)
-
-    print("Loading OLAP data into ClickHouse...")
-    clickhouse_loader = ClickHouseLoader(
+    print("Storing data into OLAP (ClickHouse)")
+    fact_sales_service = FactSalesService(
         host=config.CLICKHOUSE_HOST,
         port=config.CLICKHOUSE_PORT,
         username=config.CLICKHOUSE_USER,
         password=config.CLICKHOUSE_PASSWORD,
     )
 
-    clickhouse_loader.load_fact_sales(warehouse_df)
+    warehouse_df = build_warehouse_dataframe(df)
+    fact_sales_service.populate_fact_sales(warehouse_df)
 
     print("Revenue by category:")
-    print(clickhouse_loader.revenue_by_category())
+    print(fact_sales_service.revenue_by_category())
 
     print("Revenue by country:")
-    print(clickhouse_loader.revenue_by_country())
+    print(fact_sales_service.revenue_by_country())
 
-    print("Phase 2 pipeline finished successfully.")
+    print("Program finished successfully.")
 
 
 if __name__ == "__main__":

@@ -1,13 +1,9 @@
 import os
 
-
 CSV_PATH = "data/sales_data.csv"
 PARQUET_PATH = "data/cleaned_sales_data.parquet"
 
-POSTGRES_URL = os.getenv(
-    "POSTGRES_URL",
-    "postgresql+psycopg2://postgres:postgres@localhost:5432/sales_oltp"
-)
+POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/sales_oltp")
 
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://localhost:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minio")
