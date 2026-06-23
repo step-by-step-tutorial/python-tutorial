@@ -12,6 +12,7 @@ python --version
 pip --version
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ```shell
@@ -43,7 +44,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name dev up --
 ```
 
 ```shell
-python -m src.main
+python -m main
 ```
 
 ```shell

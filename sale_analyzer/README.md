@@ -12,6 +12,7 @@ python --version
 pip --version
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ```shell
@@ -39,7 +40,7 @@ python -m http.server 8000 --directory ./report
 ## LocalHost
 
 ```shell
-python -m src.main
+python -m main
 ```
 
 ## Dockerization

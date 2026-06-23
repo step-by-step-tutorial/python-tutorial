@@ -1,10 +1,10 @@
 import logging
 
-from src import config
-from src.file_utils import read_csv, save_text_file
-from src.cleaner_utils import clean_sales_data
-from src.transform_utils import transform_sales_data
-from src.report_service import build_report
+import config
+from file_utils import read_csv, save_text_file
+from cleaner_utils import clean_sales_data
+from transform_utils import transform_sales_data
+from report_service import build_report
 
 logging.basicConfig(
     level=logging.INFO,

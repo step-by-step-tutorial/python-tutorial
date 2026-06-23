@@ -1,10 +1,10 @@
-from src import config
-from src.csv_utils import read_csv
-from src.cleaner_utils import clean_sales_data
-from src.transformer import transform_sales_data, build_warehouse_dataframe
-from src.database_service import DatabaseService
-from src.data_lake_service import DataLakeService
-from src.fact_sales_service import FactSalesService
+import config
+from csv_utils import read_csv
+from cleaner_utils import clean_sales_data
+from transformer import transform_sales_data, build_warehouse_dataframe
+from database_service import DatabaseService
+from data_lake_service import DataLakeService
+from fact_sales_service import FactSalesService
 
 
 def main() -> None:

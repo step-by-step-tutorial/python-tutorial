@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.analyzer_service import (
+from analyzer_service import (
     get_total_revenue,
     get_average_order_value,
     get_revenue_by_category,

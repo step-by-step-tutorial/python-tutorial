@@ -1,7 +1,7 @@
 import pandas as pd
 
-from src.cleaner_utils import clean_sales_data
-from src.transformer import transform_sales_data
+from cleaner_utils import clean_sales_data
+from transformer import transform_sales_data
 
 
 def test_transform_sales_data_adds_total_price():

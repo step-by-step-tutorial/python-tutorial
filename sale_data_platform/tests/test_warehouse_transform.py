@@ -1,7 +1,7 @@
 import pandas as pd
 
-from src.cleaner_utils import clean_sales_data
-from src.transformer import transform_sales_data, build_warehouse_dataframe
+from cleaner_utils import clean_sales_data
+from transformer import transform_sales_data, build_warehouse_dataframe
 
 
 def test_build_warehouse_dataframe_renames_product_to_product_name():
