@@ -7,7 +7,7 @@
 
 ## <p align="center"> Steps </p>
 
-* [sale-analyzer](sale-analyzer)
+* [sale-analyzer](sale_analyzer)
 * [step: spark](spark_tutorial)
 * [step: airflow standalone](airflow-standalone)
 * [step: airflow](airflow)
