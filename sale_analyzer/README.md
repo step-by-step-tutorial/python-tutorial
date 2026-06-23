@@ -40,7 +40,8 @@ python -m http.server 8000 --directory ./report
 ## LocalHost
 
 ```shell
-python -m main
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_analyzer
+python ./src/main.py
 ```
 
 ## Dockerization

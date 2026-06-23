@@ -44,7 +44,8 @@ docker compose --file docker-compose-infrastructure.yml --project-name dev up --
 ```
 
 ```shell
-python -m main
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_data_platform
+python ./src/main.py
 ```
 
 ```shell

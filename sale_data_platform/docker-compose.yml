@@ -70,7 +70,7 @@ services:
       CLICKHOUSE_PORT: 8123
       CLICKHOUSE_USER: default
       CLICKHOUSE_PASSWORD: clickhouse
-    command: python -m src.main
+    command: sh -c "python -m src.main && tail -f /dev/null"
 
 volumes:
   postgres_data:
