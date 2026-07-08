@@ -48,19 +48,32 @@ services:
     restart: always
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      export AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: "admin:admin"
+      PYTHONPATH: /opt/airflow/src
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: "admin:admin"
+      POSTGRES_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/sales_oltp
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: sales-data-lake
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_DATABASE: sales_warehouse
+      CLICKHOUSE_USERNAME: sale_platform_user
+      CLICKHOUSE_PASSWORD: sale_platform_password
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
       - ./plugins:/opt/airflow/plugins
-      - ./data:/opt/airflow/resources
+      - ./data:/opt/airflow/data
       - ./airflow/simple_auth_manager_passwords.json.generated:/opt/airflow/simple_auth_manager_passwords.json.generated
+      - ./requirements.txt:/opt/requirements.txt
     ports:
       - "8080:8080"
     command: >
       bash -c "
+      pip install -r /opt/requirements.txt &&
       airflow db migrate &&
-      airflow  api-server --port 8080 & 
-      airflow scheduler
+      airflow  standalone
       "
     depends_on:
       - postgres
