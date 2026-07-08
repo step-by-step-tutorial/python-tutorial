@@ -1,0 +1,97 @@
+name: dev
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    hostname: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sales_oltp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/create_postgres_tables.sql:/docker-entrypoint-initdb.d/create_postgres_tables.sql
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    hostname: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    hostname: clickhouse
+    environment:
+      CLICKHOUSE_DB: sales_warehouse
+      CLICKHOUSE_USER: sale_platform_user
+      CLICKHOUSE_PASSWORD: sale_platform_password
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "8123:8123"
+      - "9002:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./scripts/create_clickhouse_tables.sql:/docker-entrypoint-initdb.d/create_clickhouse_tables.sql
+  airflow:
+    build: .
+    container_name: airflow
+    hostname: airflow
+    depends_on:
+      - postgres
+      - minio
+      - clickhouse
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./src:/app/src
+      - ./dags:/app/dags
+      - ./data:/app/data
+    environment:
+      AIRFLOW_HOME: /app/airflow
+      POSTGRES_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/sales_oltp
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: sales-data-lake
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_DATABASE: sales_warehouse
+      CLICKHOUSE_USERNAME: sale_platform_user
+      CLICKHOUSE_PASSWORD: sale_platform_password
+    command: >
+      bash -c "
+      airflow db migrate &&
+      airflow users create --username admin --password admin --firstname Saman --lastname Admin --role Admin --email admin@example.com || true &&
+      airflow standalone
+      "
+  app:
+    build: .
+    depends_on:
+      - postgres
+      - minio
+      - clickhouse
+    volumes:
+      - ./data:/app/data
+    environment:
+      POSTGRES_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/sales_oltp
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: sales-data-lake
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_DATABASE: sales_warehouse
+      CLICKHOUSE_USERNAME: sale_platform_user
+      CLICKHOUSE_PASSWORD: sale_platform_password
+
+volumes:
+  postgres_data:
+  minio_data:
+  clickhouse_data:

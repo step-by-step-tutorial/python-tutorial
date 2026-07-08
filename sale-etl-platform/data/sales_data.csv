@@ -1,0 +1,11 @@
+order_id,customer_name,product,category,quantity,unit_price,order_date,country
+1,Hans,Laptop,Electronics,1,1200,2026-01-05,Germany
+2,Anna,Mouse,Electronics,2,25,2026-01-06,Germany
+3,John,Desk,Furniture,1,300,2026-01-07,USA
+4,Sophie,Chair,Furniture,4,85,2026-01-08,Germany
+5,David,Keyboard,Electronics,1,70,2026-01-09,USA
+6,Lukas,Monitor,Electronics,2,250,2026-01-10,Germany
+7,Ārman,Desk,Furniture,,300,2026-01-11,Iran
+8,Thomas,Mouse,Electronics,3,,2026-01-12,Germany
+9,Pārsā,Chair,Furniture,2,85,invalid_date,Iran
+10,Matthias,Laptop,Electronics,1,1200,2026-01-15,Germany
