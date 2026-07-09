@@ -5,7 +5,6 @@ WORKDIR /app
 
 COPY requirements.txt .
 COPY src ./src
-COPY tests ./tests
 COPY pyproject.toml .
 
 RUN pip install -e .

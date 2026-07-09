@@ -1,10 +1,10 @@
 import pandas as pd
 
-from cleaner_utils import clean_sales_data
+from cleaner_service import clean_sales_data
 
 
 def test_clean_sales_data_removes_invalid_date():
-    given_dataframe = pd.DataFrame({
+    given_df = pd.DataFrame({
         "order_id": [1, 2],
         "customer_name": ["Hans", "Pārsā"],
         "product": ["Laptop", "Chair"],
@@ -15,14 +15,14 @@ def test_clean_sales_data_removes_invalid_date():
         "country": ["Germany", "Iran"],
     })
 
-    actual = clean_sales_data(given_dataframe)
+    actual = clean_sales_data(given_df)
 
     assert len(actual) == 1
     assert actual.iloc[0]["order_id"] == 1
 
 
 def test_clean_sales_data_fills_missing_quantity_with_one():
-    given_dataframe = pd.DataFrame({
+    given_df = pd.DataFrame({
         "order_id": [1],
         "customer_name": ["Ārman"],
         "product": ["Desk"],
@@ -33,6 +33,6 @@ def test_clean_sales_data_fills_missing_quantity_with_one():
         "country": ["Iran"],
     })
 
-    actual = clean_sales_data(given_dataframe)
+    actual = clean_sales_data(given_df)
 
     assert actual.iloc[0]["quantity"] == 1

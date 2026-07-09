@@ -1,6 +1,6 @@
 import pandas as pd
 
-from cleaner_utils import clean_sales_data
+from cleaner_service import clean_sales_data
 from transformer import transform_sales_data, build_warehouse_dataframe
 
 

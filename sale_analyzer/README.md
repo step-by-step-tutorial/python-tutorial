@@ -27,9 +27,6 @@ pytest
 
 ```shell
 pytest --html=./report/test/test-report.html
-```
-
-```shell
 pytest --cov --cov-report=html:report/coverage
 ```
 
@@ -53,3 +50,12 @@ docker compose --file docker-compose.yml --project-name dev up --build -d
 ```shell
 docker compose --file docker-compose.yml --project-name dev down -v
 ```
+
+## Clean Directory
+
+```shell
+rm ./output/*
+rm -rf ./report
+rm -rf ./src/sale_analyzer.egg-info
+```
+

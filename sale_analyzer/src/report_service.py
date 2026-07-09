@@ -8,26 +8,25 @@ from analyzer_service import (
     get_top_products_by_quantity,
 )
 
+EMPTY_LINE = ""
+SEPARATOR_LINE = "=" * 40
+
 
 def build_report(df: pd.DataFrame) -> str:
-    report = []
-
-    report.append("Sales Data Analysis Report")
-    report.append("=" * 40)
-
-    report.append(f"Total Revenue: {get_total_revenue(df):.2f}")
-    report.append(f"Average Order Value: {get_average_order_value(df):.2f}")
-
-    report.append("")
-    report.append("Revenue by Category:")
-    report.append(str(get_revenue_by_category(df)))
-
-    report.append("")
-    report.append("Revenue by Country:")
-    report.append(str(get_revenue_by_country(df)))
-
-    report.append("")
-    report.append("Top Products by Quantity:")
-    report.append(str(get_top_products_by_quantity(df)))
+    report = [
+        "Sales Data Analysis Report",
+        SEPARATOR_LINE,
+        f"Total Revenue: {get_total_revenue(df):.2f}",
+        f"Average Order Value: {get_average_order_value(df):.2f}",
+        EMPTY_LINE,
+        "Revenue by Category:",
+        str(get_revenue_by_category(df)),
+        EMPTY_LINE,
+        "Revenue by Country:",
+        str(get_revenue_by_country(df)),
+        EMPTY_LINE,
+        "Top Products by Quantity:",
+        str(get_top_products_by_quantity(df))
+    ]
 
     return "\n".join(report)
