@@ -49,6 +49,7 @@ docker compose --file docker-compose.yml --project-name dev up --build -d
 
 ```shell
 docker compose --file docker-compose.yml --project-name dev down -v
+docker rmi samanalishiri/application:latest
 ```
 
 ## Clean Directory
@@ -57,5 +58,6 @@ docker compose --file docker-compose.yml --project-name dev down -v
 rm ./output/*
 rm -rf ./report
 rm -rf ./src/sale_analyzer.egg-info
+rm ./.coverage
 ```
 

@@ -1,6 +1,7 @@
 name: dev
 services:
   application:
+    image: samanalishiri/application:latest
     build:
       context: .
       dockerfile: Dockerfile

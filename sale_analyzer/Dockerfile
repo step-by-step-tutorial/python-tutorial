@@ -3,7 +3,7 @@ LABEL authors="samanalishiri@gmail.com"
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY requirements-docker.txt ./requirements.txt
 COPY src ./src
 COPY pyproject.toml .
 
