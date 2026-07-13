@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS sales_warehouse;
+CREATE DATABASE IF NOT EXISTS sale_warehouse;
 
-CREATE TABLE IF NOT EXISTS sales_warehouse.fact_sales
+CREATE TABLE IF NOT EXISTS sale_warehouse.fact_sales
 (
     order_id UInt32,
     customer_name String,

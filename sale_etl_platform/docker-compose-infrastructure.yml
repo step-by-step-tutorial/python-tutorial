@@ -5,35 +5,42 @@ services:
     container_name: postgres
     hostname: postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: sales_oltp
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: sale_oltp
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/create_postgres_tables.sql:/docker-entrypoint-initdb.d/create_postgres_tables.sql
-  minio:
+  adminer:
+    image: adminer
+    container_name: adminer
+    hostname: adminer
+    restart: always
+    ports:
+      - "8081:8080"
+  datalake:
     image: minio/minio:latest
-    container_name: minio
-    hostname: minio
+    container_name: datalake
+    hostname: datalake
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: administrator
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - minio_data:/data
+      - datalake_data:/data
   clickhouse:
     image: clickhouse/clickhouse-server:latest
     container_name: clickhouse
     hostname: clickhouse
     environment:
-      CLICKHOUSE_DB: sales_warehouse
-      CLICKHOUSE_USER: sale_platform_user
-      CLICKHOUSE_PASSWORD: sale_platform_password
+      CLICKHOUSE_DB: sale_warehouse
+      CLICKHOUSE_USER: admin
+      CLICKHOUSE_PASSWORD: admin
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     ports:
       - "8123:8123"
@@ -44,5 +51,5 @@ services:
 
 volumes:
   postgres_data:
-  minio_data:
+  datalake_data:
   clickhouse_data:

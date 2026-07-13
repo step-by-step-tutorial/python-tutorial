@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.sales_data_cleaning_service import SalesDataCleaningService
+import clean_sale_data_util
 
 
 def test_clean_sales_data_should_remove_invalid_order_date():
@@ -17,10 +17,9 @@ def test_clean_sales_data_should_remove_invalid_order_date():
             "country": ["Germany", "Iran"],
         }
     )
-    given_cleaning_service = SalesDataCleaningService()
 
     # When
-    actual = given_cleaning_service.clean_sale_data(given_sales_dataframe)
+    actual = clean_sale_data_util.clean_sale_data(given_sales_dataframe)
 
     # Then
     assert len(actual) == 1
@@ -41,10 +40,8 @@ def test_clean_sales_data_should_fill_missing_quantity_with_one():
             "country": ["Iran"],
         }
     )
-    given_cleaning_service = SalesDataCleaningService()
-
     # When
-    actual = given_cleaning_service.clean_sale_data(given_sales_dataframe)
+    actual = clean_sale_data_util.clean_sale_data(given_sales_dataframe)
 
     # Then
     assert actual.iloc[0]["quantity"] == 1

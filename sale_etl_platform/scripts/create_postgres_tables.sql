@@ -1,41 +1,34 @@
-CREATE TABLE IF NOT EXISTS customers
+CREATE TABLE IF NOT EXISTS customer
 (
-    customer_id
-    SERIAL
-    PRIMARY
-    KEY,
+    customer_id SERIAL PRIMARY KEY,
     customer_name VARCHAR(100) NOT NULL,
-    country VARCHAR( 100) NOT NULL
+    country VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS products
+CREATE TABLE IF NOT EXISTS product
 (
-    product_id
-    SERIAL
-    PRIMARY
-    KEY,
-    product_name VARCHAR( 100) NOT NULL,
-    category VARCHAR( 100) NOT NULL,
-    unit_price NUMERIC( 10,  2) NOT NULL
+    product_id SERIAL PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    unit_price NUMERIC(10, 2) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS orders
+CREATE TABLE IF NOT EXISTS sale_order
 (
     order_id INT PRIMARY KEY,
     customer_id INT NOT NULL,
-    order_date DATE  NOT NULL,
-    FOREIGN KEY( customer_id) REFERENCES customers(customer_id)
+    order_date DATE NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 );
 
-CREATE TABLE IF NOT EXISTS order_items
+CREATE TABLE IF NOT EXISTS order_item
 (
-    order_item_id
-    SERIAL PRIMARY KEY,
-    order_id  INT  NOT NULL,
+    order_item_id SERIAL PRIMARY KEY,
+    order_id INT NOT NULL,
     product_id INT NOT NULL,
-    quantity NUMERIC( 10, 2) NOT NULL,
-    unit_price NUMERIC( 10, 2) NOT NULL,
-    total_price NUMERIC( 10, 2) NOT NULL,
-    FOREIGN KEY(order_id) REFERENCES orders( order_id),
-    FOREIGN KEY( product_id) REFERENCES products(product_id)
+    quantity NUMERIC(10, 2) NOT NULL,
+    unit_price NUMERIC(10, 2) NOT NULL,
+    total_price NUMERIC(10, 2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES sale_order(order_id),
+    FOREIGN KEY (product_id) REFERENCES product(product_id)
 );
