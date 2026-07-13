@@ -68,7 +68,11 @@ services:
         condition: service_healthy
     volumes:
       - ./data:/app/data
+      - ./output:/app/output
     environment:
+
+      DATA_DIR: /app/data
+      OUTPUT_DIR: /app/output
       POSTGRES_URL: postgresql+psycopg2://admin:admin@postgres:5432/sale_oltp
       DATALAKE_ENDPOINT: http://datalake:9000
       DATALAKE_ACCESS_KEY: admin

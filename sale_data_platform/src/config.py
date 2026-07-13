@@ -4,9 +4,10 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 INPUT_DIR = Path(os.getenv("DATA_DIR", PROJECT_ROOT / "data"))
+OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", PROJECT_ROOT / "output"))
 
 RAW_SALE_DATA_FILE_PATH = Path(INPUT_DIR / "sale_data.csv")
-CLEANED_SALE_DATA_LOCAL_FILE_PATH = Path(INPUT_DIR / "cleaned_sale_data.parquet")
+CLEANED_SALE_DATA_LOCAL_FILE_PATH = Path(OUTPUT_DIR / "cleaned_sale_data.parquet")
 CLEANED_SALE_DATA_DATALAKE_PATH = "cleaned/sale/cleaned_sale_data.parquet"
 
 POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg2://admin:admin@localhost:5432/sale_oltp")

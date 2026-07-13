@@ -82,6 +82,7 @@ postgres: [http://localhost:8080](http://localhost:8080)
 ## Clean Directory
 
 ```shell
+rm ./output/*
 rm -rf ./report
 rm -rf ./src/sale_data_platform.egg-info
 rm ./.coverage
