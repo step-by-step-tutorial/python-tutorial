@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def clean_sales_data(df: pd.DataFrame) -> pd.DataFrame:
+def clean_sale_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     df["quantity"] = pd.to_numeric(df["quantity"], errors="coerce")

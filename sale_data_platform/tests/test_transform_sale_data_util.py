@@ -1,10 +1,10 @@
 import pandas as pd
 
-from clean_data_service import clean_sale_data
-from transformer import transform_sales_data
+from clean_sale_data_util import clean_sale_data
+from transform_sale_data_util import transform_sale_data
 
 
-def test_transform_sales_data_adds_total_price():
+def test_transform_sale_data_adds_total_price():
     df = pd.DataFrame(
         {
             "order_id": [1],
@@ -19,12 +19,12 @@ def test_transform_sales_data_adds_total_price():
     )
 
     cleaned_df = clean_sale_data(df)
-    result = transform_sales_data(cleaned_df)
+    result = transform_sale_data(cleaned_df)
 
     assert result.iloc[0]["total_price"] == 600
 
 
-def test_transform_sales_data_adds_year_and_month():
+def test_transform_sale_data_adds_year_and_month():
     df = pd.DataFrame(
         {
             "order_id": [1],
@@ -39,7 +39,7 @@ def test_transform_sales_data_adds_year_and_month():
     )
 
     cleaned_df = clean_sale_data(df)
-    result = transform_sales_data(cleaned_df)
+    result = transform_sale_data(cleaned_df)
 
     assert result.iloc[0]["year"] == 2026
     assert result.iloc[0]["month"] == 1

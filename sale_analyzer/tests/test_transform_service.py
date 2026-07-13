@@ -1,5 +1,5 @@
 from . import stub_data
-from transform_service import transform_sale_data
+from transform_sale_data_util import transform_sale_data
 
 
 def test_transform_sale_data_adds_total_price():

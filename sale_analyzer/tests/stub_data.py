@@ -1,5 +1,5 @@
 import pandas as pd
-from clean_data_service import clean_sale_data
+from clean_sale_data_util import clean_sale_data
 
 
 def john_s_order() -> pd.DataFrame:

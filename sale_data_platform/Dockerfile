@@ -3,9 +3,8 @@ LABEL authors="samanalishiri@gmail.com"
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY requirements-docker.txt ./requirements.txt
 COPY src ./src
-COPY tests ./tests
 COPY pyproject.toml .
 
 RUN pip install -e .

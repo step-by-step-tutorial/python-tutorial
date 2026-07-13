@@ -3,19 +3,20 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-DATA_DIR = Path(os.getenv("DATA_DIR", PROJECT_ROOT / "data"))
+INPUT_DIR = Path(os.getenv("DATA_DIR", PROJECT_ROOT / "data"))
 
-CSV_PATH = Path(DATA_DIR / "sale_data.csv")
-PARQUET_PATH = Path(DATA_DIR / "cleaned_sales_data.parquet")
+RAW_SALE_DATA_FILE_PATH = Path(INPUT_DIR / "sale_data.csv")
+CLEANED_SALE_DATA_LOCAL_FILE_PATH = Path(INPUT_DIR / "cleaned_sale_data.parquet")
+CLEANED_SALE_DATA_DATALAKE_PATH = "cleaned/sale/cleaned_sale_data.parquet"
 
-POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/sales_oltp")
+POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg2://admin:admin@localhost:5432/sale_oltp")
 
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://localhost:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minio")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minio123")
-MINIO_BUCKET = os.getenv("MINIO_BUCKET", "sales-data-lake")
+DATALAKE_ENDPOINT = os.getenv("DATALAKE_ENDPOINT", "http://localhost:9000")
+DATALAKE_ACCESS_KEY = os.getenv("DATALAKE_ACCESS_KEY", "admin")
+DATALAKE_SECRET_KEY = os.getenv("DATALAKE_SECRET_KEY", "administrator")
+DATALAKE_BUCKET_NAME = os.getenv("DATALAKE_BUCKET_NAME", "sale-datalake")
 
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST", "localhost")
 CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", "8123"))
-CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "default")
-CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD", "clickhouse")
+CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "admin")
+CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD", "admin")

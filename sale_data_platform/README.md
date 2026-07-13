@@ -60,4 +60,30 @@ docker compose --file docker-compose.yml --project-name dev up --build -d
 
 ```shell
 docker compose --file docker-compose.yml --project-name dev down -v
+docker rmi samanalishiri/application:latest
 ```
+
+## UI
+datalake: [http://localhost:9001](http://localhost:9001)
+* user: admin
+* password: administrator
+
+clickhouse: [http://localhost:8123](http://localhost:8123)
+* user: admin
+* password: admin
+
+postgres: [http://localhost:8080](http://localhost:8080)
+* Username: admin
+* Password: admin
+* Server: postgres:5432
+* Database: sale_oltp
+
+
+## Clean Directory
+
+```shell
+rm -rf ./report
+rm -rf ./src/sale_data_platform.egg-info
+rm ./.coverage
+```
+

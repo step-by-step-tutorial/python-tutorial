@@ -1,7 +1,8 @@
 import pandas as pd
 
-from clean_data_service import clean_sale_data
-from transformer import transform_sales_data, build_warehouse_dataframe
+from clean_sale_data_util import clean_sale_data
+from transform_sale_data_util import transform_sale_data
+from transform_sale_fact_util import transform_sale_fact
 
 
 def test_build_warehouse_dataframe_renames_product_to_product_name():
@@ -19,8 +20,8 @@ def test_build_warehouse_dataframe_renames_product_to_product_name():
     )
 
     cleaned_df = clean_sale_data(df)
-    transformed_df = transform_sales_data(cleaned_df)
-    warehouse_df = build_warehouse_dataframe(transformed_df)
+    transformed_df = transform_sale_data(cleaned_df)
+    warehouse_df = transform_sale_fact(transformed_df)
 
     assert "product_name" in warehouse_df.columns
     assert "product" not in warehouse_df.columns
@@ -41,8 +42,8 @@ def test_build_warehouse_dataframe_has_required_columns():
     )
 
     cleaned_df = clean_sale_data(df)
-    transformed_df = transform_sales_data(cleaned_df)
-    warehouse_df = build_warehouse_dataframe(transformed_df)
+    transformed_df = transform_sale_data(cleaned_df)
+    warehouse_df = transform_sale_fact(transformed_df)
 
     expected_columns = [
         "order_id",

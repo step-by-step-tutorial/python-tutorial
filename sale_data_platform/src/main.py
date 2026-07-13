@@ -1,56 +1,45 @@
 import config
-from csv_utils import read_csv
-from cleaner_utils import clean_sales_data
-from transformer import transform_sales_data, build_warehouse_dataframe
-from database_service import DatabaseService
-from data_lake_service import DataLakeService
-from fact_sales_service import FactSalesService
+from file_utils import read_csv
+from clean_sale_data_util import clean_sale_data
+from transform_sale_data_util import transform_sale_data
+from order_item_service import OrderItemService
+from datalake_service import DataLakeService
+from sale_fact_service import SaleFactService
+from transform_sale_fact_util import transform_sale_fact
 
 
 def main() -> None:
     print("Loading data")
-    df = read_csv(config.CSV_PATH)
+    sale_data = read_csv(config.RAW_SALE_DATA_FILE_PATH)
 
     print("Cleaning data")
-    df = clean_sales_data(df)
+    sale_data = clean_sale_data(sale_data)
 
     print("Transforming data")
-    df = transform_sales_data(df)
+    sale_data = transform_sale_data(sale_data)
 
     print("Storing data into OLTP (PostgreSQL)")
-    database_service = DatabaseService(config.POSTGRES_URL)
-    database_service.populate(df)
+    order_item_service = OrderItemService()
+    order_item_service.populate(sale_data)
 
     print("Storing cleaned Parquet to Data Lake (MinIO)")
-    data_lake_service = DataLakeService(
-        endpoint=config.MINIO_ENDPOINT,
-        access_key=config.MINIO_ACCESS_KEY,
-        secret_key=config.MINIO_SECRET_KEY,
-        bucket_name=config.MINIO_BUCKET,
-    )
-
-    data_lake_service.upload_parquet(
-        df=df,
-        object_path=config.PARQUET_PATH,
-        object_key="cleaned/sales/cleaned_sales_data.parquet",
+    datalake_service = DataLakeService()
+    datalake_service.upload_as_parquet(
+        dataframe=sale_data,
+        bucket_name=config.DATALAKE_BUCKET_NAME,
+        object_key=config.CLEANED_SALE_DATA_DATALAKE_PATH
     )
 
     print("Storing data into OLAP (ClickHouse)")
-    fact_sales_service = FactSalesService(
-        host=config.CLICKHOUSE_HOST,
-        port=config.CLICKHOUSE_PORT,
-        username=config.CLICKHOUSE_USER,
-        password=config.CLICKHOUSE_PASSWORD,
-    )
-
-    warehouse_df = build_warehouse_dataframe(df)
-    fact_sales_service.populate_fact_sales(warehouse_df)
+    sale_fact = transform_sale_fact(sale_data)
+    sale_fact_service = SaleFactService()
+    sale_fact_service.populate(sale_fact)
 
     print("Revenue by category:")
-    print(fact_sales_service.revenue_by_category())
+    print(sale_fact_service.revenue_by_category())
 
     print("Revenue by country:")
-    print(fact_sales_service.revenue_by_country())
+    print(sale_fact_service.revenue_by_country())
 
     print("Program finished successfully.")
 

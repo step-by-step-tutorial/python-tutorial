@@ -1,17 +1,18 @@
 import pandas as pd
 from sqlalchemy import create_engine, text
+import config
 
 
-class DatabaseService:
-    def __init__(self, url: str):
-        self.engine = create_engine(url)
+class OrderItemService:
+    def __init__(self):
+        self.engine = create_engine(config.POSTGRES_URL)
 
     def truncate(self) -> None:
         with self.engine.begin() as connection:
             connection.execute(
                 text(
                     """
-                    TRUNCATE TABLE order_items, orders, products, customers
+                    TRUNCATE TABLE order_item, orders, products, customers
                     RESTART IDENTITY CASCADE
                     """
                 )
@@ -51,4 +52,4 @@ class DatabaseService:
             ]
 
             orders.to_sql("orders", connection, if_exists="append", index=False)
-            order_items.to_sql("order_items", connection, if_exists="append", index=False, )
+            order_items.to_sql("order_item", connection, if_exists="append", index=False, )
