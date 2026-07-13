@@ -20,7 +20,7 @@ def test_clean_sales_data_should_remove_invalid_order_date():
     given_cleaning_service = SalesDataCleaningService()
 
     # When
-    actual = given_cleaning_service.clean_sales_data(given_sales_dataframe)
+    actual = given_cleaning_service.clean_sale_data(given_sales_dataframe)
 
     # Then
     assert len(actual) == 1
@@ -44,7 +44,7 @@ def test_clean_sales_data_should_fill_missing_quantity_with_one():
     given_cleaning_service = SalesDataCleaningService()
 
     # When
-    actual = given_cleaning_service.clean_sales_data(given_sales_dataframe)
+    actual = given_cleaning_service.clean_sale_data(given_sales_dataframe)
 
     # Then
     assert actual.iloc[0]["quantity"] == 1

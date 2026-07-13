@@ -12,9 +12,9 @@ EMPTY_LINE = ""
 SEPARATOR_LINE = "=" * 40
 
 
-def build_report(df: pd.DataFrame) -> str:
+def build_sale_report(df: pd.DataFrame) -> str:
     report = [
-        "Sales Data Analysis Report",
+        "sale Data Analysis Report",
         SEPARATOR_LINE,
         f"Total Revenue: {get_total_revenue(df):.2f}",
         f"Average Order Value: {get_average_order_value(df):.2f}",
@@ -26,7 +26,7 @@ def build_report(df: pd.DataFrame) -> str:
         str(get_revenue_by_country(df)),
         EMPTY_LINE,
         "Top Products by Quantity:",
-        str(get_top_products_by_quantity(df))
+        str(get_top_products_by_quantity(df)),
     ]
 
     return "\n".join(report)

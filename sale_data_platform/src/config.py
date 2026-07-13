@@ -5,7 +5,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DATA_DIR = Path(os.getenv("DATA_DIR", PROJECT_ROOT / "data"))
 
-CSV_PATH = Path(DATA_DIR / "sales_data.csv")
+CSV_PATH = Path(DATA_DIR / "sale_data.csv")
 PARQUET_PATH = Path(DATA_DIR / "cleaned_sales_data.parquet")
 
 POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/sales_oltp")

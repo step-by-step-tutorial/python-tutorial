@@ -1,5 +1,5 @@
 import pandas as pd
-from cleaner_service import clean_sales_data
+from clean_data_service import clean_sale_data
 
 
 def john_s_order() -> pd.DataFrame:
@@ -14,7 +14,7 @@ def john_s_order() -> pd.DataFrame:
         "country": ["USA"],
     })
 
-    return clean_sales_data(order)
+    return clean_sale_data(order)
 
 
 def anna_s_order() -> pd.DataFrame:
@@ -29,4 +29,4 @@ def anna_s_order() -> pd.DataFrame:
         "country": ["Germany"],
     })
 
-    return clean_sales_data(order)
+    return clean_sale_data(order)

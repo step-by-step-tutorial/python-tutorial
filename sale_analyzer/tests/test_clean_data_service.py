@@ -1,9 +1,9 @@
 import pandas as pd
 
-from cleaner_service import clean_sales_data
+from clean_data_service import clean_sale_data
 
 
-def test_clean_sales_data_removes_invalid_date():
+def test_clean_sale_data_removes_invalid_date():
     given_df = pd.DataFrame({
         "order_id": [1, 2],
         "customer_name": ["Hans", "Pārsā"],
@@ -15,13 +15,13 @@ def test_clean_sales_data_removes_invalid_date():
         "country": ["Germany", "Iran"],
     })
 
-    actual = clean_sales_data(given_df)
+    actual = clean_sale_data(given_df)
 
     assert len(actual) == 1
     assert actual.iloc[0]["order_id"] == 1
 
 
-def test_clean_sales_data_fills_missing_quantity_with_one():
+def test_clean_sale_data_fills_missing_quantity_with_one():
     given_df = pd.DataFrame({
         "order_id": [1],
         "customer_name": ["Ārman"],
@@ -33,6 +33,6 @@ def test_clean_sales_data_fills_missing_quantity_with_one():
         "country": ["Iran"],
     })
 
-    actual = clean_sales_data(given_df)
+    actual = clean_sale_data(given_df)
 
     assert actual.iloc[0]["quantity"] == 1

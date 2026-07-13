@@ -1,6 +1,6 @@
 import pandas as pd
 
-from cleaner_service import clean_sales_data
+from clean_data_service import clean_sale_data
 from transformer import transform_sales_data, build_warehouse_dataframe
 
 
@@ -18,7 +18,7 @@ def test_build_warehouse_dataframe_renames_product_to_product_name():
         }
     )
 
-    cleaned_df = clean_sales_data(df)
+    cleaned_df = clean_sale_data(df)
     transformed_df = transform_sales_data(cleaned_df)
     warehouse_df = build_warehouse_dataframe(transformed_df)
 
@@ -40,7 +40,7 @@ def test_build_warehouse_dataframe_has_required_columns():
         }
     )
 
-    cleaned_df = clean_sales_data(df)
+    cleaned_df = clean_sale_data(df)
     transformed_df = transform_sales_data(cleaned_df)
     warehouse_df = build_warehouse_dataframe(transformed_df)
 

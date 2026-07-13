@@ -27,6 +27,9 @@ pytest
 
 ```shell
 pytest --html=./report/test/test-report.html
+```
+
+```shell
 pytest --cov --cov-report=html:report/coverage
 ```
 

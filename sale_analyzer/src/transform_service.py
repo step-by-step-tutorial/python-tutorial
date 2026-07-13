@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def transform_sales_data(df: pd.DataFrame) -> pd.DataFrame:
+def transform_sale_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
     df["total_price"] = df["quantity"] * df["unit_price"]

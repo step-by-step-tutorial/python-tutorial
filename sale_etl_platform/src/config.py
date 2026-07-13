@@ -1,7 +1,7 @@
 import os
 
 
-CSV_FILE_PATH = "data/sales_data.csv"
+CSV_FILE_PATH = "data/sale_data.csv"
 PARQUET_FILE_PATH = "data/cleaned_sales_data.parquet"
 
 POSTGRES_URL = os.getenv(

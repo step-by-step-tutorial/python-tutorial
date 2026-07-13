@@ -1,6 +1,6 @@
 import pandas as pd
 
-from cleaner_service import clean_sales_data
+from clean_data_service import clean_sale_data
 from transformer import transform_sales_data
 
 
@@ -18,7 +18,7 @@ def test_transform_sales_data_adds_total_price():
         }
     )
 
-    cleaned_df = clean_sales_data(df)
+    cleaned_df = clean_sale_data(df)
     result = transform_sales_data(cleaned_df)
 
     assert result.iloc[0]["total_price"] == 600
@@ -38,7 +38,7 @@ def test_transform_sales_data_adds_year_and_month():
         }
     )
 
-    cleaned_df = clean_sales_data(df)
+    cleaned_df = clean_sale_data(df)
     result = transform_sales_data(cleaned_df)
 
     assert result.iloc[0]["year"] == 2026
