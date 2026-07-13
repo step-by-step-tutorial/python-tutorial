@@ -1,21 +1,21 @@
-CREATE TABLE IF NOT EXISTS customers (
+CREATE TABLE IF NOT EXISTS customer (
     customer_id SERIAL PRIMARY KEY,
     customer_name VARCHAR(100) NOT NULL,
     country VARCHAR(100) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS products (
+CREATE TABLE IF NOT EXISTS product (
     product_id SERIAL PRIMARY KEY,
     product_name VARCHAR(100) NOT NULL,
     category VARCHAR(100) NOT NULL,
     unit_price NUMERIC(10, 2) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS orders (
+CREATE TABLE IF NOT EXISTS otder (
     order_id INT PRIMARY KEY,
     customer_id INT NOT NULL,
     order_date DATE NOT NULL,
-    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id)
 );
 
 CREATE TABLE IF NOT EXISTS order_item (
@@ -25,6 +25,6 @@ CREATE TABLE IF NOT EXISTS order_item (
     quantity NUMERIC(10, 2) NOT NULL,
     unit_price NUMERIC(10, 2) NOT NULL,
     total_price NUMERIC(10, 2) NOT NULL,
-    FOREIGN KEY (order_id) REFERENCES orders(order_id),
-    FOREIGN KEY (product_id) REFERENCES products(product_id)
+    FOREIGN KEY (order_id) REFERENCES otder(order_id),
+    FOREIGN KEY (product_id) REFERENCES product(product_id)
 );

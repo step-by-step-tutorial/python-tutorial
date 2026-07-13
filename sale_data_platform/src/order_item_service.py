@@ -12,7 +12,7 @@ class OrderItemService:
             connection.execute(
                 text(
                     """
-                    TRUNCATE TABLE order_item, orders, products, customers
+                    TRUNCATE TABLE order_item, otder, product, customer
                     RESTART IDENTITY CASCADE
                     """
                 )
@@ -26,16 +26,16 @@ class OrderItemService:
         products = df[["product", "category", "unit_price"]].drop_duplicates()
         products = products.rename(columns={"product": "product_name"})
 
-        customers.to_sql("customers", self.engine, if_exists="append", index=False)
-        products.to_sql("products", self.engine, if_exists="append", index=False, )
+        customers.to_sql("customer", self.engine, if_exists="append", index=False)
+        products.to_sql("product", self.engine, if_exists="append", index=False, )
 
         with self.engine.begin() as connection:
-            customers_db = pd.read_sql("SELECT * FROM customers", connection)
-            products_db = pd.read_sql("SELECT * FROM products", connection)
+            customer_db = pd.read_sql("SELECT * FROM customer", connection)
+            product_db = pd.read_sql("SELECT * FROM product", connection)
 
-            enriched_df = df.merge(customers_db, on=["customer_name", "country"])
+            enriched_df = df.merge(customer_db, on=["customer_name", "country"])
             enriched_df = enriched_df.merge(
-                products_db,
+                product_db,
                 left_on=["product", "category", "unit_price"],
                 right_on=["product_name", "category", "unit_price"]
             )
@@ -51,5 +51,5 @@ class OrderItemService:
                 ]
             ]
 
-            orders.to_sql("orders", connection, if_exists="append", index=False)
+            orders.to_sql("otder", connection, if_exists="append", index=False)
             order_items.to_sql("order_item", connection, if_exists="append", index=False, )
