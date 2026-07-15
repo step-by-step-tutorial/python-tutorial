@@ -10,7 +10,7 @@ RAW_SALE_DATA_FILE_PATH = Path(INPUT_DIR / "sale_data.csv")
 CLEANED_SALE_DATA_LOCAL_FILE_PATH = Path(OUTPUT_DIR / "cleaned_sale_data.parquet")
 CLEANED_SALE_DATA_DATALAKE_PATH = "cleaned/sale/cleaned_sale_data.parquet"
 
-POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql+psycopg2://admin:admin@localhost:5432/sale_oltp")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+psycopg2://admin:admin@localhost:5432/sale_oltp")
 
 DATALAKE_ENDPOINT = os.getenv("DATALAKE_ENDPOINT", "http://localhost:9000")
 DATALAKE_ACCESS_KEY = os.getenv("DATALAKE_ACCESS_KEY", "admin")

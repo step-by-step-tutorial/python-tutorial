@@ -1,8 +1,10 @@
-# Sale ETL Platform
+
+# Sale Data Platform
 
 ## Prerequisite
 
 * Python
+* Java
 * Docker
 
 ## Prepare Environment
@@ -10,9 +12,9 @@
 ```shell
 python --version
 pip --version
+java --version
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-pip install -e .
 ```
 
 ```shell
@@ -44,8 +46,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name dev up --
 ```
 
 ```shell
-Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_etl_orchestration-platform
-python ./src/main.py
+python -m src.main
 ```
 
 ```shell
@@ -62,31 +63,10 @@ docker compose --file docker-compose.yml --project-name dev up --build -d
 docker compose --file docker-compose.yml --project-name dev down -v
 ```
 
-## UI
+## Services
 
-Airflow: [http://localhost:8080](http://localhost:8080)
-* user: admin
-* password: admin
-
-Datalake: [http://localhost:9001](http://localhost:9001)
-* user: admin
-* password: administrator
-
-Datawarehouse: [http://localhost:8123](http://localhost:8123)
-* user: admin
-* password: admin
-
-Database: [http://localhost:8081](http://localhost:8081)
-* Server: database:5432
-* Username: admin
-* Password: admin
-* Database: sale_oltp
-
-## Clean Directory
-
-```shell
-rm ./output/*
-rm -rf ./report
-rm -rf ./src/sale_etl_orchestration-platform.egg-info
-rm ./.coverage
-```
+* Airflow: http://localhost:8080
+* Spark Master: http://localhost:8081
+* Spark Worker: http://localhost:8082
+* MinIO: http://localhost:9001
+* ClickHouse HTTP: http://localhost:8123

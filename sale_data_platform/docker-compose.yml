@@ -1,9 +1,9 @@
 name: dev
 services:
-  postgres:
+  database:
     image: postgres:16
-    container_name: postgres
-    hostname: postgres
+    container_name: database
+    hostname: database
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -11,12 +11,12 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - database_data:/var/lib/postgresql/data
       - ./scripts/create_postgres_tables.sql:/docker-entrypoint-initdb.d/create_postgres_tables.sql
-  adminer:
+  databaseui:
     image: adminer
-    container_name: adminer
-    hostname: adminer
+    container_name: databaseui
+    hostname: databaseui
     restart: always
     ports:
       - "8080:8080"
@@ -60,7 +60,7 @@ services:
     container_name: application
     hostname: application
     depends_on:
-      postgres:
+      database:
         condition: service_started
       datalake:
         condition: service_started
@@ -72,7 +72,7 @@ services:
     environment:
       DATA_DIR: /app/data
       OUTPUT_DIR: /app/output
-      POSTGRES_URL: postgresql+psycopg2://admin:admin@postgres:5432/sale_oltp
+      DATABASE_URL: postgresql+psycopg2://admin:admin@database:5432/sale_oltp
       DATALAKE_ENDPOINT: http://datalake:9000
       DATALAKE_ACCESS_KEY: admin
       DATALAKE_SECRET_KEY: administrator
@@ -84,6 +84,6 @@ services:
     command: sh -c "python -m src.main && tail -f /dev/null"
 
 volumes:
-  postgres_data:
+  database_data:
   minio_data:
   datawarehouse_data:

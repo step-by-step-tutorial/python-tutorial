@@ -11,7 +11,7 @@ RAW_SALE_DATA_DATALAKE_PATH = "raw/sale/raw_sale_data.parquet"
 CLEANED_SALE_DATA_DATALAKE_PATH = "cleaned/sale/cleaned_sale_data.parquet"
 TRANSFORMED_SALE_DATA_DATALAKE_PATH = "transformed/sale/transformed_sale_data.parquet"
 
-POSTGRES_URL = os.getenv("POSTGRES_URL","postgresql+psycopg2://admin:admin@localhost:5432/sale_oltp",)
+DATABASE_URL = os.getenv("DATABASE_URL","postgresql+psycopg2://admin:admin@localhost:5432/sale_oltp",)
 
 DATALAKE_ENDPOINT = os.getenv("DATALAKE_ENDPOINT", "http://localhost:9000")
 DATALAKE_ACCESS_KEY = os.getenv("DATALAKE_ACCESS_KEY", "admin")

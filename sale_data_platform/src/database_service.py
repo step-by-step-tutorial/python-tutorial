@@ -5,7 +5,7 @@ import config
 
 class DatabaseService:
     def __init__(self):
-        self.engine = create_engine(config.POSTGRES_URL)
+        self.engine = create_engine(config.DATABASE_URL)
 
     def truncate(self) -> None:
         with self.engine.begin() as connection:

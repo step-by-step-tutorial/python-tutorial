@@ -75,7 +75,7 @@ Datawarehouse: [http://localhost:8123](http://localhost:8123)
 Database: [http://localhost:8080](http://localhost:8080)
 * Username: admin
 * Password: admin
-* Server: postgres:5432
+* Server: database:5432
 * Database: sale_oltp
 
 

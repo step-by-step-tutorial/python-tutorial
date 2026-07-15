@@ -18,7 +18,7 @@ def main() -> None:
     print("Transforming data")
     sale_data = transform_sale_data(sale_data)
 
-    print("Storing data into OLTP (PostgreSQL)")
+    print("Storing data into OLTP database (PostgreSQL)")
     database_service = DatabaseService()
     database_service.populate(sale_data)
 
@@ -30,7 +30,7 @@ def main() -> None:
         object_key=config.CLEANED_SALE_DATA_DATALAKE_PATH
     )
 
-    print("Storing data into OLAP (ClickHouse)")
+    print("Storing data into OLAP data warehouse (ClickHouse)")
     sale_fact = transform_sale_fact(sale_data)
     sale_fact_service = SaleFactService()
     sale_fact_service.populate(sale_fact)

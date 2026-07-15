@@ -1,9 +1,9 @@
 name: dev
 services:
-  postgres:
+  database:
     image: postgres:16
-    container_name: postgres
-    hostname: postgres
+    container_name: database
+    hostname: database
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -11,12 +11,12 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - database_data:/var/lib/postgresql/data
       - ./scripts/create_postgres_tables.sql:/docker-entrypoint-initdb.d/create_postgres_tables.sql
-  adminer:
+  databaseui:
     image: adminer
-    container_name: adminer
-    hostname: adminer
+    container_name: databaseui
+    hostname: databaseui
     restart: always
     ports:
       - "8081:8080"
@@ -50,6 +50,6 @@ services:
       - ./scripts/create_clickhouse_tables.sql:/docker-entrypoint-initdb.d/create_clickhouse_tables.sql
 
 volumes:
-  postgres_data:
+  database_data:
   datalake_data:
   datawarehouse_data:

@@ -1,0 +1,29 @@
+
+FROM apache/airflow:3.3.0-python3.12
+
+USER root
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends default-jre-headless curl \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG SPARK_VERSION=4.1.2
+ARG HADOOP_VERSION=3
+
+RUN curl --fail --location \
+    "https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz" \
+    --output /tmp/spark.tgz \
+    && tar --extract --gzip --file /tmp/spark.tgz --directory /opt \
+    && mv "/opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}" /opt/spark \
+    && rm /tmp/spark.tgz
+
+ENV SPARK_HOME=/opt/spark
+ENV PATH="${SPARK_HOME}/bin:${PATH}"
+ENV PYTHONPATH=/app
+
+USER airflow
+
+RUN pip install --no-cache-dir \
+    apache-airflow-providers-apache-spark==5.3.2 \
+    clickhouse-connect==0.8.18 \
+    psycopg2-binary==2.9.10
