@@ -29,7 +29,6 @@ services:
       - "8081:8081"   # worker UI
     volumes:
       - "./resources:/resources"
-
   jupyter:
     image: samanalishiri/notebook:latest
     build:

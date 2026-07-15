@@ -3,8 +3,8 @@ from datetime import date
 
 import pytest
 
-from src.sale_data_cleaning_service import SaleDataCleaningService
-from src.sale_schema import SALE_SCHEMA
+from sale_data_cleaning_service import SaleDataCleaningService
+from sale_schema import SCHEMA
 
 
 def test_clean_sale_data_should_remove_invalid_order_date(
@@ -35,7 +35,7 @@ def test_clean_sale_data_should_remove_invalid_order_date(
     ]
     given_sale_dataframe = given_sale_spark_session.createDataFrame(
         given_sale_rows,
-        SALE_SCHEMA,
+        SCHEMA,
     )
     given_sale_data_cleaning_service = SaleDataCleaningService()
 
@@ -68,7 +68,7 @@ def test_clean_sale_data_should_fill_missing_quantity_with_one(
     ]
     given_sale_dataframe = given_sale_spark_session.createDataFrame(
         given_sale_rows,
-        SALE_SCHEMA,
+        SCHEMA,
     )
     given_sale_data_cleaning_service = SaleDataCleaningService()
 
@@ -99,7 +99,7 @@ def test_clean_sale_data_should_raise_error_when_all_prices_are_missing(
     ]
     given_sale_dataframe = given_sale_spark_session.createDataFrame(
         given_sale_rows,
-        SALE_SCHEMA,
+        SCHEMA,
     )
     given_sale_data_cleaning_service = SaleDataCleaningService()
 

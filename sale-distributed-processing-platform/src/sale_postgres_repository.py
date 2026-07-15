@@ -27,10 +27,10 @@ class SalePostgresRepository:
             transformed_sale_dataframe
             .write
             .format("jdbc")
-            .option("url", config.SALE_POSTGRES_JDBC_URL)
+            .option("url", config.DATABASE_JDBC_URL)
             .option("dbtable", "sale_stage")
-            .option("user", config.SALE_POSTGRES_USER)
-            .option("password", config.SALE_POSTGRES_PASSWORD)
+            .option("user", config.DATABASE_USER)
+            .option("password", config.DATABASE_PASSWORD)
             .option("driver", "org.postgresql.Driver")
             .mode("append")
             .save()
@@ -118,9 +118,9 @@ class SalePostgresRepository:
 
     def _create_connection(self):
         return psycopg2.connect(
-            host=config.SALE_POSTGRES_HOST,
-            port=config.SALE_POSTGRES_PORT,
-            dbname=config.SALE_POSTGRES_DATABASE,
-            user=config.SALE_POSTGRES_USER,
-            password=config.SALE_POSTGRES_PASSWORD,
+            host=config.DATABASE_HOST,
+            port=config.DATABASE_PORT,
+            dbname=config.DATABASE_DATABASE,
+            user=config.DATABASE_USER,
+            password=config.DATABASE_PASSWORD,
         )

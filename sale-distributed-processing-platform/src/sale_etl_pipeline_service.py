@@ -3,13 +3,13 @@ import logging
 
 from pyspark.sql import SparkSession
 
-from src import config
-from src.sale_data_cleaning_service import SaleDataCleaningService
-from src.sale_data_lake_repository import SaleDataLakeRepository
-from src.sale_data_transformation_service import SaleDataTransformationService
-from src.sale_postgres_repository import SalePostgresRepository
-from src.sale_schema import SALE_SCHEMA
-from src.sale_warehouse_repository import SaleWarehouseRepository
+import config
+from sale_data_cleaning_service import SaleDataCleaningService
+from sale_data_lake_repository import SaleDataLakeRepository
+from sale_data_transformation_service import SaleDataTransformationService
+from sale_postgres_repository import SalePostgresRepository
+from sale_schema import SCHEMA
+from sale_warehouse_repository import SaleWarehouseRepository
 
 
 logger = logging.getLogger(__name__)
@@ -30,15 +30,15 @@ class SaleEtlPipelineService:
     def run_sale_etl_pipeline(self) -> None:
         logger.info(
             "Reading sale data from %s",
-            config.SALE_INPUT_CSV_PATH,
+            config.INPUT_CSV_PATH,
         )
 
         sale_dataframe = (
             self.sale_spark_session
             .read
             .option("header", "true")
-            .schema(SALE_SCHEMA)
-            .csv(config.SALE_INPUT_CSV_PATH)
+            .schema(SCHEMA)
+            .csv(config.INPUT_CSV_PATH)
         )
 
         logger.info("Cleaning sale data")

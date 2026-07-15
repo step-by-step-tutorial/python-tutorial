@@ -1,9 +1,9 @@
 
-from src.sale_data_cleaning_service import SaleDataCleaningService
-from src.sale_data_transformation_service import (
+from sale_data_cleaning_service import SaleDataCleaningService
+from sale_data_transformation_service import (
     SaleDataTransformationService,
 )
-from src.sale_schema import SALE_SCHEMA
+from sale_schema import SCHEMA
 
 
 def test_transform_sale_data_should_calculate_total_price(
@@ -24,7 +24,7 @@ def test_transform_sale_data_should_calculate_total_price(
     ]
     given_sale_dataframe = given_sale_spark_session.createDataFrame(
         given_sale_rows,
-        SALE_SCHEMA,
+        SCHEMA,
     )
     given_sale_data_cleaning_service = SaleDataCleaningService()
     given_sale_data_transformation_service = (
@@ -63,7 +63,7 @@ def test_transform_sale_data_should_add_year_and_month(
     ]
     given_sale_dataframe = given_sale_spark_session.createDataFrame(
         given_sale_rows,
-        SALE_SCHEMA,
+        SCHEMA,
     )
     given_sale_data_cleaning_service = SaleDataCleaningService()
     given_sale_data_transformation_service = (
@@ -103,7 +103,7 @@ def test_build_sale_warehouse_dataframe_should_keep_expected_columns(
     ]
     given_sale_dataframe = given_sale_spark_session.createDataFrame(
         given_sale_rows,
-        SALE_SCHEMA,
+        SCHEMA,
     )
     given_sale_data_cleaning_service = SaleDataCleaningService()
     given_sale_data_transformation_service = (

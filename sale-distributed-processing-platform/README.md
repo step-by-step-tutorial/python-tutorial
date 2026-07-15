@@ -1,5 +1,4 @@
-
-# Sale Data Platform
+# Sale Distributed Processing Platform
 
 ## Prerequisite
 
@@ -15,6 +14,7 @@ pip --version
 java --version
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ```shell
@@ -46,7 +46,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name dev up --
 ```
 
 ```shell
-python -m src.main
+python -m main
 ```
 
 ```shell
@@ -65,8 +65,17 @@ docker compose --file docker-compose.yml --project-name dev down -v
 
 ## Services
 
-* Airflow: http://localhost:8080
 * Spark Master: http://localhost:8081
 * Spark Worker: http://localhost:8082
 * MinIO: http://localhost:9001
 * ClickHouse HTTP: http://localhost:8123
+* PostgreSQL: http://localhost:5432
+
+## Clean Directory
+
+```shell
+rm ./output/*
+rm -rf ./report
+rm -rf ./src/sale-distributed-processing-platform.egg-info
+rm ./.coverage
+```

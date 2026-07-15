@@ -8,11 +8,11 @@ from src import config
 class SaleWarehouseRepository:
     def __init__(self) -> None:
         self.client = clickhouse_connect.get_client(
-            host=config.SALE_WAREHOUSE_HOST,
-            port=config.SALE_WAREHOUSE_HTTP_PORT,
-            database=config.SALE_WAREHOUSE_DATABASE,
-            username=config.SALE_WAREHOUSE_USER,
-            password=config.SALE_WAREHOUSE_PASSWORD,
+            host=config.WAREHOUSE_HOST,
+            port=config.WAREHOUSE_HTTP_PORT,
+            database=config.WAREHOUSE_DATABASE,
+            username=config.WAREHOUSE_USER,
+            password=config.WAREHOUSE_PASSWORD,
         )
 
     def replace_sale_fact(

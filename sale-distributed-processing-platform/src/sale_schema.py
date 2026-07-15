@@ -8,7 +8,7 @@ from pyspark.sql.types import (
 )
 
 
-SALE_SCHEMA = StructType(
+SCHEMA = StructType(
     [
         StructField("order_id", IntegerType(), nullable=False),
         StructField("customer_name", StringType(), nullable=False),

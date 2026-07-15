@@ -1,4 +1,6 @@
 
+import sys
+
 from pyspark.sql import SparkSession
 
 from src import config
@@ -8,8 +10,13 @@ class SaleSparkSessionService:
     def create_sale_spark_session(self) -> SparkSession:
         return (
             SparkSession.builder
-            .appName(config.SALE_APPLICATION_NAME)
-            .master(config.SALE_SPARK_MASTER_URL)
+            .appName(config.APPLICATION_NAME)
+            .master(config.SPARK_MASTER_URL)
+            .config("spark.pyspark.python", sys.executable)
+            .config("spark.pyspark.driver.python", sys.executable)
+            .config("spark.executorEnv.PYSPARK_PYTHON", sys.executable)
+            .config("spark.executorEnv.PYSPARK_DRIVER_PYTHON", sys.executable)
+            .config("spark.python.use.daemon", "false")
             .config(
                 "spark.jars.packages",
                 ",".join(
@@ -22,15 +29,15 @@ class SaleSparkSessionService:
             )
             .config(
                 "spark.hadoop.fs.s3a.endpoint",
-                config.SALE_DATA_LAKE_ENDPOINT,
+                config.DATA_LAKE_ENDPOINT,
             )
             .config(
                 "spark.hadoop.fs.s3a.access.key",
-                config.SALE_DATA_LAKE_ACCESS_KEY,
+                config.DATA_LAKE_ACCESS_KEY,
             )
             .config(
                 "spark.hadoop.fs.s3a.secret.key",
-                config.SALE_DATA_LAKE_SECRET_KEY,
+                config.DATA_LAKE_SECRET_KEY,
             )
             .config(
                 "spark.hadoop.fs.s3a.path.style.access",

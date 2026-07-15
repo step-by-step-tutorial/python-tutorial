@@ -1,18 +1,14 @@
 
 import logging
 
-from src.sale_etl_pipeline_service import SaleEtlPipelineService
-from src.sale_spark_session_service import SaleSparkSessionService
+from sale_etl_pipeline_service import SaleEtlPipelineService
+from sale_spark_session_service import SaleSparkSessionService
 
 
 logging.basicConfig(
     level=logging.INFO,
-    format=(
-        "%(asctime)s "
-        "%(levelname)s "
-        "%(name)s - "
-        "%(message)s"
-    ),
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 logger = logging.getLogger(__name__)
@@ -29,7 +25,7 @@ def run_sale_etl_pipeline() -> None:
 
     try:
         sale_etl_pipeline_service = SaleEtlPipelineService(
-            sale_spark_session=sale_spark_session
+            sale_spark_session=sale_spark_session,
         )
         sale_etl_pipeline_service.run_sale_etl_pipeline()
     finally:

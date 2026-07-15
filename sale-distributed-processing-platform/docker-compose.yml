@@ -1,175 +1,137 @@
-
+name: dev
 services:
-  sale-postgres:
+  database:
     image: postgres:16
-    container_name: sale-postgres
     environment:
       POSTGRES_DB: sale_oltp
-      POSTGRES_USER: sale_platform_user
-      POSTGRES_PASSWORD: sale_platform_password
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
     volumes:
-      - sale_postgres_data:/var/lib/postgresql/data
+      - database_data:/var/lib/postgresql/data
       - ./scripts/create_postgres_tables.sql:/docker-entrypoint-initdb.d/create_postgres_tables.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready --username sale_platform_user --dbname sale_oltp"]
+      test: ["CMD-SHELL", "pg_isready --username admin --dbname sale_oltp"]
       interval: 5s
       timeout: 5s
       retries: 20
-
-  sale-data-lake:
+  datalake:
     image: minio/minio:latest
-    container_name: sale-data-lake
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: sale_data_lake_user
-      MINIO_ROOT_PASSWORD: sale_data_lake_password
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: administrator
     ports:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - sale_data_lake_data:/data
+      - datalake_data:/data
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:9000/minio/health/live"]
       interval: 5s
       timeout: 5s
       retries: 20
-
-  sale-data-lake-init:
+  datalake-init:
     image: minio/mc:latest
-    container_name: sale-data-lake-init
     depends_on:
-      sale-data-lake:
+      datalake:
         condition: service_healthy
     entrypoint:
       - /bin/sh
       - -c
       - |
-        mc alias set local http://sale-data-lake:9000 sale_data_lake_user sale_data_lake_password
-        mc mb --ignore-existing local/sale-data-lake
+        mc alias set local http://datalake:9000 admin administrator
+        mc mb --ignore-existing local/sale-datalake
 
-  sale-warehouse:
+  datawarehouse:
     image: clickhouse/clickhouse-server:latest
-    container_name: sale-warehouse
     environment:
       CLICKHOUSE_DB: sale_warehouse
-      CLICKHOUSE_USER: sale_warehouse_user
-      CLICKHOUSE_PASSWORD: sale_warehouse_password
+      CLICKHOUSE_USER: admin
+      CLICKHOUSE_PASSWORD: admin
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     ports:
       - "8123:8123"
       - "9002:9000"
     volumes:
-      - sale_warehouse_data:/var/lib/clickhouse
+      - datawarehouse_data:/var/lib/clickhouse
       - ./scripts/create_clickhouse_tables.sql:/docker-entrypoint-initdb.d/create_clickhouse_tables.sql
     healthcheck:
-      test: ["CMD-SHELL", "clickhouse-client --user sale_warehouse_user --password sale_warehouse_password --query 'SELECT 1'"]
+      test: ["CMD-SHELL", "clickhouse-client --user admin --password admin --query 'SELECT 1'"]
       interval: 5s
       timeout: 5s
       retries: 20
-
-  sale-spark-master:
+  master:
     build:
       context: .
-      dockerfile: Dockerfile.spark
-    container_name: sale-spark-master
-    command:
-      - /opt/spark/bin/spark-class
-      - org.apache.spark.deploy.master.Master
-    environment:
-      SPARK_NO_DAEMONIZE: "true"
-    ports:
-      - "7077:7077"
-      - "8081:8080"
-    volumes:
-      - ./src:/app/src
-      - ./data:/app/data
-
-  sale-spark-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.spark
-    container_name: sale-spark-worker
-    command:
-      - /opt/spark/bin/spark-class
-      - org.apache.spark.deploy.worker.Worker
-      - spark://sale-spark-master:7077
-    environment:
-      SPARK_NO_DAEMONIZE: "true"
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 2g
-    depends_on:
-      - sale-spark-master
-    ports:
-      - "8082:8081"
-    volumes:
-      - ./src:/app/src
-      - ./data:/app/data
-
-  sale-airflow:
-    build:
-      context: .
-      dockerfile: Dockerfile.airflow
-    container_name: sale-airflow
-    environment:
-      AIRFLOW_HOME: /app/airflow
-      AIRFLOW__CORE__DAGS_FOLDER: /app/dags
-      AIRFLOW_CONN_SPARK_DEFAULT: spark://sale-spark-master:7077
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./dags:/app/dags
-      - ./src:/app/src
-      - ./data:/app/data
-    depends_on:
-      - sale-spark-master
+      dockerfile: spark/Dockerfile
+    image: samanalishiri/spark-4-java21-python3:latest
+    container_name: master
+    hostname: master
     command: >
-      bash -c "
-      airflow db migrate &&
-      airflow api-server --port 8080 &
-      airflow scheduler &
-      airflow dag-processor
-      "
-
-  sale-application:
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master --host master --port 7077 --webui-port 8080
+    ports:
+      - "7077:7077"   # master RPC
+      - "8080:8080"   # master UI
+    volumes:
+      - "./resources:/resources"
+  worker:
+    build:
+      context: .
+      dockerfile: spark/Dockerfile
+    image: samanalishiri/spark-4-java21-python3:latest
+    container_name: worker
+    hostname: worker
+    depends_on:
+      - master
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://master:7077 --webui-port 8081
+    ports:
+      - "8081:8081"   # worker UI
+    volumes:
+      - "./resources:/resources"
+  application:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sale-application
+    container_name: application
+    hostname: application
     environment:
-      SALE_APPLICATION_NAME: sale-distributed-processing-platform
-      SALE_SPARK_MASTER_URL: spark://sale-spark-master:7077
-      SALE_INPUT_CSV_PATH: /app/data/sale.csv
-      SALE_POSTGRES_JDBC_URL: jdbc:postgresql://sale-postgres:5432/sale_oltp
-      SALE_POSTGRES_HOST: sale-postgres
-      SALE_POSTGRES_PORT: 5432
-      SALE_POSTGRES_DATABASE: sale_oltp
-      SALE_POSTGRES_USER: sale_platform_user
-      SALE_POSTGRES_PASSWORD: sale_platform_password
-      SALE_DATA_LAKE_ENDPOINT: http://sale-data-lake:9000
-      SALE_DATA_LAKE_ACCESS_KEY: sale_data_lake_user
-      SALE_DATA_LAKE_SECRET_KEY: sale_data_lake_password
-      SALE_DATA_LAKE_BUCKET: sale-data-lake
-      SALE_CURATED_OUTPUT_PATH: curated/sale
-      SALE_WAREHOUSE_HOST: sale-warehouse
-      SALE_WAREHOUSE_HTTP_PORT: 8123
-      SALE_WAREHOUSE_DATABASE: sale_warehouse
-      SALE_WAREHOUSE_USER: sale_warehouse_user
-      SALE_WAREHOUSE_PASSWORD: sale_warehouse_password
+      APPLICATION_NAME: sale-distributed-processing-platform
+      SPARK_MASTER_URL: spark://master:7077
+      INPUT_CSV_PATH: /app/data/sale_data.csv
+      DATABASE_JDBC_URL: jdbc:postgresql://database:5432/sale_oltp
+      DATABASE_HOST: database
+      DATABASE_PORT: 5432
+      DATABASE_DATABASE: sale_oltp
+      DATABASE_USER: admin
+      DATABASE_PASSWORD: admin
+      DATA_LAKE_ENDPOINT: http://datalake:9000
+      DATA_LAKE_ACCESS_KEY: admin
+      DATA_LAKE_SECRET_KEY: administrator
+      DATA_LAKE_BUCKET: sale-datalake
+      CURATED_OUTPUT_PATH: curated/sale
+      WAREHOUSE_HOST: datawarehouse
+      WAREHOUSE_HTTP_PORT: 8123
+      WAREHOUSE_DATABASE: sale_warehouse
+      WAREHOUSE_USER: admin
+      WAREHOUSE_PASSWORD: admin
     volumes:
       - ./src:/app/src
       - ./data:/app/data
     depends_on:
-      sale-postgres:
+      database:
         condition: service_healthy
-      sale-data-lake-init:
+      datalake-init:
         condition: service_completed_successfully
-      sale-warehouse:
+      datawarehouse:
         condition: service_healthy
-      sale-spark-master:
+      master:
         condition: service_started
-    command: python3 -m src.main
+    command: python -m main
 
 volumes:
-  sale_postgres_data:
-  sale_data_lake_data:
-  sale_warehouse_data:
+  database_data:
+  datalake_data:
+  datawarehouse_data:
