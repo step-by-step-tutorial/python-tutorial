@@ -64,15 +64,15 @@ docker rmi samanalishiri/application:latest
 ```
 
 ## UI
-datalake: [http://localhost:9001](http://localhost:9001)
+Datalake: [http://localhost:9001](http://localhost:9001)
 * user: admin
 * password: administrator
 
-clickhouse: [http://localhost:8123](http://localhost:8123)
+Datawarehouse: [http://localhost:8123](http://localhost:8123)
 * user: admin
 * password: admin
 
-postgres: [http://localhost:8080](http://localhost:8080)
+Database: [http://localhost:8080](http://localhost:8080)
 * Username: admin
 * Password: admin
 * Server: postgres:5432

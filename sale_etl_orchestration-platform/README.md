@@ -64,15 +64,15 @@ docker compose --file docker-compose.yml --project-name dev down -v
 
 ## UI
 
-airflow: [http://localhost:8080](http://localhost:8080)
+Airflow: [http://localhost:8080](http://localhost:8080)
 * user: admin
 * password: admin
 
-datalake: [http://localhost:9001](http://localhost:9001)
+Datalake: [http://localhost:9001](http://localhost:9001)
 * user: admin
 * password: administrator
 
-clickhouse: [http://localhost:8123](http://localhost:8123)
+Datawarehouse: [http://localhost:8123](http://localhost:8123)
 * user: admin
 * password: admin
 

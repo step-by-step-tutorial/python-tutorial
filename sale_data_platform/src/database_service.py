@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, text
 import config
 
 
-class OrderItemService:
+class DatabaseService:
     def __init__(self):
         self.engine = create_engine(config.POSTGRES_URL)
 

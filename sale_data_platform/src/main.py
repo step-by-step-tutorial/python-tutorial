@@ -2,7 +2,7 @@ import config
 from file_utils import read_csv
 from clean_sale_data_util import clean_sale_data
 from transform_sale_data_util import transform_sale_data
-from order_item_service import OrderItemService
+from database_service import DatabaseService
 from datalake_service import DataLakeService
 from sale_fact_service import SaleFactService
 from transform_sale_fact_util import transform_sale_fact
@@ -19,8 +19,8 @@ def main() -> None:
     sale_data = transform_sale_data(sale_data)
 
     print("Storing data into OLTP (PostgreSQL)")
-    order_item_service = OrderItemService()
-    order_item_service.populate(sale_data)
+    database_service = DatabaseService()
+    database_service.populate(sale_data)
 
     print("Storing cleaned Parquet to Data Lake (MinIO)")
     datalake_service = DataLakeService()

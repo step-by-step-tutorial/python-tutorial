@@ -7,7 +7,7 @@ import config
 from clean_sale_data_util import clean_sale_data
 from datalake_service import DataLakeService
 from file_utils import read_csv
-from order_item_service import OrderItemService
+from database_service import DatabaseService
 from sale_fact_service import SaleFactService
 from transform_sale_data_util import transform_sale_data
 from transform_sale_fact_util import transform_sale_fact
@@ -74,8 +74,8 @@ def store_sale_data_to_oltp() -> None:
         object_key=config.TRANSFORMED_SALE_DATA_DATALAKE_PATH,
     )
 
-    order_item_service = OrderItemService()
-    order_item_service.populate(sale_dataframe)
+    database_service = DatabaseService()
+    database_service.populate(sale_dataframe)
 
 
 def store_sale_data_to_olap() -> None:

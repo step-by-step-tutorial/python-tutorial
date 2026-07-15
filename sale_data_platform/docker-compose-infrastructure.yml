@@ -33,10 +33,10 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
-  clickhouse:
+  datawarehouse:
     image: clickhouse/clickhouse-server:latest
-    container_name: clickhouse
-    hostname: clickhouse
+    container_name: datawarehouse
+    hostname: datawarehouse
     environment:
       CLICKHOUSE_USER: admin
       CLICKHOUSE_PASSWORD: admin
@@ -44,10 +44,10 @@ services:
       - "8123:8123"
       - "9002:9000"
     volumes:
-      - clickhouse_data:/var/lib/clickhouse
+      - datawarehouse_data:/var/lib/clickhouse
       - ./scripts/create_clickhouse_tables.sql:/docker-entrypoint-initdb.d/create_clickhouse_tables.sql
 
 volumes:
   postgres_data:
   minio_data:
-  clickhouse_data:
+  datawarehouse_data:

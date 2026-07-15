@@ -13,13 +13,15 @@ def create_client():
     for attempt in range(1, retries + 1):
         try:
             return clickhouse_connect.get_client(
-                host=config.CLICKHOUSE_HOST,
-                port=config.CLICKHOUSE_PORT,
-                username=config.CLICKHOUSE_USER,
-                password=config.CLICKHOUSE_PASSWORD
+                host=config.DATAWAREHOUSE_HOST,
+                port=config.DATAWAREHOUSE_PORT,
+                database=config.DATAWAREHOUSE_DATABASE,
+                username=config.DATAWAREHOUSE_USER,
+                password=config.DATAWAREHOUSE_PASSWORD,
             )
         except OperationalError:
             if attempt == retries:
                 raise
             time.sleep(retry_delay_seconds)
+
     return None

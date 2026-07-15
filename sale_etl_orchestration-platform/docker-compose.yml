@@ -33,10 +33,10 @@ services:
       - "9001:9001"
     volumes:
       - datalake_data:/data
-  clickhouse:
+  datawarehouse:
     image: clickhouse/clickhouse-server:latest
-    container_name: clickhouse
-    hostname: clickhouse
+    container_name: datawarehouse
+    hostname: datawarehouse
     environment:
       CLICKHOUSE_DB: sale_warehouse
       CLICKHOUSE_USER: admin
@@ -46,7 +46,7 @@ services:
       - "8123:8123"
       - "9002:9000"
     volumes:
-      - clickhouse_data:/var/lib/clickhouse
+      - datawarehouse_data:/var/lib/clickhouse
       - ./scripts/create_clickhouse_tables.sql:/docker-entrypoint-initdb.d/create_clickhouse_tables.sql
   airflow:
     image: apache/airflow:slim-3.3.0-python3.12
@@ -62,11 +62,11 @@ services:
       DATALAKE_ACCESS_KEY: admin
       DATALAKE_SECRET_KEY: administrator
       DATALAKE_BUCKET_NAME: sale-datalake
-      CLICKHOUSE_HOST: clickhouse
-      CLICKHOUSE_PORT: 8123
-      CLICKHOUSE_DATABASE: sale_warehouse
-      CLICKHOUSE_USER: admin
-      CLICKHOUSE_PASSWORD: admin
+      DATAWAREHOUSE_HOST: datawarehouse
+      DATAWAREHOUSE_PORT: 8123
+      DATAWAREHOUSE_DATABASE: sale_warehouse
+      DATAWAREHOUSE_USER: admin
+      DATAWAREHOUSE_PASSWORD: admin
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -87,9 +87,9 @@ services:
       - postgres
       - adminer
       - datalake
-      - clickhouse
+      - datawarehouse
 
 volumes:
   postgres_data:
   datalake_data:
-  clickhouse_data:
+  datawarehouse_data:

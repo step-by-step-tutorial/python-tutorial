@@ -1,11 +1,11 @@
 import pandas as pd
 
-import clickhouse_service
+import datawarehouse_service
 
 
 class SaleFactService:
     def __init__(self):
-        self.client = clickhouse_service.create_client()
+        self.client = datawarehouse_service.create_client()
 
     def populate(self, warehouse_df: pd.DataFrame) -> None:
         self.client.command("TRUNCATE TABLE sale_warehouse.sale_fact")
