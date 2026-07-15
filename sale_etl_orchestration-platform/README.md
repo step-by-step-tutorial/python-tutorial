@@ -44,7 +44,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name dev up --
 ```
 
 ```shell
-Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_etl_platform
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_etl_orchestration-platform
 python ./src/main.py
 ```
 
@@ -87,6 +87,6 @@ adminer: [http://localhost:8081](http://localhost:8081)
 ```shell
 rm ./output/*
 rm -rf ./report
-rm -rf ./src/sale_etl_platform.egg-info
+rm -rf ./src/sale_etl_orchestration-platform.egg-info
 rm ./.coverage
 ```
