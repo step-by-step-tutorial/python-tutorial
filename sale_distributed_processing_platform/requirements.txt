@@ -1,0 +1,6 @@
+pyspark
+psycopg2-binary
+clickhouse-connect
+pytest
+pytest-html
+pytest-cov

@@ -33,7 +33,7 @@ def main() -> None:
     print("Storing data into OLAP data warehouse (ClickHouse)")
     sale_fact = transform_sale_fact(sale_data)
     sale_fact_service = SaleFactService()
-    sale_fact_service.populate(sale_fact)
+    populate(sale_fact)
 
     print("Revenue by category:")
     print(sale_fact_service.revenue_by_category())

@@ -3,8 +3,8 @@ from datetime import date
 
 import pytest
 
-from sale_data_cleaning_service import SaleDataCleaningService
-from sale_schema import SCHEMA
+from clean_sale_data_util import clean_sale_data
+from app_config.sale_schema import SCHEMA
 
 
 def test_clean_sale_data_should_remove_invalid_order_date(
@@ -37,10 +37,9 @@ def test_clean_sale_data_should_remove_invalid_order_date(
         given_sale_rows,
         SCHEMA,
     )
-    given_sale_data_cleaning_service = SaleDataCleaningService()
 
     # When
-    actual = given_sale_data_cleaning_service.clean_sale_data(
+    actual = clean_sale_data(
         given_sale_dataframe
     )
 
@@ -70,10 +69,9 @@ def test_clean_sale_data_should_fill_missing_quantity_with_one(
         given_sale_rows,
         SCHEMA,
     )
-    given_sale_data_cleaning_service = SaleDataCleaningService()
 
     # When
-    actual = given_sale_data_cleaning_service.clean_sale_data(
+    actual = clean_sale_data(
         given_sale_dataframe
     )
 
@@ -101,11 +99,10 @@ def test_clean_sale_data_should_raise_error_when_all_prices_are_missing(
         given_sale_rows,
         SCHEMA,
     )
-    given_sale_data_cleaning_service = SaleDataCleaningService()
 
     # When
     with pytest.raises(ValueError) as actual:
-        given_sale_data_cleaning_service.clean_sale_data(
+        clean_sale_data(
             given_sale_dataframe
         )
 

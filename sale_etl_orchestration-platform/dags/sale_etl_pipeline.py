@@ -5,7 +5,7 @@ from airflow.sdk import DAG
 
 import config
 from clean_sale_data_util import clean_sale_data
-from datalake_service import DataLakeService
+from service.sale_datalake_service import SaleDataLakeService
 from file_utils import read_csv
 from database_service import DatabaseService
 from sale_fact_service import SaleFactService
@@ -24,7 +24,7 @@ def read_sale_data() -> None:
     sale_dataframe = read_csv(config.RAW_SALE_DATA_FILE_PATH)
     logger.info("Loading sale data from %s (%s rows)", config.RAW_SALE_DATA_FILE_PATH, len(sale_dataframe), )
 
-    datalake_service = DataLakeService()
+    datalake_service = SaleDataLakeService()
     datalake_service.upload_as_parquet(
         dataframe=sale_dataframe,
         bucket_name=config.DATALAKE_BUCKET_NAME,
@@ -33,7 +33,7 @@ def read_sale_data() -> None:
 
 
 def clean_sale_data_task() -> None:
-    datalake_service = DataLakeService()
+    datalake_service = SaleDataLakeService()
 
     sale_dataframe = datalake_service.read_parquet(
         bucket_name=config.DATALAKE_BUCKET_NAME,
@@ -51,7 +51,7 @@ def clean_sale_data_task() -> None:
 
 
 def transform_sale_data_task() -> None:
-    datalake_service = DataLakeService()
+    datalake_service = SaleDataLakeService()
     cleaned_sale_dataframe = datalake_service.read_parquet(
         bucket_name=config.DATALAKE_BUCKET_NAME,
         object_key=config.CLEANED_SALE_DATA_DATALAKE_PATH,
@@ -68,7 +68,7 @@ def transform_sale_data_task() -> None:
 
 
 def store_sale_data_to_oltp() -> None:
-    datalake_service = DataLakeService()
+    datalake_service = SaleDataLakeService()
     sale_dataframe = datalake_service.read_parquet(
         bucket_name=config.DATALAKE_BUCKET_NAME,
         object_key=config.TRANSFORMED_SALE_DATA_DATALAKE_PATH,
@@ -79,7 +79,7 @@ def store_sale_data_to_oltp() -> None:
 
 
 def store_sale_data_to_olap() -> None:
-    datalake_service = DataLakeService()
+    datalake_service = SaleDataLakeService()
     sale_dataframe = datalake_service.read_parquet(
         bucket_name=config.DATALAKE_BUCKET_NAME,
         object_key=config.TRANSFORMED_SALE_DATA_DATALAKE_PATH,

@@ -29,7 +29,7 @@ def main() -> None:
 
     logger.info("Storing data into OLTP (PostgreSQL)")
     database_service = DatabaseService()
-    database_service.populate(sale_df)
+    populate(sale_df)
 
     logger.info("Storing cleaned Parquet to Data Lake")
     datalake_service = DataLakeService()

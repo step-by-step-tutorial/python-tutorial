@@ -1,5 +1,5 @@
 [project]
-name = "sale-distributed-processing-platform"
+name = "sale_distributed_processing_platform"
 version = "1.0.0"
 
 [tool.pytest.ini_options]

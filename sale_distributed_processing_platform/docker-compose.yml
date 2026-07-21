@@ -98,28 +98,34 @@ services:
     container_name: application
     hostname: application
     environment:
-      APPLICATION_NAME: sale-distributed-processing-platform
+      RAW_SALE_DATA_FILE_PATH: /app/data/sale_data.csv
+      INPUT_DIR: app/input
+      OUTPUT_DIR: app/output
+      SQL_DIR: /app/scripts/query
+      SPARK_APPLICATION_NAME: sale-distributed-processing-platform
       SPARK_MASTER_URL: spark://master:7077
-      INPUT_CSV_PATH: /app/data/sale_data.csv
-      DATABASE_JDBC_URL: jdbc:postgresql://database:5432/sale_oltp
+      SPARK_DRIVER_HOST: host.docker.internal
+      SPARK_DRIVER_BIND_ADDRESS: 0.0.0.0
+      DATABASE_URL: jdbc:postgresql://database:5432/sale_oltp
       DATABASE_HOST: database
       DATABASE_PORT: 5432
-      DATABASE_DATABASE: sale_oltp
+      DATABASE_NAME: sale_oltp
       DATABASE_USER: admin
       DATABASE_PASSWORD: admin
-      DATA_LAKE_ENDPOINT: http://datalake:9000
-      DATA_LAKE_ACCESS_KEY: admin
-      DATA_LAKE_SECRET_KEY: administrator
-      DATA_LAKE_BUCKET: sale-datalake
-      CURATED_OUTPUT_PATH: curated/sale
-      WAREHOUSE_HOST: datawarehouse
-      WAREHOUSE_HTTP_PORT: 8123
-      WAREHOUSE_DATABASE: sale_warehouse
-      WAREHOUSE_USER: admin
-      WAREHOUSE_PASSWORD: admin
+      DATALAKE_ENDPOINT: http://datalake:9000
+      DATALAKE_ACCESS_KEY: admin
+      DATALAKE_SECRET_KEY: administrator
+      DATALAKE_BUCKET_NAME: sale-datalake
+      DATAWAREHOUSE_HOST: datawarehouse
+      DATAWAREHOUSE_HTTP_PORT: 8123
+      DATAWAREHOUSE_DATABASE: sale_warehouse
+      DATAWAREHOUSE_USER: admin
+      DATAWAREHOUSE_PASSWORD: admin
     volumes:
       - ./src:/app/src
       - ./data:/app/data
+      - ./ouput:/app/output
+      - ./scripts:/app/scripts
     depends_on:
       database:
         condition: service_healthy

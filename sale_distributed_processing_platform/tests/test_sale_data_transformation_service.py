@@ -1,13 +1,11 @@
-
-from sale_data_cleaning_service import SaleDataCleaningService
-from sale_data_transformation_service import (
-    SaleDataTransformationService,
-)
-from sale_schema import SCHEMA
+from app_config.sale_schema import SCHEMA
+from util.clean_sale_data_util import clean_sale_data
+from util.sale_data_transform_util import transform_sale_data
+from util.sale_fact_transform_util import build_sale_warehouse_dataframe
 
 
 def test_transform_sale_data_should_calculate_total_price(
-    given_sale_spark_session,
+        given_sale_spark_session,
 ):
     # Given
     given_sale_rows = [
@@ -26,18 +24,15 @@ def test_transform_sale_data_should_calculate_total_price(
         given_sale_rows,
         SCHEMA,
     )
-    given_sale_data_cleaning_service = SaleDataCleaningService()
-    given_sale_data_transformation_service = (
-        SaleDataTransformationService()
-    )
+
     given_cleaned_sale_dataframe = (
-        given_sale_data_cleaning_service.clean_sale_data(
+        clean_sale_data(
             given_sale_dataframe
         )
     )
 
     # When
-    actual = given_sale_data_transformation_service.transform_sale_data(
+    actual = transform_sale_data(
         given_cleaned_sale_dataframe
     )
 
@@ -46,7 +41,7 @@ def test_transform_sale_data_should_calculate_total_price(
 
 
 def test_transform_sale_data_should_add_year_and_month(
-    given_sale_spark_session,
+        given_sale_spark_session,
 ):
     # Given
     given_sale_rows = [
@@ -65,18 +60,15 @@ def test_transform_sale_data_should_add_year_and_month(
         given_sale_rows,
         SCHEMA,
     )
-    given_sale_data_cleaning_service = SaleDataCleaningService()
-    given_sale_data_transformation_service = (
-        SaleDataTransformationService()
-    )
+
     given_cleaned_sale_dataframe = (
-        given_sale_data_cleaning_service.clean_sale_data(
+        clean_sale_data(
             given_sale_dataframe
         )
     )
 
     # When
-    actual = given_sale_data_transformation_service.transform_sale_data(
+    actual = transform_sale_data(
         given_cleaned_sale_dataframe
     )
 
@@ -86,7 +78,7 @@ def test_transform_sale_data_should_add_year_and_month(
 
 
 def test_build_sale_warehouse_dataframe_should_keep_expected_columns(
-    given_sale_spark_session,
+        given_sale_spark_session,
 ):
     # Given
     given_sale_rows = [
@@ -105,17 +97,14 @@ def test_build_sale_warehouse_dataframe_should_keep_expected_columns(
         given_sale_rows,
         SCHEMA,
     )
-    given_sale_data_cleaning_service = SaleDataCleaningService()
-    given_sale_data_transformation_service = (
-        SaleDataTransformationService()
-    )
+
     given_cleaned_sale_dataframe = (
-        given_sale_data_cleaning_service.clean_sale_data(
+        clean_sale_data(
             given_sale_dataframe
         )
     )
     given_transformed_sale_dataframe = (
-        given_sale_data_transformation_service.transform_sale_data(
+        transform_sale_data(
             given_cleaned_sale_dataframe
         )
     )
@@ -135,8 +124,8 @@ def test_build_sale_warehouse_dataframe_should_keep_expected_columns(
 
     # When
     actual = (
-        given_sale_data_transformation_service
-        .build_sale_warehouse_dataframe(
+
+        build_sale_warehouse_dataframe(
             given_transformed_sale_dataframe
         )
     )
