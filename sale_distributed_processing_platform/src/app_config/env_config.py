@@ -2,14 +2,15 @@ import os
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-INPUT_DIR = os.getenv("DATA_DIR", "data")
-OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", PROJECT_ROOT / "output"))
+RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
+OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 SQL_DIR = Path(os.getenv("SQL_DIR", PROJECT_ROOT / "scripts" / "query"))
 
-RAW_SALE_DATA_FILE_PATH = os.getenv("RAW_SALE_DATA_FILE_PATH", f"{INPUT_DIR}/sale_data.csv")
+RAW_SALE_DATA_FILE_PATH = os.getenv("RAW_SALE_DATA_FILE_PATH", f"{RESOURCES_DIR}/sale_data.csv")
 
 SPARK_APPLICATION_NAME = os.getenv("SPARK_APPLICATION_NAME", "sale-distributed-processing-platform")
-SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "spark://localhost:7077")
+# SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "spark://localhost:7077")
+SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "local[*]")
 SPARK_DRIVER_HOST = os.getenv("SPARK_DRIVER_HOST", "host.docker.internal")
 SPARK_DRIVER_BIND_ADDRESS = os.getenv("SPARK_DRIVER_BIND_ADDRESS", "0.0.0.0")
 
@@ -25,7 +26,7 @@ DATABASE_SALE_STAGE_TABLE = "sale_stage"
 DATALAKE_ENDPOINT = os.getenv("DATALAKE_ENDPOINT", "http://localhost:9000")
 DATALAKE_ACCESS_KEY = os.getenv("DATALAKE_ACCESS_KEY", "admin")
 DATALAKE_SECRET_KEY = os.getenv("DATALAKE_SECRET_KEY", "administrator")
-DATALAKE_BUCKET_NAME = os.getenv("DATALAKE_BUCKET_NAME", "sale-data-lake")
+DATALAKE_BUCKET_NAME = os.getenv("DATALAKE_BUCKET_NAME", "sale-datalake")
 
 DATAWAREHOUSE_HOST = os.getenv("DATAWAREHOUSE_HOST", "localhost")
 DATAWAREHOUSE_HTTP_PORT = int(os.getenv("DATAWAREHOUSE_HTTP_PORT", "8123"))
@@ -35,7 +36,4 @@ DATAWAREHOUSE_PASSWORD = os.getenv("DATAWAREHOUSE_PASSWORD", "admin")
 
 
 def build_sale_datalake_output_uri() -> str:
-    return (
-        f"s3a://{DATALAKE_BUCKET_NAME}/"
-        f"{OUTPUT_DIR}"
-    )
+    return f"s3a://{DATALAKE_BUCKET_NAME}/{OUTPUT_DIR}"

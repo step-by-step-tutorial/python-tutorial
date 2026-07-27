@@ -22,6 +22,8 @@ def create_session() -> SparkSession | None:
             .config("spark.hadoop.fs.s3a.secret.key", ec.DATALAKE_SECRET_KEY, ) \
             .config("spark.hadoop.fs.s3a.path.style.access", "true", ) \
             .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false", ) \
+            .config("spark.hadoop.fs.s3a.fast.upload", "true") \
+            .config("spark.hadoop.fs.s3a.fast.upload.buffer", "bytebuffer") \
             .getOrCreate()
         print(f"Spark version: {session.version}")
         print(f"Application [{ec.SPARK_APPLICATION_NAME}] established a connection to Spark at [{ec.SPARK_DRIVER_HOST}]")

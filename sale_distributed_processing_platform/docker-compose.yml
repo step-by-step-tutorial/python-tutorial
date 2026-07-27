@@ -98,8 +98,8 @@ services:
     container_name: application
     hostname: application
     environment:
-      RAW_SALE_DATA_FILE_PATH: /app/data/sale_data.csv
-      INPUT_DIR: app/input
+      RAW_SALE_DATA_FILE_PATH: /app/resources/sale_data.csv
+      RESOURCES_DIR: app/resources
       OUTPUT_DIR: app/output
       SQL_DIR: /app/scripts/query
       SPARK_APPLICATION_NAME: sale-distributed-processing-platform

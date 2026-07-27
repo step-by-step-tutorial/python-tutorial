@@ -61,7 +61,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name dev up --
 
 ```shell
 cd ./sale_distributed_processing_platform
-Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_etl_orchestration-platform
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_distributed_processing_platform
 python ./src/main.py
 ```
 
