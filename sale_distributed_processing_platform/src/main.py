@@ -1,6 +1,6 @@
 import logging
 
-from pipeline.sale_data_pipeline import SaleDataPipeline
+from pipeline import sale_data_pipeline
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,8 +15,7 @@ def main() -> None:
     logger.info("Starting Sale ETL Platform")
 
     try:
-        pipeline = SaleDataPipeline()
-        pipeline.run()
+        sale_data_pipeline.run()
     finally:
         logger.info("Stopping Spark session")
 

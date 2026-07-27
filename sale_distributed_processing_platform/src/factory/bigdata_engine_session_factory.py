@@ -14,8 +14,8 @@ def create_session() -> SparkSession | None:
         session = SparkSession.builder \
             .appName(ec.SPARK_APPLICATION_NAME) \
             .master(ec.SPARK_MASTER_URL) \
-            .config("spark_tutorial.driver.host", ec.SPARK_DRIVER_HOST) \
-            .config("spark_tutorial.driver.bindAddress", ec.SPARK_DRIVER_BIND_ADDRESS) \
+            .config("spark.driver.host", ec.SPARK_DRIVER_HOST) \
+            .config("spark.driver.bindAddress", ec.SPARK_DRIVER_BIND_ADDRESS) \
             .config("spark.jars.packages", ",".join(SPARK_JARS), ) \
             .config("spark.hadoop.fs.s3a.endpoint", ec.DATALAKE_ENDPOINT, ) \
             .config("spark.hadoop.fs.s3a.access.key", ec.DATALAKE_ACCESS_KEY, ) \

@@ -1,4 +1,4 @@
-FROM spark:4.0.1-java21
+FROM spark:4.1.2-java21
 LABEL maintainer="samanalishiri@gmail.com"
 
 USER root

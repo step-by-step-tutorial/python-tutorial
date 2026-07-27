@@ -1,15 +1,12 @@
-
 from datetime import date
 
 import pytest
 
-from clean_sale_data_util import clean_sale_data
+from util.clean_sale_data_util import clean_sale_data
 from app_config.sale_schema import SCHEMA
 
 
-def test_clean_sale_data_should_remove_invalid_order_date(
-    given_sale_spark_session,
-):
+def test_clean_sale_data_should_remove_invalid_order_date(given_sale_spark_session, ):
     # Given
     given_sale_rows = [
         (
@@ -33,15 +30,10 @@ def test_clean_sale_data_should_remove_invalid_order_date(
             "Iran",
         ),
     ]
-    given_sale_dataframe = given_sale_spark_session.createDataFrame(
-        given_sale_rows,
-        SCHEMA,
-    )
+    given_sale_dataframe = given_sale_spark_session.createDataFrame(given_sale_rows, SCHEMA, )
 
     # When
-    actual = clean_sale_data(
-        given_sale_dataframe
-    )
+    actual = clean_sale_data(given_sale_dataframe)
 
     # Then
     assert actual.count() == 1
@@ -49,9 +41,7 @@ def test_clean_sale_data_should_remove_invalid_order_date(
     assert actual.first()["order_date"] == date(2026, 1, 5)
 
 
-def test_clean_sale_data_should_fill_missing_quantity_with_one(
-    given_sale_spark_session,
-):
+def test_clean_sale_data_should_fill_missing_quantity_with_one(given_sale_spark_session, ):
     # Given
     given_sale_rows = [
         (
@@ -65,23 +55,16 @@ def test_clean_sale_data_should_fill_missing_quantity_with_one(
             "Iran",
         ),
     ]
-    given_sale_dataframe = given_sale_spark_session.createDataFrame(
-        given_sale_rows,
-        SCHEMA,
-    )
+    given_sale_dataframe = given_sale_spark_session.createDataFrame(given_sale_rows, SCHEMA, )
 
     # When
-    actual = clean_sale_data(
-        given_sale_dataframe
-    )
+    actual = clean_sale_data(given_sale_dataframe)
 
     # Then
     assert actual.first()["quantity"] == 1.0
 
 
-def test_clean_sale_data_should_raise_error_when_all_prices_are_missing(
-    given_sale_spark_session,
-):
+def test_clean_sale_data_should_raise_error_when_all_prices_are_missing(given_sale_spark_session, ):
     # Given
     given_sale_rows = [
         (
@@ -95,16 +78,11 @@ def test_clean_sale_data_should_raise_error_when_all_prices_are_missing(
             "USA",
         ),
     ]
-    given_sale_dataframe = given_sale_spark_session.createDataFrame(
-        given_sale_rows,
-        SCHEMA,
-    )
+    given_sale_dataframe = given_sale_spark_session.createDataFrame(given_sale_rows, SCHEMA, )
 
     # When
     with pytest.raises(ValueError) as actual:
-        clean_sale_data(
-            given_sale_dataframe
-        )
+        clean_sale_data(given_sale_dataframe)
 
     # Then
     assert "unit_price" in str(actual.value)

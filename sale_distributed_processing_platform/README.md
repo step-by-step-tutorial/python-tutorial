@@ -9,6 +9,7 @@
 ## Prepare Environment
 
 ```shell
+cd ./sale_distributed_processing_platform
 python --version
 pip --version
 java --version
@@ -24,6 +25,12 @@ docker --version
 ## Test
 
 ```shell
+cd ./sale_distributed_processing_platform
+docker compose --file docker-compose-infrastructure.yml --project-name dev up --build -d
+```
+
+```shell
+cd ./sale_distributed_processing_platform
 pytest
 ```
 
@@ -39,17 +46,27 @@ pytest --cov --cov-report=html:report/coverage
 python -m http.server 8000 --directory ./report
 ```
 
+```shell
+cd ./sale_distributed_processing_platform
+docker compose --file docker-compose-infrastructure.yml --project-name dev down -v
+```
+
 ## LocalHost
 
 ```shell
+cd ./sale_distributed_processing_platform
 docker compose --file docker-compose-infrastructure.yml --project-name dev up --build -d
 ```
 
+
 ```shell
-python -m main
+cd ./sale_distributed_processing_platform
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_etl_orchestration-platform
+python ./src/main.py
 ```
 
 ```shell
+cd ./sale_distributed_processing_platform
 docker compose --file docker-compose-infrastructure.yml --project-name dev down -v
 ```
 

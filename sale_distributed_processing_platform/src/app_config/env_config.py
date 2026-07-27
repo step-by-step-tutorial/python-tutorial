@@ -1,12 +1,12 @@
 import os
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-INPUT_DIR = Path(os.getenv("DATA_DIR", PROJECT_ROOT / "data"))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+INPUT_DIR = os.getenv("DATA_DIR", "data")
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", PROJECT_ROOT / "output"))
 SQL_DIR = Path(os.getenv("SQL_DIR", PROJECT_ROOT / "scripts" / "query"))
 
-RAW_SALE_DATA_FILE_PATH = os.getenv("RAW_SALE_DATA_FILE_PATH", INPUT_DIR / "sale_data.csv")
+RAW_SALE_DATA_FILE_PATH = os.getenv("RAW_SALE_DATA_FILE_PATH", f"{INPUT_DIR}/sale_data.csv")
 
 SPARK_APPLICATION_NAME = os.getenv("SPARK_APPLICATION_NAME", "sale-distributed-processing-platform")
 SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "spark://localhost:7077")

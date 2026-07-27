@@ -2,6 +2,8 @@ name: dev
 services:
   database:
     image: postgres:16
+    hostname: database
+    container_name: database
     environment:
       POSTGRES_DB: sale_oltp
       POSTGRES_USER: admin
@@ -18,6 +20,8 @@ services:
       retries: 20
   datalake:
     image: minio/minio:latest
+    hostname: datalake
+    container_name: datalake
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: admin
@@ -34,6 +38,8 @@ services:
       retries: 20
   datalake-init:
     image: minio/mc:latest
+    hostname: datalake-init
+    container_name: datalake-init
     depends_on:
       datalake:
         condition: service_healthy
@@ -46,6 +52,8 @@ services:
 
   datawarehouse:
     image: clickhouse/clickhouse-server:latest
+    hostname: datawarehouse
+    container_name: datawarehouse
     environment:
       CLICKHOUSE_DB: sale_warehouse
       CLICKHOUSE_USER: admin
@@ -75,7 +83,7 @@ services:
       - "7077:7077"   # master RPC
       - "8080:8080"   # master UI
     volumes:
-      - "./resources:/resources"
+      - "./data:/data"
   worker:
     build:
       context: .
@@ -90,7 +98,7 @@ services:
     ports:
       - "8081:8081"   # worker UI
     volumes:
-      - "./resources:/resources"
+      - "./data:/data"
 
 volumes:
   database_data:

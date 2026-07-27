@@ -1,30 +1,21 @@
-
-import os
-import sys
-
 import pytest
 from pyspark.sql import SparkSession
 
 
-os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
-os.environ.setdefault("PYSPARK_DRIVER_PYTHON", sys.executable)
+APP_NAME = "Tutorial: Establish Test Connection"
+MASTER_URL = "spark://localhost:7077"
+DRIVER_HOST = "host.docker.internal"
+DRIVER_BIND_ADDRESS = "0.0.0.0"
 
 
 @pytest.fixture(scope="session")
 def given_sale_spark_session() -> SparkSession:
-    given_sale_spark_session_instance = (
-        SparkSession.builder
-        .master("local[2]")
-        .appName("sale-etl-platform-tests")
-        .config("spark.pyspark.python", sys.executable)
-        .config("spark.pyspark.driver.python", sys.executable)
-        .config("spark.executorEnv.PYSPARK_PYTHON", sys.executable)
-        .config("spark.executorEnv.PYSPARK_DRIVER_PYTHON", sys.executable)
-        .config("spark.python.use.daemon", "false")
-        .config("spark.ui.enabled", "false")
-        .getOrCreate()
-    )
+    session = SparkSession.builder \
+            .appName(APP_NAME) \
+            .master(MASTER_URL) \
+            .config("spark.driver.host", DRIVER_HOST) \
+            .config("spark.driver.bindAddress", DRIVER_BIND_ADDRESS) \
+            .getOrCreate()
 
-    yield given_sale_spark_session_instance
-
-    given_sale_spark_session_instance.stop()
+    yield session
+    session.stop()
