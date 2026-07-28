@@ -47,7 +47,7 @@
       "name": "office",
       "type": "random_from_mapped_file",
       "source_field": "country",
-      "mapping_file": "data/hr/country_office_map.csv",
+      "mapping_file": "data/country_office_map.csv",
       "key_column": "country",
       "file_column": "office_file"
     },
@@ -60,22 +60,22 @@
       "key_column": "country",
       "value_column": "timezone"
     },
-    { "name": "department", "type": "random_from_file", "file": "data/hr/departments.txt" },
+    { "name": "department", "type": "random_from_file", "file": "data/departments.txt" },
     {
       "name": "job_title",
       "type": "random_from_mapped_file",
       "source_field": "department",
-      "mapping_file": "data/hr/department_job_map.csv",
+      "mapping_file": "data/department_job_map.csv",
       "key_column": "department",
       "file_column": "job_title_file"
     },
-    { "name": "seniority_level", "type": "random_from_file", "file": "data/hr/seniority_levels.txt" },
+    { "name": "seniority_level", "type": "random_from_file", "file": "data/seniority_levels.txt" },
     {
       "name": "salary_grade",
       "type": "derived",
       "method": "lookup_from_csv",
       "source_field": "seniority_level",
-      "mapping_file": "data/hr/salary_bands.csv",
+      "mapping_file": "data/salary_bands.csv",
       "key_column": "seniority_level",
       "value_column": "salary_grade"
     },
@@ -84,14 +84,14 @@
       "type": "derived",
       "method": "lookup_from_csv",
       "source_field": "seniority_level",
-      "mapping_file": "data/hr/salary_bands.csv",
+      "mapping_file": "data/salary_bands.csv",
       "key_column": "seniority_level",
       "value_column": "base_salary_usd"
     },
     { "name": "bonus_percent", "type": "random_int", "min": 0, "max": 25 },
-    { "name": "employment_type", "type": "random_from_file", "file": "data/hr/employment_types.txt" },
-    { "name": "work_mode", "type": "random_from_file", "file": "data/hr/work_modes.txt" },
-    { "name": "employment_status", "type": "random_from_file", "file": "data/hr/employment_statuses.txt" },
+    { "name": "employment_type", "type": "random_from_file", "file": "data/employment_types.txt" },
+    { "name": "work_mode", "type": "random_from_file", "file": "data/work_modes.txt" },
+    { "name": "employment_status", "type": "random_from_file", "file": "data/employment_statuses.txt" },
     {
       "name": "hire_date",
       "type": "random_date",

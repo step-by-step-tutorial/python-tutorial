@@ -10,7 +10,7 @@
       "date_start": "2026-01-01",
       "date_end": "2026-06-30"
     },
-    { "name": "sales_channel", "type": "random_from_file", "file": "data/shopping/sales_channels.txt" },
+    { "name": "sales_channel", "type": "random_from_file", "file": "data/sales_channels.txt" },
     { "name": "customer_id", "type": "random_int", "min": 100000, "max": 999999 },
     {
       "name": "first_name",
@@ -64,7 +64,7 @@
       "name": "warehouse",
       "type": "random_from_mapped_file",
       "source_field": "country",
-      "mapping_file": "data/shopping/country_warehouse_map.csv",
+      "mapping_file": "data/country_warehouse_map.csv",
       "key_column": "country",
       "file_column": "warehouse_file"
     },
@@ -88,10 +88,10 @@
       "value_column": "unit_price"
     },
     { "name": "quantity", "type": "random_int", "min": 1, "max": 6 },
-    { "name": "coupon_code", "type": "random_from_file", "file": "data/shopping/coupon_codes.txt" },
-    { "name": "payment_method", "type": "random_from_file", "file": "data/shopping/payment_methods.txt" },
-    { "name": "shipping_method", "type": "random_from_file", "file": "data/shopping/shipping_methods.txt" },
+    { "name": "coupon_code", "type": "random_from_file", "file": "data/coupon_codes.txt" },
+    { "name": "payment_method", "type": "random_from_file", "file": "data/payment_methods.txt" },
+    { "name": "shipping_method", "type": "random_from_file", "file": "data/shipping_methods.txt" },
     { "name": "delivery_days", "type": "random_int", "min": 1, "max": 10 },
-    { "name": "order_status", "type": "random_from_file", "file": "data/shopping/order_statuses.txt" }
+    { "name": "order_status", "type": "random_from_file", "file": "data/order_statuses.txt" }
   ]
 }

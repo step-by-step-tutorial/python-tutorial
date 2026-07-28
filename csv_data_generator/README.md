@@ -21,9 +21,7 @@ Generate CSV test data from plain text source files, numeric/date generators, an
 ```text
 csv_data_generator/
   data/
-    addresses/  first_names/  last_names/  phones/
-    shopping/
-    hr/
+    addresses/  first_names/  job_titles/  last_names/  offices/  phones/  warehouses/
   output/
   src/
   tests/
@@ -32,11 +30,16 @@ csv_data_generator/
   config_hr.json
 ```
 
+`data/` is organised by kind of data, never by dataset: `first_names/`, `product_names.txt`,
+`job_titles/`, and so on. A folder holds one file per key of the mapping that selects it —
+`first_names/germany.txt` is keyed by country, `job_titles/engineering.txt` by department. Any
+config may draw from any of these files, so a new dataset usually needs no new folders.
+
 One config file per dataset, named `config_<dataset>.json`. Pick one with `--config`.
 
 | Config | Output | Rows | Dataset |
 | --- | --- | --- | --- |
-| `config.json` | `output/generated_orders.csv` | 1000 | Minimal order sample |
+| `config_sale.json` | `output/generated_orders.csv` | 1000 | Minimal order sample |
 | `config_online_shopping.json` | `output/online_shopping_orders.csv` | 5000 | Online shopping orders |
 | `config_hr.json` | `output/hr_employees.csv` | 750 | HR employee records |
 
@@ -61,7 +64,7 @@ pytest
 ```shell
 cd ./csv_data_generator
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\csv_data_generator
-python ./src/main.py --config ./config.json
+python ./src/main.py --config ./config_sale.json
 python ./src/main.py --config ./config_online_shopping.json
 python ./src/main.py --config ./config_hr.json
 ```
@@ -202,20 +205,22 @@ title through a mapping file if a dataset needs those to agree.
 | `data/country_profile_map.csv` | Per-country `currency_code` and `timezone` |
 | `data/product_names.txt` | Product pool the `product_name` column draws from (all 10,000 catalog products) |
 | `data/product_catalog.csv` | 10,000 products with `category` and `unit_price`, keyed by `product` |
-| `data/shopping/sales_channels.txt` | Web Store, iOS App, Marketplace, ... |
-| `data/shopping/payment_methods.txt` | Credit Card, PayPal, Klarna, ... |
-| `data/shopping/shipping_methods.txt` | Standard, Express, Pickup Point, ... |
-| `data/shopping/order_statuses.txt` | Order lifecycle states, `Delivered` weighted |
-| `data/shopping/coupon_codes.txt` | Coupon codes plus repeated `NONE` entries |
-| `data/shopping/country_warehouse_map.csv` | Country to warehouse file |
-| `data/shopping/warehouses/*.txt` | Warehouses per country |
-| `data/hr/departments.txt` | 10 departments |
-| `data/hr/department_job_map.csv` | Department to job title file |
-| `data/hr/job_titles/*.txt` | Job titles per department |
-| `data/hr/seniority_levels.txt` | Intern through Director |
-| `data/hr/salary_bands.csv` | Seniority level to `salary_grade` and `base_salary_usd` |
-| `data/hr/employment_types.txt` | Full-time, Contract, Internship, ... |
-| `data/hr/work_modes.txt` | On-site, Hybrid, Remote |
-| `data/hr/employment_statuses.txt` | Active, Probation, Notice Period, ... |
-| `data/hr/country_office_map.csv` | Country to office file |
-| `data/hr/offices/*.txt` | Offices per country |
+| `data/first_names/*.txt`, `data/last_names/*.txt` | First and last names per country |
+| `data/phones/*.txt`, `data/addresses/*.txt` | Phone numbers and addresses per country |
+| `data/sales_channels.txt` | Web Store, iOS App, Marketplace, ... |
+| `data/payment_methods.txt` | Credit Card, PayPal, Klarna, ... |
+| `data/shipping_methods.txt` | Standard, Express, Pickup Point, ... |
+| `data/order_statuses.txt` | Order lifecycle states, `Delivered` weighted |
+| `data/coupon_codes.txt` | Coupon codes plus repeated `NONE` entries |
+| `data/country_warehouse_map.csv` | Country to warehouse file |
+| `data/warehouses/*.txt` | Warehouses per country |
+| `data/departments.txt` | 10 departments |
+| `data/department_job_map.csv` | Department to job title file |
+| `data/job_titles/*.txt` | Job titles per department |
+| `data/seniority_levels.txt` | Intern through Director |
+| `data/salary_bands.csv` | Seniority level to `salary_grade` and `base_salary_usd` |
+| `data/employment_types.txt` | Full-time, Contract, Internship, ... |
+| `data/work_modes.txt` | On-site, Hybrid, Remote |
+| `data/employment_statuses.txt` | Active, Probation, Notice Period, ... |
+| `data/country_office_map.csv` | Country to office file |
+| `data/offices/*.txt` | Offices per country |

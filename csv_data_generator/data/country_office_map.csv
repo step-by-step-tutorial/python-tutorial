@@ -1,0 +1,5 @@
+country,office_file
+Germany,data/offices/germany.txt
+USA,data/offices/usa.txt
+UK,data/offices/uk.txt
+Canada,data/offices/canada.txt

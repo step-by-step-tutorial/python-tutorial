@@ -1,0 +1,5 @@
+country,warehouse_file
+Germany,data/warehouses/germany.txt
+USA,data/warehouses/usa.txt
+UK,data/warehouses/uk.txt
+Canada,data/warehouses/canada.txt
