@@ -29,6 +29,8 @@ class ColumnConfig:
     key_column: str | None = None
     value_column: str | None = None
     file_column: str | None = None
+    file_columns: list[str] | None = None
+    separator: str | None = None
 
 
 @dataclass(frozen=True)
@@ -84,13 +86,54 @@ class CsvDataGenerator:
         self.mapping_cache: dict[str, dict[str, str]] = {}
 
     def generate_rows(self) -> list[dict[str, str]]:
+        columns_by_name = {column.name: column for column in self.config.columns}
         rows: list[dict[str, str]] = []
         for row_index in range(self.config.row_count):
-            row: dict[str, str] = {}
+            values: dict[str, str] = {}
             for column in self.config.columns:
-                row[column.name] = self._generate_value(column, row, row_index)
-            rows.append(row)
+                self._ensure_value(column, values, row_index, columns_by_name, ())
+            rows.append({column.name: values[column.name] for column in self.config.columns})
         return rows
+
+    def _ensure_value(
+        self,
+        column: ColumnConfig,
+        row: dict[str, str],
+        row_index: int,
+        columns_by_name: dict[str, ColumnConfig],
+        pending: tuple[str, ...],
+    ) -> None:
+        if column.name in row:
+            return
+        if column.name in pending:
+            cycle = " -> ".join([*pending, column.name])
+            raise ValueError(f"Circular column dependency detected: {cycle}")
+
+        for dependency_name in self._dependencies(column):
+            if dependency_name in row:
+                continue
+            dependency = columns_by_name.get(dependency_name)
+            if dependency is None:
+                raise ValueError(
+                    f"Column '{column.name}' depends on unknown column '{dependency_name}'."
+                )
+            self._ensure_value(
+                dependency,
+                row,
+                row_index,
+                columns_by_name,
+                (*pending, column.name),
+            )
+
+        row[column.name] = self._generate_value(column, row, row_index)
+
+    @staticmethod
+    def _dependencies(column: ColumnConfig) -> tuple[str, ...]:
+        if column.type == "derived" and column.method == "email_from_name":
+            return ("first_name", "last_name")
+        if column.source_field is not None:
+            return (column.source_field,)
+        return ()
 
     def write_csv(self, rows: list[dict[str, str]]) -> Path:
         output_path = self.project_root / self.config.output_file
@@ -147,31 +190,51 @@ class CsvDataGenerator:
             column.source_field is None
             or column.mapping_file is None
             or column.key_column is None
-            or column.file_column is None
         ):
             raise ValueError(
-                f"random_from_mapped_file requires source_field, mapping_file, key_column, and file_column: {column.name}"
+                f"random_from_mapped_file requires source_field, mapping_file, key_column, and file_column or file_columns: {column.name}"
             )
 
+        file_columns = self._resolve_file_columns(column)
         source_value = row.get(column.source_field)
         if source_value is None:
             raise ValueError(
                 f"Column '{column.name}' depends on source field '{column.source_field}'."
             )
 
-        mapping = self._get_mapping(
-            mapping_file=column.mapping_file,
-            key_column=column.key_column,
-            value_column=column.file_column,
-        )
-        file_path = mapping.get(source_value)
-        if file_path is None:
-            raise ValueError(
-                f"Value '{source_value}' not found in mapping for column '{column.name}'."
+        values: list[str] = []
+        for file_column in file_columns:
+            mapping = self._get_mapping(
+                mapping_file=column.mapping_file,
+                key_column=column.key_column,
+                value_column=file_column,
             )
+            file_path = mapping.get(source_value)
+            if file_path is None:
+                raise ValueError(
+                    f"Value '{source_value}' not found in mapping for column '{column.name}'."
+                )
 
-        temp_column = ColumnConfig(name=column.name, type="random_from_file", file=file_path)
-        return self._random_from_file(temp_column)
+            temp_column = ColumnConfig(name=column.name, type="random_from_file", file=file_path)
+            values.append(self._random_from_file(temp_column))
+
+        separator = column.separator if column.separator is not None else " "
+        return separator.join(values)
+
+    @staticmethod
+    def _resolve_file_columns(column: ColumnConfig) -> list[str]:
+        if column.file_columns and column.file_column:
+            raise ValueError(
+                f"Use either file_column or file_columns, not both: {column.name}"
+            )
+        if column.file_columns:
+            return list(column.file_columns)
+        if column.file_column:
+            return [column.file_column]
+
+        raise ValueError(
+            f"random_from_mapped_file requires file_column or file_columns: {column.name}"
+        )
 
     def _sequence_value(self, column: ColumnConfig, row_index: int) -> str:
         start = column.start if column.start is not None else 1

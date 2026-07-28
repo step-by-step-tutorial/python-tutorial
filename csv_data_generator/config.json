@@ -4,45 +4,21 @@
   "seed": 42,
   "columns": [
     { "name": "order_id", "type": "sequence", "start": 1, "step": 1 },
-    { "name": "country", "type": "random_from_file", "file": "data/countries.txt" },
     {
-      "name": "customer_first_name",
+      "name": "customer_name",
       "type": "random_from_mapped_file",
       "source_field": "country",
       "mapping_file": "data/country_source_map.csv",
       "key_column": "country",
-      "file_column": "first_name_file"
+      "file_columns": ["first_name_file", "last_name_file"],
+      "separator": " "
     },
-    {
-      "name": "customer_last_name",
-      "type": "random_from_mapped_file",
-      "source_field": "country",
-      "mapping_file": "data/country_source_map.csv",
-      "key_column": "country",
-      "file_column": "last_name_file"
-    },
-    {
-      "name": "customer_phone",
-      "type": "random_from_mapped_file",
-      "source_field": "country",
-      "mapping_file": "data/country_source_map.csv",
-      "key_column": "country",
-      "file_column": "phone_file"
-    },
-    {
-      "name": "customer_address",
-      "type": "random_from_mapped_file",
-      "source_field": "country",
-      "mapping_file": "data/country_source_map.csv",
-      "key_column": "country",
-      "file_column": "address_file"
-    },
-    { "name": "product", "type": "random_from_file", "file": "data/product_names.txt" },
+    { "name": "product_name", "type": "random_from_file", "file": "data/product_names.txt" },
     {
       "name": "category",
       "type": "derived",
       "method": "lookup_from_csv",
-      "source_field": "product",
+      "source_field": "product_name",
       "mapping_file": "data/product_catalog.csv",
       "key_column": "product",
       "value_column": "category"
@@ -52,7 +28,7 @@
       "name": "unit_price",
       "type": "derived",
       "method": "lookup_from_csv",
-      "source_field": "product",
+      "source_field": "product_name",
       "mapping_file": "data/product_catalog.csv",
       "key_column": "product",
       "value_column": "unit_price"
@@ -62,6 +38,7 @@
       "type": "random_date",
       "date_start": "2026-01-05",
       "date_end": "2026-01-31"
-    }
+    },
+    { "name": "country", "type": "random_from_file", "file": "data/countries.txt" }
   ]
 }

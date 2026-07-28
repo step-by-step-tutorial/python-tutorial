@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from generator_service import normalize_for_email, GeneratorConfig, ColumnConfig, CsvDataGenerator
 
 
@@ -140,3 +142,105 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
     rows = generator.generate_rows()
 
     assert rows == [{"country": "Germany", "customer_name": "Hans"}]
+
+
+def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    names_dir = data_dir / "names"
+    names_dir.mkdir(parents=True)
+    (names_dir / "germany_first.txt").write_text("Hans\n", encoding="utf-8")
+    (names_dir / "germany_last.txt").write_text("Bauer\n", encoding="utf-8")
+    (data_dir / "country_source_map.csv").write_text(
+        "country,first_name_file,last_name_file\n"
+        "Germany,data/names/germany_first.txt,data/names/germany_last.txt\n",
+        encoding="utf-8",
+    )
+
+    config = GeneratorConfig(
+        row_count=1,
+        output_file="output/test.csv",
+        seed=1,
+        columns=[
+            ColumnConfig(name="country", type="fixed", value="Germany"),
+            ColumnConfig(
+                name="customer_name",
+                type="random_from_mapped_file",
+                source_field="country",
+                mapping_file="data/country_source_map.csv",
+                key_column="country",
+                file_columns=["first_name_file", "last_name_file"],
+                separator=" ",
+            ),
+        ],
+    )
+
+    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    rows = generator.generate_rows()
+
+    assert rows == [{"country": "Germany", "customer_name": "Hans Bauer"}]
+
+
+def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    names_dir = data_dir / "names"
+    names_dir.mkdir(parents=True)
+    (names_dir / "germany.txt").write_text("Hans\n", encoding="utf-8")
+    (data_dir / "countries.txt").write_text("Germany\n", encoding="utf-8")
+    (data_dir / "country_source_map.csv").write_text(
+        "country,name_file\nGermany,data/names/germany.txt\n",
+        encoding="utf-8",
+    )
+
+    config = GeneratorConfig(
+        row_count=1,
+        output_file="output/test.csv",
+        seed=1,
+        columns=[
+            ColumnConfig(
+                name="customer_name",
+                type="random_from_mapped_file",
+                source_field="country",
+                mapping_file="data/country_source_map.csv",
+                key_column="country",
+                file_column="name_file",
+            ),
+            ColumnConfig(name="country", type="random_from_file", file="data/countries.txt"),
+        ],
+    )
+
+    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    rows = generator.generate_rows()
+
+    assert list(rows[0]) == ["customer_name", "country"]
+    assert rows[0] == {"customer_name": "Hans", "country": "Germany"}
+
+
+def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
+    config = GeneratorConfig(
+        row_count=1,
+        output_file="output/test.csv",
+        columns=[
+            ColumnConfig(
+                name="left",
+                type="derived",
+                method="lookup_from_csv",
+                source_field="right",
+                mapping_file="data/map.csv",
+                key_column="key",
+                value_column="value",
+            ),
+            ColumnConfig(
+                name="right",
+                type="derived",
+                method="lookup_from_csv",
+                source_field="left",
+                mapping_file="data/map.csv",
+                key_column="key",
+                value_column="value",
+            ),
+        ],
+    )
+
+    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    with pytest.raises(ValueError, match="Circular column dependency"):
+        generator.generate_rows()
