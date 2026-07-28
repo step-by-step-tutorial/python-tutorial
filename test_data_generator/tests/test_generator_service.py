@@ -2,7 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from generator_service import normalize_for_email, GeneratorConfig, ColumnConfig, CsvDataGenerator
+from application_config import GeneratorConfig, ColumnConfig
+from columns import normalize_for_email
+from exceptions import DependencyError
+from generator import CsvDataGenerator
 
 
 def test_normalize_for_email_removes_special_characters() -> None:
@@ -241,6 +244,5 @@ def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
         ],
     )
 
-    generator = CsvDataGenerator(config=config, project_root=tmp_path)
-    with pytest.raises(ValueError, match="Circular column dependency"):
-        generator.generate_rows()
+    with pytest.raises(DependencyError, match="Circular column dependency"):
+        CsvDataGenerator(config=config, project_root=tmp_path)
