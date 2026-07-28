@@ -1,15 +1,13 @@
 import os
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+import time
 
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 SCRIPTS_DIR = Path(os.getenv("SCRIPTS_DIR", "scripts"))
 
-QUERY_DIR = f"{SCRIPTS_DIR}/{os.getenv("QUERY_DIR", "query")}"
-
-DATA_FILE_NAME = f"{RESOURCES_DIR}/{os.getenv("DATA_FILE_NAME", "sale_data.csv")}"
+DATA_FILE = f"{RESOURCES_DIR}/{os.getenv("DATA_FILE", "data.csv")}"
 
 SPARK_APPLICATION_NAME = os.getenv("SPARK_APPLICATION_NAME", "SALE_DISTRIBUTED_PROCESSING_PLATFORM")
 SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "local[*]")
@@ -38,4 +36,4 @@ DATAWAREHOUSE_PASSWORD = os.getenv("DATAWAREHOUSE_PASSWORD", "admin")
 
 
 def build_sale_datalake_output_uri() -> str:
-    return f"s3a://{DATALAKE_BUCKET_NAME}/{OUTPUT_DIR}"
+    return f"s3a://{DATALAKE_BUCKET_NAME}/{OUTPUT_DIR}/{time.time()}"

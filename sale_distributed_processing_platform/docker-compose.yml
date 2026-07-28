@@ -114,9 +114,7 @@ services:
     environment:
       RESOURCES_DIR: /app/resources
       OUTPUT_DIR: /app/output
-      SCRIPTS_DIR: /app/scripts
-      QUERY_DIR: query
-      DATA_FILE_NAME: sale_data.csv
+      DATA_FILE: data.csv
       SPARK_APPLICATION_NAME: SALE_DISTRIBUTED_PROCESSING_PLATFORM
       SPARK_MASTER_URL: spark://master:7077
       SPARK_DRIVER_HOST: application
@@ -138,8 +136,6 @@ services:
       DATAWAREHOUSE_PASSWORD: admin
     volumes:
       - ./resources:/app/resources
-      - ./ouput:/app/output
-      - ./scripts:/app/scripts
     depends_on:
       database:
         condition: service_healthy

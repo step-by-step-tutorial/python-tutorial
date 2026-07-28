@@ -21,10 +21,10 @@ def run() -> None:
 
     try:
         spark_session = bigdata_engine_session_factory.create_session()
-        logger.info("Reading sale data from %s", ec.DATA_FILE_NAME)
+        logger.info("Reading sale data from %s", ec.DATA_FILE)
         dataframe = sale_bigdata_service.read_sale_data_from_csv(
             connection=spark_session,
-            path=ec.DATA_FILE_NAME,
+            path=ec.DATA_FILE,
             schema=SCHEMA
         )
 
