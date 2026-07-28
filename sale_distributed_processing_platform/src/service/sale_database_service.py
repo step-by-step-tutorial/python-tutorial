@@ -15,10 +15,8 @@ class Queries:
 
 
 def populate_temporary_sale_table(dataframe: DataFrame) -> None:
-    execute_sql(Queries.TRUNCATE_SALE_STAGE_QUERY)
     (
-        dataframe
-        .write
+        dataframe.write
         .format("jdbc")
         .option("url", ec.DATABASE_URL)
         .option("dbtable", ec.DATABASE_SALE_STAGE_TABLE)
@@ -30,7 +28,7 @@ def populate_temporary_sale_table(dataframe: DataFrame) -> None:
     )
 
 
-def populate_sale_db() -> None:
+def populate_sale_tables() -> None:
     steps = [
         Queries.TRUNCATE_NORMALIZED_TABLES,
         Queries.INSERT_CUSTOMERS,
@@ -43,5 +41,6 @@ def populate_sale_db() -> None:
 
 
 def populate(df: DataFrame) -> None:
+    execute_sql(Queries.TRUNCATE_SALE_STAGE_QUERY)
     populate_temporary_sale_table(df)
-    populate_sale_db()
+    populate_sale_tables()

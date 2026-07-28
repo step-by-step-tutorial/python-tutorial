@@ -26,11 +26,6 @@ docker --version
 
 ```shell
 cd ./sale_distributed_processing_platform
-docker compose --file docker-compose-infrastructure.yml --project-name dev up --build -d
-```
-
-```shell
-cd ./sale_distributed_processing_platform
 pytest
 ```
 
@@ -46,16 +41,11 @@ pytest --cov --cov-report=html:report/coverage
 python -m http.server 8000 --directory ./report
 ```
 
-```shell
-cd ./sale_distributed_processing_platform
-docker compose --file docker-compose-infrastructure.yml --project-name dev down -v
-```
-
 ## LocalHost
 
 ```shell
 cd ./sale_distributed_processing_platform
-docker compose --file docker-compose-infrastructure.yml --project-name dev up --build -d
+docker compose --file docker-compose-infrastructure.yml --project-name test up --build -d
 ```
 
 
@@ -67,32 +57,43 @@ python ./src/main.py
 
 ```shell
 cd ./sale_distributed_processing_platform
-docker compose --file docker-compose-infrastructure.yml --project-name dev down -v
+docker compose --file docker-compose-infrastructure.yml --project-name test down -v
 ```
 
 ## Dockerization
 
 ```shell
+cd ./sale_distributed_processing_platform
 docker compose --file docker-compose.yml --project-name dev up --build -d
 ```
 
 ```shell
+cd ./sale_distributed_processing_platform
 docker compose --file docker-compose.yml --project-name dev down -v
+docker rmi samanalishiri/application:latest
 ```
 
 ## Services
 
-* Spark Master: http://localhost:8081
-* Spark Worker: http://localhost:8082
-* MinIO: http://localhost:9001
-* ClickHouse HTTP: http://localhost:8123
-* PostgreSQL: http://localhost:5432
+* Spark Master: http://localhost:8080
+* Spark Worker: http://localhost:8181
+* Datalake: http://localhost:9001
+  * Username: admin
+  * Password: administrator
+* Datawarehouse HTTP: http://localhost:8123
+  * Username: admin
+  * Password: admin
+* Database: http://localhost:8083
+  * Server: database:5432
+  * Username: admin
+  * Password: admin
+  * Database: sale_database
 
 ## Clean Directory
 
 ```shell
 rm ./output/*
 rm -rf ./report
-rm -rf ./src/sale-distributed-processing-platform.egg-info
+rm -rf ./src/sale_distributed_processing_platform.egg-info
 rm ./.coverage
 ```

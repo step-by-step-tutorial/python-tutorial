@@ -2,7 +2,10 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
 
-def clean_sale_data(dataframe: DataFrame) -> DataFrame:
+def clean_sale_data(dataframe: DataFrame | None) -> DataFrame:
+    if dataframe is None:
+        raise ValueError("Cannot clean sale data because the input dataframe is None.")
+
     average_unit_price = (
         dataframe
         .select(sf.avg("unit_price").alias("average_unit_price"))

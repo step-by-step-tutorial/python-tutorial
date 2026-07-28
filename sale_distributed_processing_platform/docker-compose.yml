@@ -2,8 +2,10 @@ name: dev
 services:
   database:
     image: postgres:16
+    hostname: database
+    container_name: database
     environment:
-      POSTGRES_DB: sale_oltp
+      POSTGRES_DB: sale_database
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
     ports:
@@ -12,19 +14,28 @@ services:
       - database_data:/var/lib/postgresql/data
       - ./scripts/create_postgres_tables.sql:/docker-entrypoint-initdb.d/create_postgres_tables.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready --username admin --dbname sale_oltp"]
+      test: ["CMD-SHELL", "pg_isready --username admin --dbname sale_database"]
       interval: 5s
       timeout: 5s
       retries: 20
+  databaseui:
+    image: adminer
+    container_name: databaseui
+    hostname: databaseui
+    restart: always
+    ports:
+      - "8083:8080" # UI
   datalake:
     image: minio/minio:latest
+    hostname: datalake
+    container_name: datalake
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: administrator
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000" #
+      - "9001:9001" # UI
     volumes:
       - datalake_data:/data
     healthcheck:
@@ -34,6 +45,8 @@ services:
       retries: 20
   datalake-init:
     image: minio/mc:latest
+    hostname: datalake-init
+    container_name: datalake-init
     depends_on:
       datalake:
         condition: service_healthy
@@ -43,17 +56,17 @@ services:
       - |
         mc alias set local http://datalake:9000 admin administrator
         mc mb --ignore-existing local/sale-datalake
-
   datawarehouse:
     image: clickhouse/clickhouse-server:latest
+    hostname: datawarehouse
+    container_name: datawarehouse
     environment:
-      CLICKHOUSE_DB: sale_warehouse
+      CLICKHOUSE_DB: sale_datawarehouse
       CLICKHOUSE_USER: admin
       CLICKHOUSE_PASSWORD: admin
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     ports:
-      - "8123:8123"
-      - "9002:9000"
+      - "8123:8123" # UI
     volumes:
       - datawarehouse_data:/var/lib/clickhouse
       - ./scripts/create_clickhouse_tables.sql:/docker-entrypoint-initdb.d/create_clickhouse_tables.sql
@@ -92,24 +105,26 @@ services:
     volumes:
       - "./resources:/resources"
   application:
+    image: samanalishiri/application:latest
     build:
       context: .
       dockerfile: Dockerfile
     container_name: application
     hostname: application
     environment:
-      RAW_SALE_DATA_FILE_PATH: /app/resources/sale_data.csv
-      RESOURCES_DIR: app/resources
-      OUTPUT_DIR: app/output
-      SQL_DIR: /app/scripts/query
-      SPARK_APPLICATION_NAME: sale-distributed-processing-platform
+      RESOURCES_DIR: /app/resources
+      OUTPUT_DIR: /app/output
+      SCRIPTS_DIR: /app/scripts
+      QUERY_DIR: query
+      DATA_FILE_NAME: sale_data.csv
+      SPARK_APPLICATION_NAME: SALE_DISTRIBUTED_PROCESSING_PLATFORM
       SPARK_MASTER_URL: spark://master:7077
-      SPARK_DRIVER_HOST: host.docker.internal
+      SPARK_DRIVER_HOST: application
       SPARK_DRIVER_BIND_ADDRESS: 0.0.0.0
-      DATABASE_URL: jdbc:postgresql://database:5432/sale_oltp
+      DATABASE_URL: jdbc:postgresql://database:5432/sale_database
       DATABASE_HOST: database
       DATABASE_PORT: 5432
-      DATABASE_NAME: sale_oltp
+      DATABASE_NAME: sale_database
       DATABASE_USER: admin
       DATABASE_PASSWORD: admin
       DATALAKE_ENDPOINT: http://datalake:9000
@@ -117,17 +132,19 @@ services:
       DATALAKE_SECRET_KEY: administrator
       DATALAKE_BUCKET_NAME: sale-datalake
       DATAWAREHOUSE_HOST: datawarehouse
-      DATAWAREHOUSE_HTTP_PORT: 8123
-      DATAWAREHOUSE_DATABASE: sale_warehouse
+      DATAWAREHOUSE_PORT: 8123
+      DATAWAREHOUSE_NAME: sale_datawarehouse
       DATAWAREHOUSE_USER: admin
       DATAWAREHOUSE_PASSWORD: admin
     volumes:
       - ./src:/app/src
-      - ./data:/app/data
+      - ./resources:/app/resources
       - ./ouput:/app/output
       - ./scripts:/app/scripts
     depends_on:
       database:
+        condition: service_healthy
+      datalake:
         condition: service_healthy
       datalake-init:
         condition: service_completed_successfully
@@ -135,7 +152,7 @@ services:
         condition: service_healthy
       master:
         condition: service_started
-    command: python -m main
+    command: sh -c "python -m src.main && tail -f /dev/null"
 
 volumes:
   database_data:

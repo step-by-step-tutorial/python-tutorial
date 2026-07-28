@@ -1,11 +1,11 @@
-name: dev
+name: test
 services:
   database:
     image: postgres:16
     hostname: database
     container_name: database
     environment:
-      POSTGRES_DB: sale_oltp
+      POSTGRES_DB: sale_database
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
     ports:
@@ -14,10 +14,17 @@ services:
       - database_data:/var/lib/postgresql/data
       - ./scripts/create_postgres_tables.sql:/docker-entrypoint-initdb.d/create_postgres_tables.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready --username admin --dbname sale_oltp"]
+      test: ["CMD-SHELL", "pg_isready --username admin --dbname sale_database"]
       interval: 5s
       timeout: 5s
       retries: 20
+  databaseui:
+    image: adminer
+    container_name: databaseui
+    hostname: databaseui
+    restart: always
+    ports:
+      - "8083:8080" # UI
   datalake:
     image: minio/minio:latest
     hostname: datalake
@@ -27,8 +34,8 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: administrator
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "9000:9000" #
+      - "9001:9001" # UI
     volumes:
       - datalake_data:/data
     healthcheck:
@@ -55,13 +62,12 @@ services:
     hostname: datawarehouse
     container_name: datawarehouse
     environment:
-      CLICKHOUSE_DB: sale_warehouse
+      CLICKHOUSE_DB: sale_datawarehouse
       CLICKHOUSE_USER: admin
       CLICKHOUSE_PASSWORD: admin
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     ports:
-      - "8123:8123"
-      - "9002:9000"
+      - "8123:8123" # UI
     volumes:
       - datawarehouse_data:/var/lib/clickhouse
       - ./scripts/create_clickhouse_tables.sql:/docker-entrypoint-initdb.d/create_clickhouse_tables.sql

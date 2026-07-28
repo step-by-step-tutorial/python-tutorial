@@ -13,12 +13,7 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
     logger.info("Starting Sale ETL Platform")
-
-    try:
-        sale_data_pipeline.run()
-    finally:
-        logger.info("Stopping Spark session")
-
+    sale_data_pipeline.run()
     logger.info("Sale ETL Platform finished")
 
 

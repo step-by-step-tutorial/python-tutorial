@@ -1,17 +1,16 @@
 import logging
 
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 
 from app_config import env_config as ec
 from app_config.sale_schema import SCHEMA
+from factory import bigdata_engine_session_factory
 from service import sale_bigdata_service
 from service import sale_database_service
 from service import sale_datalake_service
 from service import sale_datawarehouse_service
 from util.clean_sale_data_util import clean_sale_data
 from util.sale_data_transform_util import transform_sale_data
-from pyspark.sql import DataFrame, SparkSession
-from factory import bigdata_engine_session_factory
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +21,10 @@ def run() -> None:
 
     try:
         spark_session = bigdata_engine_session_factory.create_session()
-        logger.info("Reading sale data from %s", ec.RAW_SALE_DATA_FILE_PATH)
-        dataframe = sale_bigdata_service.read_sale_data(
+        logger.info("Reading sale data from %s", ec.DATA_FILE_NAME)
+        dataframe = sale_bigdata_service.read_sale_data_from_csv(
             connection=spark_session,
-            path=ec.RAW_SALE_DATA_FILE_PATH,
+            path=ec.DATA_FILE_NAME,
             schema=SCHEMA
         )
 
@@ -52,7 +51,14 @@ def run() -> None:
 
         logger.info("Sale ETL pipeline completed successfully")
     finally:
-        if dataframe:
-            dataframe.unpersist()
-        if spark_session:
-            spark_session.stop()
+        stop_spark_session(dataframe, spark_session)
+
+
+def stop_spark_session(dataframe: DataFrame | None, spark_session: SparkSession | None):
+    if dataframe:
+        dataframe.unpersist()
+    if spark_session:
+        spark_session.sparkContext.stop()
+        logger.info("Spark context stopped")
+        spark_session.stop()
+        logger.info("Spark session stopped")
