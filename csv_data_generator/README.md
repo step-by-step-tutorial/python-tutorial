@@ -21,11 +21,24 @@ Generate CSV test data from plain text source files, numeric/date generators, an
 ```text
 csv_data_generator/
   data/
+    addresses/  first_names/  last_names/  phones/
+    shopping/
+    hr/
   output/
   src/
   tests/
   config.json
+  config_online_shopping.json
+  config_hr.json
 ```
+
+One config file per dataset, named `config_<dataset>.json`. Pick one with `--config`.
+
+| Config | Output | Rows | Dataset |
+| --- | --- | --- | --- |
+| `config.json` | `output/generated_orders.csv` | 1000 | Minimal order sample |
+| `config_online_shopping.json` | `output/online_shopping_orders.csv` | 5000 | Online shopping orders |
+| `config_hr.json` | `output/hr_employees.csv` | 750 | HR employee records |
 
 ## Prepare Environment
 
@@ -49,7 +62,11 @@ pytest
 cd ./csv_data_generator
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\csv_data_generator
 python ./src/main.py --config ./config.json
+python ./src/main.py --config ./config_online_shopping.json
+python ./src/main.py --config ./config_hr.json
 ```
+
+Paths inside a config file are resolved relative to the folder holding that config file.
 
 ## Configuration
 
@@ -146,12 +163,59 @@ order_id,customer_name,product_name,category,quantity,unit_price,order_date,coun
 2,Michael Wilson,Microphone,Electronics,5,130,2026-01-07,USA
 ```
 
+## Datasets
+
+### Online Shopping — `config_online_shopping.json`
+
+```text
+order_id,order_date,sales_channel,customer_id,first_name,last_name,email,phone,
+shipping_address,country,currency,warehouse,product_name,category,unit_price,quantity,
+coupon_code,payment_method,shipping_method,delivery_days,order_status
+```
+
+Name, phone, address, and warehouse all follow the row's `country`, and `currency` is looked up
+from it. `product_name` draws from all 10,000 catalog products, with `category` and `unit_price`
+looked up from the catalog. About 40% of rows carry no coupon (`NONE`), and `Delivered` is
+weighted higher than other statuses by repeating it in `order_statuses.txt`.
+
+### HR — `config_hr.json`
+
+```text
+employee_id,first_name,last_name,work_email,phone,home_address,country,office,timezone,
+department,job_title,seniority_level,salary_grade,base_salary_usd,bonus_percent,
+employment_type,work_mode,employment_status,hire_date,performance_rating,manager_id
+```
+
+`job_title` is drawn from the file mapped to the row's `department`, so titles never leak across
+departments. `office` and `timezone` follow `country`; `salary_grade` and `base_salary_usd` are
+looked up from `seniority_level`. `seniority_level`, `employment_type`, and `job_title` are drawn
+independently, so combinations such as a Junior Software Architect do occur — map the level or the
+title through a mapping file if a dataset needs those to agree.
+
 ## Data Files
 
 | File | Contents |
 | --- | --- |
-| `data/countries.txt` | Countries wired up in `data/country_source_map.csv` (Germany, USA, UK, Canada) |
+| `data/countries.txt` | Countries wired up in the mapping files (Germany, USA, UK, Canada) |
 | `data/countries_iso.txt` | All 249 ISO 3166-1 country names, for configs that do not need per-country source files |
 | `data/country_source_map.csv` | Per-country first name, last name, phone, and address files |
-| `data/product_names.txt` | Product pool the `product_name` column draws from |
+| `data/country_profile_map.csv` | Per-country `currency_code` and `timezone` |
+| `data/product_names.txt` | Product pool the `product_name` column draws from (all 10,000 catalog products) |
 | `data/product_catalog.csv` | 10,000 products with `category` and `unit_price`, keyed by `product` |
+| `data/shopping/sales_channels.txt` | Web Store, iOS App, Marketplace, ... |
+| `data/shopping/payment_methods.txt` | Credit Card, PayPal, Klarna, ... |
+| `data/shopping/shipping_methods.txt` | Standard, Express, Pickup Point, ... |
+| `data/shopping/order_statuses.txt` | Order lifecycle states, `Delivered` weighted |
+| `data/shopping/coupon_codes.txt` | Coupon codes plus repeated `NONE` entries |
+| `data/shopping/country_warehouse_map.csv` | Country to warehouse file |
+| `data/shopping/warehouses/*.txt` | Warehouses per country |
+| `data/hr/departments.txt` | 10 departments |
+| `data/hr/department_job_map.csv` | Department to job title file |
+| `data/hr/job_titles/*.txt` | Job titles per department |
+| `data/hr/seniority_levels.txt` | Intern through Director |
+| `data/hr/salary_bands.csv` | Seniority level to `salary_grade` and `base_salary_usd` |
+| `data/hr/employment_types.txt` | Full-time, Contract, Internship, ... |
+| `data/hr/work_modes.txt` | On-site, Hybrid, Remote |
+| `data/hr/employment_statuses.txt` | Active, Probation, Notice Period, ... |
+| `data/hr/country_office_map.csv` | Country to office file |
+| `data/hr/offices/*.txt` | Offices per country |

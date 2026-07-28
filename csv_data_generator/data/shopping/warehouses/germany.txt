@@ -1,0 +1,4 @@
+DE-BER Berlin Fulfilment Center
+DE-MUC Munich Warehouse
+DE-HAM Hamburg Distribution Hub
+DE-FRA Frankfurt Returns Center

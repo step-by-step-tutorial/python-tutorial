@@ -1,0 +1,7 @@
+Product Manager
+Product Owner
+Business Analyst
+UX Designer
+UI Designer
+UX Researcher
+Technical Writer

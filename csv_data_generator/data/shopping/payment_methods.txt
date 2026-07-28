@@ -1,0 +1,10 @@
+Credit Card
+Debit Card
+PayPal
+Bank Transfer
+Apple Pay
+Google Pay
+Klarna
+Gift Card
+Cash on Delivery
+Store Credit

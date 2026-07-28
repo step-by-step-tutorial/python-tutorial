@@ -1,0 +1,8 @@
+Intern
+Junior
+Mid
+Senior
+Lead
+Principal
+Manager
+Director

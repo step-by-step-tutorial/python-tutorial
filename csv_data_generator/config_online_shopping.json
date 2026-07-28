@@ -1,0 +1,97 @@
+{
+  "row_count": 5000,
+  "output_file": "output/online_shopping_orders.csv",
+  "seed": 2026,
+  "columns": [
+    { "name": "order_id", "type": "sequence", "start": 100001, "step": 1 },
+    {
+      "name": "order_date",
+      "type": "random_date",
+      "date_start": "2026-01-01",
+      "date_end": "2026-06-30"
+    },
+    { "name": "sales_channel", "type": "random_from_file", "file": "data/shopping/sales_channels.txt" },
+    { "name": "customer_id", "type": "random_int", "min": 100000, "max": 999999 },
+    {
+      "name": "first_name",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_column": "first_name_file"
+    },
+    {
+      "name": "last_name",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_column": "last_name_file"
+    },
+    {
+      "name": "email",
+      "type": "derived",
+      "method": "email_from_name",
+      "domain": "example-shop.com"
+    },
+    {
+      "name": "phone",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_column": "phone_file"
+    },
+    {
+      "name": "shipping_address",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_column": "address_file"
+    },
+    { "name": "country", "type": "random_from_file", "file": "data/countries.txt" },
+    {
+      "name": "currency",
+      "type": "derived",
+      "method": "lookup_from_csv",
+      "source_field": "country",
+      "mapping_file": "data/country_profile_map.csv",
+      "key_column": "country",
+      "value_column": "currency_code"
+    },
+    {
+      "name": "warehouse",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/shopping/country_warehouse_map.csv",
+      "key_column": "country",
+      "file_column": "warehouse_file"
+    },
+    { "name": "product_name", "type": "random_from_file", "file": "data/product_names.txt" },
+    {
+      "name": "category",
+      "type": "derived",
+      "method": "lookup_from_csv",
+      "source_field": "product_name",
+      "mapping_file": "data/product_catalog.csv",
+      "key_column": "product",
+      "value_column": "category"
+    },
+    {
+      "name": "unit_price",
+      "type": "derived",
+      "method": "lookup_from_csv",
+      "source_field": "product_name",
+      "mapping_file": "data/product_catalog.csv",
+      "key_column": "product",
+      "value_column": "unit_price"
+    },
+    { "name": "quantity", "type": "random_int", "min": 1, "max": 6 },
+    { "name": "coupon_code", "type": "random_from_file", "file": "data/shopping/coupon_codes.txt" },
+    { "name": "payment_method", "type": "random_from_file", "file": "data/shopping/payment_methods.txt" },
+    { "name": "shipping_method", "type": "random_from_file", "file": "data/shopping/shipping_methods.txt" },
+    { "name": "delivery_days", "type": "random_int", "min": 1, "max": 10 },
+    { "name": "order_status", "type": "random_from_file", "file": "data/shopping/order_statuses.txt" }
+  ]
+}

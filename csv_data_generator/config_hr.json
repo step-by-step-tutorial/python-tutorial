@@ -1,0 +1,104 @@
+{
+  "row_count": 750,
+  "output_file": "output/hr_employees.csv",
+  "seed": 7,
+  "columns": [
+    { "name": "employee_id", "type": "sequence", "start": 5001, "step": 1 },
+    {
+      "name": "first_name",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_column": "first_name_file"
+    },
+    {
+      "name": "last_name",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_column": "last_name_file"
+    },
+    {
+      "name": "work_email",
+      "type": "derived",
+      "method": "email_from_name",
+      "domain": "example-corp.com"
+    },
+    {
+      "name": "phone",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_column": "phone_file"
+    },
+    {
+      "name": "home_address",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_column": "address_file"
+    },
+    { "name": "country", "type": "random_from_file", "file": "data/countries.txt" },
+    {
+      "name": "office",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/hr/country_office_map.csv",
+      "key_column": "country",
+      "file_column": "office_file"
+    },
+    {
+      "name": "timezone",
+      "type": "derived",
+      "method": "lookup_from_csv",
+      "source_field": "country",
+      "mapping_file": "data/country_profile_map.csv",
+      "key_column": "country",
+      "value_column": "timezone"
+    },
+    { "name": "department", "type": "random_from_file", "file": "data/hr/departments.txt" },
+    {
+      "name": "job_title",
+      "type": "random_from_mapped_file",
+      "source_field": "department",
+      "mapping_file": "data/hr/department_job_map.csv",
+      "key_column": "department",
+      "file_column": "job_title_file"
+    },
+    { "name": "seniority_level", "type": "random_from_file", "file": "data/hr/seniority_levels.txt" },
+    {
+      "name": "salary_grade",
+      "type": "derived",
+      "method": "lookup_from_csv",
+      "source_field": "seniority_level",
+      "mapping_file": "data/hr/salary_bands.csv",
+      "key_column": "seniority_level",
+      "value_column": "salary_grade"
+    },
+    {
+      "name": "base_salary_usd",
+      "type": "derived",
+      "method": "lookup_from_csv",
+      "source_field": "seniority_level",
+      "mapping_file": "data/hr/salary_bands.csv",
+      "key_column": "seniority_level",
+      "value_column": "base_salary_usd"
+    },
+    { "name": "bonus_percent", "type": "random_int", "min": 0, "max": 25 },
+    { "name": "employment_type", "type": "random_from_file", "file": "data/hr/employment_types.txt" },
+    { "name": "work_mode", "type": "random_from_file", "file": "data/hr/work_modes.txt" },
+    { "name": "employment_status", "type": "random_from_file", "file": "data/hr/employment_statuses.txt" },
+    {
+      "name": "hire_date",
+      "type": "random_date",
+      "date_start": "2015-01-05",
+      "date_end": "2026-06-30"
+    },
+    { "name": "performance_rating", "type": "random_int", "min": 1, "max": 5 },
+    { "name": "manager_id", "type": "random_int", "min": 5001, "max": 5060 }
+  ]
+}

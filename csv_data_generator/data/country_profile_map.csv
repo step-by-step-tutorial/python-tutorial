@@ -1,0 +1,5 @@
+country,currency_code,timezone
+Germany,EUR,Europe/Berlin
+USA,USD,America/New_York
+UK,GBP,Europe/London
+Canada,CAD,America/Toronto

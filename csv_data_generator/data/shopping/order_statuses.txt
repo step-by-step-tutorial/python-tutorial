@@ -1,0 +1,14 @@
+Pending Payment
+Paid
+Processing
+Packed
+Shipped
+Out for Delivery
+Delivered
+Delivered
+Delivered
+Cancelled
+Returned
+Refunded
+On Hold
+Awaiting Pickup

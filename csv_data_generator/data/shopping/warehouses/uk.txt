@@ -1,0 +1,4 @@
+UK-LON London Fulfilment Center
+UK-MAN Manchester Warehouse
+UK-BHM Birmingham Distribution Hub
+UK-LDS Leeds Returns Center

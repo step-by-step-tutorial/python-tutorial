@@ -1,0 +1,9 @@
+seniority_level,salary_grade,base_salary_usd
+Intern,G1,24000
+Junior,G2,52000
+Mid,G3,74000
+Senior,G4,102000
+Lead,G5,124000
+Principal,G6,148000
+Manager,G7,132000
+Director,G8,176000
