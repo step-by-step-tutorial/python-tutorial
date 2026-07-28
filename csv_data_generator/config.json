@@ -1,0 +1,15 @@
+{
+  "row_count": 25,
+  "output_file": "output/generated_data.csv",
+  "seed": 42,
+  "columns": [
+    { "name": "first_name", "type": "random_from_file", "file": "data/first_names.txt" },
+    { "name": "last_name", "type": "random_from_file", "file": "data/last_names.txt" },
+    { "name": "email", "type": "derived", "method": "email_from_name", "domain": "example.com" },
+    { "name": "phone", "type": "random_from_file", "file": "data/phones.txt" },
+    { "name": "address", "type": "random_from_file", "file": "data/addresses.txt" },
+    { "name": "product_name", "type": "random_from_file", "file": "data/product_names.txt" },
+    { "name": "product_group", "type": "random_from_file", "file": "data/product_groups.txt" },
+    { "name": "country", "type": "fixed", "value": "Germany" }
+  ]
+}
