@@ -88,7 +88,7 @@ services:
       - "7077:7077"   # master RPC
       - "8080:8080"   # master UI
     volumes:
-      - "./resources:/resources"
+      - "./resources:/app/resources"
   worker:
     build:
       context: .
@@ -103,7 +103,7 @@ services:
     ports:
       - "8081:8081"   # worker UI
     volumes:
-      - "./resources:/resources"
+      - "./resources:/app/resources"
   application:
     image: samanalishiri/application:latest
     build:
@@ -137,7 +137,6 @@ services:
       DATAWAREHOUSE_USER: admin
       DATAWAREHOUSE_PASSWORD: admin
     volumes:
-      - ./src:/app/src
       - ./resources:/app/resources
       - ./ouput:/app/output
       - ./scripts:/app/scripts
