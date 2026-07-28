@@ -1,0 +1,5 @@
+country,first_name_file,last_name_file,phone_file,address_file
+Germany,data/first_names/germany.txt,data/last_names/germany.txt,data/phones/germany.txt,data/addresses/germany.txt
+USA,data/first_names/usa.txt,data/last_names/usa.txt,data/phones/usa.txt,data/addresses/usa.txt
+UK,data/first_names/uk.txt,data/last_names/uk.txt,data/phones/uk.txt,data/addresses/uk.txt
+Canada,data/first_names/canada.txt,data/last_names/canada.txt,data/phones/canada.txt,data/addresses/canada.txt
