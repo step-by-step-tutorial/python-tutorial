@@ -140,6 +140,11 @@ python ./src/main.py --config ./config_hr.json
 python ./src/main.py --help
 ```
 
+```shell
+cd ./test_data_generator
+python ./src/api.py 
+```
+
 
 The output file is overwritten on every run, and `output/` is created if missing. Generated CSVs are
 git-ignored, so the repository keeps the inputs, not the results.
@@ -244,7 +249,7 @@ the random draws consume that file's lines. Remove `seed` for fresh data on ever
 ```json
 {
   "row_count": 10,
-  "output_file": "output/generated_orders.csv",
+  "output_file": "output/sales.csv",
   "seed": 42,
   "columns": [
     { "name": "order_id", "type": "sequence", "start": 1, "step": 1 },
