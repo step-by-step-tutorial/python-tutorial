@@ -1,11 +1,43 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "sale_distributed_processing_platform"
 version = "1.0.0"
+description = "Integrated data engineering, machine learning and MLOps platform"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas",
+    "pyarrow",
+    "pyspark",
+    "sqlalchemy",
+    "psycopg2-binary",
+    "boto3",
+    "clickhouse-connect",
+    "confluent-kafka",
+    "scikit-learn",
+    "joblib",
+    "torch",
+    "mlflow",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "prometheus-client"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-html"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
 
 [tool.pytest.ini_options]
-pythonpath = [
-    "src"
-]
-testpaths = [
-    "tests"
-]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"

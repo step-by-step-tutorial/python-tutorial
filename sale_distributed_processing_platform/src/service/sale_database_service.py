@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame
 
 from app_config import env_config as ec
 from util.database_util import execute_sql
-from util.file_util import load_sql_query
+from util.text_file_utils import load_sql_query
 
 
 class Queries:
@@ -18,7 +18,7 @@ def populate_temporary_sale_table(dataframe: DataFrame) -> None:
     (
         dataframe.write
         .format("jdbc")
-        .option("url", ec.DATABASE_URL)
+        .option("url", ec.DATABASE_JDBC_URL)
         .option("dbtable", ec.DATABASE_SALE_STAGE_TABLE)
         .option("user", ec.DATABASE_USER)
         .option("password", ec.DATABASE_PASSWORD)

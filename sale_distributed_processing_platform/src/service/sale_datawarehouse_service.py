@@ -1,7 +1,7 @@
 from pandas import DataFrame
 
 from factory import datawarehouse_connection_factory
-from util.file_util import load_sql_query
+from util.text_file_utils import load_sql_query
 
 
 class Queries:

@@ -45,7 +45,7 @@ python -m http.server 8000 --directory ./report
 
 ```shell
 cd ./sale_distributed_processing_platform
-docker compose --file docker-compose-infrastructure.yml --project-name test up --build -d
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
 ```
 
 
@@ -57,19 +57,19 @@ python ./src/main.py
 
 ```shell
 cd ./sale_distributed_processing_platform
-docker compose --file docker-compose-infrastructure.yml --project-name test down -v
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
 ```
 
 ## Dockerization
 
 ```shell
 cd ./sale_distributed_processing_platform
-docker compose --file docker-compose.yml --project-name dev up --build -d
+docker compose --file docker-compose.yml --project-name dev --env-file .env.dev up --build -d
 ```
 
 ```shell
 cd ./sale_distributed_processing_platform
-docker compose --file docker-compose.yml --project-name dev down -v
+docker compose --file docker-compose.yml --project-name dev --env-file .env.dev down -v
 docker rmi samanalishiri/application:latest
 ```
 
