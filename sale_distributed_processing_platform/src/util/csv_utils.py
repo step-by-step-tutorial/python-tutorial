@@ -23,11 +23,11 @@ def read_csv_file(path: Path) -> pd.DataFrame:
     return df
 
 
-def validate_columns(df: DataFrame, required_columns: set[str]) -> None:
-    if df is None or required_columns is None:
+def must_has_columns(df: DataFrame, columns: set[str]) -> None:
+    if df is None or columns is None:
         raise ValueError("required columns or dataframe is None")
 
-    missing_columns = required_columns.difference(df.columns)
+    missing_columns = columns.difference(df.columns)
 
     if missing_columns:
         raise ValueError(f"Missing required columns: {sorted(missing_columns)}")

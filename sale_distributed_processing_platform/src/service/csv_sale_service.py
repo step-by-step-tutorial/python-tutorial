@@ -4,7 +4,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from app_config.sale_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
-from util.csv_utils import validate_columns, read_csv_file
+from util.csv_utils import must_has_columns, read_csv_file
 from util.datframe_utils import (
     remove_duplicates,
     convert_numeric_column,
@@ -14,9 +14,9 @@ from util.datframe_utils import (
 )
 
 
-def read_sale_data_csv(csv_path: Path) -> pd.DataFrame:
-    df = read_csv_file(csv_path)
-    validate_columns(df, SALE_REQUIRED_COLUMNS)
+def read_sale_data_csv(path: Path) -> pd.DataFrame:
+    df = read_csv_file(path)
+    must_has_columns(df, SALE_REQUIRED_COLUMNS)
     return df
 
 
@@ -31,7 +31,7 @@ def clean_sale_data(dataframe: DataFrame) -> DataFrame:
     df = convert_datetime_column(df, SALE_COLUMNS.ORDER_DATE)
 
     df = reset_index(
-        dataframe=df,
+        df=df,
         conditions=[
             df[SALE_COLUMNS.ORDER_DATE].notna(),
             df[SALE_COLUMNS.QUANTITY] > 0,
@@ -42,7 +42,7 @@ def clean_sale_data(dataframe: DataFrame) -> DataFrame:
     return df
 
 
-def transform_sale_data(dataframe: pd.DataFrame) -> pd.DataFrame:
+def enrich_sale_data(dataframe: pd.DataFrame) -> pd.DataFrame:
     df = dataframe.copy()
     df[SALE_COLUMNS.TOTAL_PRICE] = (df[SALE_COLUMNS.QUANTITY] * df[SALE_COLUMNS.UNIT_PRICE]).round(2)
     df[SALE_COLUMNS.YEAR] = df[SALE_COLUMNS.ORDER_DATE].dt.year
@@ -51,8 +51,18 @@ def transform_sale_data(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_revenue_by_category(df: pd.DataFrame) -> pd.DataFrame:
-    return sum_by_group(df, SALE_COLUMNS.CATEGORY, original_field=SALE_COLUMNS.TOTAL_PRICE, alias_field="revenue")
+    return sum_by_group(
+        df=df,
+        group_field=SALE_COLUMNS.CATEGORY,
+        original_field=SALE_COLUMNS.TOTAL_PRICE,
+        alias_field=SALE_COLUMNS.REVENUE
+    )
 
 
 def get_revenue_by_country(df: pd.DataFrame) -> pd.DataFrame:
-    return sum_by_group(df, SALE_COLUMNS.COUNTRY, original_field=SALE_COLUMNS.TOTAL_PRICE, alias_field="revenue")
+    return sum_by_group(
+        df=df,
+        group_field=SALE_COLUMNS.COUNTRY,
+        original_field=SALE_COLUMNS.TOTAL_PRICE,
+        alias_field=SALE_COLUMNS.REVENUE
+    )

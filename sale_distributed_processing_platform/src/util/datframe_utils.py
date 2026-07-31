@@ -38,16 +38,11 @@ def convert_datetime_column(df: DataFrame, column: str) -> DataFrame:
     return df
 
 
-def reset_index(dataframe: DataFrame, conditions: Iterable[pd.Series]) -> DataFrame:
-    return dataframe.loc[reduce(and_, conditions)].reset_index(drop=True)
+def reset_index(df: DataFrame, conditions: Iterable[pd.Series]) -> DataFrame:
+    return df.loc[reduce(and_, conditions)].reset_index(drop=True)
 
 
-def sum_by_group(
-        df: pd.DataFrame,
-        group_field: str,
-        original_field: str,
-        alias_field: str
-) -> pd.DataFrame:
+def sum_by_group(df: pd.DataFrame, group_field: str, original_field: str, alias_field: str) -> pd.DataFrame:
     return (
         df.groupby(group_field, as_index=False)[original_field]
         .sum()

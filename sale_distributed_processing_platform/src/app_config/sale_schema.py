@@ -16,6 +16,7 @@ class SaleColumns:
     TOTAL_PRICE: str = "total_price"
     YEAR: str = "year"
     MONTH: str = "month"
+    REVENUE: str = "revenue"
 
 
 SALE_COLUMNS = SaleColumns()
