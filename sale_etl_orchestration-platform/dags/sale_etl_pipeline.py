@@ -5,7 +5,7 @@ from airflow.sdk import DAG
 
 import config
 from clean_sale_data_util import clean_sale_data
-from service.sale_datalake_service import SaleDataLakeService
+from service.datalake_sale_service import SaleDataLakeService
 from file_utils import read_csv
 from database_service import DatabaseService
 from sale_fact_service import SaleFactService

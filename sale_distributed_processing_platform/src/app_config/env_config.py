@@ -24,7 +24,7 @@ DATABASE_NAME = os.getenv("DATABASE_NAME", "sale_database")
 DATABASE_USER = os.getenv("DATABASE_USER", "admin")
 DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "admin")
 DATABASE_DRIVER = os.getenv("DATABASE_DRIVER", "org.postgresql.Driver")
-DATABASE_SALE_STAGE_TABLE = "sale_stage"
+DATABASE_STAGE_TABLE_NAME = "sale_stage"
 DATABASE_JDBC_URL = os.getenv("DATABASE_JDBC_URL", f"jdbc:postgresql://{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}")
 DATABASE_SQLALCHEMY_URL = os.getenv("DATABASE_SQLALCHEMY_URL",
                                     f"postgresql+psycopg2://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}")

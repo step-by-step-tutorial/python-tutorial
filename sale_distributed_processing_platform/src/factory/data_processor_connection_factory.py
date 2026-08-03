@@ -10,7 +10,7 @@ SPARK_JARS = [
 ]
 
 
-def create_session() -> SparkSession | None:
+def create_connection() -> SparkSession:
     try:
         session = (
             SparkSession.builder
@@ -35,4 +35,4 @@ def create_session() -> SparkSession | None:
     except Exception as e:
         print(
             f"Application [{ec.SPARK_APPLICATION_NAME}] could not established a connection to Spark at [{ec.SPARK_DRIVER_HOST}] due to {str(e)}")
-        return None
+        raise

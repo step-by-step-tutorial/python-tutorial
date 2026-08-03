@@ -4,23 +4,25 @@ import pandas as pd
 from pandas import DataFrame
 
 from app_config.sale_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
-from util.csv_utils import must_has_columns, read_csv_file
-from util.datframe_utils import (
+from util.csv_utils import read_csv_file
+from util.pandas_dataframe_utils import (
     remove_duplicates,
     convert_numeric_column,
     fill_missing_by_group_average,
     fill_missing_by_column_average,
-    convert_datetime_column, reset_index, sum_by_group
+    convert_datetime_column,
+    reset_index, sum_by_group,
+    requires_column
 )
 
 
-def read_sale_data(path: Path) -> pd.DataFrame:
+def read_data(path: Path) -> pd.DataFrame:
     df = read_csv_file(path)
-    must_has_columns(df, SALE_REQUIRED_COLUMNS)
+    requires_column(df, SALE_REQUIRED_COLUMNS)
     return df
 
 
-def clean_sale_data(dataframe: DataFrame) -> DataFrame:
+def clean_data(dataframe: DataFrame) -> DataFrame:
     df = dataframe.copy()
 
     df = remove_duplicates(df, SALE_COLUMNS.ORDER_ID)
@@ -42,7 +44,7 @@ def clean_sale_data(dataframe: DataFrame) -> DataFrame:
     return df
 
 
-def enrich_sale_data(dataframe: pd.DataFrame) -> pd.DataFrame:
+def enrich_data(dataframe: pd.DataFrame) -> pd.DataFrame:
     df = dataframe.copy()
     df[SALE_COLUMNS.TOTAL_PRICE] = (df[SALE_COLUMNS.QUANTITY] * df[SALE_COLUMNS.UNIT_PRICE]).round(2)
     df[SALE_COLUMNS.YEAR] = df[SALE_COLUMNS.ORDER_DATE].dt.year

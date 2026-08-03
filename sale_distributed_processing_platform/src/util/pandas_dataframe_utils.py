@@ -50,3 +50,13 @@ def sum_by_group(df: pd.DataFrame, group_field: str, original_field: str, alias_
         .sort_values(alias_field, ascending=False)
         .reset_index(drop=True)
     )
+
+
+def requires_column(df: pd.DataFrame, columns: set[str]) -> None:
+    if df is None or columns is None:
+        raise ValueError("required columns or dataframe is None")
+
+    missing_columns = columns.difference(df.columns)
+
+    if missing_columns:
+        raise ValueError(f"Missing required columns: {sorted(missing_columns)}")

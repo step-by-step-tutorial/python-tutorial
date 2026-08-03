@@ -4,12 +4,10 @@ from pyspark.sql import DataFrame, SparkSession
 
 from app_config import env_config as ec
 from app_config.sale_schema import SCHEMA
-from factory import bigdata_engine_session_factory
-from service import spark_sale_service
 from service import database_sale_service
-from service import sale_datalake_service
+from service import datalake_sale_service
 from service import sale_datawarehouse_service
-from util.clean_sale_data_util import clean_sale_data
+from service import spark_sale_service
 
 logger = logging.getLogger(__name__)
 
@@ -19,26 +17,21 @@ def run() -> None:
     dataframe: DataFrame | None = None
 
     try:
-        spark_session = bigdata_engine_session_factory.create_session()
         logger.info("Reading sale data from %s", ec.DATA_FILE)
-        dataframe = spark_sale_service.read_sale_data_from_csv(
-            connection=spark_session,
-            path=ec.DATA_FILE,
-            schema=SCHEMA
-        )
+        dataframe = spark_sale_service.read_data(path=ec.DATA_FILE, schema=SCHEMA)
 
         logger.info("Cleaning sale data")
-        cleaned_dataframe = clean_sale_data(dataframe)
+        cleaned_dataframe = spark_sale_service.clean_data(dataframe)
 
         logger.info("Transforming sale data")
-        transformed_dataframe = spark_sale_service.transform_sale_data(cleaned_dataframe)
+        transformed_dataframe = spark_sale_service.enrich_data(cleaned_dataframe)
         transformed_dataframe.cache()
 
         logger.info("Storing sale data in PostgreSQL")
         database_sale_service.populate(transformed_dataframe)
 
         logger.info("Storing curated sale data in datalake")
-        sale_datalake_service.overwrite(transformed_dataframe)
+        datalake_sale_service.overwrite(transformed_dataframe)
 
         logger.info("Storing sale fact data in data warehouse")
         ordered_dataframe = transformed_dataframe.orderBy("order_id")

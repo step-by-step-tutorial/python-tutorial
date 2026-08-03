@@ -1,5 +1,4 @@
 from pathlib import Path
-from unittest.mock import call
 
 import pandas as pd
 import pytest
@@ -7,7 +6,7 @@ from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 from pytest import MonkeyPatch
 
-from app_config.sale_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
+from app_config.sale_schema import SALE_COLUMNS
 from service import csv_sale_service as system_under_test
 
 
@@ -81,16 +80,16 @@ class TestReadSaleDataCsv:
         def mock_read_csv_file(path: Path) -> DataFrame:
             return dataframe
 
-        def mock_must_has_columns(df: DataFrame, columns: set[str]) -> None:
+        def mock_requires_column(df: DataFrame, columns: set[str]) -> None:
             pass
 
         monkeypatch.setattr(system_under_test, "read_csv_file", mock_read_csv_file)
-        monkeypatch.setattr(system_under_test, "must_has_columns", mock_must_has_columns)
+        monkeypatch.setattr(system_under_test, "requires_column", mock_requires_column)
 
         given_path = Path("resources/fake.csv")
 
         # When
-        actual = system_under_test.read_sale_data(given_path)
+        actual = system_under_test.read_data(given_path)
 
         # Then
         assert actual is dataframe
@@ -107,7 +106,7 @@ class TestReadSaleDataCsv:
 
         # When
         with pytest.raises(FileNotFoundError) as actual:
-            system_under_test.read_sale_data(given_csv_path)
+            system_under_test.read_data(given_csv_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -121,18 +120,18 @@ class TestReadSaleDataCsv:
         def mock_read_csv_file(path: Path) -> DataFrame:
             return dataframe
 
-        def mock_must_has_columns(df: DataFrame, columns: set[str]) -> None:
+        def mock_requires_column(df: DataFrame, columns: set[str]) -> None:
             raise ValueError(given_error_message)
 
         monkeypatch.setattr(system_under_test, "read_csv_file", mock_read_csv_file)
-        monkeypatch.setattr(system_under_test, "must_has_columns", mock_must_has_columns)
+        monkeypatch.setattr(system_under_test, "requires_column", mock_requires_column)
 
         given_csv_path = Path("resources/invalid.csv")
         given_error_message = "Missing required columns"
 
         # When
         with pytest.raises(ValueError) as actual:
-            system_under_test.read_sale_data(given_csv_path)
+            system_under_test.read_data(given_csv_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -143,8 +142,7 @@ class TestCleanSaleData:
     def test_should_call_cleaning_functions_with_expected_arguments(self, mocker, dataframe: DataFrame) -> None:
         # Given
         mock_remove_duplicates = mocker.patch.object(
-            system_under_test, "remove_duplicates", return_value=dataframe
-        )
+            system_under_test, "remove_duplicates", return_value=dataframe)
         mock_convert_numeric_column = mocker.patch.object(
             system_under_test, "convert_numeric_column", return_value=dataframe
         )
@@ -162,7 +160,7 @@ class TestCleanSaleData:
         )
 
         # When
-        system_under_test.clean_sale_data(dataframe)
+        system_under_test.clean_data(dataframe)
 
         # Then
         assert mock_remove_duplicates.call_count == 1
@@ -189,7 +187,7 @@ class TestCleanSaleData:
         mocker.patch.object(system_under_test, "reset_index", side_effect=input_output_dataframe)
 
         # When
-        actual = system_under_test.clean_sale_data(given_original_dataframe)
+        actual = system_under_test.clean_data(given_original_dataframe)
 
         # Then
         assert actual is given_copied_dataframe
@@ -211,7 +209,7 @@ class TestCleanSaleData:
         )
 
         # When
-        actual = system_under_test.clean_sale_data(given_dataframe)
+        actual = system_under_test.clean_data(given_dataframe)
 
         # Then
         assert len(actual) == 1
@@ -238,7 +236,7 @@ class TestEnrichSaleData:
         given_expected_dataframe[SALE_COLUMNS.MONTH] = pd.Series([1, 12], dtype="int32", )
 
         # When
-        actual = system_under_test.enrich_sale_data(given_dataframe)
+        actual = system_under_test.enrich_data(given_dataframe)
 
         # Then
         assert_frame_equal(actual, given_expected_dataframe)
@@ -254,7 +252,7 @@ class TestEnrichSaleData:
         )
 
         # When
-        actual = system_under_test.enrich_sale_data(given_original_dataframe)
+        actual = system_under_test.enrich_data(given_original_dataframe)
 
         # Then
         assert actual is not given_original_dataframe
@@ -283,7 +281,7 @@ class TestEnrichSaleData:
         )
 
         # When
-        actual = system_under_test.enrich_sale_data(given_dataframe)
+        actual = system_under_test.enrich_data(given_dataframe)
 
         # Then
         assert actual.empty

@@ -26,6 +26,11 @@ docker --version
 
 ```shell
 cd ./sale_distributed_processing_platform
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
+```
+
+```shell
+cd ./sale_distributed_processing_platform
 pytest
 ```
 
@@ -38,6 +43,11 @@ pytest --cov --cov-report=html:report/coverage
 ```
 
 ```shell
+cd ./sale_distributed_processing_platform
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
+```
+
+```shell
 python -m http.server 8000 --directory ./report
 ```
 
@@ -47,7 +57,6 @@ python -m http.server 8000 --directory ./report
 cd ./sale_distributed_processing_platform
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
 ```
-
 
 ```shell
 cd ./sale_distributed_processing_platform
@@ -78,16 +87,16 @@ docker rmi samanalishiri/application:latest
 * Spark Master: http://localhost:8080
 * Spark Worker: http://localhost:8181
 * Datalake: http://localhost:9001
-  * Username: admin
-  * Password: administrator
+    * Username: admin
+    * Password: administrator
 * Datawarehouse HTTP: http://localhost:8123
-  * Username: admin
-  * Password: admin
+    * Username: admin
+    * Password: admin
 * Database: http://localhost:8083
-  * Server: database:5432
-  * Username: admin
-  * Password: admin
-  * Database: sale_database
+    * Server: database:5432
+    * Username: admin
+    * Password: admin
+    * Database: sale_database
 
 ## Clean Directory
 
