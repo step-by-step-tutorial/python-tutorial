@@ -1,6 +1,6 @@
 from typing import Any
 
-from service.database_population_strategy import POPULATION_FUNCTIONS
+from service.database_population_strategy import POPULATION_FUNCTIONS, lookup_population_strategy
 from util.database_utils import execute_sql
 from util.text_file_utils import load_sql_query
 
@@ -19,11 +19,7 @@ def truncate_stage_table() -> None:
 
 
 def populate_stage_table(dataframe: Any) -> None:
-    try:
-        population_function = POPULATION_FUNCTIONS[type(dataframe)]
-    except KeyError as error:
-        raise TypeError(f"Unsupported DataFrame type: {type(dataframe).__name__}") from error
-
+    population_function = lookup_population_strategy(dataframe)
     population_function(dataframe)
 
 

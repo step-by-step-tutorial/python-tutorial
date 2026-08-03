@@ -36,3 +36,13 @@ POPULATION_FUNCTIONS: dict[type[Any], Callable[[Any], None]] = {
     pandas.DataFrame: populate_stage_from_pandas,
     pyspark.sql.DataFrame: populate_stage_from_spark,
 }
+
+def lookup_population_strategy(dataframe: Any) -> Callable[[Any], None]:
+    dataframe_type = type(dataframe)
+
+    for registered_type, function in POPULATION_FUNCTIONS.items():
+        if issubclass(dataframe_type, registered_type):
+            return function
+
+    raise TypeError(f"Unsupported DataFrame type: {dataframe_type.__name__}")
+

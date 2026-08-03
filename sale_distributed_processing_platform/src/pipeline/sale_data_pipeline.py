@@ -1,9 +1,10 @@
 import logging
 
+import datawarehouse_service
 from app_config import env_config as ec
 from app_config.sale_schema import SCHEMA
 from factory import data_processor_connection_factory
-from service import spark_sale_service
+from service import spark_sale_service, database_sale_service
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,9 @@ def run() -> None:
 
         logger.info("Enriching sale data")
         enriched_dataframe = spark_sale_service.enrich_data(cleaned_dataframe)
+
+        logger.info("Populating database")
+        database_sale_service.populate(enriched_dataframe)
 
         logger.info("Calculating revenue by category")
         revenue_by_category_dataframe = spark_sale_service.get_revenue_by_category(enriched_dataframe)

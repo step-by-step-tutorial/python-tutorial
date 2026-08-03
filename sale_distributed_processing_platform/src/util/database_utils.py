@@ -1,8 +1,8 @@
 from factory import database_connection_factory
-
+from sqlalchemy import text
 
 def execute_sql(*queries: str):
-    with database_connection_factory.create_connection() as connection:
-        with connection.cursor() as cursor:
+    with database_connection_factory.create_connection().begin() as connection:
             for query in queries:
-                cursor.execute(query)
+                connection.execute(text(query))
+            connection.commit()
