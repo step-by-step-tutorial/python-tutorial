@@ -1,24 +1,25 @@
+CREATE DATABASE IF NOT EXISTS sale_warehouse;
 
-CREATE DATABASE IF NOT EXISTS sale_datawarehouse;
-
-CREATE TABLE IF NOT EXISTS sale_datawarehouse.sale_fact
+CREATE TABLE IF NOT EXISTS sale_warehouse.sale_fact
 (
     order_id UInt32,
     customer_name String,
     product_name String,
     category String,
-    country String,
     quantity Float64,
     unit_price Float64,
-    total_price Float64,
     order_date Date,
+    country String,
+    total_price Float64,
     year UInt16,
     month UInt8
 )
-ENGINE = MergeTree()
-ORDER BY (
+    ENGINE = MergeTree()
+    PARTITION BY toYYYYMM(order_date)
+    ORDER BY
+(
     order_date,
-    category,
     country,
+    category,
     order_id
 );

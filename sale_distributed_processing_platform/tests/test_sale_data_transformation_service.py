@@ -1,6 +1,6 @@
 from app_config.sale_schema import SCHEMA
+from service.spark_sale_service import transform_sale_data
 from util.clean_sale_data_util import clean_sale_data
-from util.sale_data_transform_util import transform_sale_data
 from util.sale_fact_transform_util import build_sale_warehouse_dataframe
 
 

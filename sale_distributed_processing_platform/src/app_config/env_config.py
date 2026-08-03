@@ -3,6 +3,8 @@ from pathlib import Path
 
 import time
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 SCRIPTS_DIR = Path(os.getenv("SCRIPTS_DIR", "scripts"))
@@ -43,6 +45,9 @@ KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sale-events")
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 
+
+def resolve(path: Path) -> Path:
+    return PROJECT_ROOT / path
 
 def build_sale_datalake_output_uri() -> str:
     return f"s3a://{DATALAKE_BUCKET_NAME}/{OUTPUT_DIR}/{time.time()}"

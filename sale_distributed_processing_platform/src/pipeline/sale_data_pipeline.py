@@ -5,12 +5,11 @@ from pyspark.sql import DataFrame, SparkSession
 from app_config import env_config as ec
 from app_config.sale_schema import SCHEMA
 from factory import bigdata_engine_session_factory
-from service import sale_bigdata_service
-from service import sale_database_service
+from service import spark_sale_service
+from service import database_sale_service
 from service import sale_datalake_service
 from service import sale_datawarehouse_service
 from util.clean_sale_data_util import clean_sale_data
-from util.sale_data_transform_util import transform_sale_data
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ def run() -> None:
     try:
         spark_session = bigdata_engine_session_factory.create_session()
         logger.info("Reading sale data from %s", ec.DATA_FILE)
-        dataframe = sale_bigdata_service.read_sale_data_from_csv(
+        dataframe = spark_sale_service.read_sale_data_from_csv(
             connection=spark_session,
             path=ec.DATA_FILE,
             schema=SCHEMA
@@ -32,11 +31,11 @@ def run() -> None:
         cleaned_dataframe = clean_sale_data(dataframe)
 
         logger.info("Transforming sale data")
-        transformed_dataframe = transform_sale_data(cleaned_dataframe)
+        transformed_dataframe = spark_sale_service.transform_sale_data(cleaned_dataframe)
         transformed_dataframe.cache()
 
         logger.info("Storing sale data in PostgreSQL")
-        sale_database_service.populate(transformed_dataframe)
+        database_sale_service.populate(transformed_dataframe)
 
         logger.info("Storing curated sale data in datalake")
         sale_datalake_service.overwrite(transformed_dataframe)

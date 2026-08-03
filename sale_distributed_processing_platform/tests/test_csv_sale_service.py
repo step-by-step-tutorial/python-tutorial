@@ -90,7 +90,7 @@ class TestReadSaleDataCsv:
         given_path = Path("resources/fake.csv")
 
         # When
-        actual = system_under_test.read_sale_data_csv(given_path)
+        actual = system_under_test.read_sale_data(given_path)
 
         # Then
         assert actual is dataframe
@@ -107,7 +107,7 @@ class TestReadSaleDataCsv:
 
         # When
         with pytest.raises(FileNotFoundError) as actual:
-            system_under_test.read_sale_data_csv(given_csv_path)
+            system_under_test.read_sale_data(given_csv_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -132,7 +132,7 @@ class TestReadSaleDataCsv:
 
         # When
         with pytest.raises(ValueError) as actual:
-            system_under_test.read_sale_data_csv(given_csv_path)
+            system_under_test.read_sale_data(given_csv_path)
 
         # Then
         assert str(actual.value) == given_error_message

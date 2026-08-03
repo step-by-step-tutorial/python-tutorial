@@ -14,7 +14,7 @@ from util.datframe_utils import (
 )
 
 
-def read_sale_data_csv(path: Path) -> pd.DataFrame:
+def read_sale_data(path: Path) -> pd.DataFrame:
     df = read_csv_file(path)
     must_has_columns(df, SALE_REQUIRED_COLUMNS)
     return df
