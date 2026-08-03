@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
 
 from app_config.sale_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
@@ -15,16 +15,17 @@ from util.spark_dataframe_utils import (
 )
 
 
-def read_data(path, schema) -> DataFrame:
+def read_data(session: SparkSession, path, schema) -> DataFrame:
+    if session is None:
+        raise ValueError("Cannot read data because the Spark session is None.")
     if path is None:
         raise ValueError("Cannot read data because the input path is None.")
     if schema is None:
         raise ValueError("Cannot read data because the input schema is None.")
 
-    with data_processor_connection_factory.create_connection() as connection:
-        df = connection.read.option("header", "true").schema(schema).csv(path)
-        requires_column(df, SALE_REQUIRED_COLUMNS)
-        return df
+    df = session.read.option("header", "true").schema(schema).csv(path)
+    requires_column(df, SALE_REQUIRED_COLUMNS)
+    return df
 
 
 def clean_data(dataframe: DataFrame) -> DataFrame:
@@ -54,7 +55,7 @@ def enrich_data(dataframe: DataFrame) -> DataFrame:
         dataframe
         .withColumn(
             SALE_COLUMNS.TOTAL_PRICE,
-            sf.round( sf.col(SALE_COLUMNS.QUANTITY) * sf.col(SALE_COLUMNS.UNIT_PRICE),2)
+            sf.round(sf.col(SALE_COLUMNS.QUANTITY) * sf.col(SALE_COLUMNS.UNIT_PRICE), 2)
         )
         .withColumn(SALE_COLUMNS.YEAR, sf.year(SALE_COLUMNS.ORDER_DATE))
         .withColumn(SALE_COLUMNS.MONTH, sf.month(SALE_COLUMNS.ORDER_DATE))

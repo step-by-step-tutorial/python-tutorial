@@ -192,9 +192,7 @@ services:
 volumes:
   database_data:
     name: ${POSTGRES_VOLUME}
-
   datalake_data:
     name: ${MINIO_VOLUME}
-
   datawarehouse_data:
     name: ${CLICKHOUSE_VOLUME}

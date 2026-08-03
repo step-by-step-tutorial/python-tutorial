@@ -26,11 +26,6 @@ docker --version
 
 ```shell
 cd ./sale_distributed_processing_platform
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
-```
-
-```shell
-cd ./sale_distributed_processing_platform
 pytest
 ```
 
@@ -40,11 +35,6 @@ pytest --html=./report/test/test-report.html
 
 ```shell
 pytest --cov --cov-report=html:report/coverage
-```
-
-```shell
-cd ./sale_distributed_processing_platform
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
 ```
 
 ```shell

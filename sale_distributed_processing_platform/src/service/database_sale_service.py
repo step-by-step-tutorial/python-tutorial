@@ -6,8 +6,8 @@ from util.text_file_utils import load_sql_query
 
 
 class DatabaseQueries:
-    TRUNCATE_STAGE_TABLE = load_sql_query("truncate_stage_table.sql")
-    TRUNCATE_ALL_TABLES = load_sql_query("truncate_all_tables.sql")
+    TRUNCATE_STAGE_TABLE = load_sql_query("truncate_database_stage_table.sql")
+    TRUNCATE_ALL_TABLES = load_sql_query("truncate_database_all_tables.sql")
     INSERT_CUSTOMERS = load_sql_query("insert_customers.sql")
     INSERT_PRODUCTS = load_sql_query("insert_products.sql")
     INSERT_ORDERS = load_sql_query("insert_orders.sql")

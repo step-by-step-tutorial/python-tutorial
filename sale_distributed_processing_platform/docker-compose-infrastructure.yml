@@ -101,43 +101,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-  master:
-    image: ${SPARK_IMAGE}
-    build:
-      context: .
-      dockerfile: ${SPARK_DOCKERFILE}
-    hostname: ${SPARK_MASTER_HOST}
-    container_name: ${SPARK_MASTER_CONTAINER_NAME}
-    command: >
-      /opt/spark/bin/spark-class
-      org.apache.spark.deploy.master.Master
-      --host ${SPARK_MASTER_HOST}
-      --port ${SPARK_MASTER_RPC_PORT}
-      --webui-port ${SPARK_MASTER_UI_PORT}
-    ports:
-      - "${SPARK_MASTER_RPC_PORT}:${SPARK_MASTER_RPC_PORT}"
-      - "${SPARK_MASTER_UI_PORT}:${SPARK_MASTER_UI_PORT}"
-    volumes:
-      - ./resources:/app/resources
-  worker:
-    image: ${SPARK_IMAGE}
-    build:
-      context: .
-      dockerfile: ${SPARK_DOCKERFILE}
-    hostname: ${SPARK_WORKER_HOST}
-    container_name: ${SPARK_WORKER_CONTAINER_NAME}
-    depends_on:
-      master:
-        condition: service_started
-    command: >
-      /opt/spark/bin/spark-class
-      org.apache.spark.deploy.worker.Worker
-      ${SPARK_MASTER_URL}
-      --webui-port ${SPARK_WORKER_UI_PORT}
-    ports:
-      - "${SPARK_WORKER_UI_PORT}:${SPARK_WORKER_UI_PORT}"
-    volumes:
-      - ./resources:/app/resources
 volumes:
   database_data:
     name: ${POSTGRES_VOLUME}
