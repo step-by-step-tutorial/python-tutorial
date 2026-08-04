@@ -5,7 +5,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import DateType, DoubleType, IntegerType, StringType, StructField, StructType
 
 from app_config.env_config import resolve, RESOURCES_DIR
-from app_config.sale_schema import SALE_COLUMNS, SCHEMA
+from app_config.dataframe_schema import SALE_COLUMNS, SCHEMA
 from service import spark_sale_service as system_under_test
 
 APP_NAME = "Test Application"

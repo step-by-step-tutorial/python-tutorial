@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS sale_warehouse;
+CREATE DATABASE IF NOT EXISTS sale_datawarehouse;
 
-CREATE TABLE IF NOT EXISTS sale_warehouse.sale_fact
+CREATE TABLE IF NOT EXISTS sale_datawarehouse.sale_table
 (
     order_id UInt32,
     customer_name String,
@@ -16,10 +16,4 @@ CREATE TABLE IF NOT EXISTS sale_warehouse.sale_fact
 )
     ENGINE = MergeTree()
     PARTITION BY toYYYYMM(order_date)
-    ORDER BY
-(
-    order_date,
-    country,
-    category,
-    order_id
-);
+    ORDER BY (order_date, country, category, order_id);

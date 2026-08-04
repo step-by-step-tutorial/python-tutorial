@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 from pandas import DataFrame
 
-from app_config.sale_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
+from app_config.dataframe_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
 from util.csv_utils import read_csv_file
 from util.pandas_dataframe_utils import (
     remove_duplicates,

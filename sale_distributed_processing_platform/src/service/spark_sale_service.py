@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
 
-from app_config.sale_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
+from app_config.dataframe_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
 from util.spark_dataframe_utils import (
     remove_duplicates,
     convert_numeric_column,

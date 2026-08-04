@@ -1,6 +1,7 @@
 from pandas import DataFrame
 
 from app_config import env_config as ec
+from app_config.datawarehouse_schema import SALE_TABLE
 from factory import datawarehouse_connection_factory
 from util.text_file_utils import load_sql_query
 
@@ -14,7 +15,7 @@ class Queries:
 def populate(dataframe: DataFrame) -> None:
     with datawarehouse_connection_factory.create_connection() as connection:
         connection.command(Queries.TRUNCATE_DATAWAREHOUSE)
-        connection.insert_df(table=ec.DATAWAREHOUSE_TABLE_NAME, df=dataframe)
+        connection.insert_df(table=f"{ec.DATAWAREHOUSE_NAME}.{SALE_TABLE}", df=dataframe)
 
 
 def get_revenue_by_category() -> DataFrame:

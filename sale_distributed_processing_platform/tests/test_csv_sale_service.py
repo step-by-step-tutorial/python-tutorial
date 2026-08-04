@@ -6,7 +6,7 @@ from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 from pytest import MonkeyPatch
 
-from app_config.sale_schema import SALE_COLUMNS
+from app_config.dataframe_schema import SALE_COLUMNS
 from service import csv_sale_service as system_under_test
 
 

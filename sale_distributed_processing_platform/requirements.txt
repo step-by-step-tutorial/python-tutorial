@@ -1,6 +1,7 @@
 pandas
 pyarrow
 pyspark
+itables
 
 sqlalchemy
 psycopg2-binary

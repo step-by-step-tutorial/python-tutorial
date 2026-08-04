@@ -1,1 +1,1 @@
-TRUNCATE TABLE sale_fact
+TRUNCATE TABLE sale_datawarehouse.sale_table
