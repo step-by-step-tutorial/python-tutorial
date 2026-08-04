@@ -138,6 +138,80 @@ services:
       - "${SPARK_WORKER_UI_PORT}:${SPARK_WORKER_UI_PORT}"
     volumes:
       - ./resources:/app/resources
+  airflow:
+    image: ${AIRFLOW_IMAGE}
+    hostname: ${AIRFLOW_HOST}
+    container_name: ${AIRFLOW_CONTAINER_NAME}
+    restart: always
+    env_file:
+      - .env.dev
+    environment:
+      # Airflow
+      AIRFLOW__CORE__EXECUTOR: ${AIRFLOW_EXECUTOR}
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: ${AIRFLOW_SIMPLE_AUTH_MANAGER_USERS}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DATABASE_SQLALCHEMY_URL}
+      PYTHONPATH: ${AIRFLOW_PYTHONPATH}
+      # Application
+      RESOURCES_DIR: ${AIRFLOW_RESOURCES_DIR}
+      OUTPUT_DIR: ${AIRFLOW_OUTPUT_DIR}
+      SCRIPTS_DIR: ${AIRFLOW_SCRIPTS_DIR}
+      DATA_FILE: ${APPLICATION_DATA_FILE}
+      # Spark
+      SPARK_APPLICATION_NAME: ${SPARK_APPLICATION_NAME}
+      SPARK_MASTER_URL: ${SPARK_MASTER_URL}
+      SPARK_DRIVER_HOST: ${AIRFLOW_HOST}
+      SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS}
+      # Database
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_DRIVER: ${DATABASE_DRIVER}
+      DATABASE_JDBC_URL: ${DATABASE_JDBC_URL}
+      DATABASE_SQLALCHEMY_URL: ${DATABASE_SQLALCHEMY_URL}
+      # Data Lake
+      DATALAKE_ENDPOINT: ${DATALAKE_ENDPOINT}
+      DATALAKE_ACCESS_KEY: ${DATALAKE_ACCESS_KEY}
+      DATALAKE_SECRET_KEY: ${DATALAKE_SECRET_KEY}
+      DATALAKE_BUCKET_NAME: ${DATALAKE_BUCKET_NAME}
+      DATALAKE_SCHEME: ${DATALAKE_SCHEME}
+      DATALAKE_ENVIRONMENT: ${DATALAKE_ENVIRONMENT}
+      DATALAKE_SALE_DATASET: ${DATALAKE_SALE_DATASET}
+      # Data Warehouse
+      DATAWAREHOUSE_HOST: ${DATAWAREHOUSE_HOST}
+      DATAWAREHOUSE_PORT: ${DATAWAREHOUSE_PORT}
+      DATAWAREHOUSE_NAME: ${DATAWAREHOUSE_NAME}
+      DATAWAREHOUSE_USER: ${DATAWAREHOUSE_USER}
+      DATAWAREHOUSE_PASSWORD: ${DATAWAREHOUSE_PASSWORD}
+    volumes:
+      - ./dags:${AIRFLOW_DAGS_DIR}
+      - ./src:${AIRFLOW_SRC_DIR}
+      - ./plugins:${AIRFLOW_PLUGINS_DIR}
+      - ./resources:${AIRFLOW_RESOURCES_DIR}
+      - ./output:${AIRFLOW_OUTPUT_DIR}
+      - ./scripts:${AIRFLOW_SCRIPTS_DIR}
+      - ./airflow/simple_auth_manager_passwords.json.generated:${AIRFLOW_PASSWORD_FILE}
+      - ./requirements-docker.txt:${AIRFLOW_REQUIREMENTS_FILE}
+    ports:
+      - "${AIRFLOW_PORT}:8080"
+    command: >
+      bash -c "
+      pip install --no-cache-dir -r ${AIRFLOW_REQUIREMENTS_FILE} &&
+      airflow db migrate &&
+      airflow standalone
+      "
+    depends_on:
+      database:
+        condition: service_healthy
+      datalake:
+        condition: service_healthy
+      datalake-init:
+        condition: service_completed_successfully
+      datawarehouse:
+        condition: service_healthy
+      master:
+        condition: service_started
   application:
     image: ${APPLICATION_IMAGE}
     build:
@@ -146,28 +220,32 @@ services:
     hostname: ${APPLICATION_HOST}
     container_name: ${APPLICATION_CONTAINER_NAME}
     environment:
+      # Application
       RESOURCES_DIR: ${APPLICATION_RESOURCES_DIR}
       OUTPUT_DIR: ${APPLICATION_OUTPUT_DIR}
       DATA_FILE: ${APPLICATION_DATA_FILE}
       SCRIPTS_DIR: ${APPLICATION_SCRIPTS_DIR}
-
+      # Spark
       SPARK_APPLICATION_NAME: ${SPARK_APPLICATION_NAME}
       SPARK_MASTER_URL: ${SPARK_MASTER_URL}
       SPARK_DRIVER_HOST: ${SPARK_DRIVER_HOST}
       SPARK_DRIVER_BIND_ADDRESS: ${SPARK_DRIVER_BIND_ADDRESS}
-
+      # Database
       DATABASE_JDBC_URL: ${DATABASE_JDBC_URL}
       DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_PORT: ${DATABASE_PORT}
       DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USER: ${DATABASE_USER}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
-
+      # Datalake
       DATALAKE_ENDPOINT: ${DATALAKE_ENDPOINT}
       DATALAKE_ACCESS_KEY: ${DATALAKE_ACCESS_KEY}
       DATALAKE_SECRET_KEY: ${DATALAKE_SECRET_KEY}
       DATALAKE_BUCKET_NAME: ${DATALAKE_BUCKET_NAME}
-
+      DATALAKE_SCHEME: ${DATALAKE_SCHEME}
+      DATALAKE_ENVIRONMENT: ${DATALAKE_ENVIRONMENT}
+      DATALAKE_SALE_DATASET: ${DATALAKE_SALE_DATASET}
+      # Datawarehouse
       DATAWAREHOUSE_HOST: ${DATAWAREHOUSE_HOST}
       DATAWAREHOUSE_PORT: ${DATAWAREHOUSE_PORT}
       DATAWAREHOUSE_NAME: ${DATAWAREHOUSE_NAME}

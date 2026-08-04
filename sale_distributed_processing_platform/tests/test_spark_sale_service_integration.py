@@ -31,21 +31,21 @@ class TestReadSaleDataIntegration:
 
     def test_should_read_sale_data(self, spark_session: SparkSession) -> None:
         # Given
-        given_path = resolve(RESOURCES_DIR) / "test/test_data.csv"
+        given_path = "test/test_data.csv"
 
         # When
-        actual = system_under_test.read_data(session=spark_session, path=str(given_path), schema=SCHEMA)
+        actual = system_under_test.read_data(session=spark_session, file_name=given_path, schema=SCHEMA)
 
         # Then
         assert actual.count() == 1000
 
     def test_should_read_sale_data_with_expected_schema(self, spark_session: SparkSession) -> None:
         # Given
-        given_path = resolve(RESOURCES_DIR) / "test/test_data.csv"
+        given_path = "test/test_data.csv"
         given_expected_schema = [(field.name, field.dataType) for field in SCHEMA.fields]
 
         # When
-        actual = system_under_test.read_data(session=spark_session, path=str(given_path), schema=SCHEMA)
+        actual = system_under_test.read_data(session=spark_session, file_name=given_path, schema=SCHEMA)
         actual_schema = [(field.name, field.dataType) for field in actual.schema.fields]
 
         # Then
@@ -53,7 +53,7 @@ class TestReadSaleDataIntegration:
 
     def test_should_raise_error_when_required_columns_are_missing(self, spark_session: SparkSession) -> None:
         # Given
-        given_path = resolve(RESOURCES_DIR) / "test/invalid_test_data.csv"
+        given_path = "test/invalid_test_data.csv"
         given_schema = StructType([
             StructField(SALE_COLUMNS.ORDER_ID, IntegerType(), True),
             StructField(SALE_COLUMNS.CUSTOMER_NAME, StringType(), True),
@@ -61,7 +61,7 @@ class TestReadSaleDataIntegration:
 
         # When
         with pytest.raises(ValueError) as actual:
-            system_under_test.read_data(session=spark_session, path=str(given_path), schema=given_schema)
+            system_under_test.read_data(session=spark_session, file_name=given_path, schema=given_schema)
 
         # Then
         assert "Missing required columns:" in str(actual.value)

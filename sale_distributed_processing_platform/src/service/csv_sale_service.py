@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 from pandas import DataFrame
+from app_config import env_config as ec
 
 from app_config.dataframe_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
 from util.csv_utils import read_csv_file
@@ -16,8 +17,8 @@ from util.pandas_dataframe_utils import (
 )
 
 
-def read_data(path: Path) -> pd.DataFrame:
-    df = read_csv_file(path)
+def read_data(file_name: str) -> pd.DataFrame:
+    df = read_csv_file(ec.resolve(ec.RESOURCES_DIR) / file_name)
     requires_column(df, SALE_REQUIRED_COLUMNS)
     return df
 

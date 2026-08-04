@@ -2,6 +2,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
 
 from app_config.dataframe_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
+from app_config import env_config as ec
 from util.spark_dataframe_utils import (
     remove_duplicates,
     convert_numeric_column,
@@ -14,15 +15,15 @@ from util.spark_dataframe_utils import (
 )
 
 
-def read_data(session: SparkSession, path, schema) -> DataFrame:
+def read_data(session: SparkSession, file_name, schema) -> DataFrame:
     if session is None:
         raise ValueError("Cannot read data because the Spark session is None.")
-    if path is None:
+    if file_name is None:
         raise ValueError("Cannot read data because the input path is None.")
     if schema is None:
         raise ValueError("Cannot read data because the input schema is None.")
 
-    df = session.read.option("header", "true").schema(schema).csv(path)
+    df = session.read.option("header", "true").schema(schema).csv(str(ec.resolve(ec.RESOURCES_DIR) / file_name))
     requires_column(df, SALE_REQUIRED_COLUMNS)
     return df
 

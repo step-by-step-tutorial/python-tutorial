@@ -10,7 +10,7 @@ class TestReadSaleData:
     def test_should_read_and_validate_sale_data(self, mocker) -> None:
         # Given
         given_session = mocker.MagicMock(spec=SparkSession)
-        given_path = "resources/fake.csv"
+        given_path = "fake.csv"
         given_schema = StructType()
         given_dataframe = mocker.MagicMock(spec=DataFrame)
 
@@ -31,7 +31,7 @@ class TestReadSaleData:
     def test_should_raise_error_when_session_is_none(self) -> None:
         # Given
         given_session = None
-        given_path = "resources/sale_data.csv"
+        given_path = "data.csv"
         given_schema = StructType()
         given_error_message = "Cannot read data because the Spark session is None."
 
@@ -59,7 +59,7 @@ class TestReadSaleData:
     def test_should_raise_error_when_schema_is_none(self, mocker) -> None:
         # Given
         given_session = mocker.MagicMock(spec=SparkSession)
-        given_path = "resources/sale_data.csv"
+        given_path = "data.csv"
         given_schema = None
         given_error_message = "Cannot read data because the input schema is None."
 
@@ -73,7 +73,7 @@ class TestReadSaleData:
     def test_should_propagate_error_when_csv_reading_fails(self, mocker) -> None:
         # Given
         given_session = mocker.MagicMock(spec=SparkSession)
-        given_path = "resources/missing.csv"
+        given_path = "missing.csv"
         given_schema = StructType()
         given_error_message = "CSV file not found"
 
@@ -91,7 +91,7 @@ class TestReadSaleData:
     def test_should_propagate_error_when_required_columns_are_missing(self, mocker) -> None:
         # Given
         given_session = mocker.MagicMock(spec=SparkSession)
-        given_path = "resources/invalid.csv"
+        given_path = "invalid.csv"
         given_schema = StructType()
         given_dataframe = mocker.MagicMock(spec=DataFrame)
         given_error_message = "Missing required columns"

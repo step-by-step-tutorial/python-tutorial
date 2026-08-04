@@ -66,3 +66,10 @@ CREATE TABLE IF NOT EXISTS pipeline_audit
     execution_message TEXT,
     executed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+SELECT 'CREATE DATABASE sale_airflow'
+    WHERE NOT EXISTS (
+    SELECT
+        FROM pg_database
+        WHERE datname = 'sale_airflow'
+)
