@@ -7,31 +7,31 @@ name = "sale_distributed_processing_platform"
 version = "1.0.0"
 description = "Integrated data engineering, machine learning and MLOps platform"
 requires-python = ">=3.12"
-dependencies = [
-    "pandas",
-    "pyarrow",
-    "pyspark",
-    "sqlalchemy",
-    "psycopg2-binary",
-    "boto3",
-    "clickhouse-connect",
-    "confluent-kafka",
-    "scikit-learn",
-    "joblib",
-    "torch",
-    "mlflow",
-    "fastapi",
-    "uvicorn",
-    "pydantic",
-    "prometheus-client"
-]
-
-[project.optional-dependencies]
-test = [
-    "pytest",
-    "pytest-cov",
-    "pytest-html"
-]
+#dependencies = [
+#    "pandas",
+#    "pyarrow",
+#    "pyspark",
+#    "sqlalchemy",
+#    "psycopg2-binary",
+#    "boto3",
+#    "clickhouse-connect",
+#    "confluent-kafka",
+#    "scikit-learn",
+#    "joblib",
+#    "torch",
+#    "mlflow",
+#    "fastapi",
+#    "uvicorn",
+#    "pydantic",
+#    "prometheus-client"
+#]
+#
+#[project.optional-dependencies]
+#test = [
+#    "pytest",
+#    "pytest-cov",
+#    "pytest-html"
+#]
 
 [tool.setuptools.packages.find]
 where = ["src"]

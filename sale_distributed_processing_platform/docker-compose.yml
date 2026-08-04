@@ -149,6 +149,7 @@ services:
       RESOURCES_DIR: ${APPLICATION_RESOURCES_DIR}
       OUTPUT_DIR: ${APPLICATION_OUTPUT_DIR}
       DATA_FILE: ${APPLICATION_DATA_FILE}
+      SCRIPTS_DIR: ${APPLICATION_SCRIPTS_DIR}
 
       SPARK_APPLICATION_NAME: ${SPARK_APPLICATION_NAME}
       SPARK_MASTER_URL: ${SPARK_MASTER_URL}
@@ -175,6 +176,7 @@ services:
     volumes:
       - ./resources:/app/resources
       - ./output:/app/output
+      - ./scripts:/app/scripts
     depends_on:
       database:
         condition: service_healthy

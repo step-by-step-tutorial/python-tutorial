@@ -1,6 +1,6 @@
 pandas
 pyarrow
-pyspark
+pyspark==4.1.2
 itables
 
 sqlalchemy
@@ -8,22 +8,22 @@ psycopg2-binary
 boto3
 clickhouse-connect
 
-confluent-kafka
-
-apache-airflow
-apache-airflow-providers-apache-spark
-
-scikit-learn
-joblib
-torch
-
-mlflow
-
-fastapi
-uvicorn
-pydantic
-
-prometheus-client
+#confluent-kafka
+#
+#apache-airflow==3.3.0
+#apache-airflow-providers-apache-spark==6.3.0
+#
+#scikit-learn
+#joblib
+#torch
+#
+#mlflow
+#
+#fastapi
+#uvicorn
+#pydantic
+#
+#prometheus-client
 
 pytest
 pytest-cov
