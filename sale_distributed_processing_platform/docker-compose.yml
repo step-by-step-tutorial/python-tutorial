@@ -138,18 +138,34 @@ services:
       - "${SPARK_WORKER_UI_PORT}:${SPARK_WORKER_UI_PORT}"
     volumes:
       - ./resources:/app/resources
+  airflow-database:
+    image: ${POSTGRES_IMAGE}
+    container_name: ${AIRFLOW_POSTGRES_CONTAINER_NAME}
+    hostname: ${AIRFLOW_POSTGRES_HOST}
+    environment:
+      POSTGRES_DB: ${AIRFLOW_POSTGRES_DATABASE}
+      POSTGRES_USER: ${AIRFLOW_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AIRFLOW_POSTGRES_PASSWORD}
+    ports:
+      - "${AIRFLOW_POSTGRES_PORT}:5432"
+    volumes:
+      - ${AIRFLOW_POSTGRES_VOLUME}:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready --username admin --dbname ${AIRFLOW_POSTGRES_DATABASE}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
   airflow:
     image: ${AIRFLOW_IMAGE}
     hostname: ${AIRFLOW_HOST}
     container_name: ${AIRFLOW_CONTAINER_NAME}
     restart: always
-    env_file:
-      - .env.dev
     environment:
       # Airflow
       AIRFLOW__CORE__EXECUTOR: ${AIRFLOW_EXECUTOR}
       AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: ${AIRFLOW_SIMPLE_AUTH_MANAGER_USERS}
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DATABASE_SQLALCHEMY_URL}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN_ASYNC: ${AIRFLOW_DATABASE_SQLALCHEMY_URL_ASYNC}
       PYTHONPATH: ${AIRFLOW_PYTHONPATH}
       # Application
       RESOURCES_DIR: ${AIRFLOW_RESOURCES_DIR}
@@ -202,6 +218,8 @@ services:
       airflow standalone
       "
     depends_on:
+      airflow-database:
+        condition: service_healthy
       database:
         condition: service_healthy
       datalake:
@@ -270,6 +288,8 @@ services:
       sh -c "python -m src.main && tail -f /dev/null"
 
 volumes:
+  airflow_database_data:
+    name: ${AIRFLOW_POSTGRES_VOLUME}
   database_data:
     name: ${POSTGRES_VOLUME}
   datalake_data:

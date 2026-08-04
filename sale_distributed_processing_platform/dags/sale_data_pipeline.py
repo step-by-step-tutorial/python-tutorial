@@ -1,89 +1,106 @@
 import logging
-from datetime import datetime
-from uuid import uuid4
+from datetime import UTC, datetime
 
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
 
 from app_config import env_config as ec
 from service import csv_sale_service, database_sale_service, datalake_sale_service, datawarehouse_sale_service
+from util.datalake_utils import DatalakeLayer, build_sale_datalake_path
 
 logger = logging.getLogger(__name__)
 
 DAG_ID = "sale_etl_pipeline"
 
 
-def generate_run_id() -> str:
-    run_id = str(uuid4())
-    logger.info("Generated pipeline run ID: %s", run_id)
-    return run_id
+def generate_ingestion_time() -> str:
+    ingestion_time = datetime.now(UTC).isoformat()
+    logger.info("Generated pipeline ingestion time: %s", ingestion_time)
+    return ingestion_time
 
 
-def upload_raw_sale_data(run_id: str) -> str:
+def upload_raw_sale_data(ingestion_time: str) -> str:
+    resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
+    raw_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=resolved_ingestion_time)
+
     logger.info("Reading sale data from %s", ec.DATA_FILE)
     dataframe = csv_sale_service.read_data(file_name=ec.DATA_FILE)
 
-    logger.info("Uploading raw sale data to the data lake")
-    return datalake_sale_service.upload_as_parquet(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                   object_key=ec.DATALAKE_RAW_SALE_DATA, run_id=run_id)
+    logger.info("Uploading raw sale data to %s", raw_sale_data_path)
+    datalake_sale_service.upload_parquet(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                         path=raw_sale_data_path)
+
+    return raw_sale_data_path
 
 
-def clean_sale_data(raw_parquet_key: str, run_id: str) -> str:
-    logger.info("Reading raw sale data from %s", raw_parquet_key)
-    dataframe = datalake_sale_service.read_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, object_key=raw_parquet_key)
+def clean_sale_data(raw_sale_data_path: str, ingestion_time: str) -> str:
+    resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
+    cleaned_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.CLEANED,
+                                                      ingestion_time=resolved_ingestion_time)
+
+    logger.info("Reading raw sale data from %s", raw_sale_data_path)
+    dataframe = datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_sale_data_path)
 
     logger.info("Cleaning sale data")
     cleaned_dataframe = csv_sale_service.clean_data(dataframe)
 
-    logger.info("Uploading cleaned sale data to the data lake")
-    return datalake_sale_service.upload_as_parquet(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                   object_key=ec.DATALAKE_CLEANED_SALE_DATA, run_id=run_id)
+    logger.info("Uploading cleaned sale data to %s", cleaned_sale_data_path)
+    datalake_sale_service.upload_parquet(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                         path=cleaned_sale_data_path)
+
+    return cleaned_sale_data_path
 
 
-def enrich_sale_data(cleaned_parquet_key: str, run_id: str) -> str:
-    logger.info("Reading cleaned sale data from %s", cleaned_parquet_key)
-    dataframe = datalake_sale_service.read_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, object_key=cleaned_parquet_key)
+def enrich_sale_data(cleaned_sale_data_path: str, ingestion_time: str) -> str:
+    resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
+    enriched_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.ENRICHED,
+                                                       ingestion_time=resolved_ingestion_time)
+
+    logger.info("Reading cleaned sale data from %s", cleaned_sale_data_path)
+    dataframe = datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_sale_data_path)
 
     logger.info("Enriching sale data")
     enriched_dataframe = csv_sale_service.enrich_data(dataframe)
 
-    logger.info("Uploading enriched sale data to the data lake")
-    return datalake_sale_service.upload_as_parquet(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                   object_key=ec.DATALAKE_ENRICHED_SALE_DATA, run_id=run_id)
+    logger.info("Uploading enriched sale data to %s", enriched_sale_data_path)
+    datalake_sale_service.upload_parquet(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                         path=enriched_sale_data_path)
+
+    return enriched_sale_data_path
 
 
-def populate_database(enriched_parquet_key: str) -> None:
-    logger.info("Reading enriched sale data from %s", enriched_parquet_key)
-    enriched_dataframe = datalake_sale_service.read_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                            object_key=enriched_parquet_key)
+def populate_database(enriched_sale_data_path: str) -> None:
+    logger.info("Reading enriched sale data from %s", enriched_sale_data_path)
+    enriched_dataframe = datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                                path=enriched_sale_data_path)
 
     logger.info("Populating database")
     database_sale_service.populate(enriched_dataframe)
 
 
-def populate_datawarehouse(enriched_parquet_key: str) -> None:
-    logger.info("Reading enriched sale data from %s", enriched_parquet_key)
-    enriched_dataframe = datalake_sale_service.read_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                            object_key=enriched_parquet_key)
+def populate_datawarehouse(enriched_sale_data_path: str) -> None:
+    logger.info("Reading enriched sale data from %s", enriched_sale_data_path)
+    enriched_dataframe = datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                                path=enriched_sale_data_path)
 
     logger.info("Populating data warehouse")
     datawarehouse_sale_service.populate(enriched_dataframe)
 
 
-def calculate_revenue_by_category(enriched_parquet_key: str) -> None:
-    logger.info("Reading enriched sale data from %s", enriched_parquet_key)
-    enriched_dataframe = datalake_sale_service.read_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                            object_key=enriched_parquet_key)
+def calculate_revenue_by_category(enriched_sale_data_path: str) -> None:
+    logger.info("Reading enriched sale data from %s", enriched_sale_data_path)
+    enriched_dataframe = datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                                path=enriched_sale_data_path)
 
     logger.info("Calculating revenue by category")
     revenue_by_category_dataframe = csv_sale_service.get_revenue_by_category(enriched_dataframe)
     logger.info("Revenue by category:\n%s", revenue_by_category_dataframe.to_string(index=False))
 
 
-def calculate_revenue_by_country(enriched_parquet_key: str) -> None:
-    logger.info("Reading enriched sale data from %s", enriched_parquet_key)
-    enriched_dataframe = datalake_sale_service.read_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                            object_key=enriched_parquet_key)
+def calculate_revenue_by_country(enriched_sale_data_path: str) -> None:
+    logger.info("Reading enriched sale data from %s", enriched_sale_data_path)
+    enriched_dataframe = datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                                path=enriched_sale_data_path)
 
     logger.info("Calculating revenue by country")
     revenue_by_country_dataframe = csv_sale_service.get_revenue_by_country(enriched_dataframe)
@@ -104,21 +121,21 @@ def calculate_datawarehouse_revenue_by_country() -> None:
 
 with DAG(
         dag_id=DAG_ID,
-        start_date=datetime(2026, 1, 1),
+        start_date=datetime(2026, 1, 1, tzinfo=UTC),
         schedule=None,
         catchup=False,
         tags=["sale", "etl", "datalake"],
 ) as dag:
-    generate_run_id_operation = PythonOperator(
-        task_id="generate_run_id",
-        python_callable=generate_run_id,
+    generate_ingestion_time_operation = PythonOperator(
+        task_id="generate_ingestion_time",
+        python_callable=generate_ingestion_time,
     )
 
     upload_raw_sale_data_operation = PythonOperator(
         task_id="upload_raw_sale_data",
         python_callable=upload_raw_sale_data,
         op_kwargs={
-            "run_id": generate_run_id_operation.output,
+            "ingestion_time": generate_ingestion_time_operation.output,
         },
     )
 
@@ -126,8 +143,8 @@ with DAG(
         task_id="clean_sale_data",
         python_callable=clean_sale_data,
         op_kwargs={
-            "raw_parquet_key": upload_raw_sale_data_operation.output,
-            "run_id": generate_run_id_operation.output,
+            "raw_sale_data_path": upload_raw_sale_data_operation.output,
+            "ingestion_time": generate_ingestion_time_operation.output,
         },
     )
 
@@ -135,8 +152,8 @@ with DAG(
         task_id="enrich_sale_data",
         python_callable=enrich_sale_data,
         op_kwargs={
-            "cleaned_parquet_key": clean_sale_data_operation.output,
-            "run_id": generate_run_id_operation.output,
+            "cleaned_sale_data_path": clean_sale_data_operation.output,
+            "ingestion_time": generate_ingestion_time_operation.output,
         },
     )
 
@@ -144,7 +161,7 @@ with DAG(
         task_id="populate_database",
         python_callable=populate_database,
         op_kwargs={
-            "enriched_parquet_key": enrich_sale_data_operation.output,
+            "enriched_sale_data_path": enrich_sale_data_operation.output,
         },
     )
 
@@ -152,7 +169,7 @@ with DAG(
         task_id="populate_datawarehouse",
         python_callable=populate_datawarehouse,
         op_kwargs={
-            "enriched_parquet_key": enrich_sale_data_operation.output,
+            "enriched_sale_data_path": enrich_sale_data_operation.output,
         },
     )
 
@@ -160,7 +177,7 @@ with DAG(
         task_id="calculate_revenue_by_category",
         python_callable=calculate_revenue_by_category,
         op_kwargs={
-            "enriched_parquet_key": enrich_sale_data_operation.output,
+            "enriched_sale_data_path": enrich_sale_data_operation.output,
         },
     )
 
@@ -168,7 +185,7 @@ with DAG(
         task_id="calculate_revenue_by_country",
         python_callable=calculate_revenue_by_country,
         op_kwargs={
-            "enriched_parquet_key": enrich_sale_data_operation.output,
+            "enriched_sale_data_path": enrich_sale_data_operation.output,
         },
     )
 
@@ -182,7 +199,7 @@ with DAG(
         python_callable=calculate_datawarehouse_revenue_by_country,
     )
 
-    generate_run_id_operation >> upload_raw_sale_data_operation >> clean_sale_data_operation >> enrich_sale_data_operation
+    generate_ingestion_time_operation >> upload_raw_sale_data_operation >> clean_sale_data_operation >> enrich_sale_data_operation
 
     enrich_sale_data_operation >> [
         populate_database_operation,

@@ -74,6 +74,10 @@ docker rmi samanalishiri/application:latest
 
 ## Services
 
+
+* Airflow: [http://localhost:8082](http://localhost:8082)
+  * user: admin
+  * password: admin
 * Spark Master: http://localhost:8080
 * Spark Worker: http://localhost:8181
 * Datalake: http://localhost:9001
