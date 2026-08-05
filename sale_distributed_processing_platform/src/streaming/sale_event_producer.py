@@ -15,11 +15,12 @@ class SaleEventProducer:
         self.producer = Producer({"bootstrap.servers": ec.KAFKA_BOOTSTRAP_SERVERS})
 
     def publish_sale_event(self, sale_event: dict[str, Any]) -> None:
+        logger.info("Publishing sale event to Kafka topic %r", ec.KAFKA_TOPIC)
+
         self.producer.produce(
             topic=ec.KAFKA_TOPIC,
             key=str(sale_event["order_id"]),
             value=json.dumps(sale_event),
-            on_delivery=self._handle_delivery,
         )
         self.producer.poll(0)
 

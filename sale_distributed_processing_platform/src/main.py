@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 def main() -> None:
     logger.info("Starting Sale ETL Platform")
-    kafka_spark_sale_pipeline.run()
+    # kafka_spark_sale_pipeline.run()
     # spark_sale_data_pipeline.run()
-    # pandas_sale_data_pipeline.run()
+    pandas_sale_data_pipeline.run()
     logger.info("Sale ETL Platform finished")
 
 
