@@ -119,6 +119,7 @@ services:
       - "${SPARK_MASTER_UI_PORT}:${SPARK_MASTER_UI_PORT}"
     volumes:
       - ./resources:/app/resources
+      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
   worker:
     image: ${SPARK_IMAGE}
     build:
@@ -138,6 +139,7 @@ services:
       - "${SPARK_WORKER_UI_PORT}:${SPARK_WORKER_UI_PORT}"
     volumes:
       - ./resources:/app/resources
+      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
   airflow-database:
     image: ${POSTGRES_IMAGE}
     container_name: ${AIRFLOW_POSTGRES_CONTAINER_NAME}
@@ -175,6 +177,7 @@ services:
       RESOURCES_DIR: ${AIRFLOW_RESOURCES_DIR}
       OUTPUT_DIR: ${AIRFLOW_OUTPUT_DIR}
       SCRIPTS_DIR: ${AIRFLOW_SCRIPTS_DIR}
+      SPARK_DIR: ${APPLICATION_SPARK_DIR}
       DATA_FILE: ${APPLICATION_DATA_FILE}
       # Spark
       SPARK_APPLICATION_NAME: ${SPARK_APPLICATION_NAME}
@@ -213,6 +216,7 @@ services:
       - ./scripts:${AIRFLOW_SCRIPTS_DIR}
       - ./airflow/simple_auth_manager_passwords.json.generated:${AIRFLOW_PASSWORD_FILE}
       - ./requirements-docker.txt:${AIRFLOW_REQUIREMENTS_FILE}
+      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
     ports:
       - "${AIRFLOW_PORT}:8080"
     command:
@@ -306,6 +310,7 @@ services:
       - ./resources:/app/resources
       - ./output:/app/output
       - ./scripts:/app/scripts
+      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
     depends_on:
       database:
         condition: service_healthy

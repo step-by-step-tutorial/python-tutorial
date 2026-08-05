@@ -6,6 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 SCRIPTS_DIR = Path(os.getenv("SCRIPTS_DIR", "scripts"))
+SPARK_DIR = Path(os.getenv("SPARK_DIR", "spark"))
 ML_MODEL_PATH = Path(os.getenv("ML_MODEL_PATH", "models/sale_model.joblib"))
 DL_MODEL_PATH = Path(os.getenv("DL_MODEL_PATH", "models/sale_neural_network.pt"))
 

@@ -5,8 +5,7 @@ from app_config import env_config as ec
 SPARK_JARS = [
     "org.postgresql:postgresql:42.7.7",
     "org.apache.hadoop:hadoop-aws:3.4.1",
-    "software.amazon.awssdk:bundle:2.31.65",
-    "org.slf4j:slf4j-simple:1.7.36",
+    "org.apache.logging.log4j:log4j-slf4j-impl:2.24.3",
 ]
 
 
@@ -26,6 +25,8 @@ def create_connection() -> SparkSession:
             .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
             .config("spark.hadoop.fs.s3a.fast.upload", "true")
             .config("spark.hadoop.fs.s3a.fast.upload.buffer", "bytebuffer")
+            .config("spark.driver.extraJavaOptions", f"-Dlog4j.configurationFile=file:{ec.SPARK_DIR}/log4j2.properties")
+            .config("spark.executor.extraJavaOptions", f"-Dlog4j.configurationFile=file:{ec.SPARK_DIR}/log4j2.properties")
             .getOrCreate()
         )
         print(f"Spark version: {session.version}")
