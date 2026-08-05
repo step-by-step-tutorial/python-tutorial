@@ -10,7 +10,7 @@ from util.datalake_utils import DatalakeLayer, build_sale_datalake_path
 
 logger = logging.getLogger(__name__)
 
-DAG_ID = "sale_etl_pipeline"
+DAG_ID = "pandas_sale_etl_pipeline"
 
 
 def generate_ingestion_time() -> str:

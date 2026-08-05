@@ -160,7 +160,11 @@ services:
     hostname: ${AIRFLOW_HOST}
     container_name: ${AIRFLOW_CONTAINER_NAME}
     restart: always
+    user: root
     environment:
+      # Java
+      JAVA_HOME: /opt/java
+      PATH: /opt/java/bin:/home/airflow/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
       # Airflow
       AIRFLOW__CORE__EXECUTOR: ${AIRFLOW_EXECUTOR}
       AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: ${AIRFLOW_SIMPLE_AUTH_MANAGER_USERS}
@@ -211,12 +215,41 @@ services:
       - ./requirements-docker.txt:${AIRFLOW_REQUIREMENTS_FILE}
     ports:
       - "${AIRFLOW_PORT}:8080"
-    command: >
-      bash -c "
-      pip install --no-cache-dir -r ${AIRFLOW_REQUIREMENTS_FILE} &&
-      airflow db migrate &&
-      airflow standalone
-      "
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+
+        apt-get update
+        apt-get install -y --no-install-recommends ca-certificates wget gpg apt-transport-https
+
+        wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public \
+          | gpg --dearmor \
+          > /etc/apt/trusted.gpg.d/adoptium.gpg
+
+        echo "deb https://packages.adoptium.net/artifactory/deb bookworm main" \
+          > /etc/apt/sources.list.d/adoptium.list
+
+        apt-get update
+        apt-get install -y --no-install-recommends temurin-21-jre
+        rm -rf /var/lib/apt/lists/*
+
+        JAVA_PATH="$$(readlink -f "$$(command -v java)")"
+        JAVA_HOME_PATH="$$(dirname "$$(dirname "$${JAVA_PATH}")")"
+
+        rm -rf /opt/java
+        ln -s "$${JAVA_HOME_PATH}" /opt/java
+
+        echo "JAVA_PATH=$${JAVA_PATH}"
+        echo "JAVA_HOME=$${JAVA_HOME}"
+        java -version
+
+        su airflow -s /bin/bash -c "
+          pip install --no-cache-dir -r ${AIRFLOW_REQUIREMENTS_FILE} &&
+          airflow db migrate &&
+          exec airflow standalone
+        "
     depends_on:
       airflow-database:
         condition: service_healthy
