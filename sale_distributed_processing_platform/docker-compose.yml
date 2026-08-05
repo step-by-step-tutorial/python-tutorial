@@ -1,5 +1,4 @@
 name: ${COMPOSE_PROJECT_NAME}
-
 services:
   database:
     image: ${POSTGRES_IMAGE}
