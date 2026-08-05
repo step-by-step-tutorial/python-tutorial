@@ -1,6 +1,11 @@
 import os
 from pathlib import Path
 
+
+def resolve(path: Path) -> Path:
+    return PROJECT_ROOT / path
+
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
@@ -16,6 +21,12 @@ SPARK_APPLICATION_NAME = os.getenv("SPARK_APPLICATION_NAME", "SALE_DISTRIBUTED_P
 SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "local[*]")
 SPARK_DRIVER_HOST = os.getenv("SPARK_DRIVER_HOST", "127.0.0.1")
 SPARK_DRIVER_BIND_ADDRESS = os.getenv("SPARK_DRIVER_BIND_ADDRESS", "127.0.0.1")
+SPARK_BUFFER = os.getenv("SPARK_BUFFER", "array")
+SPARK_ACTIVE_BLOCKS = os.getenv("SPARK_ACTIVE_BLOCKS", "1")
+SPARK_THREADS_MAX = os.getenv("SPARK_THREADS_MAX", "4")
+SPARK_MAX_TOTAL_TASKS = os.getenv("SPARK_MAX_TOTAL_TASKS", "4")
+S3A_BUFFER_DIR = os.getenv("S3A_BUFFER_DIR", str(resolve(OUTPUT_DIR / "s3a-buffer")))
+MAX_DIRECT_MEMORY_SIZE = os.getenv("MAX_DIRECT_MEMORY_SIZE", "2g")
 
 DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
 DATABASE_PORT = int(os.getenv("DATABASE_PORT", "5432"))
@@ -44,9 +55,10 @@ DATAWAREHOUSE_PASSWORD = os.getenv("DATAWAREHOUSE_PASSWORD", "admin")
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sale-events")
+KAFKA_STARTING_OFFSETS = os.getenv("KAFKA_STARTING_OFFSETS", "earliest")
+KAFKA_CHECKPOINT_PATH = os.getenv(
+    "KAFKA_CHECKPOINT_PATH",
+    f"{DATALAKE_SCHEME}://{DATALAKE_BUCKET_NAME}/checkpoints/sale-events",
+)
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
-
-
-def resolve(path: Path) -> Path:
-    return PROJECT_ROOT / path

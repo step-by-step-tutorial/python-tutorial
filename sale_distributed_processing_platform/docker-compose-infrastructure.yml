@@ -100,6 +100,38 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: LOCALHOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,CONTAINER://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: LOCALHOST://localhost:9092,CONTAINER://kafka:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: LOCALHOST
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,LOCALHOST:PLAINTEXT,CONTAINER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    container_name: kafdrop
+    hostname: kafdrop
+    restart: always
+    ports:
+      - "9002:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9094
+      JVM_OPTS: "-Xms32M -Xmx64M"
 volumes:
   database_data:
     name: ${POSTGRES_VOLUME}

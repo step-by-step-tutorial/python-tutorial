@@ -99,6 +99,7 @@ docker rmi samanalishiri/application:latest
 ## Clean Directory
 
 ```shell
+cd ./sale_distributed_processing_platform
 rm ./output/*
 rm -rf ./report
 rm -rf ./src/sale_distributed_processing_platform.egg-info

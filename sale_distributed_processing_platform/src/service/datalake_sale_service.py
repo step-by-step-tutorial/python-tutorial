@@ -7,6 +7,7 @@ import pyspark.sql as spark
 
 from app_config import env_config as ec
 from factory import datalake_connection_factory
+from util.datalake_utils import build_sale_datalake_path
 
 
 def overwrite(dataframe: spark.DataFrame, bucket_name: str, path: str) -> None:
@@ -35,6 +36,21 @@ def read(session: spark.SparkSession, bucket_name: str, path: str) -> spark.Data
 
     uri = f"{ec.DATALAKE_SCHEME}://{bucket_name.strip()}/{path.strip('/')}"
     return session.read.parquet(uri)
+
+
+def append(dataframe: spark.DataFrame, bucket_name: str, path: str) -> None:
+    if dataframe is None:
+        raise ValueError("Cannot append data because the input DataFrame is None.")
+    if bucket_name is None:
+        raise ValueError("Cannot append data because the bucket name is None.")
+    if path is None:
+        raise ValueError("Cannot append data because the input path is None.")
+    uri = f"{ec.DATALAKE_SCHEME}://{bucket_name.strip()}/{path.strip('/')}"
+    (
+        dataframe.write
+        .mode("append")
+        .parquet(uri)
+    )
 
 
 def get_bucket_names(client: Any) -> list[str]:
