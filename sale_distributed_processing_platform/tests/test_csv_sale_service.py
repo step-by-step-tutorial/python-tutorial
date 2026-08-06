@@ -77,13 +77,13 @@ class TestReadSaleDataCsv:
 
     def test_should_read_and_validate_sale_data(self, monkeypatch: MonkeyPatch, dataframe: DataFrame) -> None:
         # Given
-        def mock_read_csv_file(path: Path) -> DataFrame:
+        def mock_csv_to_dataframe(path: Path) -> DataFrame:
             return dataframe
 
         def mock_requires_column(df: DataFrame, columns: set[str]) -> None:
             pass
 
-        monkeypatch.setattr(system_under_test, "read_csv_file", mock_read_csv_file)
+        monkeypatch.setattr(system_under_test, "csv_to_dataframe", mock_csv_to_dataframe)
         monkeypatch.setattr(system_under_test, "requires_column", mock_requires_column)
 
         given_path = Path("resources/fake.csv")
@@ -96,10 +96,10 @@ class TestReadSaleDataCsv:
 
     def test_should_propagate_error_when_csv_reading_fails(self, monkeypatch: MonkeyPatch) -> None:
         # Given
-        def given_read_csv_file(csv_path: Path) -> DataFrame:
+        def given_csv_to_dataframe(csv_path: Path) -> DataFrame:
             raise FileNotFoundError(given_error_message)
 
-        monkeypatch.setattr(system_under_test, "read_csv_file", given_read_csv_file)
+        monkeypatch.setattr(system_under_test, "csv_to_dataframe", given_csv_to_dataframe)
 
         given_csv_path = Path("resources/missing.csv")
         given_error_message = "CSV file not found"
@@ -117,13 +117,13 @@ class TestReadSaleDataCsv:
             dataframe: DataFrame
     ) -> None:
         # Given
-        def mock_read_csv_file(path: Path) -> DataFrame:
+        def mock_csv_to_dataframe(path: Path) -> DataFrame:
             return dataframe
 
         def mock_requires_column(df: DataFrame, columns: set[str]) -> None:
             raise ValueError(given_error_message)
 
-        monkeypatch.setattr(system_under_test, "read_csv_file", mock_read_csv_file)
+        monkeypatch.setattr(system_under_test, "csv_to_dataframe", mock_csv_to_dataframe)
         monkeypatch.setattr(system_under_test, "requires_column", mock_requires_column)
 
         given_csv_path = Path("resources/invalid.csv")

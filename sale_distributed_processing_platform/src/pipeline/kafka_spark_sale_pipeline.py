@@ -8,13 +8,13 @@ from pyspark.sql.streaming import StreamingQuery
 from app_config import env_config as ec
 from factory import data_processor_connection_factory
 from service import (
-    csv_sale_event_service,
-    database_sale_service,
-    datalake_sale_service,
-    datawarehouse_sale_service,
-    kafka_sale_service,
+    kafka_spark_sale_service,
     spark_sale_service,
 )
+from service.datawarehouse import datawarehouse_sale_service
+from service.database import database_sale_service
+from service.datalake import datalake_spark_sale_service
+from streaming import csv_sale_publisher
 from util.datalake_utils import DatalakeLayer, build_sale_datalake_path
 
 logger = logging.getLogger(__name__)
@@ -44,16 +44,16 @@ def run() -> None:
 
 def publish_sale_events() -> None:
     logger.info("Publishing sale events from %s to Kafka topic %s", ec.DATA_FILE, ec.KAFKA_TOPIC)
-    published_event_count = csv_sale_event_service.publish_sale_events(ec.DATA_FILE)
+    published_event_count = csv_sale_publisher.publish_data(ec.DATA_FILE)
     logger.info("Published %s sale events", published_event_count)
 
 
 def process_sale_event_stream(session: SparkSession, ingestion_time: datetime) -> StreamingQuery:
     logger.info("Reading sale events from Kafka topic %s", ec.KAFKA_TOPIC)
-    kafka_dataframe = kafka_sale_service.read_sale_event_stream(session)
+    kafka_dataframe = kafka_spark_sale_service.read_sale_event_stream(session)
 
     logger.info("Parsing Kafka sale events")
-    sale_event_dataframe = kafka_sale_service.parse_sale_event_stream(kafka_dataframe)
+    sale_event_dataframe = kafka_spark_sale_service.parse_sale_event_stream(kafka_dataframe)
 
     logger.info("Starting Spark Structured Streaming query with checkpoint %s", ec.KAFKA_CHECKPOINT_PATH)
 
@@ -93,16 +93,16 @@ def process_sale_event_batch(dataframe: DataFrame, batch_id: int, ingestion_time
         enriched_output_dataframe = enriched_dataframe.coalesce(1)
 
         logger.info("Appending raw sale data to %s", raw_sale_data_path)
-        datalake_sale_service.append(dataframe=raw_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                     path=raw_sale_data_path)
+        datalake_spark_sale_service.append(dataframe=raw_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                           path=raw_sale_data_path)
 
         logger.info("Appending cleaned sale data to %s", cleaned_sale_data_path)
-        datalake_sale_service.append(dataframe=cleaned_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                     path=cleaned_sale_data_path)
+        datalake_spark_sale_service.append(dataframe=cleaned_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                           path=cleaned_sale_data_path)
 
         logger.info("Appending enriched sale data to %s", enriched_sale_data_path)
-        datalake_sale_service.append(dataframe=enriched_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                     path=enriched_sale_data_path)
+        datalake_spark_sale_service.append(dataframe=enriched_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                           path=enriched_sale_data_path)
 
         logger.info("Populating database")
         database_sale_service.populate(enriched_dataframe)
@@ -127,8 +127,8 @@ def show_pipeline_results(session: SparkSession, ingestion_time: datetime) -> No
     enriched_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
 
     logger.info("Reading enriched sale data from %s", enriched_sale_data_path)
-    enriched_dataframe = datalake_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                    path=enriched_sale_data_path)
+    enriched_dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                          path=enriched_sale_data_path)
 
     logger.info("Showing enriched sale data")
     enriched_dataframe.show(10)

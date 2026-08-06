@@ -2,7 +2,7 @@ import pandas
 import pytest
 import pyspark.sql
 
-from service import database_population_strategy as system_under_test
+from service.database import database_population_strategy as system_under_test
 
 
 class TestPopulationFunctions:

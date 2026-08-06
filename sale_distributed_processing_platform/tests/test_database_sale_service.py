@@ -1,7 +1,7 @@
 import pandas
 import pytest
 
-from service import database_sale_service as system_under_test
+from service.database import database_sale_service as system_under_test
 
 
 class TestTruncateStageTable:
@@ -11,10 +11,9 @@ class TestTruncateStageTable:
         mock_execute_sql = mocker.patch.object(system_under_test, "execute_sql")
 
         # When
-        actual = system_under_test.truncate_stage_table()
+        system_under_test.truncate_stage_table()
 
         # Then
-        assert actual is None
         assert mock_execute_sql.call_count == 1
 
 
@@ -24,15 +23,17 @@ class TestPopulateStageTable:
         # Given
         given_dataframe = pandas.DataFrame()
         given_population_function = mocker.Mock()
-
-        mocker.patch.dict(system_under_test.POPULATION_FUNCTIONS, {pandas.DataFrame: given_population_function}, clear=True)
+        mock_lookup_population_strategy = mocker.patch.object(
+            system_under_test, "lookup_population_strategy",
+            return_value=given_population_function
+        )
 
         # When
-        actual = system_under_test.populate_stage_table(given_dataframe)
+        system_under_test.populate_stage_table(given_dataframe)
 
         # Then
-        assert actual is None
-        assert given_population_function.call_count == 1
+        mock_lookup_population_strategy.assert_called_once_with(given_dataframe)
+        given_population_function.assert_called_once_with(given_dataframe)
 
     def test_should_raise_error_for_unsupported_dataframe_type(self, mocker) -> None:
         # Given
@@ -41,8 +42,7 @@ class TestPopulateStageTable:
 
         given_dataframe = GivenUnsupportedDataFrame()
         given_error_message = "Unsupported DataFrame type: GivenUnsupportedDataFrame"
-
-        mocker.patch.dict(system_under_test.POPULATION_FUNCTIONS, {}, clear=True)
+        mocker.patch.object(system_under_test, "lookup_population_strategy", side_effect=TypeError(given_error_message))
 
         # When
         with pytest.raises(TypeError) as actual:
@@ -57,17 +57,17 @@ class TestPopulateStageTable:
             pass
 
         given_dataframe = GivenUnsupportedDataFrame()
+        given_error_message = "Unsupported DataFrame type: GivenUnsupportedDataFrame"
         given_population_function = mocker.Mock()
-
-        mocker.patch.dict(system_under_test.POPULATION_FUNCTIONS, {pandas.DataFrame: given_population_function}, clear=True)
+        mocker.patch.object(system_under_test, "lookup_population_strategy", side_effect=TypeError(given_error_message))
 
         # When
         with pytest.raises(TypeError) as actual:
             system_under_test.populate_stage_table(given_dataframe)
 
         # Then
-        assert actual.value is not None
-        assert given_population_function.call_count == 0
+        assert str(actual.value) == given_error_message
+        given_population_function.assert_not_called()
 
 
 class TestTruncateAllTables:
@@ -77,10 +77,9 @@ class TestTruncateAllTables:
         mock_execute_sql = mocker.patch.object(system_under_test, "execute_sql")
 
         # When
-        actual = system_under_test.truncate_all_tables()
+        system_under_test.truncate_all_tables()
 
         # Then
-        assert actual is None
         assert mock_execute_sql.call_count == 1
 
 
@@ -91,10 +90,9 @@ class TestPopulateAllTables:
         mock_execute_sql = mocker.patch.object(system_under_test, "execute_sql")
 
         # When
-        actual = system_under_test.populate_all_tables()
+        system_under_test.populate_all_tables()
 
         # Then
-        assert actual is None
         assert mock_execute_sql.call_count == 1
 
 
@@ -110,10 +108,9 @@ class TestPopulate:
         mock_populate_all_tables = mocker.patch.object(system_under_test, "populate_all_tables")
 
         # When
-        actual = system_under_test.populate(given_dataframe)
+        system_under_test.populate(given_dataframe)
 
         # Then
-        assert actual is None
         assert mock_truncate_stage_table.call_count == 1
         assert mock_populate_stage_table.call_count == 1
         assert mock_truncate_all_tables.call_count == 1

@@ -3,13 +3,13 @@ from pandas import DataFrame
 from app_config import env_config as ec
 from app_config.datawarehouse_schema import SALE_TABLE
 from factory import datawarehouse_connection_factory
-from util.text_file_utils import load_sql_query
+from util.file_utils import read_sql_file
 
 
 class Queries:
-    TRUNCATE_DATAWAREHOUSE = load_sql_query("truncate_datawarehouse.sql")
-    SELECT_REVENUE_BY_CATEGORY = load_sql_query("select_revenue_by_category.sql")
-    SELECT_REVENUE_BY_COUNTRY = load_sql_query("select_revenue_by_country.sql")
+    TRUNCATE_DATAWAREHOUSE = read_sql_file("truncate_datawarehouse.sql")
+    SELECT_REVENUE_BY_CATEGORY = read_sql_file("select_revenue_by_category.sql")
+    SELECT_REVENUE_BY_COUNTRY = read_sql_file("select_revenue_by_country.sql")
 
 
 def populate(dataframe: DataFrame) -> None:

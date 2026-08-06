@@ -5,7 +5,7 @@ import pandas as pd
 from pandas.errors import EmptyDataError
 
 
-def read_csv_file(path: Path) -> pd.DataFrame:
+def csv_to_dataframe(path: Path) -> pd.DataFrame:
     if not path.is_file():
         raise FileNotFoundError(f"CSV file not found: {path}")
 

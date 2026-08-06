@@ -1,12 +1,7 @@
 import os
 from pathlib import Path
 
-
-def resolve(path: Path) -> Path:
-    return PROJECT_ROOT / path
-
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from util.file_utils import build_absolute_path
 
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
@@ -25,24 +20,26 @@ SPARK_BUFFER = os.getenv("SPARK_BUFFER", "array")
 SPARK_ACTIVE_BLOCKS = os.getenv("SPARK_ACTIVE_BLOCKS", "1")
 SPARK_THREADS_MAX = os.getenv("SPARK_THREADS_MAX", "4")
 SPARK_MAX_TOTAL_TASKS = os.getenv("SPARK_MAX_TOTAL_TASKS", "4")
-S3A_BUFFER_DIR = os.getenv("S3A_BUFFER_DIR", str(resolve(OUTPUT_DIR / "s3a-buffer")))
+S3A_BUFFER_DIR = os.getenv("S3A_BUFFER_DIR", str(build_absolute_path(OUTPUT_DIR / "s3a-buffer")))
 MAX_DIRECT_MEMORY_SIZE = os.getenv("MAX_DIRECT_MEMORY_SIZE", "2g")
 
 DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
 DATABASE_PORT = int(os.getenv("DATABASE_PORT", "5432"))
 DATABASE_NAME = os.getenv("DATABASE_NAME", "sale_database")
+DATABASE_AUDIT_NAME = os.getenv("DATABASE_AUDIT_NAME", "audit")
 DATABASE_USER = os.getenv("DATABASE_USER", "admin")
 DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD", "admin")
 DATABASE_DRIVER = os.getenv("DATABASE_DRIVER", "org.postgresql.Driver")
 DATABASE_JDBC_URL = os.getenv("DATABASE_JDBC_URL", f"jdbc:postgresql://{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}")
-DATABASE_SQLALCHEMY_URL = os.getenv("DATABASE_SQLALCHEMY_URL",
-                                    f"postgresql+psycopg2://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}")
+DATABASE_SQLALCHEMY_URL = os.getenv("DATABASE_SQLALCHEMY_URL", f"postgresql+psycopg2://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}")
+DATABASE_AUDIT_SQLALCHEMY_URL = os.getenv("DATABASE_AUDIT_SQLALCHEMY_URL", f"postgresql+psycopg2://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_AUDIT_NAME}")
 DATABASE_STAGE_TABLE_NAME = "sale_stage"
 
 DATALAKE_ENDPOINT = os.getenv("DATALAKE_ENDPOINT", "http://localhost:9000")
 DATALAKE_ACCESS_KEY = os.getenv("DATALAKE_ACCESS_KEY", "admin")
 DATALAKE_SECRET_KEY = os.getenv("DATALAKE_SECRET_KEY", "administrator")
 DATALAKE_BUCKET_NAME = os.getenv("DATALAKE_BUCKET_NAME", "sale-datalake")
+DATALAKE_AUDIT_BUCKET_NAME = os.getenv("DATALAKE_AUDIT_BUCKET_NAME", "sale-audit")
 DATALAKE_SCHEME = os.getenv("DATALAKE_SCHEME", "s3a")
 DATALAKE_ENVIRONMENT = os.getenv("DATALAKE_ENVIRONMENT", "dev")
 DATALAKE_SALE_DATASET = os.getenv("DATALAKE_SALE_DATASET", "sale")
@@ -55,10 +52,13 @@ DATAWAREHOUSE_PASSWORD = os.getenv("DATAWAREHOUSE_PASSWORD", "admin")
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "sale-events")
+KAFKA_SALE_TOPIC_CONSUMER_GROUP=os.getenv("KAFKA_SALE_TOPIC_CONSUMER_GROUP", "sale-consumer")
+KAFKA_AUDIT_TOPIC = os.getenv("KAFKA_AUDIT_TOPIC", "sale-audit-events")
+KAFKA_AUDIT_DEAD_LETTER_TOPIC = os.getenv("KAFKA_AUDIT_DEAD_LETTER_TOPIC", "sale.audit.dead-letter.v1")
+KAFKA_AUDIT_CONSUMER_GROUP=os.getenv("KAFKA_AUDIT_CONSUMER_GROUP", "sale-audit-consumer")
 KAFKA_STARTING_OFFSETS = os.getenv("KAFKA_STARTING_OFFSETS", "earliest")
-KAFKA_CHECKPOINT_PATH = os.getenv(
-    "KAFKA_CHECKPOINT_PATH",
-    f"{DATALAKE_SCHEME}://{DATALAKE_BUCKET_NAME}/checkpoints/sale-events",
-)
+KAFKA_CHECKPOINT_PATH = os.getenv( "KAFKA_CHECKPOINT_PATH", f"{DATALAKE_SCHEME}://{DATALAKE_BUCKET_NAME}/checkpoints/sale-events")
+
+AUDIT_ARCHIVE_ENABLED = os.getenv("AUDIT_ARCHIVE_ENABLED", "true").lower() in {"1", "true", "yes", "on"}
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")

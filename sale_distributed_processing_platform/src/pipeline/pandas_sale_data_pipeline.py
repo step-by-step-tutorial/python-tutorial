@@ -5,7 +5,10 @@ import pandas as pd
 from itables import show
 
 from app_config import env_config as ec
-from service import csv_sale_service, database_sale_service, datalake_sale_service, datawarehouse_sale_service
+from service import csv_sale_service
+from service.datawarehouse import datawarehouse_sale_service
+from service.database import database_sale_service
+from service.datalake import datalake_pandas_sale_service
 from util.datalake_utils import DatalakeLayer, build_sale_datalake_path
 
 logger = logging.getLogger(__name__)
@@ -51,8 +54,8 @@ def upload_raw_sale_data(ingestion_time: datetime) -> str:
     dataframe = csv_sale_service.read_data(file_name=ec.DATA_FILE)
 
     logger.info("Uploading raw sale data to %s", raw_sale_data_path)
-    datalake_sale_service.upload_parquet(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                         path=raw_sale_data_path)
+    datalake_pandas_sale_service.upload_parquet(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                path=raw_sale_data_path)
 
     return raw_sale_data_path
 
@@ -61,14 +64,15 @@ def clean_sale_data(raw_sale_data_path: str, ingestion_time: datetime) -> str:
     cleaned_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.CLEANED, ingestion_time=ingestion_time)
 
     logger.info("Reading raw sale data from %s", raw_sale_data_path)
-    dataframe = datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_sale_data_path)
+    dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                              path=raw_sale_data_path)
 
     logger.info("Cleaning sale data")
     cleaned_dataframe = csv_sale_service.clean_data(dataframe)
 
     logger.info("Uploading cleaned sale data to %s", cleaned_sale_data_path)
-    datalake_sale_service.upload_parquet(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                         path=cleaned_sale_data_path)
+    datalake_pandas_sale_service.upload_parquet(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                path=cleaned_sale_data_path)
 
     return cleaned_sale_data_path
 
@@ -77,21 +81,23 @@ def enrich_sale_data(cleaned_sale_data_path: str, ingestion_time: datetime) -> s
     enriched_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
 
     logger.info("Reading cleaned sale data from %s", cleaned_sale_data_path)
-    dataframe = datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_sale_data_path)
+    dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                              path=cleaned_sale_data_path)
 
     logger.info("Enriching sale data")
     enriched_dataframe = csv_sale_service.enrich_data(dataframe)
 
     logger.info("Uploading enriched sale data to %s", enriched_sale_data_path)
-    datalake_sale_service.upload_parquet(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                         path=enriched_sale_data_path)
+    datalake_pandas_sale_service.upload_parquet(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                path=enriched_sale_data_path)
 
     return enriched_sale_data_path
 
 
 def read_enriched_sale_data(enriched_sale_data_path: str) -> pd.DataFrame:
     logger.info("Reading enriched sale data from %s", enriched_sale_data_path)
-    return datalake_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_sale_data_path)
+    return datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                         path=enriched_sale_data_path)
 
 
 def populate_database(enriched_dataframe: pd.DataFrame) -> None:
