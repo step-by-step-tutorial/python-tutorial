@@ -14,10 +14,10 @@ class EventProducer:
         self.producer = create_kafka_producer()
 
     def publish(self, event: dict[str, Any]) -> None:
-        logger.info("Publishing sale event to Kafka topic %r", ec.KAFKA_TOPIC)
+        logger.info("Publishing sale event to streaming topic %r", ec.STREAMING_TOPIC)
 
         self.producer.produce(
-            topic=ec.KAFKA_TOPIC,
+            topic=ec.STREAMING_TOPIC,
             key=str(event["order_id"]),
             value=json.dumps(event),
             on_delivery=delivery_callback,

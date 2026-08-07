@@ -23,8 +23,8 @@ def read_sql_file(file_name: str) -> str:
 
 
 def read_csv_file(path: Path, processor: Callable[[dict[str, Any]], None]) -> int:
-    should_be_not_none("CSV file path", path)
-    should_be_not_none("CSV row processor", processor)
+    should_be_not_none(path, "CSV file path")
+    should_be_not_none(processor, "CSV row processor")
     should_be_exists(path)
 
     row_counter = 0

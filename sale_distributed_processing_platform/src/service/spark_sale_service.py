@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
 
 from app_config import env_config as ec
-from app_config.dataframe_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
+from app_config.dataframe_schema import SALE_COLUMNS, DATA_REQUIRED_COLUMNS
 from util.file_utils import build_absolute_path
 from util.spark_dataframe_utils import (
     remove_duplicates,
@@ -31,7 +31,7 @@ def read_data(session: SparkSession, file_name, schema) -> DataFrame:
         .csv(str(build_absolute_path(ec.RESOURCES_DIR) / file_name))
     )
 
-    requires_column(df, SALE_REQUIRED_COLUMNS)
+    requires_column(df, DATA_REQUIRED_COLUMNS)
     return df
 
 

@@ -2,7 +2,7 @@ CREATE DATABASE IF NOT EXISTS sale_datawarehouse;
 
 CREATE TABLE IF NOT EXISTS sale_datawarehouse.sale_table
 (
-    order_id UInt32,
+    order_id Int64,
     customer_name String,
     product_name String,
     category String,

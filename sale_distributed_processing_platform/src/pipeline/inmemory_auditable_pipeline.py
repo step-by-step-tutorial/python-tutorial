@@ -15,7 +15,7 @@ from service.database import database_sale_service as database_service
 from service.datalake import datalake_pandas_sale_service as datalake_service
 from service.datawarehouse import datawarehouse_sale_service
 from streaming.audit_event_producer import AuditEventProducer
-from util.datalake_utils import DatalakeLayer, build_sale_datalake_path, build_datalake_uri
+from util.datalake_utils import DatalakeLayer, build_datalake_path, build_datalake_uri
 from util.log_utils import draw_line
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import elapsed_milliseconds
@@ -40,7 +40,7 @@ def run() -> None:
             pipeline_id=pipeline_id,
             metadata={"data_file": ec.DATA_FILE}
         )
-        audit_repository.save_event(pipeline_started_event, ec.KAFKA_AUDIT_TOPIC)
+        audit_repository.save_event(pipeline_started_event, ec.STREAMING_AUDIT_TOPIC)
         ingestion_time = datetime.now(UTC)
         logger.info("Start pipeline with run-id %s at %s", pipeline_id, ingestion_time)
         draw_line()
@@ -103,11 +103,13 @@ def run() -> None:
         )
         raise
     finally:
-        flush_producers(audit_pipeline_service.producer, audit_task_service.producer)
+        producer.flush()
+        audit_pipeline_service.producer.flush()
+        audit_task_service.producer.flush()
 
 
 def upload_raw_data(ingestion_time: datetime) -> tuple[str, int]:
-    path = build_sale_datalake_path(DatalakeLayer.RAW, ingestion_time)
+    path = build_datalake_path(DatalakeLayer.RAW, ingestion_time)
 
     with (audit_task_service.audit_task(PIPELINE_NAME, pipeline_id, "upload_raw_data", TASK_ATTEMPT) as metrics):
         dataframe = csv_service.read_data(ec.DATA_FILE)
@@ -134,7 +136,7 @@ def upload_raw_data(ingestion_time: datetime) -> tuple[str, int]:
 
 
 def clean_sale_data(raw_path: str, ingestion_time: datetime) -> tuple[str, int, int]:
-    cleaned_path = build_sale_datalake_path(DatalakeLayer.CLEANED, ingestion_time)
+    cleaned_path = build_datalake_path(DatalakeLayer.CLEANED, ingestion_time)
     with (audit_task_service.audit_task(PIPELINE_NAME, pipeline_id, "clean_data", TASK_ATTEMPT) as metrics):
         raw_dataframe = datalake_service.download_parquet(ec.DATALAKE_BUCKET_NAME, raw_path)
         total_raw_rows = len(raw_dataframe)
@@ -164,7 +166,7 @@ def clean_sale_data(raw_path: str, ingestion_time: datetime) -> tuple[str, int, 
 
 
 def enrich_sale_data(cleaned_path: str, ingestion_time: datetime) -> tuple[str, int]:
-    enriched_path = build_sale_datalake_path(DatalakeLayer.ENRICHED, ingestion_time)
+    enriched_path = build_datalake_path(DatalakeLayer.ENRICHED, ingestion_time)
     with audit_task_service.audit_task(PIPELINE_NAME, pipeline_id, "enrich_data", TASK_ATTEMPT) as metrics:
         cleaned_dataframe = datalake_service.download_parquet(ec.DATALAKE_BUCKET_NAME, cleaned_path)
         total_cleaned_rows = len(cleaned_dataframe)
@@ -294,15 +296,3 @@ def publish_written_event(source: str, source_uri: str, destination_uri: str, ro
         )
     )
 
-
-def flush_producers(*producers: AuditEventProducer) -> None:
-    errors = []
-
-    for producer in {id(producer): producer for producer in producers}.values():
-        try:
-            producer.flush()
-        except Exception as error:
-            errors.append(error)
-
-    if errors:
-        raise errors[0]

@@ -13,10 +13,10 @@ class AuditEventProducer:
         self.producer = create_kafka_producer()
 
     def publish(self, event: AuditEvent) -> None:
-        logger.info("Publishing audit event to Kafka topic %r", ec.KAFKA_AUDIT_TOPIC)
+        logger.info("Publishing audit event to streaming topic %r", ec.STREAMING_AUDIT_TOPIC)
         try:
             self.producer.produce(
-                topic=ec.KAFKA_AUDIT_TOPIC,
+                topic=ec.STREAMING_AUDIT_TOPIC,
                 key=event.pipeline_id,
                 value=event.model_dump_json(),
                 headers={

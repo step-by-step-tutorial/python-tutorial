@@ -8,40 +8,35 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.streaming import StreamingQuery
 
 from app_config import env_config as ec
+from app_config.dataframe_schema import SCHEMA
 from factory import data_processor_connection_factory
 from service import (
-    kafka_spark_sale_service,
+    spark_streaming_service,
     spark_sale_service,
 )
-from service.datawarehouse import datawarehouse_sale_service
 from service.database import database_sale_service
 from service.datalake import datalake_spark_sale_service
-from streaming import csv_sale_publisher
-from util.datalake_utils import DatalakeLayer, build_sale_datalake_path
+from service.datawarehouse import datawarehouse_sale_service
+from streaming import csv_publisher
+from util.datalake_utils import DatalakeLayer, build_datalake_path
 
 logger = logging.getLogger(__name__)
 
-DAG_ID = "kafka_spark_sale_pipeline"
+DAG_ID = "spark_based_streaming_dag"
 DAG_START_DATE = pendulum.datetime(2026, 1, 1, tz="UTC")
 
 
 def create_ingestion_time() -> str:
     ingestion_time = datetime.now(UTC)
-
     logger.info("Created ingestion time %s", ingestion_time)
-
     return ingestion_time.isoformat()
 
 
 def publish_sale_events() -> None:
     draw_line()
-
-    logger.info("Publishing sale events from %s to Kafka topic %s", ec.DATA_FILE, ec.KAFKA_TOPIC)
-
-    published_event_count = csv_sale_publisher.publish_data(ec.DATA_FILE)
-
-    logger.info("Published %s sale events to Kafka topic %s", published_event_count, ec.KAFKA_TOPIC)
-
+    logger.info("Publishing sale events from %s to streaming topic %s", ec.DATA_FILE, ec.STREAMING_TOPIC)
+    published_event_count = csv_publisher.publish(ec.DATA_FILE)
+    logger.info("Published %s sale events to streaming topic %s", published_event_count, ec.STREAMING_TOPIC)
     draw_line()
 
 
@@ -52,12 +47,12 @@ def process_sale_event_stream(ingestion_time: str) -> None:
     try:
         draw_line()
 
-        logger.info("Starting Kafka Spark sale processing with ingestion time %s", parsed_ingestion_time)
+        logger.info("Starting streaming Spark sale processing with ingestion time %s", parsed_ingestion_time)
 
         streaming_query = start_sale_event_stream(session=session, ingestion_time=parsed_ingestion_time)
         await_streaming_query(streaming_query)
 
-        logger.info("Kafka Spark sale processing completed")
+        logger.info("Streaming Spark sale processing completed")
 
         draw_line()
     finally:
@@ -66,18 +61,18 @@ def process_sale_event_stream(ingestion_time: str) -> None:
 
 
 def start_sale_event_stream(session: SparkSession, ingestion_time: datetime) -> StreamingQuery:
-    logger.info("Reading sale events from Kafka topic %s", ec.KAFKA_TOPIC)
-    kafka_dataframe = kafka_spark_sale_service.read_sale_event_stream(session)
+    logger.info("Reading sale events from streaming topic %s", ec.STREAMING_TOPIC)
+    kafka_dataframe = spark_streaming_service.read_stream(session)
 
-    logger.info("Parsing Kafka sale events")
-    sale_event_dataframe = kafka_spark_sale_service.parse_sale_event_stream(kafka_dataframe)
+    logger.info("Parsing streaming sale events")
+    sale_event_dataframe = spark_streaming_service.convert(kafka_dataframe, SCHEMA)
 
-    logger.info("Starting Spark Structured Streaming query with checkpoint %s", ec.KAFKA_CHECKPOINT_PATH)
+    logger.info("Starting Spark Structured Streaming query with checkpoint %s", ec.STREAMING_CHECKPOINT_PATH)
 
     return (
         sale_event_dataframe.writeStream
         .foreachBatch(lambda dataframe, batch_id: process_sale_event_batch(dataframe, batch_id, ingestion_time))
-        .option("checkpointLocation", ec.KAFKA_CHECKPOINT_PATH)
+        .option("checkpointLocation", ec.STREAMING_CHECKPOINT_PATH)
         .trigger(availableNow=True)
         .start()
     )
@@ -85,10 +80,10 @@ def start_sale_event_stream(session: SparkSession, ingestion_time: datetime) -> 
 
 def process_sale_event_batch(dataframe: DataFrame, batch_id: int, ingestion_time: datetime) -> None:
     if dataframe.isEmpty():
-        logger.info("Skipping empty Kafka micro-batch %s", batch_id)
+        logger.info("Skipping empty streaming micro-batch %s", batch_id)
         return
 
-    logger.info("Processing Kafka micro-batch %s", batch_id)
+    logger.info("Processing streaming micro-batch %s", batch_id)
 
     raw_dataframe = dataframe.drop(
         "kafka_topic",
@@ -101,22 +96,25 @@ def process_sale_event_batch(dataframe: DataFrame, batch_id: int, ingestion_time
     enriched_dataframe = spark_sale_service.enrich_data(cleaned_dataframe).persist()
 
     try:
-        raw_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=ingestion_time)
-        cleaned_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.CLEANED, ingestion_time=ingestion_time)
-        enriched_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
+        raw_sale_data_path = build_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=ingestion_time)
+        cleaned_sale_data_path = build_datalake_path(layer=DatalakeLayer.CLEANED, ingestion_time=ingestion_time)
+        enriched_sale_data_path = build_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
 
         raw_output_dataframe = raw_dataframe.coalesce(1)
         cleaned_output_dataframe = cleaned_dataframe.coalesce(1)
         enriched_output_dataframe = enriched_dataframe.coalesce(1)
 
         logger.info("Appending raw sale data to %s", raw_sale_data_path)
-        datalake_spark_sale_service.append(dataframe=raw_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_sale_data_path)
+        datalake_spark_sale_service.append(dataframe=raw_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                           path=raw_sale_data_path)
 
         logger.info("Appending cleaned sale data to %s", cleaned_sale_data_path)
-        datalake_spark_sale_service.append(dataframe=cleaned_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_sale_data_path)
+        datalake_spark_sale_service.append(dataframe=cleaned_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                           path=cleaned_sale_data_path)
 
         logger.info("Appending enriched sale data to %s", enriched_sale_data_path)
-        datalake_spark_sale_service.append(dataframe=enriched_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_sale_data_path)
+        datalake_spark_sale_service.append(dataframe=enriched_output_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                           path=enriched_sale_data_path)
 
         logger.info("Populating database")
         database_sale_service.populate(enriched_dataframe)
@@ -124,7 +122,7 @@ def process_sale_event_batch(dataframe: DataFrame, batch_id: int, ingestion_time
         logger.info("Populating datawarehouse")
         datawarehouse_sale_service.populate(enriched_dataframe.toPandas())
 
-        logger.info("Completed Kafka micro-batch %s", batch_id)
+        logger.info("Completed streaming micro-batch %s", batch_id)
     finally:
         enriched_dataframe.unpersist()
         cleaned_dataframe.unpersist()
@@ -132,11 +130,11 @@ def process_sale_event_batch(dataframe: DataFrame, batch_id: int, ingestion_time
 
 
 def await_streaming_query(streaming_query: StreamingQuery) -> None:
-    logger.info("Waiting for available Kafka sale events to be processed")
+    logger.info("Waiting for available streaming sale events to be processed")
 
     streaming_query.awaitTermination()
 
-    logger.info("Available Kafka sale events were processed")
+    logger.info("Available streaming sale events were processed")
 
 
 def show_pipeline_results(ingestion_time: str) -> None:
@@ -146,10 +144,12 @@ def show_pipeline_results(ingestion_time: str) -> None:
     try:
         draw_line()
 
-        enriched_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=parsed_ingestion_time)
+        enriched_sale_data_path = build_datalake_path(layer=DatalakeLayer.ENRICHED,
+                                                      ingestion_time=parsed_ingestion_time)
 
         logger.info("Reading enriched sale data from %s", enriched_sale_data_path)
-        enriched_dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_sale_data_path)
+        enriched_dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME,
+                                                              path=enriched_sale_data_path)
 
         logger.info("Showing enriched sale data")
         enriched_dataframe.show(10)
@@ -164,11 +164,13 @@ def show_pipeline_results(ingestion_time: str) -> None:
 
         logger.info("Calculating revenue by category with Datawarehouse")
         revenue_by_category_datawarehouse_dataframe = datawarehouse_sale_service.get_revenue_by_category()
-        logger.info("Revenue by category from Datawarehouse:\n%s", revenue_by_category_datawarehouse_dataframe.to_string(index=False))
+        logger.info("Revenue by category from Datawarehouse:\n%s",
+                    revenue_by_category_datawarehouse_dataframe.to_string(index=False))
 
         logger.info("Calculating revenue by country with Datawarehouse")
         revenue_by_country_datawarehouse_dataframe = datawarehouse_sale_service.get_revenue_by_country()
-        logger.info("Revenue by country from Datawarehouse:\n%s", revenue_by_country_datawarehouse_dataframe.to_string(index=False))
+        logger.info("Revenue by country from Datawarehouse:\n%s",
+                    revenue_by_country_datawarehouse_dataframe.to_string(index=False))
 
         draw_line()
     finally:
@@ -187,7 +189,7 @@ def draw_line() -> None:
 
 with DAG(
         dag_id=DAG_ID,
-        description="Publish CSV sale events to Kafka and process them with Spark Structured Streaming",
+        description="Publish CSV sale events to streaming and process them with Spark Structured Streaming",
         schedule=None,
         start_date=DAG_START_DATE,
         catchup=False,
@@ -197,7 +199,7 @@ with DAG(
             "retries": 0,
             "retry_delay": timedelta(minutes=1),
         },
-        tags=["sale", "kafka", "spark", "streaming"],
+        tags=["sale", "streaming", "spark"],
 ) as dag:
     create_ingestion_time_task = PythonOperator(
         task_id="create_ingestion_time",

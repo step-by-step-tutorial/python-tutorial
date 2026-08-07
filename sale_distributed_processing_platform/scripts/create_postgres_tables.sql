@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS product (
 );
 
 CREATE TABLE IF NOT EXISTS sale_order (
-    order_id INTEGER PRIMARY KEY,
+    order_id BIGINT PRIMARY KEY,
     customer_id INTEGER NOT NULL,
     order_date DATE NOT NULL,
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS sale_order (
 
 CREATE TABLE IF NOT EXISTS order_item (
     order_item_id SERIAL PRIMARY KEY,
-    order_id INTEGER NOT NULL,
+    order_id BIGINT NOT NULL,
     product_id INTEGER NOT NULL,
     quantity NUMERIC(12, 2) NOT NULL,
     unit_price NUMERIC(12, 2) NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS order_item (
 );
 
 CREATE TABLE IF NOT EXISTS sale_stage (
-    order_id INTEGER NOT NULL,
+    order_id BIGINT NOT NULL,
     customer_name VARCHAR(200) NOT NULL,
     product_name VARCHAR(200) NOT NULL,
     category VARCHAR(100) NOT NULL,

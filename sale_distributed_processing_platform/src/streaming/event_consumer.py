@@ -7,7 +7,7 @@ from factory.kafka_connection_factory import create_topic_consumer
 class EventConsumer:
     def __init__(self) -> None:
         self.consumer = create_topic_consumer()
-        self.consumer.subscribe([ec.KAFKA_TOPIC])
+        self.consumer.subscribe([ec.STREAMING_TOPIC])
 
     def consume(self, timeout_seconds: float = 5.0) -> dict | None:
         message = self.consumer.poll(timeout_seconds)

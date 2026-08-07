@@ -2,7 +2,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from app_config import env_config as ec
-from app_config.dataframe_schema import SALE_COLUMNS, SALE_REQUIRED_COLUMNS
+from app_config.dataframe_schema import SALE_COLUMNS, DATA_REQUIRED_COLUMNS
 from util.csv_utils import csv_to_dataframe
 from util.file_utils import build_absolute_path
 from util.pandas_dataframe_utils import (
@@ -18,7 +18,7 @@ from util.pandas_dataframe_utils import (
 
 def read_data(file_name: str) -> pd.DataFrame:
     df = csv_to_dataframe(build_absolute_path(ec.RESOURCES_DIR) / file_name)
-    requires_column(df, SALE_REQUIRED_COLUMNS)
+    requires_column(df, DATA_REQUIRED_COLUMNS)
     return df
 
 

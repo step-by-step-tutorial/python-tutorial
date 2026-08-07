@@ -10,14 +10,14 @@ from app_config import env_config as ec
 from app_config.dataframe_schema import SCHEMA
 from factory import data_processor_connection_factory
 from service import spark_sale_service
-from service.datawarehouse import datawarehouse_sale_service
 from service.database import database_sale_service
 from service.datalake import datalake_spark_sale_service
-from util.datalake_utils import DatalakeLayer, build_sale_datalake_path
+from service.datawarehouse import datawarehouse_sale_service
+from util.datalake_utils import DatalakeLayer, build_datalake_path
 
 logger = logging.getLogger(__name__)
 
-DAG_ID = "spark_sale_etl_pipeline"
+DAG_ID = "spark_based_etl_dag"
 
 ResultType = TypeVar("ResultType")
 
@@ -39,7 +39,7 @@ def generate_ingestion_time() -> str:
 
 def upload_raw_sale_data(ingestion_time: str) -> str:
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    raw_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=resolved_ingestion_time)
+    raw_sale_data_path = build_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=resolved_ingestion_time)
 
     def operation(session: SparkSession) -> str:
         logger.info("Reading sale data from %s", ec.DATA_FILE)
@@ -56,8 +56,8 @@ def upload_raw_sale_data(ingestion_time: str) -> str:
 
 def clean_sale_data(raw_sale_data_path: str, ingestion_time: str) -> str:
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    cleaned_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.CLEANED,
-                                                      ingestion_time=resolved_ingestion_time)
+    cleaned_sale_data_path = build_datalake_path(layer=DatalakeLayer.CLEANED,
+                                                 ingestion_time=resolved_ingestion_time)
 
     def operation(session: SparkSession) -> str:
         logger.info("Reading raw sale data from %s", raw_sale_data_path)
@@ -78,8 +78,8 @@ def clean_sale_data(raw_sale_data_path: str, ingestion_time: str) -> str:
 
 def enrich_sale_data(cleaned_sale_data_path: str, ingestion_time: str) -> str:
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    enriched_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.ENRICHED,
-                                                       ingestion_time=resolved_ingestion_time)
+    enriched_sale_data_path = build_datalake_path(layer=DatalakeLayer.ENRICHED,
+                                                  ingestion_time=resolved_ingestion_time)
 
     def operation(session: SparkSession) -> str:
         logger.info("Reading cleaned sale data from %s", cleaned_sale_data_path)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from pyspark.sql.types import DoubleType, IntegerType, StringType, StructField, StructType
+from pyspark.sql.types import DoubleType, StringType, StructField, StructType, LongType
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,7 @@ class SaleColumns:
 
 SALE_COLUMNS = SaleColumns()
 
-SALE_REQUIRED_COLUMNS = {
+DATA_REQUIRED_COLUMNS = {
     SALE_COLUMNS.ORDER_ID,
     SALE_COLUMNS.CUSTOMER_NAME,
     SALE_COLUMNS.PRODUCT_NAME,
@@ -34,7 +34,7 @@ SALE_REQUIRED_COLUMNS = {
 
 SCHEMA = StructType(
     [
-        StructField(SALE_COLUMNS.ORDER_ID, IntegerType(), nullable=False),
+        StructField(SALE_COLUMNS.ORDER_ID, LongType(), nullable=False),
         StructField(SALE_COLUMNS.CUSTOMER_NAME, StringType(), nullable=False),
         StructField(SALE_COLUMNS.PRODUCT_NAME, StringType(), nullable=False),
         StructField(SALE_COLUMNS.CATEGORY, StringType(), nullable=False),

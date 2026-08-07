@@ -1,5 +1,10 @@
-from datetime import UTC, datetime
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC
+from datetime import datetime
 from enum import StrEnum
+
+from pyspark.sql import DataFrame
 
 from app_config import env_config as ec
 
@@ -10,7 +15,7 @@ class DatalakeLayer(StrEnum):
     ENRICHED = "enriched"
 
 
-def build_sale_datalake_path(layer: DatalakeLayer, ingestion_time: datetime | None = None) -> str:
+def build_datalake_path(layer: DatalakeLayer, ingestion_time: datetime | None = None) -> str:
     resolved_ingestion_time = ingestion_time or datetime.now(UTC)
 
     return (
@@ -27,3 +32,14 @@ def build_audit_datalake_uri(object_key: str) -> str:
 
 def build_datalake_uri(path: str) -> str:
     return f"s3://{ec.DATALAKE_BUCKET_NAME}/{path.strip('/')}"
+
+
+@contextmanager
+def persisted_dataframes() -> Iterator[list[DataFrame]]:
+    dataframes: list[DataFrame] = []
+
+    try:
+        yield dataframes
+    finally:
+        for dataframe in reversed(dataframes):
+            dataframe.unpersist()

@@ -28,11 +28,11 @@ AUDIT_MODEL_OPERATIONS: dict[str, tuple[str, Callable[[AuditEvent], dict[str, An
 }
 
 
-def save_event(event: AuditEvent, kafka_topic: str) -> None:
+def save_event(event: AuditEvent, streaming_topic: str) -> None:
     model = event.model_dump(mode="json")
     model.update(
         metadata=json.dumps(model["metadata"]),
-        kafka_topic=kafka_topic
+        kafka_topic=streaming_topic
     )
 
     with create_connection().begin() as connection:

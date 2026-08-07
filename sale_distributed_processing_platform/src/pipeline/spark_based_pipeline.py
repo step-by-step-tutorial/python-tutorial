@@ -11,7 +11,7 @@ from service import spark_sale_service
 from service.datawarehouse import datawarehouse_sale_service
 from service.database import database_sale_service
 from service.datalake import datalake_spark_sale_service
-from util.datalake_utils import DatalakeLayer, build_sale_datalake_path
+from util.datalake_utils import DatalakeLayer, build_datalake_path
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def run() -> None:
 
 
 def upload_raw_sale_data(session: SparkSession, ingestion_time: datetime) -> str:
-    raw_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=ingestion_time)
+    raw_sale_data_path = build_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=ingestion_time)
 
     logger.info("Reading sale data from %s", ec.DATA_FILE)
     dataframe = spark_sale_service.read_data(session=session, file_name=ec.DATA_FILE, schema=SCHEMA)
@@ -71,7 +71,7 @@ def upload_raw_sale_data(session: SparkSession, ingestion_time: datetime) -> str
 
 
 def clean_sale_data(session: SparkSession, raw_sale_data_path: str, ingestion_time: datetime) -> str:
-    cleaned_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.CLEANED, ingestion_time=ingestion_time)
+    cleaned_sale_data_path = build_datalake_path(layer=DatalakeLayer.CLEANED, ingestion_time=ingestion_time)
 
     logger.info("Reading raw sale data from %s", raw_sale_data_path)
     dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_sale_data_path)
@@ -86,7 +86,7 @@ def clean_sale_data(session: SparkSession, raw_sale_data_path: str, ingestion_ti
 
 
 def enrich_sale_data(session: SparkSession, cleaned_sale_data_path: str, ingestion_time: datetime) -> str:
-    enriched_sale_data_path = build_sale_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
+    enriched_sale_data_path = build_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
 
     logger.info("Reading cleaned sale data from %s", cleaned_sale_data_path)
     dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_sale_data_path)
