@@ -4,10 +4,12 @@ from uuid import uuid4
 import pandas as pd
 
 from factory import datalake_connection_factory
+from service.pandas_sale_service import normalize_dataframe
 from service.datalake import datalake_sale_service
 
 
-def upload_parquet(dataframe: pd.DataFrame, bucket_name: str, path: str) -> str:
+def upload_parquet(df: pd.DataFrame, bucket_name: str, path: str) -> str:
+    dataframe = normalize_dataframe(df)
     parquet_buffer = BytesIO()
     dataframe.to_parquet(parquet_buffer, index=False)
     parquet_buffer.seek(0)

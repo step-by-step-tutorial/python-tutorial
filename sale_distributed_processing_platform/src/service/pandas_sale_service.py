@@ -68,3 +68,15 @@ def get_revenue_by_country(df: pd.DataFrame) -> pd.DataFrame:
         original_field=SALE_COLUMNS.TOTAL_PRICE,
         alias_field=SALE_COLUMNS.REVENUE
     )
+
+def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    df[SALE_COLUMNS.ORDER_ID] = df[SALE_COLUMNS.ORDER_ID].astype("int64")
+    df[SALE_COLUMNS.QUANTITY] = df[SALE_COLUMNS.QUANTITY].astype("float64")
+    df[SALE_COLUMNS.UNIT_PRICE] = df[SALE_COLUMNS.UNIT_PRICE].astype("float64")
+
+    if SALE_COLUMNS.TOTAL_PRICE in df.columns:
+        df[SALE_COLUMNS.TOTAL_PRICE] = df[SALE_COLUMNS.TOTAL_PRICE].astype("float64")
+
+    return df

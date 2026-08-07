@@ -5,7 +5,7 @@ import pandas as pd
 from itables import show
 
 from app_config import env_config as ec
-from service import csv_sale_service
+from service import pandas_sale_service
 from service.database import database_sale_service
 from service.datalake import datalake_pandas_sale_service
 from service.datawarehouse import datawarehouse_sale_service
@@ -56,10 +56,10 @@ class InmemoryPipeline:
         raw_data_path = build_datalake_path(DatalakeLayer.RAW, self.ingestion_time)
 
         logger.info("Reading data from file %s", ec.DATA_FILE)
-        dataframe = csv_sale_service.read_data(file_name=ec.DATA_FILE)
+        dataframe = pandas_sale_service.read_data(file_name=ec.DATA_FILE)
 
         logger.info("Storing raw data in datalake path %s", raw_data_path)
-        datalake_pandas_sale_service.upload_parquet(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+        datalake_pandas_sale_service.upload_parquet(df=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
 
         return raw_data_path
 
@@ -68,12 +68,12 @@ class InmemoryPipeline:
         dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
 
         logger.info("Cleaning data")
-        cleaned_dataframe = csv_sale_service.clean_data(dataframe)
+        cleaned_dataframe = pandas_sale_service.clean_data(dataframe)
 
         cleaned_data_path = build_datalake_path(DatalakeLayer.CLEANED, self.ingestion_time)
 
         logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
-        datalake_pandas_sale_service.upload_parquet(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
+        datalake_pandas_sale_service.upload_parquet(df=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
 
         return cleaned_data_path
 
@@ -82,12 +82,12 @@ class InmemoryPipeline:
         dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
 
         logger.info("Enriching data")
-        enriched_dataframe = csv_sale_service.enrich_data(dataframe)
+        enriched_dataframe = pandas_sale_service.enrich_data(dataframe)
 
         enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, self.ingestion_time)
 
         logger.info("Storing enriched data in datalake path %s", enriched_data_path)
-        datalake_pandas_sale_service.upload_parquet(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        datalake_pandas_sale_service.upload_parquet(df=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
         return enriched_data_path
 
@@ -102,11 +102,11 @@ class InmemoryPipeline:
         show(dataframe)
 
         logger.info("Calculating revenue by category using Pandas")
-        revenue_by_category = csv_sale_service.get_revenue_by_category(dataframe)
+        revenue_by_category = pandas_sale_service.get_revenue_by_category(dataframe)
         show(revenue_by_category)
 
         logger.info("Calculating revenue by country using Pandas")
-        revenue_by_country = csv_sale_service.get_revenue_by_country(dataframe)
+        revenue_by_country = pandas_sale_service.get_revenue_by_country(dataframe)
         show(revenue_by_country)
 
     @staticmethod

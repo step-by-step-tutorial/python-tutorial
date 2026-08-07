@@ -29,7 +29,7 @@ class TestUploadParquet:
         mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names", return_value=[])
 
         # When
-        actual = system_under_test.upload_parquet(dataframe=given_dataframe, bucket_name=given_bucket_name,
+        actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name,
                                                   path=given_path)
 
         # Then
@@ -65,7 +65,7 @@ class TestUploadParquet:
                                                     return_value=[given_bucket_name])
 
         # When
-        actual = system_under_test.upload_parquet(dataframe=given_dataframe, bucket_name=given_bucket_name,
+        actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name,
                                                   path=given_path)
 
         # Then
@@ -93,7 +93,7 @@ class TestUploadParquet:
                                                     return_value=[given_bucket_name])
 
         # When
-        actual = system_under_test.upload_parquet(dataframe=given_dataframe, bucket_name=given_bucket_name,
+        actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name,
                                                   path=given_path)
 
         # Then
@@ -122,7 +122,7 @@ class TestUploadParquet:
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.upload_parquet(dataframe=given_dataframe, bucket_name=given_bucket_name, path=given_path)
+            system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name, path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -143,7 +143,7 @@ class TestUploadParquet:
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.upload_parquet(dataframe=given_dataframe, bucket_name=given_bucket_name, path=given_path)
+            system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name, path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message

@@ -8,7 +8,7 @@ from itables import show
 from app_config import env_config as ec
 from model.audit_event import AuditEvent, AuditEventType, AuditStatus
 from repository import audit_repository
-from service import csv_sale_service
+from service import pandas_sale_service
 from service.audit.audit_pipeline_service import AuditPipelineService
 from service.audit.audit_task_service import AuditTaskService
 from service.database import database_sale_service
@@ -109,7 +109,7 @@ class InmemoryAuditablePipeline:
         with self.audit_task_service.audit_task(PIPELINE_NAME, self.pipeline_id, "store_raw_data",
                                                 TASK_ATTEMPT) as metrics:
             logger.info("Reading data from file %s", ec.DATA_FILE)
-            dataframe = csv_sale_service.read_data(ec.DATA_FILE)
+            dataframe = pandas_sale_service.read_data(ec.DATA_FILE)
 
             row_count = len(dataframe)
 
@@ -147,7 +147,7 @@ class InmemoryAuditablePipeline:
             metrics.source_uri = build_datalake_uri(raw_data_path)
 
             logger.info("Cleaning data")
-            cleaned_dataframe = csv_sale_service.clean_data(raw_dataframe)
+            cleaned_dataframe = pandas_sale_service.clean_data(raw_dataframe)
 
             output_row_count = len(cleaned_dataframe)
             rejected_row_count = input_row_count - output_row_count
@@ -186,7 +186,7 @@ class InmemoryAuditablePipeline:
             metrics.source_uri = build_datalake_uri(cleaned_data_path)
 
             logger.info("Enriching data")
-            enriched_dataframe = csv_sale_service.enrich_data(cleaned_dataframe)
+            enriched_dataframe = pandas_sale_service.enrich_data(cleaned_dataframe)
 
             output_row_count = len(enriched_dataframe)
 
@@ -263,11 +263,11 @@ class InmemoryAuditablePipeline:
             show(dataframe)
 
             logger.info("Calculating revenue by category using Pandas")
-            revenue_by_category = csv_sale_service.get_revenue_by_category(dataframe)
+            revenue_by_category = pandas_sale_service.get_revenue_by_category(dataframe)
             show(revenue_by_category)
 
             logger.info("Calculating revenue by country using Pandas")
-            revenue_by_country = csv_sale_service.get_revenue_by_country(dataframe)
+            revenue_by_country = pandas_sale_service.get_revenue_by_country(dataframe)
             show(revenue_by_country)
 
             metrics.output_row_count = len(revenue_by_category) + len(revenue_by_country)

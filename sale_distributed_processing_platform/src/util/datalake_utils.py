@@ -16,13 +16,17 @@ class DatalakeLayer(StrEnum):
 
 
 def build_datalake_path(layer: DatalakeLayer, ingestion_time: datetime | None = None) -> str:
-    resolved_ingestion_time = ingestion_time or datetime.now(UTC)
+    if ingestion_time is None:
+        ingestion_time = datetime.now(UTC)
+
+    ingestion_id = ingestion_time.strftime("%Y%m%dT%H%M%S%fZ")
 
     return (
         f"{ec.DATALAKE_ENVIRONMENT}/{layer.value}/{ec.DATALAKE_SALE_DATASET}/"
-        f"ingestion_year={resolved_ingestion_time.year}/"
-        f"ingestion_month={resolved_ingestion_time.month:02d}/"
-        f"ingestion_day={resolved_ingestion_time.day:02d}"
+        f"ingestion_year={ingestion_time.year}/"
+        f"ingestion_month={ingestion_time.month:02d}/"
+        f"ingestion_day={ingestion_time.day:02d}"
+        f"ingestion_id={ingestion_id}"
     )
 
 
