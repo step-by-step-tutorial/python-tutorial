@@ -6,138 +6,115 @@ from itables import show
 
 from app_config import env_config as ec
 from service import csv_sale_service
-from service.datawarehouse import datawarehouse_sale_service
 from service.database import database_sale_service
 from service.datalake import datalake_pandas_sale_service
+from service.datawarehouse import datawarehouse_sale_service
 from util.datalake_utils import DatalakeLayer, build_datalake_path
+from util.log_utils import log_line
 
 logger = logging.getLogger(__name__)
 
 
-def run() -> None:
-    ingestion_time = datetime.now(UTC)
+class InmemoryPipeline:
 
-    draw_line()
-    logger.info("Starting sale pipeline with ingestion time %s", ingestion_time)
+    def __init__(self) -> None:
+        self.ingestion_time: datetime = datetime.now(UTC)
+        self.run()
 
-    raw_sale_data_path = upload_raw_sale_data(ingestion_time)
-    draw_line()
+    def run(self) -> None:
+        log_line()
+        logger.info("Starting pipeline with ingestion time %s", self.ingestion_time)
 
-    cleaned_sale_data_path = clean_sale_data(raw_sale_data_path, ingestion_time)
-    draw_line()
+        raw_data_path = self.store_raw_data()
+        log_line()
 
-    enriched_sale_data_path = enrich_sale_data(cleaned_sale_data_path, ingestion_time)
-    draw_line()
+        cleaned_data_path = self.clean_data(raw_data_path)
+        log_line()
 
-    enriched_dataframe = read_enriched_sale_data(enriched_sale_data_path)
+        enriched_data_path = self.enrich_data(cleaned_data_path)
+        log_line()
 
-    populate_database(enriched_dataframe)
-    draw_line()
+        enriched_dataframe = self.read_enriched_data(enriched_data_path)
 
-    populate_datawarehouse(enriched_dataframe)
-    draw_line()
+        logger.info("Populating operational database with enriched data")
+        database_sale_service.populate(enriched_dataframe)
+        log_line()
 
-    show_enriched_sale_data(enriched_dataframe)
-    draw_line()
+        logger.info("Populating data warehouse with enriched data")
+        datawarehouse_sale_service.populate(enriched_dataframe)
+        log_line()
 
-    process_data_by_csv(enriched_dataframe)
-    draw_line()
+        self.show_revenue_by_pandas(enriched_dataframe)
+        log_line()
 
-    process_data_by_datawarehouse()
-    draw_line()
+        self.show_revenue_by_datawarehouse()
+        log_line()
 
+        logger.info("Pipeline completed successfully")
 
-def upload_raw_sale_data(ingestion_time: datetime) -> str:
-    raw_sale_data_path = build_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=ingestion_time)
+    def store_raw_data(self) -> str:
+        raw_data_path = build_datalake_path(DatalakeLayer.RAW, self.ingestion_time)
 
-    logger.info("Reading sale data from %s", ec.DATA_FILE)
-    dataframe = csv_sale_service.read_data(file_name=ec.DATA_FILE)
+        logger.info("Reading data from file %s", ec.DATA_FILE)
+        dataframe = csv_sale_service.read_data(file_name=ec.DATA_FILE)
 
-    logger.info("Uploading raw sale data to %s", raw_sale_data_path)
-    datalake_pandas_sale_service.upload_parquet(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                path=raw_sale_data_path)
+        logger.info("Storing raw data in datalake path %s", raw_data_path)
+        datalake_pandas_sale_service.upload_parquet(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
 
-    return raw_sale_data_path
+        return raw_data_path
 
+    def clean_data(self, raw_data_path: str) -> str:
+        logger.info("Reading raw data from datalake path %s", raw_data_path)
+        dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
 
-def clean_sale_data(raw_sale_data_path: str, ingestion_time: datetime) -> str:
-    cleaned_sale_data_path = build_datalake_path(layer=DatalakeLayer.CLEANED, ingestion_time=ingestion_time)
+        logger.info("Cleaning data")
+        cleaned_dataframe = csv_sale_service.clean_data(dataframe)
 
-    logger.info("Reading raw sale data from %s", raw_sale_data_path)
-    dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                              path=raw_sale_data_path)
+        cleaned_data_path = build_datalake_path(DatalakeLayer.CLEANED, self.ingestion_time)
 
-    logger.info("Cleaning sale data")
-    cleaned_dataframe = csv_sale_service.clean_data(dataframe)
+        logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
+        datalake_pandas_sale_service.upload_parquet(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
 
-    logger.info("Uploading cleaned sale data to %s", cleaned_sale_data_path)
-    datalake_pandas_sale_service.upload_parquet(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                path=cleaned_sale_data_path)
+        return cleaned_data_path
 
-    return cleaned_sale_data_path
+    def enrich_data(self, cleaned_data_path: str) -> str:
+        logger.info("Reading cleaned data from datalake path %s", cleaned_data_path)
+        dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
 
+        logger.info("Enriching data")
+        enriched_dataframe = csv_sale_service.enrich_data(dataframe)
 
-def enrich_sale_data(cleaned_sale_data_path: str, ingestion_time: datetime) -> str:
-    enriched_sale_data_path = build_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
+        enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, self.ingestion_time)
 
-    logger.info("Reading cleaned sale data from %s", cleaned_sale_data_path)
-    dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                              path=cleaned_sale_data_path)
+        logger.info("Storing enriched data in datalake path %s", enriched_data_path)
+        datalake_pandas_sale_service.upload_parquet(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
-    logger.info("Enriching sale data")
-    enriched_dataframe = csv_sale_service.enrich_data(dataframe)
+        return enriched_data_path
 
-    logger.info("Uploading enriched sale data to %s", enriched_sale_data_path)
-    datalake_pandas_sale_service.upload_parquet(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                path=enriched_sale_data_path)
+    @staticmethod
+    def read_enriched_data(enriched_data_path: str) -> pd.DataFrame:
+        logger.info("Reading enriched data from datalake path %s", enriched_data_path)
+        return datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
-    return enriched_sale_data_path
+    @staticmethod
+    def show_revenue_by_pandas(dataframe: pd.DataFrame) -> None:
+        logger.info("Displaying enriched data")
+        show(dataframe)
 
+        logger.info("Calculating revenue by category using Pandas")
+        revenue_by_category = csv_sale_service.get_revenue_by_category(dataframe)
+        show(revenue_by_category)
 
-def read_enriched_sale_data(enriched_sale_data_path: str) -> pd.DataFrame:
-    logger.info("Reading enriched sale data from %s", enriched_sale_data_path)
-    return datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                                         path=enriched_sale_data_path)
+        logger.info("Calculating revenue by country using Pandas")
+        revenue_by_country = csv_sale_service.get_revenue_by_country(dataframe)
+        show(revenue_by_country)
 
+    @staticmethod
+    def show_revenue_by_datawarehouse() -> None:
+        logger.info("Calculating revenue by category using the data warehouse")
+        revenue_by_category = datawarehouse_sale_service.get_revenue_by_category()
+        show(revenue_by_category)
 
-def populate_database(enriched_dataframe: pd.DataFrame) -> None:
-    logger.info("Populating database")
-    database_sale_service.populate(enriched_dataframe)
-
-
-def populate_datawarehouse(enriched_dataframe: pd.DataFrame) -> None:
-    logger.info("Populating data warehouse")
-    datawarehouse_sale_service.populate(enriched_dataframe)
-
-
-def show_enriched_sale_data(enriched_dataframe: pd.DataFrame) -> None:
-    logger.info("Showing enriched sale data")
-    show(enriched_dataframe)
-
-
-def process_data_by_csv(enriched_dataframe: pd.DataFrame) -> None:
-    logger.info("Processing data by CSV service")
-
-    logger.info("Calculating revenue by category")
-    revenue_by_category_dataframe = csv_sale_service.get_revenue_by_category(enriched_dataframe)
-    show(revenue_by_category_dataframe)
-
-    logger.info("Calculating revenue by country")
-    revenue_by_country_dataframe = csv_sale_service.get_revenue_by_country(enriched_dataframe)
-    show(revenue_by_country_dataframe)
-
-
-def process_data_by_datawarehouse() -> None:
-    logger.info("Processing data by Datawarehouse")
-
-    logger.info("Calculating revenue by category")
-    revenue_by_category_dataframe = datawarehouse_sale_service.get_revenue_by_category()
-    show(revenue_by_category_dataframe)
-
-    logger.info("Calculating revenue by country")
-    revenue_by_country_dataframe = datawarehouse_sale_service.get_revenue_by_country()
-    show(revenue_by_country_dataframe)
-
-
-def draw_line() -> None:
-    logger.info(100 * "=")
+        logger.info("Calculating revenue by country using the data warehouse")
+        revenue_by_country = datawarehouse_sale_service.get_revenue_by_country()
+        show(revenue_by_country)

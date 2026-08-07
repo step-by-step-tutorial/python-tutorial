@@ -13,5 +13,5 @@ def configure_logging() -> None:
     )
 
 
-def draw_line() -> None:
+def log_line() -> None:
     logger.info(100 * "=")

@@ -14,12 +14,12 @@ from service.datalake import datalake_spark_sale_service
 from service.datawarehouse import datawarehouse_sale_service
 from streaming import csv_publisher
 from util.datalake_utils import DatalakeLayer, build_datalake_path, persisted_dataframes
-from util.log_utils import draw_line
+from util.log_utils import log_line
 
 logger = logging.getLogger(__name__)
 
 
-class StreamingPipeline:
+class SparkStreamingPipeline:
 
     def __init__(self) -> None:
         self.session: SparkSession = data_processor_connection_factory.create_connection()
@@ -28,16 +28,16 @@ class StreamingPipeline:
 
     def run(self) -> None:
         try:
-            draw_line()
+            log_line()
             logger.info("Starting pipeline with ingestion time %s", self.ingestion_time)
 
             logger.info("Publishing events from file %s to Kafka topic %s", ec.DATA_FILE, ec.STREAMING_TOPIC)
             csv_publisher.publish(ec.DATA_FILE)
-            draw_line()
+            log_line()
 
             logger.info("Starting Spark streaming ingestion from Kafka to datalake")
             self.start_batch_storage().awaitTermination()
-            draw_line()
+            log_line()
 
             enriched_dataframe = self.read_enriched_data()
 
@@ -48,10 +48,10 @@ class StreamingPipeline:
             datawarehouse_sale_service.populate(enriched_dataframe.toPandas())
 
             self.show_revenue_by_spark(enriched_dataframe)
-            draw_line()
+            log_line()
 
             self.show_revenue_by_datawarehouse()
-            draw_line()
+            log_line()
 
             logger.info("Pipeline completed successfully")
         finally:
