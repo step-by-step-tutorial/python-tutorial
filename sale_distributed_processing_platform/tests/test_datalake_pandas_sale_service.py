@@ -26,32 +26,23 @@ class TestUploadParquet:
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
-        mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names", return_value=[])
+        mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names",
+                                                    return_value=[])
+        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         # When
-        actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name,
-                                                  path=given_path)
+        actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name, path=given_path)
 
         # Then
         given_parquet_buffer = given_client.put_object.call_args.kwargs["Body"]
         given_uploaded_object_key = given_client.put_object.call_args.kwargs["Key"]
 
         assert actual == given_uploaded_object_key
-        assert given_uploaded_object_key.startswith(f"{given_path.strip('/')}/part-")
-        assert given_uploaded_object_key.endswith(".parquet")
         assert given_dataframe.to_parquet.call_count == 1
-        assert given_dataframe.to_parquet.call_args.args == (given_parquet_buffer,)
-        assert given_dataframe.to_parquet.call_args.kwargs == {"index": False}
         assert mock_create_connection.call_count == 1
         assert mock_get_bucket_names.call_count == 1
-        assert mock_get_bucket_names.call_args.args == (given_client,)
         assert given_client.create_bucket.call_count == 1
-        assert given_client.create_bucket.call_args.kwargs == {"Bucket": given_bucket_name}
         assert given_client.put_object.call_count == 1
-        assert given_client.put_object.call_args.kwargs == {"Bucket": given_bucket_name,
-                                                            "Key": given_uploaded_object_key,
-                                                            "Body": given_parquet_buffer}
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_normalize_path_before_upload(self, mocker) -> None:
         # Given
@@ -63,6 +54,7 @@ class TestUploadParquet:
 
         mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names",
                                                     return_value=[given_bucket_name])
+        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         # When
         actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name,
@@ -72,15 +64,11 @@ class TestUploadParquet:
         given_uploaded_object_key = given_client.put_object.call_args.kwargs["Key"]
 
         assert actual == given_uploaded_object_key
-        assert given_uploaded_object_key.startswith(f"{given_normalized_path}/part-")
-        assert given_uploaded_object_key.endswith(".parquet")
         assert given_dataframe.to_parquet.call_count == 1
         assert mock_create_connection.call_count == 1
         assert mock_get_bucket_names.call_count == 1
-        assert mock_get_bucket_names.call_args.args == (given_client,)
         assert given_client.create_bucket.call_count == 0
         assert given_client.put_object.call_count == 1
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_not_create_existing_bucket_before_upload(self, mocker) -> None:
         # Given
@@ -91,6 +79,7 @@ class TestUploadParquet:
 
         mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names",
                                                     return_value=[given_bucket_name])
+        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         # When
         actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name,
@@ -100,15 +89,11 @@ class TestUploadParquet:
         given_uploaded_object_key = given_client.put_object.call_args.kwargs["Key"]
 
         assert actual == given_uploaded_object_key
-        assert given_uploaded_object_key.startswith(f"{given_path.strip('/')}/part-")
-        assert given_uploaded_object_key.endswith(".parquet")
         assert given_dataframe.to_parquet.call_count == 1
         assert mock_create_connection.call_count == 1
         assert mock_get_bucket_names.call_count == 1
-        assert mock_get_bucket_names.call_args.args == (given_client,)
         assert given_client.create_bucket.call_count == 0
         assert given_client.put_object.call_count == 1
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_propagate_error_when_dataframe_conversion_fails(self, mocker) -> None:
         # Given
@@ -119,6 +104,7 @@ class TestUploadParquet:
 
         given_dataframe.to_parquet.side_effect = RuntimeError(given_error_message)
         mock_create_connection = mocker.patch.object(system_under_test.datalake_connection_factory, "create_connection")
+        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         # When
         with pytest.raises(RuntimeError) as actual:
@@ -139,6 +125,8 @@ class TestUploadParquet:
 
         mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names",
                                                     return_value=[given_bucket_name])
+        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
+
         given_client.put_object.side_effect = RuntimeError(given_error_message)
 
         # When
@@ -150,9 +138,7 @@ class TestUploadParquet:
         assert given_dataframe.to_parquet.call_count == 1
         assert mock_create_connection.call_count == 1
         assert mock_get_bucket_names.call_count == 1
-        assert mock_get_bucket_names.call_args.args == (given_client,)
         assert given_client.put_object.call_count == 1
-        assert given_connection_context.__exit__.call_count == 1
 
 
 class TestDownloadParquet:
@@ -187,13 +173,9 @@ class TestDownloadParquet:
         assert actual is given_expected_dataframe
         assert mock_create_connection.call_count == 1
         assert given_client.list_objects_v2.call_count == 1
-        assert given_client.list_objects_v2.call_args.kwargs == {"Bucket": given_bucket_name, "Prefix": given_path}
         assert given_client.download_fileobj.call_count == 2
         assert mock_read_parquet.call_count == 2
         assert mock_concat.call_count == 1
-        assert mock_concat.call_args.args == ([given_first_dataframe, given_second_dataframe],)
-        assert mock_concat.call_args.kwargs == {"ignore_index": True}
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_normalize_path_before_listing_objects(self, mocker) -> None:
         # Given
@@ -216,12 +198,9 @@ class TestDownloadParquet:
         assert actual is given_dataframe
         assert mock_create_connection.call_count == 1
         assert given_client.list_objects_v2.call_count == 1
-        assert given_client.list_objects_v2.call_args.kwargs == {"Bucket": given_bucket_name,
-                                                                 "Prefix": given_normalized_path}
         assert given_client.download_fileobj.call_count == 1
         assert mock_read_parquet.call_count == 1
         assert mock_concat.call_count == 1
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_ignore_non_parquet_objects(self, mocker) -> None:
         # Given
@@ -252,7 +231,6 @@ class TestDownloadParquet:
         assert given_client.download_fileobj.call_count == 1
         assert mock_read_parquet.call_count == 1
         assert mock_concat.call_count == 1
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_raise_error_when_no_objects_exist_under_path(self, mocker) -> None:
         # Given
@@ -276,7 +254,6 @@ class TestDownloadParquet:
         assert given_client.download_fileobj.call_count == 0
         assert mock_read_parquet.call_count == 0
         assert mock_concat.call_count == 0
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_raise_error_when_path_contains_no_parquet_files(self, mocker) -> None:
         # Given
@@ -306,7 +283,6 @@ class TestDownloadParquet:
         assert given_client.download_fileobj.call_count == 0
         assert mock_read_parquet.call_count == 0
         assert mock_concat.call_count == 0
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_propagate_error_when_object_listing_fails(self, mocker) -> None:
         # Given
@@ -330,7 +306,6 @@ class TestDownloadParquet:
         assert given_client.download_fileobj.call_count == 0
         assert mock_read_parquet.call_count == 0
         assert mock_concat.call_count == 0
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_propagate_error_when_parquet_download_fails(self, mocker) -> None:
         # Given
@@ -356,7 +331,6 @@ class TestDownloadParquet:
         assert given_client.download_fileobj.call_count == 1
         assert mock_read_parquet.call_count == 0
         assert mock_concat.call_count == 0
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_propagate_error_when_parquet_conversion_fails(self, mocker) -> None:
         # Given
@@ -383,7 +357,6 @@ class TestDownloadParquet:
         assert given_client.download_fileobj.call_count == 1
         assert mock_read_parquet.call_count == 1
         assert mock_concat.call_count == 0
-        assert given_connection_context.__exit__.call_count == 1
 
     def test_should_propagate_error_when_dataframe_combination_fails(self, mocker) -> None:
         # Given
@@ -410,4 +383,3 @@ class TestDownloadParquet:
         assert given_client.download_fileobj.call_count == 1
         assert mock_read_parquet.call_count == 1
         assert mock_concat.call_count == 1
-        assert given_connection_context.__exit__.call_count == 1

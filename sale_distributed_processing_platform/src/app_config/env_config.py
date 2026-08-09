@@ -3,6 +3,9 @@ from pathlib import Path
 
 from util.file_utils import build_absolute_path
 
+DATASET_NAME = os.getenv("DATASET_NAME", "sale")
+PIPELINE_TYPE = os.getenv("PIPELINE_TYPE", "inmemory")
+
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 SCRIPTS_DIR = Path(os.getenv("SCRIPTS_DIR", "scripts"))

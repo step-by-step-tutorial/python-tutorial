@@ -96,7 +96,7 @@ class TestReadSaleData:
         given_dataframe = mocker.MagicMock(spec=DataFrame)
         given_error_message = "Missing required columns"
 
-        given_session.read.option.return_value.schema.return_value.csv.return_value = given_dataframe
+        given_session.read.option.return_value.dataframe_schema.return_value.csv.return_value = given_dataframe
 
         mocker.patch.object(
             system_under_test,

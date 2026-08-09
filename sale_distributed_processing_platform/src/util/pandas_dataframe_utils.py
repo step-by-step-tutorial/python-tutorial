@@ -1,13 +1,9 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence, Callable
 from functools import reduce
 from operator import and_
 
 import pandas as pd
 from pandas import DataFrame
-
-
-def remove_duplicates(df: DataFrame, *columns: str) -> DataFrame:
-    return df.drop_duplicates(subset=columns, keep="first")
 
 
 def convert_numeric_column(df: DataFrame, column: str, default_value: float | int | None = None) -> DataFrame:
@@ -60,3 +56,65 @@ def requires_column(df: pd.DataFrame, columns: set[str]) -> None:
 
     if missing_columns:
         raise ValueError(f"Missing required columns: {sorted(missing_columns)}")
+
+
+def rename_columns(df: DataFrame, columns: Mapping[str, str]) -> DataFrame:
+    return df.rename(columns=columns)
+
+
+def remove_duplicates(df: DataFrame, subset: str | Sequence[str] | None = None) -> DataFrame:
+    return df.drop_duplicates(subset=subset)
+
+
+def convert_boolean_column(df: DataFrame, column: str, default_value: bool = False) -> DataFrame:
+    df[column] = (
+        df[column]
+        .map({
+            True: True,
+            False: False,
+            "True": True,
+            "False": False,
+        })
+        .fillna(default_value)
+        .astype(bool)
+    )
+
+    return df
+
+
+def strip_string_column(df: DataFrame, column: str) -> DataFrame:
+    df[column] = df[column].astype("string").str.strip()
+    return df
+
+
+def remove_rows_with_missing_values(df: DataFrame, columns: Sequence[str]) -> DataFrame:
+    return df.dropna(subset=columns)
+
+
+def divide_columns(
+        df: DataFrame,
+        numerator_field: str,
+        denominator_field: str,
+        alias_field: str,
+        decimal_places: int = 2
+) -> DataFrame:
+    df[alias_field] = (df[numerator_field] / df[denominator_field]).round(decimal_places)
+    return df
+
+
+def create_column(df: DataFrame, alias_field: str, function: Callable[[pd.Series], object]) -> DataFrame:
+    df[alias_field] = df.apply(function, axis=1)
+    return df
+
+
+def average_by_group(
+        df: DataFrame,
+        group_field: str,
+        original_field: str,
+        alias_field: str
+) -> DataFrame:
+    return (
+        df.groupby(group_field, as_index=False)[original_field]
+        .mean()
+        .rename(columns={original_field: alias_field})
+    )

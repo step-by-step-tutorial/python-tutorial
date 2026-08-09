@@ -3,7 +3,6 @@ from functools import reduce
 from operator import and_
 
 from pyspark.sql import Column, DataFrame
-from pyspark.sql import functions as sf
 
 
 def remove_duplicates(df: DataFrame, *columns: str) -> DataFrame:
@@ -69,3 +68,73 @@ def requires_column(df: DataFrame, columns: set[str]) -> None:
 
     if missing_columns:
         raise ValueError(f"Missing required columns: {sorted(missing_columns)}")
+
+
+from collections.abc import Mapping, Sequence
+
+from pyspark.sql import Column, DataFrame
+from pyspark.sql import functions as sf
+
+
+def rename_columns(df: DataFrame, columns: Mapping[str, str]) -> DataFrame:
+    for original_field, alias_field in columns.items():
+        df = df.withColumnRenamed(original_field, alias_field)
+
+    return df
+
+
+def convert_boolean_column(df: DataFrame, column: str, default_value: bool = False) -> DataFrame:
+    return df.withColumn(
+        column,
+        sf.coalesce(
+            sf.col(column).cast("boolean"),
+            sf.lit(default_value),
+        ),
+    )
+
+
+def trim_string_column(df: DataFrame, column: str) -> DataFrame:
+    return df.withColumn(column, sf.trim(sf.col(column)))
+
+
+def divide_columns(
+        df: DataFrame,
+        numerator_field: str,
+        denominator_field: str,
+        alias_field: str,
+        decimal_places: int = 2,
+) -> DataFrame:
+    return df.withColumn(
+        alias_field,
+        sf.round(
+            sf.col(numerator_field) / sf.col(denominator_field),
+            decimal_places,
+        ),
+    )
+
+
+def average_by_group(
+        df: DataFrame,
+        group_field: str,
+        original_field: str,
+        alias_field: str,
+) -> DataFrame:
+    return df.groupBy(group_field).agg(
+        sf.avg(original_field).alias(alias_field)
+    )
+
+
+def create_hash_column(
+        df: DataFrame,
+        alias_field: str,
+        source_columns: Sequence[Column],
+        separator: str = "|",
+        bit_length: int = 256,
+) -> DataFrame:
+    return df.withColumn(
+        alias_field,
+        sf.sha2(
+            sf.concat_ws(separator, *source_columns),
+            bit_length,
+        ),
+    )

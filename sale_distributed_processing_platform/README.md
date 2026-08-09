@@ -51,7 +51,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ```shell
 cd ./sale_distributed_processing_platform
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\sale_distributed_processing_platform
-python ./src/main.py
+PIPELINE_TYPE="inmemory_auditable" DATASET_NAME="sale" python ./src/main.py
 ```
 
 ```shell

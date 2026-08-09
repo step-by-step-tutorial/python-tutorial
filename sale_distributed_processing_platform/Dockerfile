@@ -11,6 +11,8 @@ RUN apt-get update \
 
 ENV JAVA_HOME=/opt/java
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
+ENV DATASET_NAME: sale
+ENV PIPELINE_TYPE: inmemory_auditable
 
 WORKDIR /app
 
