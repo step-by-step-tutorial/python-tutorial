@@ -10,8 +10,8 @@ from app_config.dataframe_schema import DATA_REQUIRED_COLUMNS
 from service import (
     spark_sale_service,
 )
-from service.datalake import datalake_spark_sale_service
-from util.datalake_utils import DatalakeLayer, build_datalake_path
+from service.datalake import distributed_datalake_service
+from util.datalake_utils import DatalakeLayer, generate_relative_path
 from util.spark_dataframe_utils import requires_column
 from util.string_utils import should_be_not_none
 
@@ -61,9 +61,9 @@ def convert(dataframe: DataFrame, schema: StructType) -> DataFrame:
 
 def append_raw_data(df: DataFrame, ingestion_time: datetime) -> DataFrame:
     dataframe = df.drop("kafka_topic", "kafka_partition", "kafka_offset", "kafka_timestamp")
-    path = build_datalake_path(layer=DatalakeLayer.RAW, ingestion_time=ingestion_time)
+    path = generate_relative_path(layer=DatalakeLayer.RAW, ingestion_time=ingestion_time)
     logger.info("Appending raw data to %s", path)
-    datalake_spark_sale_service.append(
+    distributed_datalake_service.append(
         dataframe=dataframe.coalesce(1),
         bucket_name=ec.DATALAKE_BUCKET_NAME,
         path=path
@@ -73,9 +73,9 @@ def append_raw_data(df: DataFrame, ingestion_time: datetime) -> DataFrame:
 
 def append_cleaned_data(df: DataFrame, ingestion_time: datetime) -> DataFrame:
     dataframe = spark_sale_service.clean_data(df)
-    path = build_datalake_path(layer=DatalakeLayer.CLEANED, ingestion_time=ingestion_time)
+    path = generate_relative_path(layer=DatalakeLayer.CLEANED, ingestion_time=ingestion_time)
     logger.info("Appending cleaned data to %s", path)
-    datalake_spark_sale_service.append(
+    distributed_datalake_service.append(
         dataframe=dataframe.coalesce(1),
         bucket_name=ec.DATALAKE_BUCKET_NAME,
         path=path
@@ -85,9 +85,9 @@ def append_cleaned_data(df: DataFrame, ingestion_time: datetime) -> DataFrame:
 
 def append_enriched_data(df: DataFrame, ingestion_time: datetime) -> DataFrame:
     dataframe = spark_sale_service.enrich_data(df)
-    path = build_datalake_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
+    path = generate_relative_path(layer=DatalakeLayer.ENRICHED, ingestion_time=ingestion_time)
     logger.info("Appending enriched data to %s", path)
-    datalake_spark_sale_service.append(
+    distributed_datalake_service.append(
         dataframe=dataframe.coalesce(1),
         bucket_name=ec.DATALAKE_BUCKET_NAME,
         path=path

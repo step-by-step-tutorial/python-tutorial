@@ -1,6 +1,6 @@
 import pytest
 
-from service.datalake import datalake_spark_sale_service as system_under_test
+from service.datalake import distributed_datalake_service as system_under_test
 
 
 class TestOverwrite:
@@ -10,7 +10,7 @@ class TestOverwrite:
         given_dataframe = mocker.Mock()
         given_dataframe.columns = ["order_id", "order_date", "country"]
         given_writer = given_dataframe.write
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
 
         given_writer.mode.return_value = given_writer
@@ -27,7 +27,7 @@ class TestOverwrite:
     def test_should_raise_error_when_dataframe_is_none(self) -> None:
         # Given
         given_dataframe = None
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
 
         # When
@@ -56,7 +56,7 @@ class TestOverwrite:
     def test_should_raise_error_when_path_is_none(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = None
 
         # When
@@ -72,7 +72,7 @@ class TestOverwrite:
     def test_should_raise_error_when_path_is_empty(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = " "
 
         # When
@@ -90,7 +90,7 @@ class TestOverwrite:
         given_dataframe = mocker.Mock()
         given_dataframe.columns = ["order_id"]
         given_writer = given_dataframe.write
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_error_message = "Cannot set write mode"
 
@@ -110,7 +110,7 @@ class TestOverwrite:
         given_dataframe = mocker.Mock()
         given_dataframe.columns = ["order_id"]
         given_writer = given_dataframe.write
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_error_message = "Parquet writing failed"
 
@@ -133,7 +133,7 @@ class TestRead:
     def test_should_read_parquet_dataframe_from_given_uri(self, mocker) -> None:
         # Given
         given_session = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_dataframe = mocker.Mock()
 
@@ -150,7 +150,7 @@ class TestRead:
     def test_should_raise_error_when_session_is_none(self) -> None:
         # Given
         given_session = None
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
 
         # When
@@ -178,7 +178,7 @@ class TestRead:
     def test_should_raise_error_when_path_is_none(self, mocker) -> None:
         # Given
         given_session = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = None
 
         # When
@@ -192,7 +192,7 @@ class TestRead:
     def test_should_raise_error_when_path_is_empty(self, mocker) -> None:
         # Given
         given_session = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = " "
 
         # When
@@ -206,7 +206,7 @@ class TestRead:
     def test_should_propagate_error_when_parquet_reading_fails(self, mocker) -> None:
         # Given
         given_session = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_error_message = "Parquet reading failed"
 

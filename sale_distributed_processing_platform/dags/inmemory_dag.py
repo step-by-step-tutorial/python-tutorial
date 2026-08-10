@@ -7,9 +7,9 @@ from airflow.sdk import DAG
 from app_config import env_config as ec
 from service import pandas_sale_service as csv_service
 from service.database import database_sale_service as database_service
-from service.datalake import datalake_pandas_sale_service as datalake_service
+from service.datalake import inmemory_datalake_service as datalake_service
 from service.datawarehouse import datawarehouse_sale_service as datawarehouse_service
-from util.datalake_utils import DatalakeLayer, build_datalake_path
+from util.datalake_utils import DatalakeLayer, generate_relative_path
 
 logger = logging.getLogger(__name__)
 
@@ -24,54 +24,52 @@ def generate_ingestion_time() -> str:
 
 def store_raw_data(ingestion_time: str) -> str:
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    raw_data_path = build_datalake_path(DatalakeLayer.RAW, resolved_ingestion_time)
+    raw_data_path = generate_relative_path(DatalakeLayer.RAW, resolved_ingestion_time)
 
     logger.info("Reading data from file %s", ec.DATA_FILE)
     dataframe = csv_service.read_data(file_name=ec.DATA_FILE)
 
     logger.info("Storing raw data in datalake path %s", raw_data_path)
-    datalake_service.upload_parquet(df=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+    datalake_service.upload(df=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=raw_data_path)
 
     return raw_data_path
 
 
 def clean_data(raw_data_path: str, ingestion_time: str) -> str:
     logger.info("Reading raw data from datalake path %s", raw_data_path)
-    dataframe = datalake_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+    dataframe = datalake_service.download(bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=raw_data_path)
 
     logger.info("Cleaning data")
     cleaned_dataframe = csv_service.clean_data(dataframe)
 
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    cleaned_data_path = build_datalake_path(DatalakeLayer.CLEANED, resolved_ingestion_time)
+    cleaned_data_path = generate_relative_path(DatalakeLayer.CLEANED, resolved_ingestion_time)
 
     logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
-    datalake_service.upload_parquet(df=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                    path=cleaned_data_path)
+    datalake_service.upload(df=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=cleaned_data_path)
 
     return cleaned_data_path
 
 
 def enrich_data(cleaned_data_path: str, ingestion_time: str) -> str:
     logger.info("Reading cleaned data from datalake path %s", cleaned_data_path)
-    dataframe = datalake_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
+    dataframe = datalake_service.download(bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=cleaned_data_path)
 
     logger.info("Enriching data")
     enriched_dataframe = csv_service.enrich_data(dataframe)
 
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, resolved_ingestion_time)
+    enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, resolved_ingestion_time)
 
     logger.info("Storing enriched data in datalake path %s", enriched_data_path)
-    datalake_service.upload_parquet(df=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,
-                                    path=enriched_data_path)
+    datalake_service.upload(df=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=enriched_data_path)
 
     return enriched_data_path
 
 
 def populate_database(enriched_data_path: str) -> None:
     logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-    dataframe = datalake_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+    dataframe = datalake_service.download(bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=enriched_data_path)
 
     logger.info("Populating operational database with enriched data")
     database_service.populate(dataframe)
@@ -79,7 +77,7 @@ def populate_database(enriched_data_path: str) -> None:
 
 def populate_datawarehouse(enriched_data_path: str) -> None:
     logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-    dataframe = datalake_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+    dataframe = datalake_service.download(bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=enriched_data_path)
 
     logger.info("Populating data warehouse with enriched data")
     datawarehouse_service.populate(dataframe)
@@ -87,7 +85,7 @@ def populate_datawarehouse(enriched_data_path: str) -> None:
 
 def show_revenue_by_category(enriched_data_path: str) -> None:
     logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-    dataframe = datalake_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+    dataframe = datalake_service.download(bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=enriched_data_path)
 
     logger.info("Calculating revenue by category using Pandas")
     revenue_by_category = csv_service.get_revenue_by_category(dataframe)
@@ -96,7 +94,7 @@ def show_revenue_by_category(enriched_data_path: str) -> None:
 
 def show_revenue_by_country(enriched_data_path: str) -> None:
     logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-    dataframe = datalake_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+    dataframe = datalake_service.download(bucket_name=ec.DATALAKE_BUCKET_NAME, relative_path=enriched_data_path)
 
     logger.info("Calculating revenue by country using Pandas")
     revenue_by_country = csv_service.get_revenue_by_country(dataframe)

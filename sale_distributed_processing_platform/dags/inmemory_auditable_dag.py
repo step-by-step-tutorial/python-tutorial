@@ -12,10 +12,10 @@ from service import pandas_sale_service
 from service.audit.audit_pipeline_service import AuditPipelineService
 from service.audit.audit_task_service import AuditTaskService
 from service.database import database_sale_service
-from service.datalake import datalake_pandas_sale_service
+from service.datalake import inmemory_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
 from streaming.audit_event_producer import AuditEventProducer
-from util.datalake_utils import DatalakeLayer, build_datalake_path, build_datalake_uri
+from util.datalake_utils import DatalakeLayer, generate_relative_path, build_datalake_uri
 from util.pipeline_utils import create_pipeline_id
 
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ def start_pipeline(pipeline_context: dict) -> None:
 def store_raw_data(pipeline_context: dict) -> dict:
     pipeline_id = pipeline_context["pipeline_id"]
     ingestion_time = datetime.fromisoformat(pipeline_context["ingestion_time"])
-    raw_data_path = build_datalake_path(DatalakeLayer.RAW, ingestion_time)
+    raw_data_path = generate_relative_path(DatalakeLayer.RAW, ingestion_time)
 
     audit_task_service = AuditTaskService()
     producer = AuditEventProducer()
@@ -79,7 +79,7 @@ def store_raw_data(pipeline_context: dict) -> dict:
             metrics.destination_uri = build_datalake_uri(raw_data_path)
 
             logger.info("Storing raw data in datalake path %s", raw_data_path)
-            datalake_pandas_sale_service.upload_parquet(dataframe, ec.DATALAKE_BUCKET_NAME, raw_data_path)
+            inmemory_datalake_service.upload(dataframe, ec.DATALAKE_BUCKET_NAME, raw_data_path)
 
         producer.publish(
             AuditEvent(
@@ -110,7 +110,7 @@ def clean_data(pipeline_context: dict) -> dict:
     pipeline_id = pipeline_context["pipeline_id"]
     ingestion_time = datetime.fromisoformat(pipeline_context["ingestion_time"])
     raw_data_path = pipeline_context["raw_data_path"]
-    cleaned_data_path = build_datalake_path(DatalakeLayer.CLEANED, ingestion_time)
+    cleaned_data_path = generate_relative_path(DatalakeLayer.CLEANED, ingestion_time)
 
     audit_task_service = AuditTaskService()
     producer = AuditEventProducer()
@@ -118,7 +118,7 @@ def clean_data(pipeline_context: dict) -> dict:
     try:
         with audit_task_service.audit_task(PIPELINE_NAME, pipeline_id, "clean_data", TASK_ATTEMPT) as metrics:
             logger.info("Reading raw data from datalake path %s", raw_data_path)
-            raw_dataframe = datalake_pandas_sale_service.download_parquet(ec.DATALAKE_BUCKET_NAME, raw_data_path)
+            raw_dataframe = inmemory_datalake_service.download(ec.DATALAKE_BUCKET_NAME, raw_data_path)
 
             input_row_count = len(raw_dataframe)
 
@@ -137,7 +137,7 @@ def clean_data(pipeline_context: dict) -> dict:
             metrics.destination_uri = build_datalake_uri(cleaned_data_path)
 
             logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
-            datalake_pandas_sale_service.upload_parquet(cleaned_dataframe, ec.DATALAKE_BUCKET_NAME, cleaned_data_path)
+            inmemory_datalake_service.upload(cleaned_dataframe, ec.DATALAKE_BUCKET_NAME, cleaned_data_path)
 
         producer.publish(
             AuditEvent(
@@ -169,7 +169,7 @@ def enrich_data(pipeline_context: dict) -> dict:
     pipeline_id = pipeline_context["pipeline_id"]
     ingestion_time = datetime.fromisoformat(pipeline_context["ingestion_time"])
     cleaned_data_path = pipeline_context["cleaned_data_path"]
-    enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, ingestion_time)
+    enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, ingestion_time)
 
     audit_task_service = AuditTaskService()
     producer = AuditEventProducer()
@@ -177,8 +177,7 @@ def enrich_data(pipeline_context: dict) -> dict:
     try:
         with audit_task_service.audit_task(PIPELINE_NAME, pipeline_id, "enrich_data", TASK_ATTEMPT) as metrics:
             logger.info("Reading cleaned data from datalake path %s", cleaned_data_path)
-            cleaned_dataframe = datalake_pandas_sale_service.download_parquet(ec.DATALAKE_BUCKET_NAME,
-                                                                              cleaned_data_path)
+            cleaned_dataframe = inmemory_datalake_service.download(ec.DATALAKE_BUCKET_NAME, cleaned_data_path)
 
             input_row_count = len(cleaned_dataframe)
 
@@ -195,7 +194,7 @@ def enrich_data(pipeline_context: dict) -> dict:
             metrics.destination_uri = build_datalake_uri(enriched_data_path)
 
             logger.info("Storing enriched data in datalake path %s", enriched_data_path)
-            datalake_pandas_sale_service.upload_parquet(enriched_dataframe, ec.DATALAKE_BUCKET_NAME, enriched_data_path)
+            inmemory_datalake_service.upload(enriched_dataframe, ec.DATALAKE_BUCKET_NAME, enriched_data_path)
 
         producer.publish(
             AuditEvent(
@@ -228,7 +227,7 @@ def populate_database(pipeline_context: dict) -> None:
     audit_task_service = AuditTaskService()
 
     try:
-        dataframe = datalake_pandas_sale_service.download_parquet(ec.DATALAKE_BUCKET_NAME, enriched_data_path)
+        dataframe = inmemory_datalake_service.download(ec.DATALAKE_BUCKET_NAME, enriched_data_path)
 
         with audit_task_service.audit_task(PIPELINE_NAME, pipeline_id, "populate_database", TASK_ATTEMPT) as metrics:
             row_count = len(dataframe)
@@ -252,7 +251,7 @@ def populate_datawarehouse(pipeline_context: dict) -> None:
     audit_task_service = AuditTaskService()
 
     try:
-        dataframe = datalake_pandas_sale_service.download_parquet(ec.DATALAKE_BUCKET_NAME, enriched_data_path)
+        dataframe = inmemory_datalake_service.download(ec.DATALAKE_BUCKET_NAME, enriched_data_path)
 
         with audit_task_service.audit_task(PIPELINE_NAME, pipeline_id, "populate_datawarehouse",
                                            TASK_ATTEMPT) as metrics:

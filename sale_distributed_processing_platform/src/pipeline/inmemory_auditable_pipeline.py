@@ -12,10 +12,10 @@ from service import pandas_sale_service
 from service.audit.audit_pipeline_service import AuditPipelineService
 from service.audit.audit_task_service import AuditTaskService
 from service.database import database_sale_service
-from service.datalake import datalake_pandas_sale_service
+from service.datalake import inmemory_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
 from streaming.audit_event_producer import AuditEventProducer
-from util.datalake_utils import DatalakeLayer, build_datalake_path, build_datalake_uri
+from util.datalake_utils import DatalakeLayer, generate_relative_path, build_datalake_uri
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import elapsed_milliseconds
@@ -104,7 +104,7 @@ class InmemoryAuditablePipeline:
             log_line()
 
     def store_raw_data(self) -> tuple[str, int]:
-        path = build_datalake_path(DatalakeLayer.RAW, self.ingestion_time)
+        path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
 
         with self.audit_task_service.audit_task(PIPELINE_NAME, self.pipeline_id, "store_raw_data",
                                                 TASK_ATTEMPT) as metrics:
@@ -121,7 +121,7 @@ class InmemoryAuditablePipeline:
             metrics.destination_uri = build_datalake_uri(path)
 
             logger.info("Storing raw data in datalake path %s", path)
-            datalake_pandas_sale_service.upload_parquet(dataframe, ec.DATALAKE_BUCKET_NAME, path)
+            inmemory_datalake_service.upload(dataframe, ec.DATALAKE_BUCKET_NAME, path)
 
         self.publish_written_event(
             source="csv",
@@ -134,11 +134,11 @@ class InmemoryAuditablePipeline:
         return path, row_count
 
     def clean_data(self, raw_data_path: str) -> tuple[str, int, int]:
-        cleaned_data_path = build_datalake_path(DatalakeLayer.CLEANED, self.ingestion_time)
+        cleaned_data_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time)
 
         with self.audit_task_service.audit_task(PIPELINE_NAME, self.pipeline_id, "clean_data", TASK_ATTEMPT) as metrics:
             logger.info("Reading raw data from datalake path %s", raw_data_path)
-            raw_dataframe = datalake_pandas_sale_service.download_parquet(ec.DATALAKE_BUCKET_NAME, raw_data_path)
+            raw_dataframe = inmemory_datalake_service.download(ec.DATALAKE_BUCKET_NAME, raw_data_path)
 
             input_row_count = len(raw_dataframe)
 
@@ -158,7 +158,7 @@ class InmemoryAuditablePipeline:
             metrics.destination_uri = build_datalake_uri(cleaned_data_path)
 
             logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
-            datalake_pandas_sale_service.upload_parquet(cleaned_dataframe, ec.DATALAKE_BUCKET_NAME, cleaned_data_path)
+            inmemory_datalake_service.upload(cleaned_dataframe, ec.DATALAKE_BUCKET_NAME, cleaned_data_path)
 
         self.publish_written_event(
             source="datalake",
@@ -171,13 +171,12 @@ class InmemoryAuditablePipeline:
         return cleaned_data_path, output_row_count, rejected_row_count
 
     def enrich_data(self, cleaned_data_path: str) -> tuple[str, int]:
-        enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+        enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
 
         with self.audit_task_service.audit_task(PIPELINE_NAME, self.pipeline_id, "enrich_data",
                                                 TASK_ATTEMPT) as metrics:
             logger.info("Reading cleaned data from datalake path %s", cleaned_data_path)
-            cleaned_dataframe = datalake_pandas_sale_service.download_parquet(ec.DATALAKE_BUCKET_NAME,
-                                                                              cleaned_data_path)
+            cleaned_dataframe = inmemory_datalake_service.download(ec.DATALAKE_BUCKET_NAME, cleaned_data_path)
 
             input_row_count = len(cleaned_dataframe)
 
@@ -195,7 +194,7 @@ class InmemoryAuditablePipeline:
             metrics.destination_uri = build_datalake_uri(enriched_data_path)
 
             logger.info("Storing enriched data in datalake path %s", enriched_data_path)
-            datalake_pandas_sale_service.upload_parquet(enriched_dataframe, ec.DATALAKE_BUCKET_NAME, enriched_data_path)
+            inmemory_datalake_service.upload(enriched_dataframe, ec.DATALAKE_BUCKET_NAME, enriched_data_path)
 
         self.publish_written_event(
             source="datalake",
@@ -211,7 +210,7 @@ class InmemoryAuditablePipeline:
         with self.audit_task_service.audit_task(PIPELINE_NAME, self.pipeline_id, "read_enriched_data",
                                                 TASK_ATTEMPT) as metrics:
             logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-            dataframe = datalake_pandas_sale_service.download_parquet(ec.DATALAKE_BUCKET_NAME, enriched_data_path)
+            dataframe = inmemory_datalake_service.download(ec.DATALAKE_BUCKET_NAME, enriched_data_path)
 
             row_count = len(dataframe)
 

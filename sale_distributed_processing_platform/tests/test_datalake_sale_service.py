@@ -18,7 +18,7 @@ class TestGetBucketNames:
         given_client = mocker.Mock()
         given_client.list_buckets.return_value = {
             "Buckets": [
-                {"Name": "sale-datalake"},
+                {"Name": "sale-bucket"},
                 {"Name": "archive-datalake"},
             ]
         }
@@ -27,7 +27,7 @@ class TestGetBucketNames:
         actual = system_under_test.get_bucket_names(given_client)
 
         # Then
-        assert actual == ["sale-datalake", "archive-datalake"]
+        assert actual == ["sale-bucket", "archive-datalake"]
         assert given_client.list_buckets.call_count == 1
 
     def test_should_return_empty_list_when_buckets_are_missing(self, mocker) -> None:
@@ -48,7 +48,7 @@ class TestBucketList:
     def test_should_return_bucket_names_using_connection(self, mocker) -> None:
         # Given
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
-        given_bucket_names = ["sale-datalake"]
+        given_bucket_names = ["sale-bucket"]
 
         mock_get_bucket_names = mocker.patch.object(system_under_test, "get_bucket_names",
                                                     return_value=given_bucket_names)
@@ -68,11 +68,11 @@ class TestBucketExists:
 
     def test_should_return_true_when_bucket_exists(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         mock_get_bucket_names = mocker.patch.object(system_under_test, "get_bucket_names",
-                                                    return_value=["sale-datalake", "archive-datalake"])
+                                                    return_value=["sale-bucket", "archive-datalake"])
 
         # When
         actual = system_under_test.bucket_exists(given_bucket_name)
@@ -90,7 +90,7 @@ class TestBucketExists:
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         mock_get_bucket_names = mocker.patch.object(system_under_test, "get_bucket_names",
-                                                    return_value=["sale-datalake"])
+                                                    return_value=["sale-bucket"])
 
         # When
         actual = system_under_test.bucket_exists(given_bucket_name)
@@ -107,7 +107,7 @@ class TestCreateBucketIfNotExists:
 
     def test_should_create_bucket_when_bucket_does_not_exist(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         mock_get_bucket_names = mocker.patch.object(system_under_test, "get_bucket_names", return_value=[])
@@ -126,7 +126,7 @@ class TestCreateBucketIfNotExists:
 
     def test_should_not_create_bucket_when_bucket_exists(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         mock_get_bucket_names = mocker.patch.object(system_under_test, "get_bucket_names",

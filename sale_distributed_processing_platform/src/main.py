@@ -1,5 +1,6 @@
 import logging
 
+import dataset.sale.config
 from app_config import env_config as ec
 from pipeline.inmemory_auditable_pipeline import InmemoryAuditablePipeline
 from pipeline.inmemory_pipeline import InmemoryPipeline
@@ -18,9 +19,7 @@ PIPELINES = {
 
 
 def main() -> None:
-    logger.info("Starting Sale ETL Platform")
-    PIPELINES[ec.PIPELINE_TYPE]()
-    logger.info("Sale ETL Platform finished")
+    PIPELINES[ec.PIPELINE_TYPE](dataset.sale.config.SALE_DATASET)
 
 
 if __name__ == "__main__":

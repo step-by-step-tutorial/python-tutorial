@@ -4,7 +4,7 @@ from pandas import DataFrame
 from app_config import env_config as ec
 from app_config.dataframe_schema import SALE_COLUMNS, DATA_REQUIRED_COLUMNS
 from util.csv_utils import csv_to_dataframe
-from util.file_utils import build_absolute_path
+from util.file_utils import absolute_path
 from util.pandas_dataframe_utils import (
     remove_duplicates,
     convert_numeric_column,
@@ -12,13 +12,13 @@ from util.pandas_dataframe_utils import (
     fill_missing_by_column_average,
     convert_datetime_column,
     reset_index, sum_by_group,
-    requires_column
+    require_columns
 )
 
 
 def read_data(file_name: str) -> pd.DataFrame:
-    df = csv_to_dataframe(build_absolute_path(ec.RESOURCES_DIR) / file_name)
-    requires_column(df, DATA_REQUIRED_COLUMNS)
+    df = csv_to_dataframe(absolute_path(ec.RESOURCES_DIR) / file_name)
+    require_columns(df, DATA_REQUIRED_COLUMNS)
     return df
 
 
@@ -68,15 +68,3 @@ def get_revenue_by_country(df: pd.DataFrame) -> pd.DataFrame:
         original_field=SALE_COLUMNS.TOTAL_PRICE,
         alias_field=SALE_COLUMNS.REVENUE
     )
-
-def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-
-    df[SALE_COLUMNS.ORDER_ID] = df[SALE_COLUMNS.ORDER_ID].astype("int64")
-    df[SALE_COLUMNS.QUANTITY] = df[SALE_COLUMNS.QUANTITY].astype("float64")
-    df[SALE_COLUMNS.UNIT_PRICE] = df[SALE_COLUMNS.UNIT_PRICE].astype("float64")
-
-    if SALE_COLUMNS.TOTAL_PRICE in df.columns:
-        df[SALE_COLUMNS.TOTAL_PRICE] = df[SALE_COLUMNS.TOTAL_PRICE].astype("float64")
-
-    return df

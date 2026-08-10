@@ -1,6 +1,6 @@
 import schema
 from app_config import env_config as ec
-from dataset.definition import StageTable, Dataset, DataWarehouse
+from dataset.definition import StageTable, Dataset, DataWarehouse, Datalake
 from dataset.house.inmemory_processor import InmemoryHouseProcessor
 from dataset.house.schema import REQUIRED_COLUMNS, DATAFRAME_SCHEMA
 from dataset.house.spark_processor import SparkHouseProcessor
@@ -14,6 +14,7 @@ HOUSE_DATASET = Dataset(
     streaming_topic="house-events",
     streaming_consumer_group="house-spark-consumer",
     streaming_checkpoint_path=f"{ec.DATALAKE_SCHEME}://{ec.DATALAKE_BUCKET_NAME}/checkpoints/house-events",
+    datalake=Datalake(bucket_name=ec.DATALAKE_BUCKET_NAME),
     database=StageTable(
         name="house_stage",
         columns=(schema.dataset_model_instance.LISTING_KEY, schema.dataset_model_instance.AREA,

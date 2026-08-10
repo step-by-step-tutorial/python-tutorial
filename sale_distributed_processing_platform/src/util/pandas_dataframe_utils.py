@@ -1,9 +1,13 @@
+import logging
 from collections.abc import Iterable, Mapping, Sequence, Callable
 from functools import reduce
 from operator import and_
 
 import pandas as pd
+from itables import show
 from pandas import DataFrame
+
+logger = logging.getLogger(__name__)
 
 
 def convert_numeric_column(df: DataFrame, column: str, default_value: float | int | None = None) -> DataFrame:
@@ -48,7 +52,7 @@ def sum_by_group(df: pd.DataFrame, group_field: str, original_field: str, alias_
     )
 
 
-def requires_column(df: pd.DataFrame, columns: set[str]) -> None:
+def require_columns(df: pd.DataFrame, columns: frozenset[str]) -> None:
     if df is None or columns is None:
         raise ValueError("required columns or dataframe is None")
 
@@ -118,3 +122,9 @@ def average_by_group(
         .mean()
         .rename(columns={original_field: alias_field})
     )
+
+
+def show_map_of_dataframe(map_of_dataframe: Mapping[str, DataFrame]) -> None:
+    for key, value in map_of_dataframe.items():
+        logger.info(f"{key}")
+        show(value)

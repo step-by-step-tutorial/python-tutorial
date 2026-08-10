@@ -37,6 +37,10 @@ class DataWarehouse:
     columns: tuple[str, ...]
     analysis_sql_files: Mapping[str, str]
 
+@dataclass(frozen=True)
+class Datalake:
+    bucket_name: str
+
 
 @dataclass(frozen=True)
 class Dataset:
@@ -48,6 +52,7 @@ class Dataset:
     streaming_topic: str
     streaming_consumer_group: str
     streaming_checkpoint_path: str
+    datalake: Datalake
     database: StageTable
     datawarehouse: DataWarehouse
     processors: dict[str, DataProcessor]

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from util.file_utils import build_absolute_path
+from util.file_utils import absolute_path
 
 DATASET_NAME = os.getenv("DATASET_NAME", "sale")
 PIPELINE_TYPE = os.getenv("PIPELINE_TYPE", "inmemory")
@@ -15,7 +15,7 @@ DEEP_LEARNING_MODEL_PATH = Path(os.getenv("DEEP_LEARNING_MODEL_PATH", "models/sa
 ML_MODEL_PATH = MACHINE_LEARNING_MODEL_PATH
 DL_MODEL_PATH = DEEP_LEARNING_MODEL_PATH
 
-DATA_FILE = os.getenv("DATA_FILE", "data.csv")
+DATA_FILE = os.getenv("DATA_FILE", "sale.csv")
 
 SPARK_APPLICATION_NAME = os.getenv("SPARK_APPLICATION_NAME", "SALE_DISTRIBUTED_PROCESSING_PLATFORM")
 SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "local[*]")
@@ -25,7 +25,7 @@ SPARK_BUFFER = os.getenv("SPARK_BUFFER", "array")
 SPARK_ACTIVE_BLOCKS = os.getenv("SPARK_ACTIVE_BLOCKS", "1")
 SPARK_THREADS_MAX = os.getenv("SPARK_THREADS_MAX", "4")
 SPARK_MAX_TOTAL_TASKS = os.getenv("SPARK_MAX_TOTAL_TASKS", "4")
-S3A_BUFFER_DIR = os.getenv("S3A_BUFFER_DIR", str(build_absolute_path(OUTPUT_DIR / "s3a-buffer")))
+# S3A_BUFFER_DIR = os.getenv("S3A_BUFFER_DIR", str(build_absolute_path(OUTPUT_DIR / "s3a-buffer")))
 MAX_DIRECT_MEMORY_SIZE = os.getenv("MAX_DIRECT_MEMORY_SIZE", "2g")
 
 DATABASE_HOST = os.getenv("DATABASE_HOST", "localhost")
@@ -47,7 +47,7 @@ DATABASE_STAGE_TABLE_NAME = "sale_stage"
 DATALAKE_ENDPOINT = os.getenv("DATALAKE_ENDPOINT", "http://localhost:9000")
 DATALAKE_ACCESS_KEY = os.getenv("DATALAKE_ACCESS_KEY", "admin")
 DATALAKE_SECRET_KEY = os.getenv("DATALAKE_SECRET_KEY", "administrator")
-DATALAKE_BUCKET_NAME = os.getenv("DATALAKE_BUCKET_NAME", "sale-datalake")
+DATALAKE_BUCKET_NAME = os.getenv("DATALAKE_BUCKET_NAME", "sale-bucket")
 DATALAKE_AUDIT_BUCKET_NAME = os.getenv("DATALAKE_AUDIT_BUCKET_NAME", "sale-audit")
 DATALAKE_SCHEME = os.getenv("DATALAKE_SCHEME", "s3a")
 DATALAKE_ENVIRONMENT = os.getenv("DATALAKE_ENVIRONMENT", "dev")

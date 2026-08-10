@@ -11,4 +11,4 @@ def get_dataset_names() -> tuple[str, ...]:
     return _get_dataset_names()
 
 
-__all__ = ["get_dataset", "get_dataset_names"]
+__all__ = ["Dataset", "get_dataset", "get_dataset_names"]

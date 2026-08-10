@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from service.datalake import datalake_pandas_sale_service as system_under_test
+from service.datalake import inmemory_datalake_service as system_under_test
 
 
 def create_connection_context(mocker):
@@ -22,16 +22,15 @@ class TestUploadParquet:
     def test_should_create_bucket_and_upload_dataframe_under_given_path(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names",
                                                     return_value=[])
-        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         # When
-        actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name, path=given_path)
+        actual = system_under_test.upload(df=given_dataframe, bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         given_parquet_buffer = given_client.put_object.call_args.kwargs["Body"]
@@ -47,18 +46,16 @@ class TestUploadParquet:
     def test_should_normalize_path_before_upload(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "/dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/"
         given_normalized_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names",
                                                     return_value=[given_bucket_name])
-        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         # When
-        actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name,
-                                                  path=given_path)
+        actual = system_under_test.upload(df=given_dataframe, bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         given_uploaded_object_key = given_client.put_object.call_args.kwargs["Key"]
@@ -73,17 +70,15 @@ class TestUploadParquet:
     def test_should_not_create_existing_bucket_before_upload(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names",
                                                     return_value=[given_bucket_name])
-        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         # When
-        actual = system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name,
-                                                  path=given_path)
+        actual = system_under_test.upload(df=given_dataframe, bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         given_uploaded_object_key = given_client.put_object.call_args.kwargs["Key"]
@@ -98,17 +93,16 @@ class TestUploadParquet:
     def test_should_propagate_error_when_dataframe_conversion_fails(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_error_message = "Parquet conversion failed"
 
         given_dataframe.to_parquet.side_effect = RuntimeError(given_error_message)
         mock_create_connection = mocker.patch.object(system_under_test.datalake_connection_factory, "create_connection")
-        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name, path=given_path)
+            system_under_test.upload(df=given_dataframe, bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -118,20 +112,19 @@ class TestUploadParquet:
     def test_should_propagate_error_when_upload_fails(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/raw/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_error_message = "Upload failed"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         mock_get_bucket_names = mocker.patch.object(system_under_test.datalake_sale_service, "get_bucket_names",
                                                     return_value=[given_bucket_name])
-        mocker.patch.object(system_under_test, "normalize_dataframe", side_effect=lambda df: df)
 
         given_client.put_object.side_effect = RuntimeError(given_error_message)
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.upload_parquet(df=given_dataframe, bucket_name=given_bucket_name, path=given_path)
+            system_under_test.upload(df=given_dataframe, bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -145,7 +138,7 @@ class TestDownloadParquet:
 
     def test_should_download_and_combine_all_parquet_files_under_path(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_first_object_key = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/part-001.parquet"
         given_second_object_key = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/year=2026/month=08/part-002.parquet"
@@ -167,7 +160,7 @@ class TestDownloadParquet:
         mock_concat = mocker.patch.object(system_under_test.pd, "concat", return_value=given_expected_dataframe)
 
         # When
-        actual = system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+        actual = system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert actual is given_expected_dataframe
@@ -179,7 +172,7 @@ class TestDownloadParquet:
 
     def test_should_normalize_path_before_listing_objects(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "/dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/"
         given_normalized_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_object_key = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/part-001.parquet"
@@ -192,7 +185,7 @@ class TestDownloadParquet:
         mock_concat = mocker.patch.object(system_under_test.pd, "concat", return_value=given_dataframe)
 
         # When
-        actual = system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+        actual = system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert actual is given_dataframe
@@ -204,7 +197,7 @@ class TestDownloadParquet:
 
     def test_should_ignore_non_parquet_objects(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_object_key = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/part-001.parquet"
         given_dataframe = pd.DataFrame({"order_id": [1]})
@@ -222,7 +215,7 @@ class TestDownloadParquet:
         mock_concat = mocker.patch.object(system_under_test.pd, "concat", return_value=given_dataframe)
 
         # When
-        actual = system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+        actual = system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert actual is given_dataframe
@@ -234,9 +227,9 @@ class TestDownloadParquet:
 
     def test_should_raise_error_when_no_objects_exist_under_path(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
-        given_error_message = "No Parquet files found under path: dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
+        given_error_message = "No parquet files found under path: dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         given_client.list_objects_v2.return_value = {}
@@ -245,7 +238,7 @@ class TestDownloadParquet:
 
         # When
         with pytest.raises(FileNotFoundError) as actual:
-            system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+            system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -257,9 +250,9 @@ class TestDownloadParquet:
 
     def test_should_raise_error_when_path_contains_no_parquet_files(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
-        given_error_message = "No Parquet files found under path: dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
+        given_error_message = "No parquet files found under path: dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
 
         given_client.list_objects_v2.return_value = {
@@ -274,7 +267,7 @@ class TestDownloadParquet:
 
         # When
         with pytest.raises(FileNotFoundError) as actual:
-            system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+            system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -286,7 +279,7 @@ class TestDownloadParquet:
 
     def test_should_propagate_error_when_object_listing_fails(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_error_message = "Object listing failed"
         given_client, given_connection_context, mock_create_connection = create_connection_context(mocker)
@@ -297,7 +290,7 @@ class TestDownloadParquet:
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+            system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -309,7 +302,7 @@ class TestDownloadParquet:
 
     def test_should_propagate_error_when_parquet_download_fails(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_object_key = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/part-001.parquet"
         given_error_message = "Download failed"
@@ -322,7 +315,7 @@ class TestDownloadParquet:
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+            system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -334,7 +327,7 @@ class TestDownloadParquet:
 
     def test_should_propagate_error_when_parquet_conversion_fails(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_object_key = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/part-001.parquet"
         given_error_message = "Parquet conversion failed"
@@ -348,7 +341,7 @@ class TestDownloadParquet:
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+            system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message
@@ -360,7 +353,7 @@ class TestDownloadParquet:
 
     def test_should_propagate_error_when_dataframe_combination_fails(self, mocker) -> None:
         # Given
-        given_bucket_name = "sale-datalake"
+        given_bucket_name = "sale-bucket"
         given_path = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04"
         given_object_key = "dev/enriched/sale/ingestion_year=2026/ingestion_month=08/ingestion_day=04/part-001.parquet"
         given_dataframe = pd.DataFrame({"order_id": [1]})
@@ -374,7 +367,7 @@ class TestDownloadParquet:
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.download_parquet(bucket_name=given_bucket_name, path=given_path)
+            system_under_test.download(bucket_name=given_bucket_name, relative_path=given_path)
 
         # Then
         assert str(actual.value) == given_error_message

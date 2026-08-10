@@ -12,10 +12,10 @@ from app_config.dataframe_schema import SCHEMA
 from factory import data_processor_connection_factory
 from service import spark_sale_service, spark_streaming_service
 from service.database import database_sale_service
-from service.datalake import datalake_spark_sale_service
+from service.datalake import distributed_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
 from streaming import csv_publisher
-from util.datalake_utils import DatalakeLayer, build_datalake_path, persisted_dataframes
+from util.datalake_utils import DatalakeLayer, generate_relative_path, persisted_dataframes
 from util.log_utils import log_line
 
 logger = logging.getLogger(__name__)
@@ -152,11 +152,11 @@ def show_pipeline_results(ingestion_time: str) -> None:
 
 def read_enriched_data(session: SparkSession, ingestion_time: str) -> DataFrame:
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, resolved_ingestion_time)
+    enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, resolved_ingestion_time)
 
     logger.info("Reading enriched data from datalake path %s", enriched_data_path)
 
-    return datalake_spark_sale_service.read(
+    return distributed_datalake_service.read(
         session=session,
         bucket_name=ec.DATALAKE_BUCKET_NAME,
         path=enriched_data_path,

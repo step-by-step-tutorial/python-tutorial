@@ -1,40 +1,49 @@
 import logging
 from datetime import UTC, datetime
+from typing import Mapping
 
 import pandas as pd
 from itables import show
+from pandas import DataFrame
 
 from app_config import env_config as ec
-from service import pandas_sale_service
+from dataset.definition import Dataset
 from service.database import database_sale_service
-from service.datalake import datalake_pandas_sale_service
+from service.datalake import inmemory_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
-from util.datalake_utils import DatalakeLayer, build_datalake_path
+from util.csv_utils import csv_to_dataframe
+from util.datalake_utils import DatalakeLayer, generate_relative_path
+from util.file_utils import absolute_path
 from util.log_utils import log_line
+from util.pandas_dataframe_utils import require_columns, show_map_of_dataframe
 
 logger = logging.getLogger(__name__)
 
 
 class InmemoryPipeline:
 
-    def __init__(self) -> None:
+    def __init__(self, ds: Dataset) -> None:
+        self.dataset = ds
         self.ingestion_time: datetime = datetime.now(UTC)
         self.run()
 
     def run(self) -> None:
-        log_line()
-        logger.info("Starting pipeline with ingestion time %s", self.ingestion_time)
-
-        raw_data_path = self.store_raw_data()
+        logger.info("Starting ETL pipeline with dataset %s at ingestion time %s", self.dataset.name, self.ingestion_time)
         log_line()
 
-        cleaned_data_path = self.clean_data(raw_data_path)
+        raw_relative_path = self.store_raw_data()
         log_line()
 
-        enriched_data_path = self.enrich_data(cleaned_data_path)
+        cleaned_data_path = self.cleaning(raw_relative_path)
         log_line()
 
-        enriched_dataframe = self.read_enriched_data(enriched_data_path)
+        enriched_data_path = self.enriching(cleaned_data_path)
+        log_line()
+
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+
+        logger.info("Displaying enriched data")
+        show(enriched_dataframe)
 
         logger.info("Populating operational database with enriched data")
         database_sale_service.populate(enriched_dataframe)
@@ -44,73 +53,69 @@ class InmemoryPipeline:
         datawarehouse_sale_service.populate(enriched_dataframe)
         log_line()
 
-        self.show_revenue_by_pandas(enriched_dataframe)
+        analysis_results = self.analyzing(enriched_dataframe)
+        show_map_of_dataframe(analysis_results)
         log_line()
 
         self.show_revenue_by_datawarehouse()
         log_line()
 
-        logger.info("Pipeline completed successfully")
+        logger.info("Finished ETL pipeline with dataset %s at ingestion time %s", self.dataset.name, self.ingestion_time)
 
     def store_raw_data(self) -> str:
-        raw_data_path = build_datalake_path(DatalakeLayer.RAW, self.ingestion_time)
+        dataframe = csv_to_dataframe(absolute_path(ec.RESOURCES_DIR) / self.dataset.file_name)
+        require_columns(dataframe, self.dataset.required_columns)
 
-        logger.info("Reading data from file %s", ec.DATA_FILE)
-        dataframe = pandas_sale_service.read_data(file_name=ec.DATA_FILE)
+        relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
+        inmemory_datalake_service.upload(
+            df=dataframe,
+            bucket_name=self.dataset.datalake.bucket_name,
+            relative_path=relative_path
+        )
 
-        logger.info("Storing raw data in datalake path %s", raw_data_path)
-        datalake_pandas_sale_service.upload_parquet(df=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+        return relative_path
 
-        return raw_data_path
+    def cleaning(self, raw_relative_path: str) -> str:
+        dataframe = inmemory_datalake_service.download(
+            bucket_name=self.dataset.datalake.bucket_name,
+            relative_path=raw_relative_path
+        )
 
-    def clean_data(self, raw_data_path: str) -> str:
-        logger.info("Reading raw data from datalake path %s", raw_data_path)
-        dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+        cleaned_dataframe = self.dataset.processors["inmemory"].clean(dataframe)
 
-        logger.info("Cleaning data")
-        cleaned_dataframe = pandas_sale_service.clean_data(dataframe)
+        relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time)
+        inmemory_datalake_service.upload(
+            df=cleaned_dataframe,
+            bucket_name=self.dataset.datalake.bucket_name,
+            relative_path=relative_path
+        )
 
-        cleaned_data_path = build_datalake_path(DatalakeLayer.CLEANED, self.ingestion_time)
+        return relative_path
 
-        logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
-        datalake_pandas_sale_service.upload_parquet(df=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
+    def enriching(self, cleaned_relative_path: str) -> str:
+        dataframe = inmemory_datalake_service.download(
+            bucket_name=self.dataset.datalake.bucket_name,
+            relative_path=cleaned_relative_path
+        )
+        enriched_dataframe = self.dataset.processors["inmemory"].enrich(dataframe)
 
-        return cleaned_data_path
+        relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+        inmemory_datalake_service.upload(
+            df=enriched_dataframe,
+            bucket_name=self.dataset.datalake.bucket_name,
+            relative_path=relative_path
+        )
 
-    def enrich_data(self, cleaned_data_path: str) -> str:
-        logger.info("Reading cleaned data from datalake path %s", cleaned_data_path)
-        dataframe = datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
+        return relative_path
 
-        logger.info("Enriching data")
-        enriched_dataframe = pandas_sale_service.enrich_data(dataframe)
+    def download_enriched_data(self, relative_path: str) -> pd.DataFrame:
+        return inmemory_datalake_service.download(bucket_name=self.dataset.datalake.bucket_name,
+                                                  relative_path=relative_path)
 
-        enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+    def analyzing(self, dataframe: pd.DataFrame) -> Mapping[str, DataFrame]:
+        return self.dataset.processors["inmemory"].analyze(dataframe)
 
-        logger.info("Storing enriched data in datalake path %s", enriched_data_path)
-        datalake_pandas_sale_service.upload_parquet(df=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
-
-        return enriched_data_path
-
-    @staticmethod
-    def read_enriched_data(enriched_data_path: str) -> pd.DataFrame:
-        logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-        return datalake_pandas_sale_service.download_parquet(bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
-
-    @staticmethod
-    def show_revenue_by_pandas(dataframe: pd.DataFrame) -> None:
-        logger.info("Displaying enriched data")
-        show(dataframe)
-
-        logger.info("Calculating revenue by category using Pandas")
-        revenue_by_category = pandas_sale_service.get_revenue_by_category(dataframe)
-        show(revenue_by_category)
-
-        logger.info("Calculating revenue by country using Pandas")
-        revenue_by_country = pandas_sale_service.get_revenue_by_country(dataframe)
-        show(revenue_by_country)
-
-    @staticmethod
-    def show_revenue_by_datawarehouse() -> None:
+    def show_revenue_by_datawarehouse(self) -> None:
         logger.info("Calculating revenue by category using the data warehouse")
         revenue_by_category = datawarehouse_sale_service.get_revenue_by_category()
         show(revenue_by_category)

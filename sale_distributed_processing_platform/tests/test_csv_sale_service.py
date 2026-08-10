@@ -80,11 +80,11 @@ class TestReadSaleDataCsv:
         def mock_csv_to_dataframe(path: Path) -> DataFrame:
             return dataframe
 
-        def mock_requires_column(df: DataFrame, columns: set[str]) -> None:
+        def mock_require_columns(df: DataFrame, columns: set[str]) -> None:
             pass
 
         monkeypatch.setattr(system_under_test, "csv_to_dataframe", mock_csv_to_dataframe)
-        monkeypatch.setattr(system_under_test, "requires_column", mock_requires_column)
+        monkeypatch.setattr(system_under_test, "require_columns", mock_require_columns)
 
         given_path = Path("resources/fake.csv")
 
@@ -120,11 +120,11 @@ class TestReadSaleDataCsv:
         def mock_csv_to_dataframe(path: Path) -> DataFrame:
             return dataframe
 
-        def mock_requires_column(df: DataFrame, columns: set[str]) -> None:
+        def mock_require_columns(df: DataFrame, columns: set[str]) -> None:
             raise ValueError(given_error_message)
 
         monkeypatch.setattr(system_under_test, "csv_to_dataframe", mock_csv_to_dataframe)
-        monkeypatch.setattr(system_under_test, "requires_column", mock_requires_column)
+        monkeypatch.setattr(system_under_test, "require_columns", mock_require_columns)
 
         given_csv_path = Path("resources/invalid.csv")
         given_error_message = "Missing required columns"

@@ -11,9 +11,9 @@ from app_config.dataframe_schema import SCHEMA
 from factory import data_processor_connection_factory
 from service import spark_sale_service
 from service.database import database_sale_service
-from service.datalake import datalake_spark_sale_service
+from service.datalake import distributed_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
-from util.datalake_utils import DatalakeLayer, build_datalake_path
+from util.datalake_utils import DatalakeLayer, generate_relative_path
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +40,14 @@ def generate_ingestion_time() -> str:
 
 def store_raw_data(ingestion_time: str) -> str:
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    raw_data_path = build_datalake_path(DatalakeLayer.RAW, resolved_ingestion_time)
+    raw_data_path = generate_relative_path(DatalakeLayer.RAW, resolved_ingestion_time)
 
     def operation(session: SparkSession) -> str:
         logger.info("Reading data from file %s", ec.DATA_FILE)
         dataframe = spark_sale_service.read_data(session=session, file_name=ec.DATA_FILE, schema=SCHEMA)
 
         logger.info("Storing raw data in datalake path %s", raw_data_path)
-        datalake_spark_sale_service.overwrite(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+        distributed_datalake_service.overwrite(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
 
         return raw_data_path
 
@@ -56,17 +56,17 @@ def store_raw_data(ingestion_time: str) -> str:
 
 def clean_data(raw_data_path: str, ingestion_time: str) -> str:
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    cleaned_data_path = build_datalake_path(DatalakeLayer.CLEANED, resolved_ingestion_time)
+    cleaned_data_path = generate_relative_path(DatalakeLayer.CLEANED, resolved_ingestion_time)
 
     def operation(session: SparkSession) -> str:
         logger.info("Reading raw data from datalake path %s", raw_data_path)
-        dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+        dataframe = distributed_datalake_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
 
         logger.info("Cleaning data")
         cleaned_dataframe = spark_sale_service.clean_data(dataframe)
 
         logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
-        datalake_spark_sale_service.overwrite(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
+        distributed_datalake_service.overwrite(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
 
         return cleaned_data_path
 
@@ -75,17 +75,17 @@ def clean_data(raw_data_path: str, ingestion_time: str) -> str:
 
 def enrich_data(cleaned_data_path: str, ingestion_time: str) -> str:
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
-    enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, resolved_ingestion_time)
+    enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, resolved_ingestion_time)
 
     def operation(session: SparkSession) -> str:
         logger.info("Reading cleaned data from datalake path %s", cleaned_data_path)
-        dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
+        dataframe = distributed_datalake_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
 
         logger.info("Enriching data")
         enriched_dataframe = spark_sale_service.enrich_data(dataframe)
 
         logger.info("Storing enriched data in datalake path %s", enriched_data_path)
-        datalake_spark_sale_service.overwrite(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        distributed_datalake_service.overwrite(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
         return enriched_data_path
 
@@ -95,7 +95,7 @@ def enrich_data(cleaned_data_path: str, ingestion_time: str) -> str:
 def populate_database(enriched_data_path: str) -> None:
     def operation(session: SparkSession) -> None:
         logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-        dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        dataframe = distributed_datalake_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
         logger.info("Populating operational database with enriched data")
         database_sale_service.populate(dataframe)
@@ -106,7 +106,7 @@ def populate_database(enriched_data_path: str) -> None:
 def populate_datawarehouse(enriched_data_path: str) -> None:
     def operation(session: SparkSession) -> None:
         logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-        dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        dataframe = distributed_datalake_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
         logger.info("Populating data warehouse with enriched data")
         datawarehouse_sale_service.populate(dataframe.toPandas())
@@ -117,7 +117,7 @@ def populate_datawarehouse(enriched_data_path: str) -> None:
 def show_enriched_data(enriched_data_path: str) -> None:
     def operation(session: SparkSession) -> None:
         logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-        dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        dataframe = distributed_datalake_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
         logger.info("Displaying enriched data")
         dataframe.show(10, truncate=False)
@@ -128,7 +128,7 @@ def show_enriched_data(enriched_data_path: str) -> None:
 def show_revenue_by_category(enriched_data_path: str) -> None:
     def operation(session: SparkSession) -> None:
         logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-        dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        dataframe = distributed_datalake_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
         logger.info("Calculating revenue by category using Spark")
         revenue_by_category = spark_sale_service.get_revenue_by_category(dataframe)
@@ -140,7 +140,7 @@ def show_revenue_by_category(enriched_data_path: str) -> None:
 def show_revenue_by_country(enriched_data_path: str) -> None:
     def operation(session: SparkSession) -> None:
         logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-        dataframe = datalake_spark_sale_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        dataframe = distributed_datalake_service.read(session=session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
         logger.info("Calculating revenue by country using Spark")
         revenue_by_country = spark_sale_service.get_revenue_by_country(dataframe)

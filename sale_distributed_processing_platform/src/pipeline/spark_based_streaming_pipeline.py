@@ -10,10 +10,10 @@ from app_config.dataframe_schema import SCHEMA
 from factory import data_processor_connection_factory
 from service import spark_sale_service, spark_streaming_service
 from service.database import database_sale_service
-from service.datalake import datalake_spark_sale_service
+from service.datalake import distributed_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
 from streaming import csv_publisher
-from util.datalake_utils import DatalakeLayer, build_datalake_path, persisted_dataframes
+from util.datalake_utils import DatalakeLayer, generate_relative_path, persisted_dataframes
 from util.log_utils import log_line
 
 logger = logging.getLogger(__name__)
@@ -93,11 +93,11 @@ class SparkStreamingPipeline:
         logger.info("Completed Spark micro-batch %s", batch_id)
 
     def read_enriched_data(self) -> DataFrame:
-        path = build_datalake_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+        path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
 
         logger.info("Reading enriched data from datalake path %s", path)
 
-        return datalake_spark_sale_service.read(
+        return distributed_datalake_service.read(
             session=self.session,
             bucket_name=ec.DATALAKE_BUCKET_NAME,
             path=path,

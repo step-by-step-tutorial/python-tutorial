@@ -6,11 +6,7 @@ from typing import Any
 from app_config import env_config as ec
 from util.string_utils import should_be_not_none
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
-
-def build_absolute_path(path: Path) -> Path:
-    return PROJECT_ROOT / path
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def should_be_exists(path: Path) -> None:
@@ -18,8 +14,14 @@ def should_be_exists(path: Path) -> None:
         raise FileNotFoundError(f"File {path} does not exist")
 
 
+def absolute_path(path: Path) -> Path:
+    full_path = ROOT / path
+    should_be_exists(full_path)
+    return full_path
+
+
 def read_sql_file(file_name: str) -> str:
-    return (build_absolute_path(ec.SCRIPTS_DIR) / file_name).read_text(encoding="utf-8")
+    return (absolute_path(ec.SCRIPTS_DIR) / file_name).read_text(encoding="utf-8")
 
 
 def read_csv_file(path: Path, processor: Callable[[dict[str, Any]], None]) -> int:

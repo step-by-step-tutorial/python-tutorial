@@ -9,9 +9,9 @@ from app_config.dataframe_schema import SCHEMA
 from factory import data_processor_connection_factory
 from service import spark_sale_service
 from service.database import database_sale_service
-from service.datalake import datalake_spark_sale_service
+from service.datalake import distributed_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
-from util.datalake_utils import DatalakeLayer, build_datalake_path
+from util.datalake_utils import DatalakeLayer, generate_relative_path
 from util.log_utils import log_line
 
 logger = logging.getLogger(__name__)
@@ -60,46 +60,46 @@ class SparkPipeline:
             log_line()
 
     def store_raw_data(self) -> str:
-        raw_data_path = build_datalake_path(DatalakeLayer.RAW, self.ingestion_time)
+        raw_data_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
 
         logger.info("Reading data from file %s", ec.DATA_FILE)
         dataframe = spark_sale_service.read_data(session=self.session, file_name=ec.DATA_FILE, schema=SCHEMA)
 
         logger.info("Storing raw data in datalake path %s", raw_data_path)
-        datalake_spark_sale_service.overwrite(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+        distributed_datalake_service.overwrite(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
 
         return raw_data_path
 
     def clean_data(self, raw_data_path: str) -> str:
         logger.info("Reading raw data from datalake path %s", raw_data_path)
-        dataframe = datalake_spark_sale_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME,   path=raw_data_path)
+        dataframe = distributed_datalake_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
 
         logger.info("Cleaning data")
         cleaned_dataframe = spark_sale_service.clean_data(dataframe)
 
-        cleaned_data_path = build_datalake_path(DatalakeLayer.CLEANED, self.ingestion_time)
+        cleaned_data_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time)
         logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
-        datalake_spark_sale_service.overwrite(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,  path=cleaned_data_path)
+        distributed_datalake_service.overwrite(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
 
         return cleaned_data_path
 
     def enrich_data(self, cleaned_data_path: str) -> str:
 
         logger.info("Reading cleaned data from datalake path %s", cleaned_data_path)
-        dataframe = datalake_spark_sale_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME,  path=cleaned_data_path)
+        dataframe = distributed_datalake_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
 
         logger.info("Enriching data")
         enriched_dataframe = spark_sale_service.enrich_data(dataframe)
 
-        enriched_data_path = build_datalake_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+        enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
         logger.info("Storing enriched data in datalake path %s", enriched_data_path)
-        datalake_spark_sale_service.overwrite(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME,   path=enriched_data_path)
+        distributed_datalake_service.overwrite(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
         return enriched_data_path
 
     def read_enriched_data(self, enriched_data_path: str) -> DataFrame:
         logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-        return datalake_spark_sale_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME,   path=enriched_data_path)
+        return distributed_datalake_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
 
     @staticmethod
     def show_revenue_by_spark(dataframe: DataFrame) -> None:
