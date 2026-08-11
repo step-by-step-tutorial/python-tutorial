@@ -3,7 +3,7 @@ requires = ["setuptools>=80"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sale_distributed_processing_platform"
+name = "data_platform"
 version = "1.0.0"
 description = "Integrated data engineering, machine learning and MLOps platform"
 requires-python = ">=3.12"
