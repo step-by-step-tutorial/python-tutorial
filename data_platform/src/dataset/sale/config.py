@@ -1,8 +1,9 @@
+import dataset.sale.schema as schema
 from app_config import env_config as ec
 from dataset.definition import StageTable, Dataset, DataWarehouse, Datalake
 from dataset.sale.inmemory_processor import InmemorySaleProcessor
-import dataset.sale.schema as schema
 from dataset.sale.spark_processor import SparkSaleProcessor
+from util.file_utils import read_sql_file
 
 SALE_DATASET = Dataset(
     name="Sale",
@@ -25,13 +26,18 @@ SALE_DATASET = Dataset(
     ),
     datawarehouse=DataWarehouse(
         table_name="sale_table",
+        full_table_name=f"{ec.DATAWAREHOUSE_NAME}.sale_table",
         columns=schema.ALL_COLUMNS,
+        preparing_sql_files={
+            "truncate":  read_sql_file("truncate_datawarehouse.sql")
+        },
         analysis_sql_files={
-            "revenue_by_category": "datasets/sale/select_revenue_by_category.sql",
-            "revenue_by_country": "datasets/sale/select_revenue_by_country.sql",
+            "revenue_by_category": read_sql_file("select_revenue_by_category.sql"),
+            "revenue_by_country": read_sql_file("select_revenue_by_country.sql"),
         },
     ),
     processors={
-        "inmemory": InmemorySaleProcessor(), "spark": SparkSaleProcessor()
+        "inmemory": InmemorySaleProcessor(),
+        "spark": SparkSaleProcessor()
     },
 )

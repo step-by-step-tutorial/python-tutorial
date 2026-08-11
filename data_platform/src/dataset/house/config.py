@@ -1,8 +1,9 @@
+import dataset.house.schema as schema
 from app_config import env_config as ec
 from dataset.definition import StageTable, Dataset, DataWarehouse, Datalake
 from dataset.house.inmemory_processor import InmemoryHouseProcessor
-import dataset.house.schema as schema
 from dataset.house.spark_processor import SparkHouseProcessor
+from util.file_utils import read_sql_file
 
 HOUSE_DATASET = Dataset(
     name="house",
@@ -22,20 +23,19 @@ HOUSE_DATASET = Dataset(
                  schema.dataset_model_instance.ADDRESS, schema.dataset_model_instance.PRICE,
                  schema.dataset_model_instance.PRICE_USD, schema.dataset_model_instance.PRICE_PER_SQUARE_METER,
                  schema.dataset_model_instance.PRICE_USD_PER_SQUARE_METER),
-        before_load_sql_files=("datasets/house/truncate_stage.sql",),
-        after_load_sql_files=("datasets/house/upsert_listing.sql",),
+        before_load_sql_files=("truncate_stage.sql",),
+        after_load_sql_files=("upsert_listing.sql",),
     ),
     datawarehouse=DataWarehouse(
         table_name="house_table",
-        columns=(schema.dataset_model_instance.LISTING_KEY, schema.dataset_model_instance.AREA,
-                 schema.dataset_model_instance.ROOM, schema.dataset_model_instance.PARKING,
-                 schema.dataset_model_instance.WAREHOUSE, schema.dataset_model_instance.ELEVATOR,
-                 schema.dataset_model_instance.ADDRESS, schema.dataset_model_instance.PRICE,
-                 schema.dataset_model_instance.PRICE_USD, schema.dataset_model_instance.PRICE_PER_SQUARE_METER,
-                 schema.dataset_model_instance.PRICE_USD_PER_SQUARE_METER),
+        full_table_name=f"{ec.DATAWAREHOUSE_NAME}.house_table",
+        columns=schema.ALL_COLUMNS,
+        preparing_sql_files={
+            "truncate": read_sql_file("truncate_datawarehouse.sql"),
+        },
         analysis_sql_files={
-            "average_price_by_address": "datasets/house/select_average_price_by_address.sql",
-            "average_price_per_square_meter_by_room": "datasets/house/select_average_price_per_square_meter_by_room.sql",
+            "revenue_by_category": read_sql_file("select_revenue_by_category.sql"),
+            "revenue_by_country": read_sql_file("select_revenue_by_country.sql"),
         },
     ),
     processors={

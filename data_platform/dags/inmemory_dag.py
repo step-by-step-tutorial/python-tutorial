@@ -9,17 +9,12 @@ from service import pandas_sale_service as csv_service
 from service.database import database_sale_service as database_service
 from service.datalake import inmemory_datalake_service as datalake_service
 from service.datawarehouse import datawarehouse_sale_service as datawarehouse_service
+from util import time_utils
 from util.datalake_utils import DatalakeLayer, generate_relative_path
 
 logger = logging.getLogger(__name__)
 
 DAG_ID = "inmemory_etl_dag"
-
-
-def generate_ingestion_time() -> str:
-    ingestion_time = datetime.now(UTC).isoformat()
-    logger.info("Generated ingestion time %s", ingestion_time)
-    return ingestion_time
 
 
 def store_raw_data(ingestion_time: str) -> str:
@@ -122,7 +117,7 @@ with DAG(
 ) as dag:
     generate_ingestion_time_task = PythonOperator(
         task_id="generate_ingestion_time",
-        python_callable=generate_ingestion_time,
+        python_callable=time_utils.generate_ingestion_time,
     )
 
     store_raw_data_task = PythonOperator(

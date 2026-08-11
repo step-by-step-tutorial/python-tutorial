@@ -34,7 +34,9 @@ class StageTable:
 @dataclass(frozen=True)
 class DataWarehouse:
     table_name: str
+    full_table_name: str
     columns: tuple[str, ...]
+    preparing_sql_files: Mapping[str, str]
     analysis_sql_files: Mapping[str, str]
 
 @dataclass(frozen=True)

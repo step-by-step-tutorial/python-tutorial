@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Mapping
 
 import pandas as pd
@@ -16,6 +16,7 @@ from util.datalake_utils import DatalakeLayer, generate_relative_path
 from util.file_utils import absolute_path
 from util.log_utils import log_line
 from util.pandas_dataframe_utils import require_columns, show_map_of_dataframe
+from util.time_utils import generate_ingestion_time
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +25,15 @@ class InmemoryPipeline:
 
     def __init__(self, ds: Dataset) -> None:
         self.dataset = ds
-        self.ingestion_time: datetime = datetime.now(UTC)
+        self.ingestion_time: datetime = generate_ingestion_time()
         self.run()
 
     def run(self) -> None:
-        logger.info("Starting ETL pipeline with dataset %s at ingestion time %s", self.dataset.name, self.ingestion_time)
+        logger.info(
+            "Starting ETL pipeline with dataset %s at ingestion time %s",
+            self.dataset.name,
+            self.ingestion_time.isoformat()
+        )
         log_line()
 
         raw_relative_path = self.store_raw_data()
@@ -42,25 +47,33 @@ class InmemoryPipeline:
 
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
 
-        logger.info("Displaying enriched data")
-        show(enriched_dataframe)
-
         logger.info("Populating operational database with enriched data")
         database_sale_service.populate(enriched_dataframe)
         log_line()
 
         logger.info("Populating data warehouse with enriched data")
-        datawarehouse_sale_service.populate(enriched_dataframe)
+        datawarehouse_sale_service.truncate_and_populate(self.dataset.datawarehouse, enriched_dataframe)
         log_line()
 
-        analysis_results = self.analyzing(enriched_dataframe)
-        show_map_of_dataframe(analysis_results)
+        logger.info("Displaying enriched data")
+        show(enriched_dataframe)
         log_line()
 
-        self.show_revenue_by_datawarehouse()
+        logger.info("Analyzing enriched data via memory")
+        analysis_via_memory_results = self.analyzing_via_memory(enriched_dataframe)
+        show_map_of_dataframe(analysis_via_memory_results)
         log_line()
 
-        logger.info("Finished ETL pipeline with dataset %s at ingestion time %s", self.dataset.name, self.ingestion_time)
+        logger.info("Analyzing enriched data via data warehouse")
+        analysis_via_datawarehouse_result = self.analyzing_via_datawarehouse()
+        show_map_of_dataframe(analysis_via_datawarehouse_result)
+        log_line()
+
+        logger.info(
+            "Finished ETL pipeline with dataset %s at ingestion time %s",
+            self.dataset.name,
+            self.ingestion_time.isoformat()
+        )
 
     def store_raw_data(self) -> str:
         dataframe = csv_to_dataframe(absolute_path(ec.RESOURCES_DIR) / self.dataset.file_name)
@@ -112,14 +125,8 @@ class InmemoryPipeline:
         return inmemory_datalake_service.download(bucket_name=self.dataset.datalake.bucket_name,
                                                   relative_path=relative_path)
 
-    def analyzing(self, dataframe: pd.DataFrame) -> Mapping[str, DataFrame]:
+    def analyzing_via_memory(self, dataframe: pd.DataFrame) -> Mapping[str, DataFrame]:
         return self.dataset.processors["inmemory"].analyze(dataframe)
 
-    def show_revenue_by_datawarehouse(self) -> None:
-        logger.info("Calculating revenue by category using the data warehouse")
-        revenue_by_category = datawarehouse_sale_service.get_revenue_by_category()
-        show(revenue_by_category)
-
-        logger.info("Calculating revenue by country using the data warehouse")
-        revenue_by_country = datawarehouse_sale_service.get_revenue_by_country()
-        show(revenue_by_country)
+    def analyzing_via_datawarehouse(self) -> Mapping[str, DataFrame]:
+        return datawarehouse_sale_service.analyze(self.dataset.datawarehouse)
