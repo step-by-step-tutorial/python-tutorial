@@ -1,7 +1,7 @@
 import logging
 
-import dataset.sale.config
 from app_config import env_config as ec
+from dataset.registry import get_dataset
 from pipeline.inmemory_auditable_pipeline import InmemoryAuditablePipeline
 from pipeline.inmemory_pipeline import InmemoryPipeline
 from pipeline.spark_based_pipeline import SparkPipeline
@@ -19,7 +19,7 @@ PIPELINES = {
 
 
 def main() -> None:
-    PIPELINES[ec.PIPELINE_TYPE](dataset.sale.config.SALE_DATASET)
+    PIPELINES[ec.PIPELINE_TYPE](get_dataset(ec.DATASET_NAME))
 
 
 if __name__ == "__main__":

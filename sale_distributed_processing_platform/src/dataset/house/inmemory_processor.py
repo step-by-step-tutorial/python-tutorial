@@ -3,8 +3,7 @@ from collections.abc import Mapping
 
 import pandas as pd
 from pandas import DataFrame
-
-import schema
+import dataset.house.schema as schema
 from dataset.definition import DataProcessor
 from util.pandas_dataframe_utils import (
     average_by_group,

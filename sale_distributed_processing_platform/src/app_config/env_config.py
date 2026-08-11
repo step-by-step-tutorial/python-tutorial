@@ -3,7 +3,7 @@ from pathlib import Path
 
 from util.file_utils import absolute_path
 
-DATASET_NAME = os.getenv("DATASET_NAME", "sale")
+DATASET_NAME = os.getenv("DATASET_NAME", "Sale")
 PIPELINE_TYPE = os.getenv("PIPELINE_TYPE", "inmemory")
 
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")

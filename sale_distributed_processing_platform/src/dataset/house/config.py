@@ -1,15 +1,14 @@
-import schema
 from app_config import env_config as ec
 from dataset.definition import StageTable, Dataset, DataWarehouse, Datalake
 from dataset.house.inmemory_processor import InmemoryHouseProcessor
-from dataset.house.schema import REQUIRED_COLUMNS, DATAFRAME_SCHEMA
+import dataset.house.schema as schema
 from dataset.house.spark_processor import SparkHouseProcessor
 
 HOUSE_DATASET = Dataset(
     name="house",
     file_name="house_data.csv",
-    dataframe_schema=DATAFRAME_SCHEMA,
-    required_columns=REQUIRED_COLUMNS,
+    dataframe_schema=schema.DATAFRAME_SCHEMA,
+    required_columns=schema.REQUIRED_COLUMNS,
     event_key_column=schema.dataset_model_instance.ADDRESS_RAW,
     streaming_topic="house-events",
     streaming_consumer_group="house-spark-consumer",
