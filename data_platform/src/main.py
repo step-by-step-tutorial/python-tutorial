@@ -19,7 +19,8 @@ PIPELINES = {
 
 
 def main() -> None:
-    PIPELINES[ec.PIPELINE_TYPE](get_dataset(ec.DATASET_NAME))
+    pipeline = PIPELINES[ec.PIPELINE_TYPE](get_dataset(ec.DATASET_NAME))
+    pipeline.run()
 
 
 if __name__ == "__main__":

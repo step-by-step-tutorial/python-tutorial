@@ -1,10 +1,8 @@
 import logging
 from datetime import datetime
-from typing import Mapping
 
 import pandas as pd
 from itables import show
-from pandas import DataFrame
 
 from app_config import env_config as ec
 from dataset.definition import Dataset
@@ -26,7 +24,6 @@ class InmemoryPipeline:
     def __init__(self, ds: Dataset) -> None:
         self.dataset = ds
         self.ingestion_time: datetime = generate_ingestion_time()
-        self.run()
 
     def run(self) -> None:
         logger.info(
@@ -36,37 +33,35 @@ class InmemoryPipeline:
         )
         log_line()
 
+        logger.info("step 1")
         raw_relative_path = self.store_raw_data()
         log_line()
 
+        logger.info("step 2")
         cleaned_data_path = self.cleaning(raw_relative_path)
         log_line()
 
+        logger.info("step 3")
         enriched_data_path = self.enriching(cleaned_data_path)
         log_line()
 
-        enriched_dataframe = self.download_enriched_data(enriched_data_path)
-
-        logger.info("Populating operational database with enriched data")
-        database_sale_service.populate(enriched_dataframe)
+        logger.info("step 4")
+        self.populate_database(enriched_data_path)
         log_line()
 
-        logger.info("Populating data warehouse with enriched data")
-        datawarehouse_sale_service.truncate_and_populate(self.dataset.datawarehouse, enriched_dataframe)
+        logger.info("step 5")
+        self.populate_datawarehouse(enriched_data_path)
         log_line()
 
-        logger.info("Displaying enriched data")
-        show(enriched_dataframe)
+        logger.info("step 6")
+        self.show_dataframe(enriched_data_path)
+
+        logger.info("step 7")
+        self.analyzing_via_memory(enriched_data_path)
         log_line()
 
-        logger.info("Analyzing enriched data via memory")
-        analysis_via_memory_results = self.analyzing_via_memory(enriched_dataframe)
-        show_map_of_dataframe(analysis_via_memory_results)
-        log_line()
-
-        logger.info("Analyzing enriched data via data warehouse")
-        analysis_via_datawarehouse_result = self.analyzing_via_datawarehouse()
-        show_map_of_dataframe(analysis_via_datawarehouse_result)
+        logger.info("step 8")
+        self.analyzing_via_datawarehouse()
         log_line()
 
         logger.info(
@@ -76,7 +71,8 @@ class InmemoryPipeline:
         )
 
     def store_raw_data(self) -> str:
-        dataframe = csv_to_dataframe(absolute_path(ec.RESOURCES_DIR) / self.dataset.file_name)
+        data_file_path = absolute_path(ec.RESOURCES_DIR) / self.dataset.file_name
+        dataframe = csv_to_dataframe(data_file_path)
         require_columns(dataframe, self.dataset.required_columns)
 
         relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
@@ -122,11 +118,34 @@ class InmemoryPipeline:
         return relative_path
 
     def download_enriched_data(self, relative_path: str) -> pd.DataFrame:
-        return inmemory_datalake_service.download(bucket_name=self.dataset.datalake.bucket_name,
-                                                  relative_path=relative_path)
+        return inmemory_datalake_service.download(
+            bucket_name=self.dataset.datalake.bucket_name,
+            relative_path=relative_path
+        )
 
-    def analyzing_via_memory(self, dataframe: pd.DataFrame) -> Mapping[str, DataFrame]:
-        return self.dataset.processors["inmemory"].analyze(dataframe)
+    def populate_database(self, enriched_data_path: str):
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Populating operational database with enriched data")
+        database_sale_service.populate(enriched_dataframe)
 
-    def analyzing_via_datawarehouse(self) -> Mapping[str, DataFrame]:
-        return datawarehouse_sale_service.analyze(self.dataset.datawarehouse)
+    def populate_datawarehouse(self, enriched_data_path: str):
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Populating data warehouse with enriched data")
+        datawarehouse_sale_service.truncate_and_populate(self.dataset.datawarehouse, enriched_dataframe)
+
+    def analyzing_via_memory(self, enriched_data_path: str):
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Analyzing enriched data via memory")
+        results = self.dataset.processors["inmemory"].analyze(enriched_dataframe)
+        show_map_of_dataframe(results)
+
+    def analyzing_via_datawarehouse(self):
+        result = datawarehouse_sale_service.analyze(self.dataset.datawarehouse)
+        logger.info("Analyzing enriched data via data warehouse")
+        show_map_of_dataframe(result)
+
+    def show_dataframe(self, enriched_data_path: str):
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Displaying enriched data")
+        show(enriched_dataframe)
+        log_line()
