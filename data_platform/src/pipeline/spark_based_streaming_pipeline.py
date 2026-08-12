@@ -31,11 +31,11 @@ class SparkStreamingPipeline:
             log_line()
             logger.info("Starting pipeline with ingestion time %s", self.ingestion_time)
 
-            logger.info("Publishing events from file %s to Kafka topic %s", ec.DATA_FILE, ec.STREAMING_TOPIC)
+            logger.info("Publishing events from file %s to streaming topic %s", ec.DATA_FILE, ec.STREAMING_TOPIC)
             csv_publisher.publish(ec.DATA_FILE)
             log_line()
 
-            logger.info("Starting Spark streaming ingestion from Kafka to datalake")
+            logger.info("Starting Spark streaming ingestion from streaming to datalake")
             self.start_batch_storage().awaitTermination()
             log_line()
 
@@ -58,7 +58,7 @@ class SparkStreamingPipeline:
             self.stop()
 
     def start_batch_storage(self) -> StreamingQuery:
-        logger.info("Creating Spark stream for Kafka topic %s", ec.STREAMING_TOPIC)
+        logger.info("Creating Spark stream for streaming topic %s", ec.STREAMING_TOPIC)
 
         dataframe = spark_streaming_service.read_stream(self.session)
         event_dataframe = spark_streaming_service.convert(dataframe, SCHEMA)

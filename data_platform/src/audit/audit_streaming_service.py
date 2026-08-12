@@ -8,12 +8,14 @@ from util.streaming_utils import delivery_callback, flush_messages
 logger = logging.getLogger(__name__)
 
 
-class AuditEventProducer:
+class AuditStreamingService:
+
     def __init__(self) -> None:
         self.producer = create_streaming_producer()
 
     def publish(self, event: AuditEvent) -> None:
         logger.info("Publishing audit event to streaming topic %r", ec.STREAMING_AUDIT_TOPIC)
+
         try:
             self.producer.produce(
                 topic=ec.STREAMING_AUDIT_TOPIC,
@@ -22,7 +24,8 @@ class AuditEventProducer:
                 headers={
                     "event_id": str(event.event_id),
                     "event_type": event.event_type.value,
-                    "event_version": str(event.event_version)},
+                    "event_version": str(event.event_version)
+                },
                 on_delivery=delivery_callback
             )
             self.producer.poll(0)

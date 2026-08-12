@@ -2,7 +2,7 @@ from confluent_kafka import Consumer, Producer
 
 from app_config import env_config as ec
 
-def create_kafka_producer() -> Producer:
+def create_streaming_producer() -> Producer:
     return Producer(
         {
             "bootstrap.servers": ec.STREAMING_BOOTSTRAP_SERVERS,

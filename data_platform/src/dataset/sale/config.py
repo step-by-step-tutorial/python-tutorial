@@ -11,10 +11,12 @@ SALE_DATASET = Dataset(
     dataframe_schema=schema.DATAFRAME_SCHEMA,
     required_columns=schema.REQUIRED_COLUMNS,
     event_key_column=schema.dataset_model_instance.ORDER_ID,
-    streaming_topic="sale-events",
-    streaming_consumer_group="sale-spark-consumer",
+    streaming_topic=ec.STREAMING_TOPIC,
+    streaming_consumer_group=ec.STREAMING_CONSUMER_GROUP,
+    streaming_checkpoint_path=f"{ec.DATALAKE_SCHEME}://{ec.DATALAKE_BUCKET_NAME}/checkpoints/{ec.STREAMING_TOPIC}",
+    audit_topic=ec.STREAMING_AUDIT_TOPIC,
+    audit_consumer_group=ec.STREAMING_AUDIT_CONSUMER_GROUP,
     datalake=Datalake(bucket_name=ec.DATALAKE_BUCKET_NAME),
-    streaming_checkpoint_path=f"{ec.DATALAKE_SCHEME}://{ec.DATALAKE_BUCKET_NAME}/checkpoints/sale-events",
     database=StageTable(
         name="sale_stage",
         columns=schema.ALL_COLUMNS,
@@ -40,4 +42,5 @@ SALE_DATASET = Dataset(
         "inmemory": InmemorySaleProcessor(),
         "spark": SparkSaleProcessor()
     },
+
 )

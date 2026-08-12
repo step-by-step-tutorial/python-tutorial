@@ -23,8 +23,8 @@ def read_stream(session: SparkSession) -> DataFrame:
 
     return (
         session.readStream
-        .format("kafka")
-        .option("kafka.bootstrap.servers", ec.STREAMING_BOOTSTRAP_SERVERS)
+        .format("streaming")
+        .option("streaming.bootstrap.servers", ec.STREAMING_BOOTSTRAP_SERVERS)
         .option("subscribe", ec.STREAMING_TOPIC)
         .option("startingOffsets", ec.STREAMING_STARTING_OFFSETS)
         .option("failOnDataLoss", "false")
@@ -39,18 +39,18 @@ def convert(dataframe: DataFrame, schema: StructType) -> DataFrame:
         dataframe
         .select(
             sf.from_json(sf.col("value").cast("string"), schema).alias("event"),
-            sf.col("topic").alias("kafka_topic"),
-            sf.col("partition").alias("kafka_partition"),
-            sf.col("offset").alias("kafka_offset"),
-            sf.col("timestamp").alias("kafka_timestamp"),
+            sf.col("topic").alias("streaming_topic"),
+            sf.col("partition").alias("streaming_partition"),
+            sf.col("offset").alias("streaming_offset"),
+            sf.col("timestamp").alias("streaming_timestamp"),
         )
         .filter(sf.col("event").isNotNull())
         .select(
             "event.*",
-            "kafka_topic",
-            "kafka_partition",
-            "kafka_offset",
-            "kafka_timestamp",
+            "streaming_topic",
+            "streaming_partition",
+            "streaming_offset",
+            "streaming_timestamp",
         )
     )
 
@@ -60,7 +60,7 @@ def convert(dataframe: DataFrame, schema: StructType) -> DataFrame:
 
 
 def append_raw_data(df: DataFrame, ingestion_time: datetime) -> DataFrame:
-    dataframe = df.drop("kafka_topic", "kafka_partition", "kafka_offset", "kafka_timestamp")
+    dataframe = df.drop("streaming_topic", "streaming_partition", "streaming_offset", "streaming_timestamp")
     path = generate_relative_path(layer=DatalakeLayer.RAW, ingestion_time=ingestion_time)
     logger.info("Appending raw data to %s", path)
     distributed_datalake_service.append(

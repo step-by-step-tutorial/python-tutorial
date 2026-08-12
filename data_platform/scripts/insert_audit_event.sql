@@ -24,7 +24,7 @@ INSERT INTO audit.event (
     error_message,
     error_stacktrace,
     metadata,
-    kafka_topic
+    streaming_topic
 ) VALUES (
     :event_id,
     :event_version,
@@ -51,6 +51,6 @@ INSERT INTO audit.event (
     :error_message,
     :error_stacktrace,
     CAST(:metadata AS JSONB),
-    :kafka_topic
+    :streaming_topic
 )
 ON CONFLICT DO NOTHING;

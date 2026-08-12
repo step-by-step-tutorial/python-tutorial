@@ -19,7 +19,7 @@ class AuditMetrics:
 
 @dataclass(frozen=True)
 class SaleReconciliationMetrics:
-    kafka_consumed_count: int
+    streaming_consumed_count: int
     bronze_row_count: int
     silver_row_count: int
     rejected_row_count: int

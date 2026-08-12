@@ -129,13 +129,12 @@ CREATE TABLE IF NOT EXISTS audit.event (
     error_message TEXT,
     error_stacktrace TEXT,
     metadata JSONB NOT NULL DEFAULT '{}',
-    kafka_topic VARCHAR(250),
-    kafka_partition INTEGER,
-    kafka_offset BIGINT,
+    streaming_topic VARCHAR(250) Nullable,
+    streaming_partition INTEGER Nullable,
+    streaming_offset BIGINT Nullable,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT uq_audit_kafka_position
-    UNIQUE (kafka_topic, kafka_partition, kafka_offset)
+    CONSTRAINT uq_audit_streaming_position
 );
 
 CREATE TABLE IF NOT EXISTS audit.data_quality_result (

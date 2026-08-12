@@ -1,7 +1,7 @@
 import json
 
 from app_config import env_config as ec
-from factory.kafka_connection_factory import create_audit_topic_consumer
+from factory.streamming_connection_factory import create_audit_topic_consumer
 
 
 class AuditEventConsumer:

@@ -50,12 +50,14 @@ class Dataset:
     file_name: str
     dataframe_schema: Any
     required_columns: frozenset[str]
-    event_key_column: str
-    streaming_topic: str
-    streaming_consumer_group: str
-    streaming_checkpoint_path: str
     datalake: Datalake
     database: StageTable
     datawarehouse: DataWarehouse
     processors: dict[str, DataProcessor]
+    event_key_column: str = ""
+    streaming_topic: str = ""
+    streaming_consumer_group: str = ""
+    streaming_checkpoint_path: str = ""
+    audit_topic: str = ""
+    audit_consumer_group: str = ""
     schema_version: str = "1"

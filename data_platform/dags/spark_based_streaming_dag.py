@@ -31,9 +31,9 @@ def generate_ingestion_time() -> str:
 
 
 def publish_events() -> None:
-    logger.info("Publishing events from file %s to Kafka topic %s", ec.DATA_FILE, ec.STREAMING_TOPIC)
+    logger.info("Publishing events from file %s to streaming topic %s", ec.DATA_FILE, ec.STREAMING_TOPIC)
     published_event_count = csv_publisher.publish(ec.DATA_FILE)
-    logger.info("Published %s events to Kafka topic %s", published_event_count, ec.STREAMING_TOPIC)
+    logger.info("Published %s events to streaming topic %s", published_event_count, ec.STREAMING_TOPIC)
 
 
 def process_stream(ingestion_time: str) -> None:
@@ -55,7 +55,7 @@ def process_stream(ingestion_time: str) -> None:
 
 
 def start_stream(session: SparkSession, ingestion_time: datetime) -> StreamingQuery:
-    logger.info("Creating Spark stream for Kafka topic %s", ec.STREAMING_TOPIC)
+    logger.info("Creating Spark stream for streaming topic %s", ec.STREAMING_TOPIC)
 
     dataframe = spark_streaming_service.read_stream(session)
     event_dataframe = spark_streaming_service.convert(dataframe, SCHEMA)
@@ -165,7 +165,7 @@ def read_enriched_data(session: SparkSession, ingestion_time: str) -> DataFrame:
 
 with DAG(
         dag_id=DAG_ID,
-        description="Publish events to Kafka and process them with Spark Structured Streaming",
+        description="Publish events to streaming and process them with Spark Structured Streaming",
         schedule=None,
         start_date=DAG_START_DATE,
         catchup=False,

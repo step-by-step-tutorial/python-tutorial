@@ -7,10 +7,10 @@ from airflow.sdk import DAG
 
 from app_config import env_config as ec
 from model.audit_event import AuditEvent, AuditEventType, AuditStatus
-from repository import audit_repository
+from audit import audit_database_service
 from service import pandas_sale_service
-from service.audit.audit_pipeline_service import AuditPipelineService
-from service.audit.audit_task_service import AuditTaskService
+from audit.audit_service import AuditService
+from audit.audit_task_service import AuditTaskService
 from service.database import database_sale_service
 from service.datalake import inmemory_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
@@ -42,7 +42,7 @@ def generate_pipeline_context() -> dict:
 
 
 def start_pipeline(pipeline_context: dict) -> None:
-    audit_pipeline_service = AuditPipelineService()
+    audit_pipeline_service = AuditService()
 
     event = audit_pipeline_service.pipeline_started(
         pipeline_name=PIPELINE_NAME,
@@ -50,7 +50,7 @@ def start_pipeline(pipeline_context: dict) -> None:
         metadata={"data_file": ec.DATA_FILE},
     )
 
-    audit_repository.save_event(event, ec.STREAMING_AUDIT_TOPIC)
+    audit_database_service.save_event(event, ec.STREAMING_AUDIT_TOPIC)
     audit_pipeline_service.producer.flush()
 
     logger.info("Started pipeline with run id %s", pipeline_context["pipeline_id"])
@@ -271,7 +271,7 @@ def populate_datawarehouse(pipeline_context: dict) -> None:
 
 
 def complete_pipeline(pipeline_context: dict) -> None:
-    audit_pipeline_service = AuditPipelineService()
+    audit_pipeline_service = AuditService()
 
     try:
         audit_pipeline_service.pipeline_completed(

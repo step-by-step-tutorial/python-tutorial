@@ -10,9 +10,9 @@ INSERT INTO audit.event(
     task_attempt,
     status,
     metadata,
-    kafka_topic,
-    kafka_partition,
-    kafka_offset
+    streaming_topic,
+    streaming_partition,
+    streaming_offset
 ) VALUES (
     %(event_id) s,
     %(event_version) s,
@@ -25,8 +25,8 @@ INSERT INTO audit.event(
     %(task_attempt) s,
     %(status) s,
     %(metadata) s,
-    %(kafka_topic) s,
-    %(kafka_partition) s,
-    %(kafka_offset) s
+    %(streaming_topic) s,
+    %(streaming_partition) s,
+    %(streaming_offset) s
 )
 ON CONFLICT (event_id) DO NOTHING;

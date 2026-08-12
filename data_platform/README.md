@@ -51,7 +51,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ```shell
 cd ./data_platform
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
-PIPELINE_TYPE="inmemory" DATASET_NAME="Sale" python ./src/main.py
+PIPELINE_TYPE="inmemory_auditable" DATASET_NAME="Sale" python ./src/main.py
 ```
 
 ```shell
@@ -82,10 +82,10 @@ docker rmi samanalishiri/application:latest
 * Datalake: http://localhost:9001
     * Username: admin
     * Password: administrator
-* Datawarehouse HTTP: http://localhost:8123
+* Datawarehouse HTTP: http://localhost:8600
     * Username: admin
     * Password: admin
-* Database: http://localhost:8083
+* Database: http://localhost:8500
     * Server: database:5432
     * Username: admin
     * Password: admin
