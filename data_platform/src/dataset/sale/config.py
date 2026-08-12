@@ -1,21 +1,19 @@
+from pathlib import Path
+
 import dataset.sale.schema as schema
 from app_config import env_config as ec
 from dataset.definition import StageTable, Dataset, DataWarehouse, Datalake
 from dataset.sale.inmemory_processor import InmemorySaleProcessor
 from dataset.sale.spark_processor import SparkSaleProcessor
-from util.file_utils import read_sql_file
+from model.sale_event import SaleEvent
+from util.file_utils import read_text_file, generate_full_file_path
 
 SALE_DATASET = Dataset(
     name="Sale",
     file_name="sale.csv",
+    file_path=str(ec.ROOT / ec.RESOURCES_DIR / "sale.csv"),
     dataframe_schema=schema.DATAFRAME_SCHEMA,
     required_columns=schema.REQUIRED_COLUMNS,
-    event_key_column=schema.dataset_model_instance.ORDER_ID,
-    streaming_topic=ec.STREAMING_TOPIC,
-    streaming_consumer_group=ec.STREAMING_CONSUMER_GROUP,
-    streaming_checkpoint_path=f"{ec.DATALAKE_SCHEME}://{ec.DATALAKE_BUCKET_NAME}/checkpoints/{ec.STREAMING_TOPIC}",
-    audit_topic=ec.STREAMING_AUDIT_TOPIC,
-    audit_consumer_group=ec.STREAMING_AUDIT_CONSUMER_GROUP,
     datalake=Datalake(bucket_name=ec.DATALAKE_BUCKET_NAME),
     database=StageTable(
         name="sale_stage",
@@ -31,16 +29,23 @@ SALE_DATASET = Dataset(
         full_table_name=f"{ec.DATAWAREHOUSE_NAME}.sale_table",
         columns=schema.ALL_COLUMNS,
         preparing_sql_files={
-            "truncate":  read_sql_file("truncate_datawarehouse.sql")
+            "truncate": read_text_file("truncate_datawarehouse.sql")
         },
         analysis_sql_files={
-            "revenue_by_category": read_sql_file("select_revenue_by_category.sql"),
-            "revenue_by_country": read_sql_file("select_revenue_by_country.sql"),
+            "revenue_by_category": read_text_file("select_revenue_by_category.sql"),
+            "revenue_by_country": read_text_file("select_revenue_by_country.sql"),
         },
     ),
     processors={
         "inmemory": InmemorySaleProcessor(),
         "spark": SparkSaleProcessor()
     },
+    event_key_column=schema.dataset_model_instance.ORDER_ID,
+    streaming_topic=ec.STREAMING_TOPIC,
+    streaming_consumer_group=ec.STREAMING_CONSUMER_GROUP,
+    streaming_checkpoint_path=f"{ec.DATALAKE_SCHEME}://{ec.DATALAKE_BUCKET_NAME}/checkpoints/{ec.STREAMING_TOPIC}",
+    event_converter=lambda row: SaleEvent.from_dict(row).to_dict(),
+    audit_topic=ec.STREAMING_AUDIT_TOPIC,
+    audit_consumer_group=ec.STREAMING_AUDIT_CONSUMER_GROUP,
 
 )

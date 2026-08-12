@@ -8,4 +8,4 @@ logger = logging.getLogger("audit")
 class AuditLogService:
 
     def log(self, event: AuditEvent) -> None:
-        logger.info("Audit event: %s", event.model_dump_json())
+        logger.info("Audit event: %s", event.event_id)

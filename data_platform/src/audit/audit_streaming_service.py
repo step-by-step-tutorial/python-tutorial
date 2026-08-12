@@ -3,7 +3,7 @@ import logging
 from app_config import env_config as ec
 from factory.streamming_connection_factory import create_streaming_producer
 from model.audit_event import AuditEvent
-from util.streaming_utils import delivery_callback, flush_messages
+from util.streaming_utils import topic_on_delivery
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class AuditStreamingService:
         self.producer = create_streaming_producer()
 
     def publish(self, event: AuditEvent) -> None:
-        logger.info("Publishing audit event to streaming topic %r", ec.STREAMING_AUDIT_TOPIC)
+        logger.info("Publishing audit event %s to streaming topic %s", event.event_id, ec.STREAMING_AUDIT_TOPIC)
 
         try:
             self.producer.produce(
@@ -26,12 +26,9 @@ class AuditStreamingService:
                     "event_type": event.event_type.value,
                     "event_version": str(event.event_version)
                 },
-                on_delivery=delivery_callback
+                on_delivery=topic_on_delivery
             )
             self.producer.poll(0)
         except Exception as error:
-            logger.exception("Failed to publish audit event due to error: %s", error)
+            logger.exception("Failed to publish audit event %s due to error: %s", event.event_id, error)
             raise
-
-    def flush(self) -> None:
-        flush_messages(self.producer)

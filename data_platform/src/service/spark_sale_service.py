@@ -3,7 +3,7 @@ from pyspark.sql import functions as sf
 
 from app_config import env_config as ec
 from app_config.dataframe_schema import SALE_COLUMNS, DATA_REQUIRED_COLUMNS
-from util.file_utils import absolute_path
+from util.file_utils import generate_full_file_path
 from util.spark_dataframe_utils import (
     remove_duplicates,
     convert_numeric_column,
@@ -28,7 +28,7 @@ def read_data(session: SparkSession, file_name, schema) -> DataFrame:
         session.read
         .option("header", "true")
         .schema(schema)
-        .csv(str(absolute_path(ec.RESOURCES_DIR) / file_name))
+        .csv(str(generate_full_file_path(ec.RESOURCES_DIR) / file_name))
     )
 
     requires_column(df, DATA_REQUIRED_COLUMNS)

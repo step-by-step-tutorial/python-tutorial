@@ -4,7 +4,7 @@ from pandas import DataFrame
 from app_config import env_config as ec
 from app_config.dataframe_schema import SALE_COLUMNS, DATA_REQUIRED_COLUMNS
 from util.csv_utils import csv_to_dataframe
-from util.file_utils import absolute_path
+from util.file_utils import generate_full_file_path
 from util.pandas_dataframe_utils import (
     remove_duplicates,
     convert_numeric_column,
@@ -17,7 +17,7 @@ from util.pandas_dataframe_utils import (
 
 
 def read_data(file_name: str) -> pd.DataFrame:
-    df = csv_to_dataframe(absolute_path(ec.RESOURCES_DIR) / file_name)
+    df = csv_to_dataframe(generate_full_file_path(ec.RESOURCES_DIR) / file_name)
     require_columns(df, DATA_REQUIRED_COLUMNS)
     return df
 

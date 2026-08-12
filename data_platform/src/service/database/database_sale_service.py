@@ -2,16 +2,16 @@ from typing import Any
 
 from service.database.database_population_strategy import lookup_population_strategy
 from util.database_utils import execute_sql
-from util.file_utils import read_sql_file
+from util.file_utils import read_text_file
 
 
 class DatabaseQueries:
-    TRUNCATE_STAGE_TABLE = read_sql_file("truncate_database_stage_table.sql")
-    TRUNCATE_ALL_TABLES = read_sql_file("truncate_database_all_tables.sql")
-    INSERT_CUSTOMERS = read_sql_file("insert_customers.sql")
-    INSERT_PRODUCTS = read_sql_file("insert_products.sql")
-    INSERT_ORDERS = read_sql_file("insert_orders.sql")
-    INSERT_ORDER_ITEMS = read_sql_file("insert_order_items.sql")
+    TRUNCATE_STAGE_TABLE = read_text_file("truncate_database_stage_table.sql")
+    TRUNCATE_ALL_TABLES = read_text_file("truncate_database_all_tables.sql")
+    INSERT_CUSTOMERS = read_text_file("insert_customers.sql")
+    INSERT_PRODUCTS = read_text_file("insert_products.sql")
+    INSERT_ORDERS = read_text_file("insert_orders.sql")
+    INSERT_ORDER_ITEMS = read_text_file("insert_order_items.sql")
 
 
 def truncate_stage_table() -> None:

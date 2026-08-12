@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
 
-from util.file_utils import absolute_path
+from util.file_utils import generate_full_file_path
 
 DATASET_NAME = os.getenv("DATASET_NAME", "Sale")
 PIPELINE_TYPE = os.getenv("PIPELINE_TYPE", "inmemory")
 
+ROOT = os.getenv("ROOT", Path(__file__).resolve().parents[2])
 RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 SCRIPTS_DIR = Path(os.getenv("SCRIPTS_DIR", "scripts"))

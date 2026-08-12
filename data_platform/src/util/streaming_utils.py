@@ -3,17 +3,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def delivery_callback(error, message) -> None:
+def topic_on_delivery(error, message) -> None:
     if error is not None:
         logger.error("Failed to deliver event: %s", error)
-        return
-
-    logger.debug("Delivered event to topic=%s partition=%s offset=%s", message.topic(), message.partition(),
-                 message.offset())
-
-
-def flush_messages(producer) -> None:
-    remaining_message_count = producer.flush()
-    if remaining_message_count > 0:
-        raise RuntimeError(f"Could not publish {remaining_message_count} sale events.")
-
+    elif message is not None:
+        logger.info(f"Delivered event to topic={message.topic()} partition={message.partition()} offset={message.offset()}")
+    else:
+        logger.error("Failed to deliver event: message is None")

@@ -129,12 +129,13 @@ CREATE TABLE IF NOT EXISTS audit.event (
     error_message TEXT,
     error_stacktrace TEXT,
     metadata JSONB NOT NULL DEFAULT '{}',
-    streaming_topic VARCHAR(250) Nullable,
-    streaming_partition INTEGER Nullable,
-    streaming_offset BIGINT Nullable,
+    streaming_topic VARCHAR(250),
+    streaming_partition INTEGER,
+    streaming_offset BIGINT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT uq_audit_streaming_position
+    UNIQUE (streaming_topic, streaming_partition, streaming_offset)
 );
 
 CREATE TABLE IF NOT EXISTS audit.data_quality_result (

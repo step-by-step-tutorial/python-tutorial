@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from typing import Generic, Mapping, TypeVar
 
@@ -48,12 +50,14 @@ class Datalake:
 class Dataset:
     name: str
     file_name: str
+    file_path: str
     dataframe_schema: Any
     required_columns: frozenset[str]
     datalake: Datalake
     database: StageTable
     datawarehouse: DataWarehouse
     processors: dict[str, DataProcessor]
+    event_converter: Callable[[dict[str, str]], dict[str, Any]]
     event_key_column: str = ""
     streaming_topic: str = ""
     streaming_consumer_group: str = ""

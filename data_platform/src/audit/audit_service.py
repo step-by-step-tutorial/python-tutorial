@@ -49,7 +49,7 @@ class AuditService:
 
         self.database.save(event)
         self.streaming.publish(event)
-        self.streaming.flush()
+        self.streaming.producer.flush()
         self.log.log(event)
 
     def fail_pipeline(self, pipeline_name: str, pipeline_id: str, started_at: float, error: Exception, metadata: dict | None = None) -> None:
@@ -63,7 +63,7 @@ class AuditService:
 
         self.database.save(event)
         self.streaming.publish(event)
-        self.streaming.flush()
+        self.streaming.producer.flush()
         self.log.log(event)
 
     def start_task(self, pipeline_name: str, pipeline_id: str, task_name: str, task_attempt: int, metrics: AuditMetrics) -> tuple[AuditTaskContext, float]:

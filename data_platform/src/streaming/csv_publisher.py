@@ -1,23 +1,45 @@
+import json
 import logging
-from pathlib import Path
+from functools import partial
 
-from app_config import env_config as ec
-from converter.event_converter import conver_dict_event
-from streaming.event_producer import EventProducer
-from util.file_utils import absolute_path, read_csv_file
+from dataset.definition import Dataset
+from factory.streamming_connection_factory import create_streaming_producer
+from util.file_utils import read_csv_file
+from util.streaming_utils import topic_on_delivery
 from util.string_utils import should_be_not_none
 
 logger = logging.getLogger(__name__)
 
 
-def publish(file_name: str) -> int:
-    should_be_not_none(file_name, "file_name")
-    csv_file_path = absolute_path(Path(ec.RESOURCES_DIR)) / file_name
-    logger.info("Reading CSV file from %s", csv_file_path)
+class CsvPublisher:
 
-    producer = EventProducer()
-    event_counter = read_csv_file(csv_file_path, lambda row: producer.publish(conver_dict_event(row).to_dict()))
-    producer.flush()
-    logger.info("Published %s events to streaming topic %s", event_counter, ec.STREAMING_TOPIC)
+    def __init__(self) -> None:
+        self.producer = create_streaming_producer()
 
-    return event_counter
+    def publish(self, dataset: Dataset) -> int:
+        should_be_not_none(dataset.file_name, "file_name")
+        should_be_not_none(dataset.event_key_column, "event_key_column")
+        should_be_not_none(dataset.streaming_topic, "streaming_topic")
+
+        event_counter = read_csv_file(
+            path_str=dataset.file_path,
+            consumer=partial(self.publish_row_as_event, dataset=dataset)
+        )
+
+        self.producer.poll(0)
+        self.producer.flush()
+
+        logger.info("Published %s events to streaming topic %s", event_counter, dataset.streaming_topic)
+
+        return event_counter
+
+    def publish_row_as_event(self, row: dict[str, str], dataset: Dataset) -> None:
+        event = dataset.event_converter(row)
+        event_key = event[dataset.event_key_column] if dataset.event_key_column in event else None
+
+        self.producer.produce(
+            topic=dataset.streaming_topic,
+            key=None if event_key is None else str(event_key),
+            value=json.dumps(event),
+            on_delivery=topic_on_delivery
+        )

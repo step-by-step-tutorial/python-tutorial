@@ -11,7 +11,7 @@ from service.datalake import inmemory_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
 from util.csv_utils import csv_to_dataframe
 from util.datalake_utils import DatalakeLayer, generate_relative_path
-from util.file_utils import absolute_path
+from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
 from util.pandas_dataframe_utils import require_columns, show_map_of_dataframe
 from util.time_utils import generate_ingestion_time
@@ -71,7 +71,7 @@ class InmemoryPipeline:
         )
 
     def store_raw_data(self) -> str:
-        data_file_path = absolute_path(ec.RESOURCES_DIR) / self.dataset.file_name
+        data_file_path = generate_full_file_path(ec.RESOURCES_DIR) / self.dataset.file_name
         dataframe = csv_to_dataframe(data_file_path)
         require_columns(dataframe, self.dataset.required_columns)
 
