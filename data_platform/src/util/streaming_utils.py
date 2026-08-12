@@ -3,10 +3,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def topic_on_delivery(error, message) -> None:
+def topic_on_delivery(error, message, event_id: str) -> None:
     if error is not None:
-        logger.error("Failed to deliver event: %s", error)
+        logger.error(f"[asynchronous log] Failed to deliver event {event_id}: {error}")
     elif message is not None:
-        logger.info(f"Delivered event to topic={message.topic()} partition={message.partition()} offset={message.offset()}")
+        logger.info(f"[asynchronous log] Delivered event {event_id} to topic={message.topic()}")
     else:
-        logger.error("Failed to deliver event: message is None")
+        logger.error(f"[asynchronous log] Failed to deliver event {event_id}: message is None")

@@ -1,6 +1,7 @@
 import time
 from uuid import uuid4
 
+from app_config import env_config as ec
 from audit.audit_database_service import AuditDatabaseService
 from audit.audit_event_factory import AuditEventFactory
 from audit.audit_log_service import AuditLogService
@@ -14,7 +15,7 @@ class AuditService:
 
     def __init__(self) -> None:
         self.database = AuditDatabaseService()
-        self.streaming = AuditStreamingService()
+        self.streaming = AuditStreamingService(ec.STREAMING_AUDIT_TOPIC)
         self.log = AuditLogService()
 
     def start_pipeline(self, pipeline_name: str, pipeline_id: str, metadata: dict | None = None) -> float:
@@ -52,7 +53,8 @@ class AuditService:
         self.streaming.producer.flush()
         self.log.log(event)
 
-    def fail_pipeline(self, pipeline_name: str, pipeline_id: str, started_at: float, error: Exception, metadata: dict | None = None) -> None:
+    def fail_pipeline(self, pipeline_name: str, pipeline_id: str, started_at: float, error: Exception,
+                      metadata: dict | None = None) -> None:
         event = AuditEventFactory.create_pipeline_failed_event(
             pipeline_name=pipeline_name,
             pipeline_id=pipeline_id,
@@ -66,7 +68,8 @@ class AuditService:
         self.streaming.producer.flush()
         self.log.log(event)
 
-    def start_task(self, pipeline_name: str, pipeline_id: str, task_name: str, task_attempt: int, metrics: AuditMetrics) -> tuple[AuditTaskContext, float]:
+    def start_task(self, pipeline_name: str, pipeline_id: str, task_name: str, task_attempt: int,
+                   metrics: AuditMetrics) -> tuple[AuditTaskContext, float]:
         started_at = time.perf_counter()
 
         context = AuditTaskContext(

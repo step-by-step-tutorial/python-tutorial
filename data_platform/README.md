@@ -51,7 +51,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ```shell
 cd ./data_platform
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
-PIPELINE_TYPE="inmemory" DATASET_NAME="Sale" python ./src/main.py
+PIPELINE_TYPE="inmemory_auditable" DATASET_NAME="Sale" python ./src/main.py
 ```
 
 ```shell

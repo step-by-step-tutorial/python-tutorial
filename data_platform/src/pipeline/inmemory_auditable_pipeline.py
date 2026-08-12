@@ -35,6 +35,11 @@ class InmemoryAuditablePipeline:
         self.audit_service = AuditService()
 
     def run(self) -> None:
+        logger.info(
+            f"Starting ETL pipeline {self.pipeline_name}/{self.pipeline_id}"
+            f" with dataset {self.dataset.name} "
+            f"at ingestion time {self.ingestion_time.isoformat()}"
+        )
         pipeline_started_at = self.audit_service.start_pipeline(
             pipeline_name=self.pipeline_name,
             pipeline_id=self.pipeline_id,
@@ -42,13 +47,6 @@ class InmemoryAuditablePipeline:
                 "dataset": self.dataset.name,
                 "ingestion_time": self.ingestion_time.isoformat()
             }
-        )
-
-        logger.info(
-            "Starting ETL pipeline with dataset %s, pipeline id %s at ingestion time %s",
-            self.dataset.name,
-            self.pipeline_id,
-            self.ingestion_time.isoformat()
         )
         log_line()
 
@@ -101,10 +99,9 @@ class InmemoryAuditablePipeline:
         )
 
         logger.info(
-            "Finished ETL pipeline with dataset %s, pipeline id %s at ingestion time %s",
-            self.dataset.name,
-            self.pipeline_id,
-            self.ingestion_time.isoformat()
+            f"Finished ETL pipeline {self.pipeline_name}/{self.pipeline_id}"
+            f" with dataset {self.dataset.name} "
+            f"at ingestion time {self.ingestion_time.isoformat()}"
         )
 
     def store_raw_data(self) -> str:

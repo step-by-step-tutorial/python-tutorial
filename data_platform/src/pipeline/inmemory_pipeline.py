@@ -14,6 +14,7 @@ from util.datalake_utils import DatalakeLayer, generate_relative_path
 from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
 from util.pandas_dataframe_utils import require_columns, show_map_of_dataframe
+from util.pipeline_utils import create_pipeline_id
 from util.time_utils import generate_ingestion_time
 
 logger = logging.getLogger(__name__)
@@ -23,13 +24,15 @@ class InmemoryPipeline:
 
     def __init__(self, ds: Dataset) -> None:
         self.dataset = ds
+        self.pipeline_name = "inmemory_pipeline"
+        self.pipeline_id = create_pipeline_id()
         self.ingestion_time: datetime = generate_ingestion_time()
 
     def run(self) -> None:
         logger.info(
-            "Starting ETL pipeline with dataset %s at ingestion time %s",
-            self.dataset.name,
-            self.ingestion_time.isoformat()
+            f"Starting ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
+            f"with dataset {self.dataset.name} "
+            f"at ingestion time {self.ingestion_time.isoformat()}"
         )
         log_line()
 
@@ -65,9 +68,9 @@ class InmemoryPipeline:
         log_line()
 
         logger.info(
-            "Finished ETL pipeline with dataset %s at ingestion time %s",
-            self.dataset.name,
-            self.ingestion_time.isoformat()
+            f"Finished ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
+            f"with dataset {self.dataset.name} "
+            f"at ingestion time {self.ingestion_time.isoformat()}"
         )
 
     def store_raw_data(self) -> str:
