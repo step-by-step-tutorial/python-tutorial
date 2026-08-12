@@ -1,23 +1,21 @@
-from pathlib import Path
-
-import dataset.sale.schema as schema
+import dataset.sale.model as schema
 from app_config import env_config as ec
 from dataset.definition import StageTable, Dataset, DataWarehouse, Datalake
 from dataset.sale.inmemory_processor import InmemorySaleProcessor
 from dataset.sale.spark_processor import SparkSaleProcessor
 from model.sale_event import SaleEvent
-from util.file_utils import read_text_file, generate_full_file_path
+from util.file_utils import read_text_file
 
 SALE_DATASET = Dataset(
     name="Sale",
     file_name="sale.csv",
     file_path=str(ec.ROOT / ec.RESOURCES_DIR / "sale.csv"),
-    dataframe_schema=schema.DATAFRAME_SCHEMA,
-    required_columns=schema.REQUIRED_COLUMNS,
+    dataframe_schema=schema.struct_type,
+    required_columns=schema.required_columns,
     datalake=Datalake(bucket_name=ec.DATALAKE_BUCKET_NAME),
     database=StageTable(
         name="sale_stage",
-        columns=schema.ALL_COLUMNS,
+        columns=schema.all_columns,
         before_load_sql_files=("datasets/sale/truncate_stage.sql",),
         after_load_sql_files=(
             "datasets/sale/upsert_customer.sql", "datasets/sale/upsert_product.sql",
@@ -27,7 +25,7 @@ SALE_DATASET = Dataset(
     datawarehouse=DataWarehouse(
         table_name="sale_table",
         full_table_name=f"{ec.DATAWAREHOUSE_NAME}.sale_table",
-        columns=schema.ALL_COLUMNS,
+        columns=schema.all_columns,
         preparing_sql_files={
             "truncate": read_text_file("truncate_datawarehouse.sql")
         },
@@ -40,7 +38,7 @@ SALE_DATASET = Dataset(
         "inmemory": InmemorySaleProcessor(),
         "spark": SparkSaleProcessor()
     },
-    event_key_column=schema.dataset_model_instance.ORDER_ID,
+    event_key_column=schema.model.ORDER_ID,
     streaming_topic=ec.STREAMING_TOPIC,
     streaming_consumer_group=ec.STREAMING_CONSUMER_GROUP,
     streaming_checkpoint_path=f"{ec.DATALAKE_SCHEME}://{ec.DATALAKE_BUCKET_NAME}/checkpoints/{ec.STREAMING_TOPIC}",

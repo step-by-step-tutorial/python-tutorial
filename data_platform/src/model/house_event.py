@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from dataset.house.schema import dataset_model_instance
+from dataset.house.model import model
 from util.csv_utils import convert_to_integer, convert_to_optional_float, normalize_optional_text
 
 
@@ -22,12 +22,12 @@ class HouseEvent:
     @classmethod
     def from_dict(cls, row: dict[str, str]) -> "HouseEvent":
         return cls(
-            area=float(row[dataset_model_instance.AREA_RAW]),
-            room=convert_to_integer(row.get(dataset_model_instance.ROOM_RAW)),
-            parking=row.get(dataset_model_instance.PARKING_RAW) == "True" if row.get(dataset_model_instance.PARKING_RAW) is not None else None,
-            warehouse=row.get(dataset_model_instance.WAREHOUSE_RAW) == "True" if row.get(dataset_model_instance.WAREHOUSE_RAW) is not None else None,
-            elevator=row.get(dataset_model_instance.ELEVATOR_RAW) == "True" if row.get(dataset_model_instance.ELEVATOR_RAW) is not None else None,
-            address=normalize_optional_text(row.get(dataset_model_instance.ADDRESS_RAW)),
-            price=float(row[dataset_model_instance.PRICE_RAW]),
-            price_usd=convert_to_optional_float(row.get(dataset_model_instance.PRICE_USD_RAW))
+            area=float(row[model.AREA_RAW]),
+            room=convert_to_integer(row.get(model.ROOM_RAW)),
+            parking=row.get(model.PARKING_RAW) == "True" if row.get(model.PARKING_RAW) is not None else None,
+            warehouse=row.get(model.WAREHOUSE_RAW) == "True" if row.get(model.WAREHOUSE_RAW) is not None else None,
+            elevator=row.get(model.ELEVATOR_RAW) == "True" if row.get(model.ELEVATOR_RAW) is not None else None,
+            address=normalize_optional_text(row.get(model.ADDRESS_RAW)),
+            price=float(row[model.PRICE_RAW]),
+            price_usd=convert_to_optional_float(row.get(model.PRICE_USD_RAW))
         )
