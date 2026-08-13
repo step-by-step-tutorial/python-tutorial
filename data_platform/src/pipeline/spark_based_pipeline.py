@@ -1,129 +1,173 @@
 import logging
-from datetime import UTC, datetime
+from datetime import datetime
 
 from itables import show
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import DataFrame
 
 from app_config import env_config as ec
-from app_config.dataframe_schema import SCHEMA
-from factory import spark_connection_factory
-from service import spark_sale_service
+from dataset.definition import Dataset
 from service.database import database_sale_service
-from service.datalake import distributed_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
+from service.spark_service import SparkService
 from util.datalake_utils import DatalakeLayer, generate_relative_path
+from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
+from util.pipeline_utils import create_pipeline_id
+from util.time_utils import generate_ingestion_time
 
 logger = logging.getLogger(__name__)
 
 
 class SparkPipeline:
 
-    def __init__(self) -> None:
-        self.session: SparkSession = spark_connection_factory.create_connection()
-        self.ingestion_time: datetime = datetime.now(UTC)
-        self.run()
+    def __init__(self, ds: Dataset) -> None:
+        self.dataset = ds
+        self.pipeline_name = "spark_pipeline"
+        self.pipeline_id = create_pipeline_id()
+        self.ingestion_time: datetime = generate_ingestion_time()
+        self.spark = SparkService(ds)
 
     def run(self) -> None:
-        try:
-            log_line()
-            logger.info("Starting pipeline with ingestion time %s", self.ingestion_time)
+        logger.info(
+            f"Starting ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
+            f"with dataset {self.dataset.name} "
+            f"at ingestion time {self.ingestion_time.isoformat()}"
+        )
+        log_line()
 
-            raw_data_path = self.store_raw_data()
-            log_line()
+        logger.info("step 1")
+        raw_relative_path = self.store_raw_data()
+        log_line()
 
-            cleaned_data_path = self.clean_data(raw_data_path)
-            log_line()
+        logger.info("step 2")
+        cleaned_data_path = self.cleaning(raw_relative_path)
+        log_line()
 
-            enriched_data_path = self.enrich_data(cleaned_data_path)
-            log_line()
+        logger.info("step 3")
+        enriched_data_path = self.enriching(cleaned_data_path)
+        log_line()
 
-            enriched_dataframe = self.read_enriched_data(enriched_data_path)
+        logger.info("step 4")
+        self.populate_database(enriched_data_path)
+        log_line()
 
-            logger.info("Populating operational database with enriched data")
-            database_sale_service.populate(enriched_dataframe)
-            log_line()
+        logger.info("step 5")
+        self.populate_datawarehouse(enriched_data_path)
+        log_line()
 
-            logger.info("Populating data warehouse with enriched data")
-            datawarehouse_sale_service.populate(enriched_dataframe.toPandas())
-            log_line()
+        logger.info("step 6")
+        self.show_dataframe(enriched_data_path)
 
-            self.show_revenue_by_spark(enriched_dataframe)
-            log_line()
+        logger.info("step 7")
+        self.analyzing_via_spark(enriched_data_path)
+        log_line()
 
-            self.show_revenue_by_datawarehouse()
-            log_line()
+        logger.info("step 8")
+        self.analyzing_via_datawarehouse()
+        log_line()
 
-            logger.info("Pipeline completed successfully")
-        finally:
-            self.stop()
-            log_line()
+        logger.info(
+            f"Finished ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
+            f"with dataset {self.dataset.name} "
+            f"at ingestion time {self.ingestion_time.isoformat()}"
+        )
+
+        self.spark.stop()
 
     def store_raw_data(self) -> str:
-        raw_data_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
+        data_file_path = generate_full_file_path(ec.RESOURCES_DIR) / self.dataset.file_name
 
-        logger.info("Reading data from file %s", ec.DATA_FILE)
-        dataframe = spark_sale_service.read_data(session=self.session, file_name=ec.DATA_FILE, schema=SCHEMA)
+        dataframe = self.spark.read_csv(
+            file_path=str(data_file_path),
+            schema=self.dataset.dataframe_schema,
+            required_columns=self.dataset.required_columns
+        )
 
-        logger.info("Storing raw data in datalake path %s", raw_data_path)
-        distributed_datalake_service.overwrite(dataframe=dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+        relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
 
-        return raw_data_path
+        self.spark.overwrite(
+            dataframe=dataframe,
+            bucket_name=self.dataset.datalake.bucket_name,
+            path=relative_path
+        )
 
-    def clean_data(self, raw_data_path: str) -> str:
-        logger.info("Reading raw data from datalake path %s", raw_data_path)
-        dataframe = distributed_datalake_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=raw_data_path)
+        return relative_path
 
-        logger.info("Cleaning data")
-        cleaned_dataframe = spark_sale_service.clean_data(dataframe)
+    def cleaning(self, raw_relative_path: str) -> str:
+        dataframe = self.spark.read(
+            bucket_name=self.dataset.datalake.bucket_name,
+            path=raw_relative_path
+        )
 
-        cleaned_data_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time)
-        logger.info("Storing cleaned data in datalake path %s", cleaned_data_path)
-        distributed_datalake_service.overwrite(dataframe=cleaned_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
+        cleaned_dataframe = self.dataset.processors["spark"].clean(dataframe)
 
-        return cleaned_data_path
+        relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time)
 
-    def enrich_data(self, cleaned_data_path: str) -> str:
+        self.spark.overwrite(
+            dataframe=cleaned_dataframe,
+            bucket_name=self.dataset.datalake.bucket_name,
+            path=relative_path
+        )
 
-        logger.info("Reading cleaned data from datalake path %s", cleaned_data_path)
-        dataframe = distributed_datalake_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=cleaned_data_path)
+        return relative_path
 
-        logger.info("Enriching data")
-        enriched_dataframe = spark_sale_service.enrich_data(dataframe)
+    def enriching(self, cleaned_relative_path: str) -> str:
+        dataframe = self.spark.read(
+            bucket_name=self.dataset.datalake.bucket_name,
+            path=cleaned_relative_path
+        )
 
-        enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
-        logger.info("Storing enriched data in datalake path %s", enriched_data_path)
-        distributed_datalake_service.overwrite(dataframe=enriched_dataframe, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        enriched_dataframe = self.dataset.processors["spark"].enrich(dataframe)
 
-        return enriched_data_path
+        relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
 
-    def read_enriched_data(self, enriched_data_path: str) -> DataFrame:
-        logger.info("Reading enriched data from datalake path %s", enriched_data_path)
-        return distributed_datalake_service.read(session=self.session, bucket_name=ec.DATALAKE_BUCKET_NAME, path=enriched_data_path)
+        self.spark.overwrite(
+            dataframe=enriched_dataframe,
+            bucket_name=self.dataset.datalake.bucket_name,
+            path=relative_path
+        )
 
-    @staticmethod
-    def show_revenue_by_spark(dataframe: DataFrame) -> None:
-        logger.info("Displaying enriched data sample")
-        dataframe.show(10)
+        return relative_path
 
-        logger.info("Calculating revenue by category using Spark")
-        revenue_by_category = spark_sale_service.get_revenue_by_category(dataframe)
-        revenue_by_category.show()
+    def download_enriched_data(self, relative_path: str) -> DataFrame:
+        return self.spark.read(
+            bucket_name=self.dataset.datalake.bucket_name,
+            path=relative_path
+        )
 
-        logger.info("Calculating revenue by country using Spark")
-        revenue_by_country = spark_sale_service.get_revenue_by_country(dataframe)
-        revenue_by_country.show()
+    def populate_database(self, enriched_data_path: str) -> None:
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Populating operational database with enriched data")
+        database_sale_service.populate(enriched_dataframe)
 
-    @staticmethod
-    def show_revenue_by_datawarehouse() -> None:
-        logger.info("Calculating revenue by category using the data warehouse")
-        revenue_by_category = datawarehouse_sale_service.get_revenue_by_category()
-        show(revenue_by_category)
+    def populate_datawarehouse(self, enriched_data_path: str) -> None:
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Populating data warehouse with enriched data")
 
-        logger.info("Calculating revenue by country using the data warehouse")
-        revenue_by_country = datawarehouse_sale_service.get_revenue_by_country()
-        show(revenue_by_country)
+        datawarehouse_sale_service.truncate_and_populate(
+            self.dataset.datawarehouse,
+            enriched_dataframe.toPandas()
+        )
 
-    def stop(self) -> None:
-        logger.info("Stopping Spark session")
-        self.session.stop()
+    def analyzing_via_spark(self, enriched_data_path: str) -> None:
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Analyzing enriched data via Spark")
+
+        results = self.dataset.processors["spark"].analyze(enriched_dataframe)
+
+        for name, dataframe in results.items():
+            logger.info("Displaying analysis result %s", name)
+            dataframe.show()
+
+    def analyzing_via_datawarehouse(self) -> None:
+        results = datawarehouse_sale_service.analyze(self.dataset.datawarehouse)
+        logger.info("Analyzing enriched data via data warehouse")
+
+        for dataframe in results.values():
+            show(dataframe)
+
+    def show_dataframe(self, enriched_data_path: str) -> None:
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Displaying enriched data")
+        enriched_dataframe.show()
+        log_line()

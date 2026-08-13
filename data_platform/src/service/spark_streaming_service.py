@@ -23,8 +23,8 @@ def read_stream(session: SparkSession) -> DataFrame:
 
     return (
         session.readStream
-        .format("streaming")
-        .option("streaming.bootstrap.servers", ec.STREAMING_BOOTSTRAP_SERVERS)
+        .format("kafka")
+        .option("kafka.bootstrap.servers", ec.STREAMING_BOOTSTRAP_SERVERS)
         .option("subscribe", ec.STREAMING_TOPIC)
         .option("startingOffsets", ec.STREAMING_STARTING_OFFSETS)
         .option("failOnDataLoss", "false")

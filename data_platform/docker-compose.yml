@@ -313,6 +313,8 @@ services:
       dockerfile: Dockerfile
     hostname: ${APPLICATION_HOST}
     container_name: ${APPLICATION_CONTAINER_NAME}
+    stdin_open: true
+    tty: true
     environment:
       # Application
       DATASET_NAME: ${DATASET_NAME}
@@ -375,7 +377,7 @@ services:
       kafka:
         condition: service_started
     command: >
-      sh -c "python -m src.main && tail -f /dev/null"
+      sh -c "python -m main"
 
 volumes:
   airflow_database_data:

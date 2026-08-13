@@ -60,7 +60,7 @@ def sum_by_group(df: DataFrame, group_field: str, original_field: str, alias_fie
     )
 
 
-def requires_column(df: DataFrame, columns: set[str]) -> None:
+def requires_column(df: DataFrame, columns: frozenset[str]) -> None:
     if df is None or columns is None:
         raise ValueError("required columns or dataframe is None")
 

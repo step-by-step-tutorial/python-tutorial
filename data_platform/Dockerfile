@@ -3,7 +3,7 @@ FROM python:3.12-slim-trixie
 LABEL authors="samanalishiri@gmail.com"
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates openjdk-21-jre-headless \
+    && apt-get install -y --no-install-recommends ca-certificates openjdk-21-jre-headless bash \
     && rm -rf /var/lib/apt/lists/* \
     && JAVA_PATH="$(readlink -f "$(command -v java)")" \
     && JAVA_HOME_PATH="$(dirname "$(dirname "${JAVA_PATH}")")" \
@@ -11,8 +11,8 @@ RUN apt-get update \
 
 ENV JAVA_HOME=/opt/java
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
-ENV DATASET_NAME: sale
-ENV PIPELINE_TYPE: inmemory_auditable
+ENV DATASET_NAME=sale
+ENV PIPELINE_TYPE=inmemory_auditable
 
 WORKDIR /app
 
@@ -28,4 +28,4 @@ RUN python -m pip install --upgrade pip \
 RUN java -version \
     && test -x "${JAVA_HOME}/bin/java"
 
-CMD ["sh", "-c", "python -m main && tail -f /dev/null"]
+CMD ["sh", "-c", "python -m main"]

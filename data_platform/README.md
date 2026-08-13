@@ -82,7 +82,7 @@ docker rmi samanalishiri/application:latest
 * Datalake: http://localhost:9001
     * Username: admin
     * Password: administrator
-* Datawarehouse HTTP: http://localhost:8600
+* Datawarehouse HTTP: http://localhost:8123
     * Username: admin
     * Password: admin
 * Database: http://localhost:8500
