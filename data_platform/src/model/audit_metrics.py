@@ -18,7 +18,7 @@ class AuditMetrics:
 
 
 @dataclass(frozen=True)
-class SaleReconciliationMetrics:
+class ReconciliationMetrics:
     streaming_consumed_count: int
     bronze_row_count: int
     silver_row_count: int

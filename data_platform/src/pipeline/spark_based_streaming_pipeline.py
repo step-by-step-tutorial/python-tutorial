@@ -7,7 +7,7 @@ from pyspark.sql.streaming import StreamingQuery
 
 from app_config import env_config as ec
 from app_config.dataframe_schema import SCHEMA
-from factory import data_processor_connection_factory
+from factory import spark_connection_factory
 from service import spark_sale_service, spark_streaming_service
 from service.database import database_sale_service
 from service.datalake import distributed_datalake_service
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class SparkStreamingPipeline:
 
     def __init__(self) -> None:
-        self.session: SparkSession = data_processor_connection_factory.create_connection()
+        self.session: SparkSession = spark_connection_factory.create_connection()
         self.ingestion_time: datetime = datetime.now(UTC)
         self.run()
 

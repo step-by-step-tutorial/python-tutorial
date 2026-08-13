@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from pyspark.sql import SparkSession
 
 from app_config import env_config as ec
@@ -15,8 +13,6 @@ SPARK_JARS = [
 
 
 def create_connection() -> SparkSession:
-    Path(ec.S3A_BUFFER_DIR).mkdir(parents=True, exist_ok=True)
-
     try:
         session = (
             SparkSession.builder
@@ -33,7 +29,6 @@ def create_connection() -> SparkSession:
             .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
             .config("spark.hadoop.fs.s3a.fast.upload", "true")
             .config("spark.hadoop.fs.s3a.fast.upload.buffer", ec.SPARK_BUFFER)
-            .config("spark.hadoop.fs.s3a.buffer.dir", ec.S3A_BUFFER_DIR)
             .config("spark.hadoop.fs.s3a.fast.upload.active.blocks", ec.SPARK_ACTIVE_BLOCKS)
             .config("spark.hadoop.fs.s3a.threads.max", ec.SPARK_THREADS_MAX)
             .config("spark.hadoop.fs.s3a.max.total.tasks", ec.SPARK_MAX_TOTAL_TASKS)

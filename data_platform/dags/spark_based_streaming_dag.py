@@ -9,7 +9,7 @@ from pyspark.sql.streaming import StreamingQuery
 
 from app_config import env_config as ec
 from app_config.dataframe_schema import SCHEMA
-from factory import data_processor_connection_factory
+from factory import spark_connection_factory
 from service import spark_sale_service, spark_streaming_service
 from service.database import database_sale_service
 from service.datalake import distributed_datalake_service
@@ -37,7 +37,7 @@ def publish_events() -> None:
 
 
 def process_stream(ingestion_time: str) -> None:
-    session = data_processor_connection_factory.create_connection()
+    session = spark_connection_factory.create_connection()
     resolved_ingestion_time = datetime.fromisoformat(ingestion_time)
 
     try:
@@ -92,7 +92,7 @@ def store_batch(dataframe: DataFrame, batch_id: int, ingestion_time: datetime) -
 
 
 def populate_database(ingestion_time: str) -> None:
-    session = data_processor_connection_factory.create_connection()
+    session = spark_connection_factory.create_connection()
 
     try:
         dataframe = read_enriched_data(session, ingestion_time)
@@ -105,7 +105,7 @@ def populate_database(ingestion_time: str) -> None:
 
 
 def populate_datawarehouse(ingestion_time: str) -> None:
-    session = data_processor_connection_factory.create_connection()
+    session = spark_connection_factory.create_connection()
 
     try:
         dataframe = read_enriched_data(session, ingestion_time)
@@ -118,7 +118,7 @@ def populate_datawarehouse(ingestion_time: str) -> None:
 
 
 def show_pipeline_results(ingestion_time: str) -> None:
-    session = data_processor_connection_factory.create_connection()
+    session = spark_connection_factory.create_connection()
 
     try:
         log_line()

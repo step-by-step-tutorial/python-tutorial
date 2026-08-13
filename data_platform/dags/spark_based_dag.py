@@ -8,7 +8,7 @@ from pyspark.sql import SparkSession
 
 from app_config import env_config as ec
 from app_config.dataframe_schema import SCHEMA
-from factory import data_processor_connection_factory
+from factory import spark_connection_factory
 from service import spark_sale_service
 from service.database import database_sale_service
 from service.datalake import distributed_datalake_service
@@ -23,7 +23,7 @@ ResultType = TypeVar("ResultType")
 
 
 def execute_with_spark_session(operation: Callable[[SparkSession], ResultType]) -> ResultType:
-    session = data_processor_connection_factory.create_connection()
+    session = spark_connection_factory.create_connection()
 
     try:
         return operation(session)
