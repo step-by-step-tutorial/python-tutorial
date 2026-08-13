@@ -6,7 +6,6 @@ from itables import show
 from app_config import env_config as ec
 from audit.audit_service import AuditService
 from dataset.definition import Dataset
-from model.audit_metrics import AuditMetrics
 from service.database import database_sale_service
 from service.datalake import inmemory_datalake_service
 from service.datawarehouse import datawarehouse_sale_service
@@ -105,14 +104,11 @@ class InmemoryAuditablePipeline:
         )
 
     def store_raw_data(self) -> str:
-        metrics = AuditMetrics()
-
-        context, started_at = self.audit_service.start_task(
+        task_id, started_at = self.audit_service.start_task(
             pipeline_name=self.pipeline_name,
             pipeline_id=self.pipeline_id,
             task_name="store_raw_data",
-            task_attempt=self.task_attempt,
-            metrics=metrics
+            task_attempt=self.task_attempt
         )
 
         data_file_path = generate_full_file_path(ec.RESOURCES_DIR) / self.dataset.file_name
@@ -123,13 +119,6 @@ class InmemoryAuditablePipeline:
 
         relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
         full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
-
-        metrics.input_row_count = self.raw_row_count
-        metrics.output_row_count = self.raw_row_count
-        metrics.source_system = "csv"
-        metrics.source_uri = str(data_file_path)
-        metrics.destination_system = "datalake"
-        metrics.destination_uri = full_path
 
         inmemory_datalake_service.upload(
             df=dataframe,
@@ -148,19 +137,30 @@ class InmemoryAuditablePipeline:
             metadata={"datalake_layer": DatalakeLayer.RAW.value}
         )
 
-        self.audit_service.complete_task(context, started_at)
+        self.audit_service.complete_task(
+            pipeline_name=self.pipeline_name,
+            pipeline_id=self.pipeline_id,
+            task_name="store_raw_data",
+            task_id=task_id,
+            task_attempt=self.task_attempt,
+            started_at=started_at,
+            input_row_count=self.raw_row_count,
+            output_row_count=self.raw_row_count,
+            source_system="csv",
+            source_uri=str(data_file_path),
+            destination_system="datalake",
+            destination_uri=full_path,
+            metadata={"datalake_layer": DatalakeLayer.RAW.value}
+        )
 
         return relative_path
 
     def cleaning(self, raw_relative_path: str) -> str:
-        metrics = AuditMetrics()
-
-        context, started_at = self.audit_service.start_task(
+        task_id, started_at = self.audit_service.start_task(
             pipeline_name=self.pipeline_name,
             pipeline_id=self.pipeline_id,
             task_name="cleaning",
-            task_attempt=self.task_attempt,
-            metrics=metrics
+            task_attempt=self.task_attempt
         )
 
         dataframe = inmemory_datalake_service.download(
@@ -186,14 +186,6 @@ class InmemoryAuditablePipeline:
         relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time)
         cleaned_full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
 
-        metrics.input_row_count = input_row_count
-        metrics.output_row_count = self.cleaned_row_count
-        metrics.rejected_row_count = input_row_count - self.cleaned_row_count
-        metrics.source_system = "datalake"
-        metrics.source_uri = raw_full_path
-        metrics.destination_system = "datalake"
-        metrics.destination_uri = cleaned_full_path
-
         inmemory_datalake_service.upload(
             df=cleaned_dataframe,
             bucket_name=self.dataset.datalake.bucket_name,
@@ -211,19 +203,31 @@ class InmemoryAuditablePipeline:
             metadata={"datalake_layer": DatalakeLayer.CLEANED.value}
         )
 
-        self.audit_service.complete_task(context, started_at)
+        self.audit_service.complete_task(
+            pipeline_name=self.pipeline_name,
+            pipeline_id=self.pipeline_id,
+            task_name="cleaning",
+            task_id=task_id,
+            task_attempt=self.task_attempt,
+            started_at=started_at,
+            input_row_count=input_row_count,
+            output_row_count=self.cleaned_row_count,
+            rejected_row_count=input_row_count - self.cleaned_row_count,
+            source_system="datalake",
+            source_uri=raw_full_path,
+            destination_system="datalake",
+            destination_uri=cleaned_full_path,
+            metadata={"datalake_layer": DatalakeLayer.CLEANED.value}
+        )
 
         return relative_path
 
     def enriching(self, cleaned_relative_path: str) -> str:
-        metrics = AuditMetrics()
-
-        context, started_at = self.audit_service.start_task(
+        task_id, started_at = self.audit_service.start_task(
             pipeline_name=self.pipeline_name,
             pipeline_id=self.pipeline_id,
             task_name="enriching",
-            task_attempt=self.task_attempt,
-            metrics=metrics
+            task_attempt=self.task_attempt
         )
 
         dataframe = inmemory_datalake_service.download(
@@ -249,13 +253,6 @@ class InmemoryAuditablePipeline:
         relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
         enriched_full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
 
-        metrics.input_row_count = input_row_count
-        metrics.output_row_count = self.enriched_row_count
-        metrics.source_system = "datalake"
-        metrics.source_uri = cleaned_full_path
-        metrics.destination_system = "datalake"
-        metrics.destination_uri = enriched_full_path
-
         inmemory_datalake_service.upload(
             df=enriched_dataframe,
             bucket_name=self.dataset.datalake.bucket_name,
@@ -273,19 +270,30 @@ class InmemoryAuditablePipeline:
             metadata={"datalake_layer": DatalakeLayer.ENRICHED.value}
         )
 
-        self.audit_service.complete_task(context, started_at)
+        self.audit_service.complete_task(
+            pipeline_name=self.pipeline_name,
+            pipeline_id=self.pipeline_id,
+            task_name="enriching",
+            task_id=task_id,
+            task_attempt=self.task_attempt,
+            started_at=started_at,
+            input_row_count=input_row_count,
+            output_row_count=self.enriched_row_count,
+            source_system="datalake",
+            source_uri=cleaned_full_path,
+            destination_system="datalake",
+            destination_uri=enriched_full_path,
+            metadata={"datalake_layer": DatalakeLayer.ENRICHED.value}
+        )
 
         return relative_path
 
     def populate_database(self, enriched_data_path: str) -> None:
-        metrics = AuditMetrics()
-
-        context, started_at = self.audit_service.start_task(
+        task_id, started_at = self.audit_service.start_task(
             pipeline_name=self.pipeline_name,
             pipeline_id=self.pipeline_id,
             task_name="populate_database",
-            task_attempt=self.task_attempt,
-            metrics=metrics
+            task_attempt=self.task_attempt
         )
 
         enriched_dataframe = inmemory_datalake_service.download(
@@ -304,28 +312,31 @@ class InmemoryAuditablePipeline:
             pipeline_id=self.pipeline_id,
             metadata={"datalake_layer": DatalakeLayer.ENRICHED.value}
         )
-
-        metrics.input_row_count = row_count
-        metrics.output_row_count = row_count
-        metrics.source_system = "datalake"
-        metrics.source_uri = full_path
-        metrics.destination_system = "postgresql"
-        metrics.destination_uri = ec.DATABASE_STAGE_TABLE_NAME
 
         logger.info("Populating operational database with enriched data")
         database_sale_service.populate(enriched_dataframe)
 
-        self.audit_service.complete_task(context, started_at)
+        self.audit_service.complete_task(
+            pipeline_name=self.pipeline_name,
+            pipeline_id=self.pipeline_id,
+            task_name="populate_database",
+            task_id=task_id,
+            task_attempt=self.task_attempt,
+            started_at=started_at,
+            input_row_count=row_count,
+            output_row_count=row_count,
+            source_system="datalake",
+            source_uri=full_path,
+            destination_system="postgresql",
+            destination_uri=ec.DATABASE_STAGE_TABLE_NAME
+        )
 
     def populate_datawarehouse(self, enriched_data_path: str) -> None:
-        metrics = AuditMetrics()
-
-        context, started_at = self.audit_service.start_task(
+        task_id, started_at = self.audit_service.start_task(
             pipeline_name=self.pipeline_name,
             pipeline_id=self.pipeline_id,
             task_name="populate_datawarehouse",
-            task_attempt=self.task_attempt,
-            metrics=metrics
+            task_attempt=self.task_attempt
         )
 
         enriched_dataframe = inmemory_datalake_service.download(
@@ -345,27 +356,30 @@ class InmemoryAuditablePipeline:
             metadata={"datalake_layer": DatalakeLayer.ENRICHED.value}
         )
 
-        metrics.input_row_count = row_count
-        metrics.output_row_count = row_count
-        metrics.source_system = "datalake"
-        metrics.source_uri = full_path
-        metrics.destination_system = "datawarehouse"
-        metrics.destination_uri = ec.DATAWAREHOUSE_NAME
-
         logger.info("Populating data warehouse with enriched data")
         datawarehouse_sale_service.truncate_and_populate(self.dataset.datawarehouse, enriched_dataframe)
 
-        self.audit_service.complete_task(context, started_at)
+        self.audit_service.complete_task(
+            pipeline_name=self.pipeline_name,
+            pipeline_id=self.pipeline_id,
+            task_name="populate_datawarehouse",
+            task_id=task_id,
+            task_attempt=self.task_attempt,
+            started_at=started_at,
+            input_row_count=row_count,
+            output_row_count=row_count,
+            source_system="datalake",
+            source_uri=full_path,
+            destination_system="datawarehouse",
+            destination_uri=ec.DATAWAREHOUSE_NAME
+        )
 
     def analyzing_via_memory(self, enriched_data_path: str) -> None:
-        metrics = AuditMetrics()
-
-        context, started_at = self.audit_service.start_task(
+        task_id, started_at = self.audit_service.start_task(
             pipeline_name=self.pipeline_name,
             pipeline_id=self.pipeline_id,
             task_name="analyzing_via_memory",
-            task_attempt=self.task_attempt,
-            metrics=metrics
+            task_attempt=self.task_attempt
         )
 
         enriched_dataframe = inmemory_datalake_service.download(
@@ -387,36 +401,45 @@ class InmemoryAuditablePipeline:
         logger.info("Analyzing enriched data via memory")
         results = self.dataset.processors["inmemory"].analyze(enriched_dataframe)
 
-        metrics.input_row_count = len(enriched_dataframe)
-        metrics.output_row_count = sum(len(result) for result in results.values())
-        metrics.source_system = "datalake"
-        metrics.source_uri = full_path
-
         show_map_of_dataframe(results)
 
-        self.audit_service.complete_task(context, started_at)
+        self.audit_service.complete_task(
+            pipeline_name=self.pipeline_name,
+            pipeline_id=self.pipeline_id,
+            task_name="analyzing_via_memory",
+            task_id=task_id,
+            task_attempt=self.task_attempt,
+            started_at=started_at,
+            input_row_count=len(enriched_dataframe),
+            output_row_count=sum(len(result) for result in results.values()),
+            source_system="datalake",
+            source_uri=full_path
+        )
 
     def analyzing_via_datawarehouse(self) -> None:
-        metrics = AuditMetrics()
-
-        context, started_at = self.audit_service.start_task(
+        task_id, started_at = self.audit_service.start_task(
             pipeline_name=self.pipeline_name,
             pipeline_id=self.pipeline_id,
             task_name="analyzing_via_datawarehouse",
-            task_attempt=self.task_attempt,
-            metrics=metrics
+            task_attempt=self.task_attempt
         )
 
         logger.info("Analyzing enriched data via data warehouse")
         results = datawarehouse_sale_service.analyze(self.dataset.datawarehouse)
 
-        metrics.source_system = "datawarehouse"
-        metrics.source_uri = ec.DATAWAREHOUSE_NAME
-        metrics.output_row_count = sum(len(result) for result in results.values())
-
         show_map_of_dataframe(results)
 
-        self.audit_service.complete_task(context, started_at)
+        self.audit_service.complete_task(
+            pipeline_name=self.pipeline_name,
+            pipeline_id=self.pipeline_id,
+            task_name="analyzing_via_datawarehouse",
+            task_id=task_id,
+            task_attempt=self.task_attempt,
+            started_at=started_at,
+            output_row_count=sum(len(result) for result in results.values()),
+            source_system="datawarehouse",
+            source_uri=ec.DATAWAREHOUSE_NAME
+        )
 
     def show_dataframe(self, enriched_data_path: str) -> None:
         enriched_dataframe = inmemory_datalake_service.download(

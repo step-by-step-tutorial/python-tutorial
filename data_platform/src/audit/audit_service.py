@@ -7,8 +7,6 @@ from audit.audit_database_service import AuditDatabaseService
 from audit.audit_event_factory import AuditEventFactory
 from audit.audit_log_service import AuditLogService
 from audit.audit_streaming_service import AuditStreamingService
-from model.audit_metrics import AuditMetrics
-from model.audit_task_context import AuditTaskContext
 from util.time_utils import elapsed_milliseconds
 
 
@@ -84,38 +82,112 @@ class AuditService:
             pipeline_id: str,
             task_name: str,
             task_attempt: int,
-            metrics: AuditMetrics
-    ) -> tuple[AuditTaskContext, float]:
+            metadata: dict | None = None
+    ) -> tuple[str, float]:
         started_at = time.perf_counter()
-
-        context = AuditTaskContext(
+        task_id = str(uuid4())
+        event = AuditEventFactory.create_task_started_event(
             pipeline_name=pipeline_name,
             pipeline_id=pipeline_id,
             task_name=task_name,
-            task_id=str(uuid4()),
+            task_id=task_id,
             task_attempt=task_attempt,
-            metrics=metrics
+            metadata=metadata
         )
 
-        event = AuditEventFactory.create_task_started_event(context)
+        self.database.save(event)
+        self.streaming.publish(event)
+        self.log.log(event)
+        audit_archive_service.save_event(event, bucket_name=self.bucket_name)
+
+        return task_id, started_at
+
+    def complete_task(
+            self,
+            pipeline_name: str,
+            pipeline_id: str,
+            task_name: str,
+            task_id: str,
+            task_attempt: int,
+            started_at: float,
+            input_row_count: int | None = None,
+            output_row_count: int | None = None,
+            rejected_row_count: int | None = None,
+            duplicate_row_count: int | None = None,
+            source_system: str | None = None,
+            source_uri: str | None = None,
+            destination_system: str | None = None,
+            destination_uri: str | None = None,
+            schema_version: str | None = None,
+            checksum: str | None = None,
+            metadata: dict | None = None
+    ) -> None:
+        event = AuditEventFactory.create_task_completed_event(
+            pipeline_name=pipeline_name,
+            pipeline_id=pipeline_id,
+            task_name=task_name,
+            task_id=task_id,
+            task_attempt=task_attempt,
+            duration_ms=elapsed_milliseconds(started_at),
+            input_row_count=input_row_count,
+            output_row_count=output_row_count,
+            rejected_row_count=rejected_row_count,
+            duplicate_row_count=duplicate_row_count,
+            source_system=source_system,
+            source_uri=source_uri,
+            destination_system=destination_system,
+            destination_uri=destination_uri,
+            schema_version=schema_version,
+            checksum=checksum,
+            metadata=metadata
+        )
 
         self.database.save(event)
         self.streaming.publish(event)
         self.log.log(event)
         audit_archive_service.save_event(event, bucket_name=self.bucket_name)
 
-        return context, started_at
-
-    def complete_task(self, context: AuditTaskContext, started_at: float) -> None:
-        event = AuditEventFactory.create_task_completed_event(context, elapsed_milliseconds(started_at))
-
-        self.database.save(event)
-        self.streaming.publish(event)
-        self.log.log(event)
-        audit_archive_service.save_event(event, bucket_name=self.bucket_name)
-
-    def fail_task(self, context: AuditTaskContext, started_at: float, error: Exception) -> None:
-        event = AuditEventFactory.create_task_failed_event(context, elapsed_milliseconds(started_at), error)
+    def fail_task(
+            self,
+            pipeline_name: str,
+            pipeline_id: str,
+            task_name: str,
+            task_id: str,
+            task_attempt: int,
+            started_at: float,
+            error: Exception,
+            input_row_count: int | None = None,
+            output_row_count: int | None = None,
+            rejected_row_count: int | None = None,
+            duplicate_row_count: int | None = None,
+            source_system: str | None = None,
+            source_uri: str | None = None,
+            destination_system: str | None = None,
+            destination_uri: str | None = None,
+            schema_version: str | None = None,
+            checksum: str | None = None,
+            metadata: dict | None = None
+    ) -> None:
+        event = AuditEventFactory.create_task_failed_event(
+            pipeline_name=pipeline_name,
+            pipeline_id=pipeline_id,
+            task_name=task_name,
+            task_id=task_id,
+            task_attempt=task_attempt,
+            duration_ms=elapsed_milliseconds(started_at),
+            error=error,
+            input_row_count=input_row_count,
+            output_row_count=output_row_count,
+            rejected_row_count=rejected_row_count,
+            duplicate_row_count=duplicate_row_count,
+            source_system=source_system,
+            source_uri=source_uri,
+            destination_system=destination_system,
+            destination_uri=destination_uri,
+            schema_version=schema_version,
+            checksum=checksum,
+            metadata=metadata
+        )
 
         self.database.save(event)
         self.streaming.publish(event)

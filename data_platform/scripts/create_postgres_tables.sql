@@ -61,48 +61,7 @@ CREATE TABLE IF NOT EXISTS sale_stage (
     month INTEGER NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS audit.pipeline (
-    pipeline_id VARCHAR(100) PRIMARY KEY,
-    pipeline_name VARCHAR(200) NOT NULL,
-    airflow_dag_id VARCHAR(250),
-    airflow_dag_run_id VARCHAR(250),
-    logical_date TIMESTAMPTZ,
-    started_at TIMESTAMPTZ NOT NULL,
-    completed_at TIMESTAMPTZ,
-    status VARCHAR(30) NOT NULL,
-    input_row_count BIGINT,
-    output_row_count BIGINT,
-    rejected_row_count BIGINT,
-    duration_ms BIGINT,
-    error_message TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS audit.task (
-    task_id VARCHAR(100) PRIMARY KEY,
-    pipeline_id VARCHAR(100) NOT NULL,
-    task_name VARCHAR(250) NOT NULL,
-    task_attempt INTEGER NOT NULL,
-    started_at TIMESTAMPTZ NOT NULL,
-    completed_at TIMESTAMPTZ,
-    status VARCHAR(30) NOT NULL,
-    input_row_count BIGINT,
-    output_row_count BIGINT,
-    rejected_row_count BIGINT,
-    duration_ms BIGINT,
-    error_type VARCHAR(500),
-    error_message TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_task_pipeline
-    FOREIGN KEY (pipeline_id)
-    REFERENCES audit.pipeline (pipeline_id),
-
-    CONSTRAINT uq_task_attempt
-    UNIQUE (pipeline_id, task_name, task_attempt)
-);
-
+-- Single-table audit log. Event-specific details live in `metadata`.
 CREATE TABLE IF NOT EXISTS audit.event (
     event_id UUID PRIMARY KEY,
     event_version INTEGER NOT NULL,
@@ -138,22 +97,6 @@ CREATE TABLE IF NOT EXISTS audit.event (
     UNIQUE (streaming_topic, streaming_partition, streaming_offset)
 );
 
-CREATE TABLE IF NOT EXISTS audit.data_quality_result (
-    data_quality_result_id UUID PRIMARY KEY,
-    pipeline_id VARCHAR(100) NOT NULL,
-    task_id VARCHAR(100),
-    dataset_name VARCHAR(250) NOT NULL,
-    check_name VARCHAR(250) NOT NULL,
-    check_type VARCHAR(100) NOT NULL,
-    status VARCHAR(30) NOT NULL,
-    expected_value TEXT,
-    actual_value TEXT,
-    failed_row_count BIGINT,
-    sample_failure_uri TEXT,
-    checked_at TIMESTAMPTZ NOT NULL,
-    metadata JSONB NOT NULL DEFAULT '{}'
-);
-
 CREATE INDEX idx_audit_event_pipeline_id
     ON audit.event (pipeline_id);
 
@@ -162,9 +105,3 @@ CREATE INDEX idx_audit_event_event_time
 
 CREATE INDEX idx_audit_event_status
     ON audit.event (status);
-
-CREATE INDEX idx_task_pipeline_id
-    ON audit.task (pipeline_id);
-
-CREATE INDEX idx_data_quality_pipeline_id
-    ON audit.data_quality_result (pipeline_id);
