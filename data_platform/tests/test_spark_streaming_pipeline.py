@@ -1,39 +1,49 @@
-from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Datalake, DataWarehouse, \
-    Event, FileSource, Messaging, Source, StageDatabase
+from dataset.definition import (
+    Audit,
+    DataLakeEndpoint,
+    DataWarehouseEndpoint,
+    Dataframe,
+    DatabaseEndpoint,
+    Dataset,
+    Event,
+    FileEndpoint,
+    MessagingEndpoint,
+)
 from pipeline.spark_based_streaming_pipeline import SparkStreamingPipeline
 
 
 def build_dataset() -> Dataset:
+    processor = type(
+        "Processor",
+        (),
+        {
+            "clean": lambda self, dataframe: dataframe,
+            "enrich": lambda self, dataframe: dataframe,
+            "analyze": lambda self, dataframe: {},
+        },
+    )()
+
     return Dataset(
         name="example",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
         event=Event(converter=lambda row: row),
-        messaging=Messaging(topic="example-events", checkpoint_path="/tmp/checkpoint"),
         audit=Audit(),
-        processors={
-            "spark": type(
-                "Processor",
-                (),
-                {
-                    "clean": lambda self, dataframe: dataframe,
-                    "enrich": lambda self, dataframe: dataframe,
-                    "analyze": lambda self, dataframe: {},
-                },
-            )()
+        processor_factories={"spark": lambda: processor},
+        sources={
+            "file": FileEndpoint(file_name="example.csv", file_path="resources/example.csv"),
+            "messaging": MessagingEndpoint(topic="example-events"),
         },
-        source=Source(file=FileSource(file_name="example.csv", file_path="resources/example.csv")),
-        destination=Destination(
-            datalake=Datalake(bucket_name="bucket"),
-            database=StageDatabase(connection=DatabaseConnection(), table_name="sale.example_stage"),
-            datawarehouse=DataWarehouse(full_table_name="app_datawarehouse.example"),
-        ),
+        destinations={
+            "datalake": DataLakeEndpoint(bucket_name="bucket"),
+            "database": DatabaseEndpoint(table_name="sale.example_stage"),
+            "datawarehouse": DataWarehouseEndpoint(full_table_name="app_datawarehouse.example"),
+        },
     )
 
 
 class TestRun:
 
     def test_should_execute_each_pipeline_step_once(self, mocker) -> None:
-        # Given
         given_pipeline = SparkStreamingPipeline(build_dataset())
         mocker.patch.object(given_pipeline, "publish_events", return_value=1)
         mock_start_batch_storage = mocker.patch.object(given_pipeline, "start_batch_storage")
@@ -46,10 +56,8 @@ class TestRun:
         mocker.patch("pipeline.spark_based_streaming_pipeline.log_line")
         mocker.patch.object(given_pipeline.spark, "stop")
 
-        # When
         given_pipeline.run()
 
-        # Then
         assert given_pipeline.publish_events.call_count == 1
         assert given_pipeline.start_batch_storage.call_count == 1
         assert mock_start_batch_storage.return_value.awaitTermination.call_count == 1

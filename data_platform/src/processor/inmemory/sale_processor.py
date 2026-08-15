@@ -3,7 +3,7 @@ from collections.abc import Mapping
 
 from pandas import DataFrame
 
-from dataset.sale.model import model
+from dataset.sale.columns import sale_columns as model
 from processor.base import DataProcessor
 from transformation.inmemory.pandas_ops import (
     remove_duplicates,

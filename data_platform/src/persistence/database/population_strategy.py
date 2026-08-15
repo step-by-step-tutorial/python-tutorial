@@ -54,7 +54,7 @@ def lookup_population_strategy(dataframe: Any) -> Callable[..., None]:
 
 try:
     from pyspark.sql import DataFrame as SparkDataFrame
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
     SparkDataFrame = None
 
 

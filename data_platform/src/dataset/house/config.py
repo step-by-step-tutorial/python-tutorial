@@ -1,4 +1,8 @@
-from app_config import env_config as ec
+from config.app import settings as app_settings
+from config.audit import settings as audit_settings
+from config.datalake import settings as datalake_settings
+from config.datawarehouse import settings as datawarehouse_settings
+from config.messaging import settings as messaging_settings
 from dataset.definition import (
     Audit,
     DataLakeEndpoint,
@@ -10,47 +14,65 @@ from dataset.definition import (
     FileEndpoint,
     MessagingEndpoint,
 )
-from dataset.house import model as schema
+from dataset.house.columns import house_columns as columns
+from dataset.house.spark_schema import build_schema
 from model.house_event import HouseEvent
-from processor.inmemory.house_processor import InmemoryHouseProcessor
-from processor.spark.house_processor import SparkHouseProcessor
 
 
 def _schema():
-    return schema.get_struct_type()
+    return build_schema()
+
+
+def _inmemory_processor():
+    from processor.inmemory.house_processor import InmemoryHouseProcessor
+
+    return InmemoryHouseProcessor()
+
+
+def _spark_processor():
+    from processor.spark.house_processor import SparkHouseProcessor
+
+    return SparkHouseProcessor()
 
 
 HOUSE_DATASET = Dataset(
     name="house",
     dataframe=Dataframe(
         schema_factory=_schema,
-        required_columns=schema.required_columns,
+        required_columns=frozenset(
+            {
+                columns.area_raw,
+                columns.room_raw,
+                columns.parking_raw,
+                columns.warehouse_raw,
+                columns.elevator_raw,
+                columns.address_raw,
+                columns.price_raw,
+                columns.price_usd_raw,
+            }
+        ),
     ),
     event=Event(
-        key_column=schema.model.address_raw,
+        key_column=columns.address_raw,
         converter=lambda row: HouseEvent.from_dict(row).to_dict(),
     ),
     audit=Audit(
-        topic=ec.APP_STREAMING_AUDIT_TOPIC,
-        archive_enabled=ec.APP_AUDIT_ARCHIVE_ENABLED,
+        topic=audit_settings.streaming_topic,
+        archive_enabled=audit_settings.archive_enabled,
     ),
     sources={
         "file": FileEndpoint(
             name="file",
             file_name="house.csv",
-            file_path=str(ec.ROOT / ec.RESOURCES_DIR / "house.csv"),
+            file_path=str(app_settings.root / app_settings.resources_dir / "house.csv"),
         ),
         "messaging": MessagingEndpoint(
             name="messaging",
             topic="house-events",
-            server=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
-            bootstrap_servers=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
-            checkpoint_path=f"{ec.APP_DATALAKE_SCHEME}://{ec.APP_DATALAKE_BUCKET_NAME}/checkpoints/house-events",
-            starting_offsets=ec.APP_STREAMING_STARTING_OFFSETS,
         ),
     },
     destinations={
-        "datalake": DataLakeEndpoint(name="datalake"),
+        "datalake": DataLakeEndpoint(name="datalake", bucket_name=datalake_settings.bucket_name),
         "database": DatabaseEndpoint(
             name="database",
             table_name="house.house_stage",
@@ -60,7 +82,7 @@ HOUSE_DATASET = Dataset(
         "datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
             table_name="house_table",
-            full_table_name=f"{ec.APP_DATAWAREHOUSE_NAME}.house_table",
+            full_table_name=f"{datawarehouse_settings.database_name}.house_table",
             preparing_sql_files={
                 "truncate": "datawarehouse/house/truncate_datawarehouse.sql",
             },
@@ -70,8 +92,8 @@ HOUSE_DATASET = Dataset(
             },
         ),
     },
-    processors={
-        "inmemory": InmemoryHouseProcessor(),
-        "spark": SparkHouseProcessor(),
+    processor_factories={
+        "inmemory": _inmemory_processor,
+        "spark": _spark_processor,
     },
 )

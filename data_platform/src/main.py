@@ -1,9 +1,8 @@
 import logging
 import sys
 
-from app_config import env_config as ec
+from config.app import settings as app_settings
 from dataset.registry import get_dataset
-from pipeline.inmemory_auditable_pipeline import InmemoryAuditablePipeline
 from pipeline.inmemory_pipeline import InmemoryPipeline
 from pipeline.spark_based_pipeline import SparkPipeline
 from pipeline.spark_based_streaming_pipeline import SparkStreamingPipeline
@@ -14,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 PIPELINES = {
     "inmemory": InmemoryPipeline,
-    "inmemory_auditable": InmemoryAuditablePipeline,
     "spark": SparkPipeline,
     "spark_streaming": SparkStreamingPipeline,
 }
@@ -39,7 +37,7 @@ def run_pipeline(pipeline_type: str, dataset_name: str) -> None:
 def main() -> None:
     if len(sys.argv) > 1:
         pipeline_type = sys.argv[1]
-        dataset_name = sys.argv[2] if len(sys.argv) > 2 else ec.DATASET_NAME
+        dataset_name = sys.argv[2] if len(sys.argv) > 2 else app_settings.dataset_name
         run_pipeline(pipeline_type, dataset_name)
         return
 
@@ -67,9 +65,8 @@ def main() -> None:
         print()
         print("Available pipelines:")
         print("1. inmemory")
-        print("2. inmemory_auditable")
-        print("3. spark")
-        print("4. spark_streaming")
+        print("2. spark")
+        print("3. spark_streaming")
         print("0. back")
 
         pipeline_command = input("> ").strip()
@@ -82,9 +79,8 @@ def main() -> None:
 
         pipeline_type = {
             "1": "inmemory",
-            "2": "inmemory_auditable",
-            "3": "spark",
-            "4": "spark_streaming",
+            "2": "spark",
+            "3": "spark_streaming",
         }.get(pipeline_command, pipeline_command)
 
         try:

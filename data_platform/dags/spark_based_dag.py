@@ -3,13 +3,13 @@ from datetime import UTC, datetime
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
 
-from app_config import env_config as ec
+from config.app import settings as app_settings
 from dataset.registry import get_dataset
 from pipeline.spark_based_pipeline import SparkPipeline
 
 DAG_ID = "spark_etl_dag"
 
-pipeline = SparkPipeline(get_dataset(ec.DATASET_NAME))
+pipeline = SparkPipeline(get_dataset(app_settings.dataset_name))
 
 with DAG(
         dag_id=DAG_ID,

@@ -1,7 +1,7 @@
 import time
 from uuid import uuid4
 
-from app_config import env_config as ec
+from config.audit import settings as audit_settings
 from audit import audit_archive_service
 from audit.audit_database_service import AuditDatabaseService
 from audit.audit_event_factory import AuditEventFactory
@@ -15,13 +15,13 @@ class AuditService:
 
     def __init__(self, audit: Audit | None = None) -> None:
         audit = audit or Audit(
-            topic=ec.APP_STREAMING_AUDIT_TOPIC,
-            archive_enabled=ec.APP_AUDIT_ARCHIVE_ENABLED,
+            topic=audit_settings.streaming_topic,
+            archive_enabled=audit_settings.archive_enabled,
         )
         self.database = AuditDatabaseService()
-        self.streaming = AuditStreamingService(audit.topic or ec.APP_STREAMING_AUDIT_TOPIC)
+        self.streaming = AuditStreamingService(audit.topic or audit_settings.streaming_topic)
         self.log = AuditLogService()
-        self.bucket_name = ec.APP_DATALAKE_AUDIT_BUCKET_NAME
+        self.bucket_name = audit_settings.archive_bucket_name
         self.archive_enabled = audit.archive_enabled
 
     def start_pipeline(self, pipeline_name: str, pipeline_id: str, metadata: dict | None = None) -> float:

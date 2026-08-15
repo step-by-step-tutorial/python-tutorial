@@ -3,13 +3,13 @@ from datetime import UTC, datetime
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
 
-from app_config import env_config as ec
+from config.app import settings as app_settings
 from dataset.registry import get_dataset
 from pipeline.inmemory_pipeline import InmemoryPipeline
 
 DAG_ID = "inmemory_etl_dag"
 
-pipeline = InmemoryPipeline(get_dataset(ec.DATASET_NAME))
+pipeline = InmemoryPipeline(get_dataset(app_settings.dataset_name))
 
 with DAG(
         dag_id=DAG_ID,

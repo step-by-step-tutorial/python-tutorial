@@ -2,149 +2,113 @@ from pathlib import Path
 
 import pytest
 
-from app_config import env_config as ec
+from config.app import settings as app_settings
 from dataset.definition import (
     Audit,
+    DataLakeEndpoint,
+    DataWarehouseEndpoint,
     Dataframe,
-    DatabaseConnection,
+    DatabaseEndpoint,
     Dataset,
-    Destination,
-    Datalake,
-    DataWarehouse,
     Event,
-    FileSource,
-    Messaging,
-    Source,
-    StageDatabase,
+    FileEndpoint,
+    MessagingEndpoint,
 )
 from dataset.house.config import HOUSE_DATASET
 from dataset.registry import get_dataset, get_dataset_names
 from dataset.sale.config import SALE_DATASET
 
 
-class TestFileSource:
+class TestFileEndpoint:
 
     def test_should_resolve_path_using_file_path_when_available(self) -> None:
-        # Given
-        given_source = FileSource(file_name="sale.csv", file_path=str(Path("C:/data/sale.csv")))
+        given_endpoint = FileEndpoint(file_name="sale.csv", file_path=str(Path("C:/data/sale.csv")))
 
-        # When
-        actual = given_source.resolve_path("resources")
+        actual = given_endpoint.resolve_path("resources")
 
-        # Then
         assert actual == Path("C:/data/sale.csv")
 
     def test_should_resolve_path_using_base_path_when_file_path_is_missing(self) -> None:
-        # Given
-        given_source = FileSource(file_name="sale.csv")
+        given_endpoint = FileEndpoint(file_name="sale.csv")
 
-        # When
-        actual = given_source.resolve_path(Path("resources"))
+        actual = given_endpoint.resolve_path(Path("resources"))
 
-        # Then
         assert actual == Path("resources") / "sale.csv"
 
 
 class TestDataset:
 
-    def test_should_expose_grouped_configuration_through_compatibility_properties(self) -> None:
-        # Given
+    def test_should_lookup_sources_and_destinations(self) -> None:
         given_dataset = Dataset(
             name="example",
             dataframe=Dataframe(schema=None, required_columns=frozenset({"id"})),
-            event=Event(
-                converter=lambda row: row,
-                key_column="id",
-            ),
-            messaging=Messaging(
-                server="kafka:9092",
-                bootstrap_servers="kafka:9092",
-                topic="example-events",
-                checkpoint_path="/checkpoints/example",
-            ),
-            audit=Audit(
-                topic="example-audit",
-            ),
-            processors={},
-            source=Source(
-                file=FileSource(
-                    file_name="example.csv",
-                    file_path="/tmp/example.csv",
-                )
-            ),
-            destination=Destination(
-                datalake=Datalake(bucket_name="example-bucket"),
-                database=StageDatabase(
-                    connection=DatabaseConnection(server="localhost", port=5432, database_name="example"),
-                    table_name="sale.example_stage",
-                ),
-                datawarehouse=DataWarehouse(
-                    connection=DatabaseConnection(server="localhost", port=8123, database_name="warehouse"),
-                    table_name="example_table",
-                    full_table_name="app_datawarehouse.example_table",
-                ),
-            ),
+            event=Event(converter=lambda row: row, key_column="id"),
+            audit=Audit(topic="example-audit"),
+            processor_factories={},
+            sources={
+                "file": FileEndpoint(file_name="example.csv", file_path="/tmp/example.csv"),
+                "messaging": MessagingEndpoint(topic="example-events"),
+            },
+            destinations={
+                "datalake": DataLakeEndpoint(bucket_name="example-bucket"),
+                "database": DatabaseEndpoint(table_name="sale.example_stage"),
+                "datawarehouse": DataWarehouseEndpoint(full_table_name="app_datawarehouse.example_table"),
+            },
         )
 
-        # Then
-        assert given_dataset.file_name == "example.csv"
-        assert given_dataset.file_path == "/tmp/example.csv"
-        assert given_dataset.datalake.bucket_name == "example-bucket"
-        assert given_dataset.database.table_name == "sale.example_stage"
-        assert given_dataset.datawarehouse.full_table_name == "app_datawarehouse.example_table"
+        assert given_dataset.get_source("file").file_name == "example.csv"
+        assert given_dataset.get_destination("datalake").bucket_name == "example-bucket"
+        assert given_dataset.get_destination("database").table_name == "sale.example_stage"
+        assert given_dataset.get_destination("datawarehouse").full_table_name == "app_datawarehouse.example_table"
         assert given_dataset.dataframe.schema is None
         assert given_dataset.dataframe.required_columns == frozenset({"id"})
         assert given_dataset.event.key_column == "id"
-        assert given_dataset.messaging.topic == "example-events"
-        assert given_dataset.messaging.checkpoint_path == "/checkpoints/example"
-        assert given_dataset.audit_topic == "example-audit"
+        assert given_dataset.audit.topic == "example-audit"
+
+    def test_should_raise_error_for_missing_endpoint(self) -> None:
+        given_dataset = Dataset(name="example")
+
+        with pytest.raises(KeyError):
+            given_dataset.get_source("missing")
+
+        with pytest.raises(KeyError):
+            given_dataset.get_destination("missing")
 
 
 class TestDatasetRegistry:
 
     def test_should_return_known_dataset_names(self) -> None:
-        # When
         actual = get_dataset_names()
 
-        # Then
         assert actual == ("house", "sale")
 
     def test_should_return_sale_dataset(self) -> None:
-        # When
-        actual = get_dataset("sale")
-
-        # Then
-        assert actual is SALE_DATASET
+        assert get_dataset("sale") is SALE_DATASET
 
     def test_should_return_house_dataset(self) -> None:
-        # When
-        actual = get_dataset("house")
-
-        # Then
-        assert actual is HOUSE_DATASET
+        assert get_dataset("house") is HOUSE_DATASET
 
     def test_should_raise_error_for_unsupported_dataset(self) -> None:
-        # When / Then
         with pytest.raises(ValueError):
             get_dataset("missing")
 
 
 class TestConcreteDatasetConfiguration:
 
-    def test_sale_dataset_should_include_streaming_server_and_source_path(self) -> None:
-        # Then
-        assert SALE_DATASET.messaging.server == ec.APP_STREAMING_BOOTSTRAP_SERVERS
-        assert SALE_DATASET.messaging.bootstrap_servers == ec.APP_STREAMING_BOOTSTRAP_SERVERS
-        assert SALE_DATASET.source.file.resolve_path(ec.RESOURCES_DIR).name == "sale.csv"
-        assert SALE_DATASET.database.table_name == "sale.sale_stage"
-        assert SALE_DATASET.datawarehouse.full_table_name == "app_datawarehouse.sale_table"
-        assert SALE_DATASET.audit.topic == ec.APP_STREAMING_AUDIT_TOPIC
+    def test_sale_dataset_should_expose_logical_endpoints(self) -> None:
+        assert SALE_DATASET.get_source("file").resolve_path(app_settings.resources_dir).name == "sale.csv"
+        assert SALE_DATASET.get_source("messaging").topic == "sale-events"
+        assert SALE_DATASET.get_destination("database").table_name == "sale.sale_stage"
+        assert SALE_DATASET.get_destination("datawarehouse").full_table_name == "app_datawarehouse.sale_table"
+        assert SALE_DATASET.audit.topic == "sale.audit.event.v1"
 
-    def test_house_dataset_should_include_streaming_server_and_source_path(self) -> None:
-        # Then
-        assert HOUSE_DATASET.messaging.server == ec.APP_STREAMING_BOOTSTRAP_SERVERS
-        assert HOUSE_DATASET.messaging.bootstrap_servers == ec.APP_STREAMING_BOOTSTRAP_SERVERS
-        assert HOUSE_DATASET.source.file.resolve_path(ec.RESOURCES_DIR).name == "house.csv"
-        assert HOUSE_DATASET.database.table_name == "house.house_stage"
-        assert HOUSE_DATASET.datawarehouse.full_table_name == "app_datawarehouse.house_table"
-        assert HOUSE_DATASET.audit.topic == ec.APP_STREAMING_AUDIT_TOPIC
+    def test_house_dataset_should_expose_logical_endpoints(self) -> None:
+        assert HOUSE_DATASET.get_source("file").resolve_path(app_settings.resources_dir).name == "house.csv"
+        assert HOUSE_DATASET.get_source("messaging").topic == "house-events"
+        assert HOUSE_DATASET.get_destination("database").table_name == "house.house_stage"
+        assert HOUSE_DATASET.get_destination("datawarehouse").full_table_name == "app_datawarehouse.house_table"
+        assert HOUSE_DATASET.audit.topic == "sale.audit.event.v1"
+
+    def test_dataset_processors_should_be_lazy(self) -> None:
+        assert callable(SALE_DATASET.processor_factories["spark"])
+        assert callable(HOUSE_DATASET.processor_factories["spark"])

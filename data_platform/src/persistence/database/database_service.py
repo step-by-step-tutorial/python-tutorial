@@ -11,7 +11,7 @@ from util.file_utils import read_text_file
 
 def populate_stage_table(dataset: Dataset, dataframe: Any) -> None:
     population_function = lookup_population_strategy(dataframe)
-    database = dataset.database
+    database = dataset.get_destination("database")
 
     if hasattr(dataframe, "write"):
         population_function(
@@ -35,6 +35,7 @@ def run_sql_files(sql_files: tuple[str, ...]) -> None:
 
 
 def populate(dataset: Dataset, dataframe: Any) -> None:
-    run_sql_files(dataset.database.before_load_sql_files)
+    database = dataset.get_destination("database")
+    run_sql_files(database.before_load_sql_files)
     populate_stage_table(dataset, dataframe)
-    run_sql_files(dataset.database.after_load_sql_files)
+    run_sql_files(database.after_load_sql_files)

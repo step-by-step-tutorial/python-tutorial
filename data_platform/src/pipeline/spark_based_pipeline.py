@@ -3,16 +3,15 @@ from datetime import datetime
 
 from pyspark.sql import DataFrame
 
-from app_config import env_config as ec
+from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
-from connector.distributed.spark_service import SparkService
+from service.spark.batch_service import SparkBatchService as SparkService
 from dataset.definition import Dataset
 from persistence.database import database_service
 from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
-from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import generate_ingestion_time
@@ -27,7 +26,7 @@ class SparkPipeline:
         self.pipeline_name = "spark_pipeline"
         self.pipeline_id = create_pipeline_id()
         self.ingestion_time: datetime = generate_ingestion_time()
-        self.spark = SparkService(ds)
+        self.spark = SparkService()
 
     def run(self) -> None:
         logger.info(
@@ -77,7 +76,8 @@ class SparkPipeline:
         self.spark.stop()
 
     def store_raw_data(self) -> str:
-        data_file_path = self.dataset.source.file.resolve_path(generate_full_file_path(ec.RESOURCES_DIR))
+        file_endpoint = self.dataset.get_source("file")
+        data_file_path = file_endpoint.resolve_path(app_settings.resources_dir)
 
         dataframe = self.spark.read_csv(file_path=str(data_file_path), schema=self.dataset.dataframe.schema)
 
@@ -86,7 +86,8 @@ class SparkPipeline:
         self.spark.overwrite(
             dataframe=dataframe,
             bucket_name=datalake_settings.bucket_name,
-            path=relative_path
+            path=relative_path,
+            scheme=datalake_settings.scheme,
         )
 
         return relative_path
@@ -94,17 +95,19 @@ class SparkPipeline:
     def cleaning(self, raw_relative_path: str) -> str:
         dataframe = self.spark.read(
             bucket_name=datalake_settings.bucket_name,
-            path=raw_relative_path
+            path=raw_relative_path,
+            scheme=datalake_settings.scheme,
         )
 
-        cleaned_dataframe = self.dataset.processors["spark"].clean(dataframe)
+        cleaned_dataframe = self.dataset.get_processor("spark").clean(dataframe)
 
         relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time, self.dataset.name.lower())
 
         self.spark.overwrite(
             dataframe=cleaned_dataframe,
             bucket_name=datalake_settings.bucket_name,
-            path=relative_path
+            path=relative_path,
+            scheme=datalake_settings.scheme,
         )
 
         return relative_path
@@ -112,17 +115,19 @@ class SparkPipeline:
     def enriching(self, cleaned_relative_path: str) -> str:
         dataframe = self.spark.read(
             bucket_name=datalake_settings.bucket_name,
-            path=cleaned_relative_path
+            path=cleaned_relative_path,
+            scheme=datalake_settings.scheme,
         )
 
-        enriched_dataframe = self.dataset.processors["spark"].enrich(dataframe)
+        enriched_dataframe = self.dataset.get_processor("spark").enrich(dataframe)
 
         relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
 
         self.spark.overwrite(
             dataframe=enriched_dataframe,
             bucket_name=datalake_settings.bucket_name,
-            path=relative_path
+            path=relative_path,
+            scheme=datalake_settings.scheme,
         )
 
         return relative_path
@@ -130,7 +135,8 @@ class SparkPipeline:
     def download_enriched_data(self, relative_path: str) -> DataFrame:
         return self.spark.read(
             bucket_name=datalake_settings.bucket_name,
-            path=relative_path
+            path=relative_path,
+            scheme=datalake_settings.scheme,
         )
 
     def populate_database(self, enriched_data_path: str) -> None:
@@ -143,7 +149,7 @@ class SparkPipeline:
         logger.info("Populating data warehouse with enriched data")
 
         datawarehouse_service.truncate_and_populate(
-            self.dataset.datawarehouse,
+            self.dataset.get_destination("datawarehouse"),
             enriched_dataframe
         )
 
@@ -151,14 +157,14 @@ class SparkPipeline:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Analyzing enriched data via Spark")
 
-        results = self.dataset.processors["spark"].analyze(enriched_dataframe)
+        results = self.dataset.get_processor("spark").analyze(enriched_dataframe)
 
         for name, dataframe in results.items():
             logger.info("Displaying analysis result %s", name)
             dataframe.show()
 
     def analyzing_via_datawarehouse(self) -> None:
-        results = datawarehouse_service.analyze(self.dataset.datawarehouse)
+        results = datawarehouse_service.analyze(self.dataset.get_destination("datawarehouse"))
         logger.info("Analyzing enriched data via data warehouse")
 
         for dataframe in results.values():

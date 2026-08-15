@@ -1,4 +1,8 @@
-from app_config import env_config as ec
+from config.app import settings as app_settings
+from config.audit import settings as audit_settings
+from config.datalake import settings as datalake_settings
+from config.datawarehouse import settings as datawarehouse_settings
+from config.messaging import settings as messaging_settings
 from dataset.definition import (
     Audit,
     DataLakeEndpoint,
@@ -10,47 +14,65 @@ from dataset.definition import (
     FileEndpoint,
     MessagingEndpoint,
 )
-from dataset.sale import model as schema
+from dataset.sale.columns import sale_columns as columns
+from dataset.sale.spark_schema import build_schema
 from model.sale_event import SaleEvent
-from processor.inmemory.sale_processor import InmemorySaleProcessor
-from processor.spark.sale_processor import SparkSaleProcessor
 
 
 def _schema():
-    return schema.get_struct_type()
+    return build_schema()
+
+
+def _inmemory_processor():
+    from processor.inmemory.sale_processor import InmemorySaleProcessor
+
+    return InmemorySaleProcessor()
+
+
+def _spark_processor():
+    from processor.spark.sale_processor import SparkSaleProcessor
+
+    return SparkSaleProcessor()
 
 
 SALE_DATASET = Dataset(
     name="Sale",
     dataframe=Dataframe(
         schema_factory=_schema,
-        required_columns=schema.required_columns,
+        required_columns=frozenset(
+            {
+                columns.order_id,
+                columns.customer_name,
+                columns.product_name,
+                columns.category,
+                columns.quantity,
+                columns.unit_price,
+                columns.order_date,
+                columns.country,
+            }
+        ),
     ),
     event=Event(
-        key_column=schema.model.order_id,
+        key_column=columns.order_id,
         converter=lambda row: SaleEvent.from_dict(row).to_dict(),
     ),
     audit=Audit(
-        topic=ec.APP_STREAMING_AUDIT_TOPIC,
-        archive_enabled=ec.APP_AUDIT_ARCHIVE_ENABLED,
+        topic=audit_settings.streaming_topic,
+        archive_enabled=audit_settings.archive_enabled,
     ),
     sources={
         "file": FileEndpoint(
             name="file",
             file_name="sale.csv",
-            file_path=str(ec.ROOT / ec.RESOURCES_DIR / "sale.csv"),
+            file_path=str(app_settings.root / app_settings.resources_dir / "sale.csv"),
         ),
         "messaging": MessagingEndpoint(
             name="messaging",
-            topic=ec.APP_STREAMING_TOPIC,
-            server=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
-            bootstrap_servers=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
-            checkpoint_path=f"{ec.APP_DATALAKE_SCHEME}://{ec.APP_DATALAKE_BUCKET_NAME}/checkpoints/{ec.APP_STREAMING_TOPIC}",
-            starting_offsets=ec.APP_STREAMING_STARTING_OFFSETS,
+            topic=messaging_settings.topic,
         ),
     },
     destinations={
-        "datalake": DataLakeEndpoint(name="datalake"),
+        "datalake": DataLakeEndpoint(name="datalake", bucket_name=datalake_settings.bucket_name),
         "database": DatabaseEndpoint(
             name="database",
             table_name="sale.sale_stage",
@@ -65,7 +87,7 @@ SALE_DATASET = Dataset(
         "datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
             table_name="sale_table",
-            full_table_name=f"{ec.APP_DATAWAREHOUSE_NAME}.sale_table",
+            full_table_name=f"{datawarehouse_settings.database_name}.sale_table",
             preparing_sql_files={
                 "truncate": "datawarehouse/sale/truncate_datawarehouse.sql"
             },
@@ -75,8 +97,8 @@ SALE_DATASET = Dataset(
             },
         ),
     },
-    processors={
-        "inmemory": InmemorySaleProcessor(),
-        "spark": SparkSaleProcessor(),
+    processor_factories={
+        "inmemory": _inmemory_processor,
+        "spark": _spark_processor,
     },
 )

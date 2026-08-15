@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
-from dataset.house import model as schema
+from dataset.house.columns import house_columns as schema
 from processor.base import DataProcessor
 from transformation.spark.spark_ops import (
     average_by_group,
@@ -18,14 +18,14 @@ from transformation.spark.spark_ops import (
 )
 
 _RENAME = {
-    schema.model.area_raw: schema.model.area,
-    schema.model.room_raw: schema.model.room,
-    schema.model.parking_raw: schema.model.parking,
-    schema.model.warehouse_raw: schema.model.warehouse,
-    schema.model.elevator_raw: schema.model.elevator,
-    schema.model.address_raw: schema.model.address,
-    schema.model.price_raw: schema.model.price,
-    schema.model.price_usd_raw: schema.model.price_usd,
+    schema.area_raw: schema.area,
+    schema.room_raw: schema.room,
+    schema.parking_raw: schema.parking,
+    schema.warehouse_raw: schema.warehouse,
+    schema.elevator_raw: schema.elevator,
+    schema.address_raw: schema.address,
+    schema.price_raw: schema.price,
+    schema.price_usd_raw: schema.price_usd,
 }
 
 
@@ -34,25 +34,25 @@ class SparkHouseProcessor(DataProcessor[DataFrame]):
         df = dataframe
 
         df = rename_columns(df, _RENAME)
-        df = convert_numeric_column(df, schema.model.area)
-        df = convert_numeric_column(df, schema.model.room)
-        df = convert_numeric_column(df, schema.model.price)
-        df = convert_numeric_column(df, schema.model.price_usd)
-        df = convert_boolean_column(df, schema.model.parking, default_value=False)
-        df = convert_boolean_column(df, schema.model.warehouse, default_value=False)
-        df = convert_boolean_column(df, schema.model.elevator, default_value=False)
-        df = trim_string_column(df, schema.model.address)
+        df = convert_numeric_column(df, schema.area)
+        df = convert_numeric_column(df, schema.room)
+        df = convert_numeric_column(df, schema.price)
+        df = convert_numeric_column(df, schema.price_usd)
+        df = convert_boolean_column(df, schema.parking, default_value=False)
+        df = convert_boolean_column(df, schema.warehouse, default_value=False)
+        df = convert_boolean_column(df, schema.elevator, default_value=False)
+        df = trim_string_column(df, schema.address)
         df = remove_duplicates(df)
 
         return filter_dataframe(
             df=df,
             conditions=[
-                sf.col(schema.model.area).isNotNull(),
-                sf.col(schema.model.room).isNotNull(),
-                sf.col(schema.model.price).isNotNull(),
-                sf.col(schema.model.area) > 0,
-                sf.col(schema.model.room) >= 0,
-                sf.col(schema.model.price) > 0,
+                sf.col(schema.area).isNotNull(),
+                sf.col(schema.room).isNotNull(),
+                sf.col(schema.price).isNotNull(),
+                sf.col(schema.area) > 0,
+                sf.col(schema.room) >= 0,
+                sf.col(schema.price) > 0,
             ],
         )
 
@@ -61,34 +61,34 @@ class SparkHouseProcessor(DataProcessor[DataFrame]):
 
         df = divide_columns(
             df=df,
-            numerator_field=schema.model.price,
-            denominator_field=schema.model.area,
-            alias_field=schema.model.price_per_square_meter,
+            numerator_field=schema.price,
+            denominator_field=schema.area,
+            alias_field=schema.price_per_square_meter,
         )
 
         df = divide_columns(
             df=df,
-            numerator_field=schema.model.price_usd,
-            denominator_field=schema.model.area,
-            alias_field=schema.model.price_usd_per_square_meter,
+            numerator_field=schema.price_usd,
+            denominator_field=schema.area,
+            alias_field=schema.price_usd_per_square_meter,
         )
 
         return create_hash_column(
             df=df,
-            alias_field=schema.model.listing_key,
+            alias_field=schema.listing_key,
             source_columns=[
-                sf.format_string("%.6f", sf.col(schema.model.area)),
-                sf.col(schema.model.room).cast("long").cast("string"),
-                sf.lower(sf.col(schema.model.parking).cast("string")),
-                sf.lower(sf.col(schema.model.warehouse).cast("string")),
-                sf.lower(sf.col(schema.model.elevator).cast("string")),
-                sf.coalesce(sf.col(schema.model.address), sf.lit("")),
-                sf.format_string("%.6f", sf.col(schema.model.price)),
+                sf.format_string("%.6f", sf.col(schema.area)),
+                sf.col(schema.room).cast("long").cast("string"),
+                sf.lower(sf.col(schema.parking).cast("string")),
+                sf.lower(sf.col(schema.warehouse).cast("string")),
+                sf.lower(sf.col(schema.elevator).cast("string")),
+                sf.coalesce(sf.col(schema.address), sf.lit("")),
+                sf.format_string("%.6f", sf.col(schema.price)),
                 sf.when(
-                    sf.col(schema.model.price_usd).isNull(),
+                    sf.col(schema.price_usd).isNull(),
                     sf.lit(""),
                 ).otherwise(
-                    sf.format_string("%.6f", sf.col(schema.model.price_usd))
+                    sf.format_string("%.6f", sf.col(schema.price_usd))
                 ),
             ],
         )
@@ -97,15 +97,14 @@ class SparkHouseProcessor(DataProcessor[DataFrame]):
         return {
             "average_price_by_address": average_by_group(
                 df=dataframe,
-                group_field=schema.model.address,
-                original_field=schema.model.price,
+                group_field=schema.address,
+                original_field=schema.price,
                 alias_field="average_price",
             ),
             "average_price_per_square_meter_by_room": average_by_group(
                 df=dataframe,
-                group_field=schema.model.room,
-                original_field=schema.model.price_per_square_meter,
+                group_field=schema.room,
+                original_field=schema.price_per_square_meter,
                 alias_field="average_price_per_square_meter",
             ),
         }
-

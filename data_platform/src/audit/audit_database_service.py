@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from app_config import env_config as ec
+from config.audit import settings as audit_settings
 from audit.audit_event_converter import to_audit_event_model
 from connector.database.postgres_connector import create_connection
 from model.audit_event import AuditEvent
@@ -14,5 +14,5 @@ class AuditDatabaseService:
         with create_connection().begin() as connection:
             connection.execute(
                 text(event_insert_sql),
-                to_audit_event_model(event, streaming_topic or ec.APP_STREAMING_AUDIT_TOPIC)
+                to_audit_event_model(event, streaming_topic or audit_settings.streaming_topic)
             )

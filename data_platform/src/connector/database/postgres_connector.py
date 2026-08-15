@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 
-from app_config import env_config as ec
+from config.database import settings as database_settings
 
 
 def create_connection():
-    return create_engine(ec.APP_DATABASE_SQLALCHEMY_URL)
+    return create_engine(database_settings.sqlalchemy_url)

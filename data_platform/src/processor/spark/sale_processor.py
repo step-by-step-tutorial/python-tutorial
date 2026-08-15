@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
-from dataset.sale import model as schema
+from dataset.sale.columns import sale_columns as schema
 from processor.base import DataProcessor
 from transformation.spark.spark_ops import (
     convert_datetime_column,
@@ -20,19 +20,19 @@ class SparkSaleProcessor(DataProcessor[DataFrame]):
     def clean(self, dataframe: DataFrame) -> DataFrame:
         df = dataframe
 
-        df = remove_duplicates(df, schema.model.order_id)
-        df = convert_numeric_column(df, schema.model.quantity, default_value=1.0)
-        df = convert_numeric_column(df, schema.model.unit_price)
-        df = fill_missing_by_group_average(df, schema.model.category, schema.model.unit_price)
-        df = fill_missing_by_column_average(df, schema.model.unit_price)
-        df = convert_datetime_column(df, schema.model.order_date)
+        df = remove_duplicates(df, schema.order_id)
+        df = convert_numeric_column(df, schema.quantity, default_value=1.0)
+        df = convert_numeric_column(df, schema.unit_price)
+        df = fill_missing_by_group_average(df, schema.category, schema.unit_price)
+        df = fill_missing_by_column_average(df, schema.unit_price)
+        df = convert_datetime_column(df, schema.order_date)
 
         return filter_dataframe(
             df=df,
             conditions=[
-                sf.col(schema.model.order_date).isNotNull(),
-                sf.col(schema.model.quantity) > 0,
-                sf.col(schema.model.unit_price) >= 0,
+                sf.col(schema.order_date).isNotNull(),
+                sf.col(schema.quantity) > 0,
+                sf.col(schema.unit_price) >= 0,
             ]
         )
 
@@ -40,26 +40,25 @@ class SparkSaleProcessor(DataProcessor[DataFrame]):
         return (
             dataframe
             .withColumn(
-                schema.model.total_price,
-                sf.round(sf.col(schema.model.quantity) * sf.col(schema.model.unit_price), 2)
+                schema.total_price,
+                sf.round(sf.col(schema.quantity) * sf.col(schema.unit_price), 2)
             )
-            .withColumn(schema.model.year, sf.year(schema.model.order_date))
-            .withColumn(schema.model.month, sf.month(schema.model.order_date))
+            .withColumn(schema.year, sf.year(schema.order_date))
+            .withColumn(schema.month, sf.month(schema.order_date))
         )
 
     def analyze(self, dataframe: DataFrame) -> Mapping[str, DataFrame]:
         return {
             "revenue_by_category": sum_by_group(
                 df=dataframe,
-                group_field=schema.model.category,
-                original_field=schema.model.total_price,
-                alias_field=schema.model.revenue
+                group_field=schema.category,
+                original_field=schema.total_price,
+                alias_field=schema.revenue
             ),
             "revenue_by_country": sum_by_group(
                 df=dataframe,
-                group_field=schema.model.country,
-                original_field=schema.model.total_price,
-                alias_field=schema.model.revenue
+                group_field=schema.country,
+                original_field=schema.total_price,
+                alias_field=schema.revenue
             )
         }
-

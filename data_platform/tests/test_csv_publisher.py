@@ -1,5 +1,5 @@
 from dataset.sale.config import SALE_DATASET
-from dataset.sale.model import SALE_COLUMNS
+from dataset.sale.columns import SALE_COLUMNS
 from ingestion.batch.csv_ingestion import CsvPublisher
 
 

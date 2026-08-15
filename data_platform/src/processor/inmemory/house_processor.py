@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import pandas as pd
 from pandas import DataFrame
 
-import dataset.house.model as schema
+from dataset.house.columns import house_columns as schema
 from processor.base import DataProcessor
 from transformation.inmemory.pandas_ops import (
     average_by_group,
@@ -20,32 +20,32 @@ from transformation.inmemory.pandas_ops import (
 )
 
 _RENAME = {
-    schema.model.area_raw: schema.model.area,
-    schema.model.room_raw: schema.model.room,
-    schema.model.parking_raw: schema.model.parking,
-    schema.model.warehouse_raw: schema.model.warehouse,
-    schema.model.elevator_raw: schema.model.elevator,
-    schema.model.address_raw: schema.model.address,
-    schema.model.price_raw: schema.model.price,
-    schema.model.price_usd_raw: schema.model.price_usd,
+    schema.area_raw: schema.area,
+    schema.room_raw: schema.room,
+    schema.parking_raw: schema.parking,
+    schema.warehouse_raw: schema.warehouse,
+    schema.elevator_raw: schema.elevator,
+    schema.address_raw: schema.address,
+    schema.price_raw: schema.price,
+    schema.price_usd_raw: schema.price_usd,
 }
 
 
 def create_listing_key(row: pd.Series) -> str:
     price_usd = (
         ""
-        if pd.isna(row[schema.model.price_usd])
-        else f"{float(row[schema.model.price_usd]):.6f}"
+        if pd.isna(row[schema.price_usd])
+        else f"{float(row[schema.price_usd]):.6f}"
     )
 
     parts = (
-        f"{float(row[schema.model.area]):.6f}",
-        str(int(row[schema.model.room])),
-        str(bool(row[schema.model.parking])).lower(),
-        str(bool(row[schema.model.warehouse])).lower(),
-        str(bool(row[schema.model.elevator])).lower(),
-        "" if pd.isna(row[schema.model.address]) else str(row[schema.model.address]),
-        f"{float(row[schema.model.price]):.6f}",
+        f"{float(row[schema.area]):.6f}",
+        str(int(row[schema.room])),
+        str(bool(row[schema.parking])).lower(),
+        str(bool(row[schema.warehouse])).lower(),
+        str(bool(row[schema.elevator])).lower(),
+        "" if pd.isna(row[schema.address]) else str(row[schema.address]),
+        f"{float(row[schema.price]):.6f}",
         price_usd,
     )
 
@@ -59,32 +59,32 @@ class InmemoryHouseProcessor(DataProcessor[DataFrame]):
 
         df = rename_columns(df, _RENAME)
 
-        df = convert_numeric_column(df, schema.model.area)
-        df = convert_numeric_column(df, schema.model.room)
-        df = convert_numeric_column(df, schema.model.price)
-        df = convert_numeric_column(df, schema.model.price_usd)
+        df = convert_numeric_column(df, schema.area)
+        df = convert_numeric_column(df, schema.room)
+        df = convert_numeric_column(df, schema.price)
+        df = convert_numeric_column(df, schema.price_usd)
 
-        df = convert_boolean_column(df, schema.model.parking)
-        df = convert_boolean_column(df, schema.model.warehouse)
-        df = convert_boolean_column(df, schema.model.elevator)
+        df = convert_boolean_column(df, schema.parking)
+        df = convert_boolean_column(df, schema.warehouse)
+        df = convert_boolean_column(df, schema.elevator)
 
-        df = strip_string_column(df, schema.model.address)
+        df = strip_string_column(df, schema.address)
 
         df = remove_rows_with_missing_values(
             df,
             [
-                schema.model.area,
-                schema.model.room,
-                schema.model.price,
+                schema.area,
+                schema.room,
+                schema.price,
             ],
         )
 
         df = reset_index(
             df=df,
             conditions=[
-                df[schema.model.area] > 0,
-                df[schema.model.room] >= 0,
-                df[schema.model.price] > 0,
+                df[schema.area] > 0,
+                df[schema.room] >= 0,
+                df[schema.price] > 0,
             ],
         )
 
@@ -97,21 +97,21 @@ class InmemoryHouseProcessor(DataProcessor[DataFrame]):
 
         df = divide_columns(
             df=df,
-            numerator_field=schema.model.price,
-            denominator_field=schema.model.area,
-            alias_field=schema.model.price_per_square_meter,
+            numerator_field=schema.price,
+            denominator_field=schema.area,
+            alias_field=schema.price_per_square_meter,
         )
 
         df = divide_columns(
             df=df,
-            numerator_field=schema.model.price_usd,
-            denominator_field=schema.model.area,
-            alias_field=schema.model.price_usd_per_square_meter,
+            numerator_field=schema.price_usd,
+            denominator_field=schema.area,
+            alias_field=schema.price_usd_per_square_meter,
         )
 
         df = create_column(
             df=df,
-            alias_field=schema.model.listing_key,
+            alias_field=schema.listing_key,
             function=create_listing_key,
         )
 
@@ -121,14 +121,14 @@ class InmemoryHouseProcessor(DataProcessor[DataFrame]):
         return {
             "average_price_by_address": average_by_group(
                 df=dataframe,
-                group_field=schema.model.address,
-                original_field=schema.model.price,
+                group_field=schema.address,
+                original_field=schema.price,
                 alias_field="average_price",
             ),
             "average_price_by_square_meter": average_by_group(
                 df=dataframe,
-                group_field=schema.model.room,
-                original_field=schema.model.price_per_square_meter,
+                group_field=schema.room,
+                original_field=schema.price_per_square_meter,
                 alias_field="average_price_by_square_meter",
             ),
         }

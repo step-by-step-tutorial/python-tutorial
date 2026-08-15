@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from dataset.sale.model import SALE_COLUMNS
+from dataset.sale.columns import SALE_COLUMNS
 from transformation.inmemory.pandas_ops import sum_by_group
 from transformation.conversion.type_converter import (
     convert_to_integer,

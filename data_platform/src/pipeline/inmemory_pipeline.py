@@ -3,7 +3,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from app_config import env_config as ec
+from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
 from dataset.definition import Dataset
 from persistence.database import database_service
@@ -14,7 +14,6 @@ from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
 from transformation.validation.schema_validator import require_columns
 from util.csv_utils import csv_to_dataframe
-from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import generate_ingestion_time
@@ -76,7 +75,8 @@ class InmemoryPipeline:
         )
 
     def store_raw_data(self) -> str:
-        data_file_path = self.dataset.source.file.resolve_path(generate_full_file_path(ec.RESOURCES_DIR))
+        file_endpoint = self.dataset.get_source("file")
+        data_file_path = file_endpoint.resolve_path(app_settings.resources_dir)
         dataframe = csv_to_dataframe(data_file_path)
         require_columns(dataframe, self.dataset.dataframe.required_columns)
 
@@ -95,7 +95,7 @@ class InmemoryPipeline:
             relative_path=raw_relative_path
         )
 
-        cleaned_dataframe = self.dataset.processors["inmemory"].clean(dataframe)
+        cleaned_dataframe = self.dataset.get_processor("inmemory").clean(dataframe)
 
         relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(
@@ -111,7 +111,7 @@ class InmemoryPipeline:
             bucket_name=datalake_settings.bucket_name,
             relative_path=cleaned_relative_path
         )
-        enriched_dataframe = self.dataset.processors["inmemory"].enrich(dataframe)
+        enriched_dataframe = self.dataset.get_processor("inmemory").enrich(dataframe)
 
         relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(
@@ -136,16 +136,16 @@ class InmemoryPipeline:
     def populate_datawarehouse(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating data warehouse with enriched data")
-        datawarehouse_service.truncate_and_populate(self.dataset.datawarehouse, enriched_dataframe)
+        datawarehouse_service.truncate_and_populate(self.dataset.get_destination("datawarehouse"), enriched_dataframe)
 
     def analyzing_via_memory(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Analyzing enriched data via memory")
-        results = self.dataset.processors["inmemory"].analyze(enriched_dataframe)
+        results = self.dataset.get_processor("inmemory").analyze(enriched_dataframe)
         show_map_of_dataframe(results)
 
     def analyzing_via_datawarehouse(self):
-        result = datawarehouse_service.analyze(self.dataset.datawarehouse)
+        result = datawarehouse_service.analyze(self.dataset.get_destination("datawarehouse"))
         logger.info("Analyzing enriched data via data warehouse")
         show_map_of_dataframe(result)
 
