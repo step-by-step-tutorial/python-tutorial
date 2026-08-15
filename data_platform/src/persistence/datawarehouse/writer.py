@@ -26,12 +26,8 @@ def _insert_rows(rows: list[tuple[Any, ...]], column_names: list[str], table_nam
 
 
 def write_pandas(datawarehouse: Any, dataframe: Any) -> None:
-    table_name = getattr(datawarehouse, "full_table_name")
-    _insert_pandas_frame(dataframe, table_name)
-
-
-def _insert_pandas_frame(dataframe: "pd.DataFrame", table_name: str) -> None:
     import pandas as pd
+    table_name = getattr(datawarehouse, "full_table_name")
 
     if not isinstance(dataframe, pd.DataFrame):
         raise TypeError("write_pandas expects a pandas DataFrame.")
