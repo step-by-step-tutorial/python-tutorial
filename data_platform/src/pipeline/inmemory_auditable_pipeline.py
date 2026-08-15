@@ -6,17 +6,17 @@ from itables import show
 from app_config import env_config as ec
 from audit.audit_service import AuditService
 from dataset.definition import Dataset
-from dataframe.validation import require_columns
-from service.database import database_service
-from service.datalake import inmemory_datalake_service
-from service import datawarehouse_service
+from persistence.database import database_service
+from persistence.datalake import datalake_service as inmemory_datalake_service
+from persistence.datawarehouse import datawarehouse_service
 from util.csv_utils import csv_to_dataframe
-from util.datalake_utils import DatalakeLayer, generate_full_path, generate_relative_path
+from persistence.datalake.path_utils import DatalakeLayer, generate_full_path, generate_relative_path
 from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
 from util.pandas_dataframe_utils import show_map_of_dataframe
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import generate_ingestion_time
+from transformation.validation.schema_validator import require_columns
 
 logger = logging.getLogger(__name__)
 

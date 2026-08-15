@@ -3,7 +3,7 @@ from collections.abc import Mapping
 
 from pandas import DataFrame
 
-from dataset.definition import DataProcessor
+from processor.base import DataProcessor
 from dataset.sale.model import model
 from util.pandas_dataframe_utils import (
     remove_duplicates,

@@ -2,7 +2,7 @@ from app_config import env_config as ec
 from sqlalchemy import text
 
 from audit.audit_event_converter import to_audit_event_model
-from factory.database_connection_factory import create_connection
+from connector.database.postgres_connector import create_connection
 from model.audit_event import AuditEvent
 from util.file_utils import read_text_file
 

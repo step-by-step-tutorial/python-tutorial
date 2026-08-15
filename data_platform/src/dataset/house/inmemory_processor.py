@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import pandas as pd
 from pandas import DataFrame
 import dataset.house.model as schema
-from dataset.definition import DataProcessor
+from processor.base import DataProcessor
 from util.pandas_dataframe_utils import (
     average_by_group,
     convert_boolean_column,

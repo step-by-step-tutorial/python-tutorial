@@ -2,9 +2,9 @@ import json
 from datetime import datetime
 from typing import Any
 
-from factory import datalake_connection_factory
+from connector.datalake import object_storage_connector as datalake_connection_factory
 from model.audit_event import AuditEvent
-from util.datalake_utils import generate_full_path
+from persistence.datalake.path_utils import generate_full_path
 
 
 def save_event(event: AuditEvent, bucket_name: str) -> str:

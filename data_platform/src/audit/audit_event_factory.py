@@ -169,8 +169,8 @@ class AuditEventFactory:
     ) -> AuditEvent:
         return AuditEvent(
             event_type=AuditEventType.DATASET_READ,
-            pipeline_name=pipeline_name,
-            pipeline_id=pipeline_id,
+            pipeline_name=pipeline_name or "",
+            pipeline_id=pipeline_id or "",
             status=AuditStatus.SUCCEEDED,
             source_system=source_system,
             source_uri=source_uri,
@@ -191,8 +191,8 @@ class AuditEventFactory:
     ) -> AuditEvent:
         return AuditEvent(
             event_type=AuditEventType.DATASET_WRITTEN,
-            pipeline_name=pipeline_name,
-            pipeline_id=pipeline_id,
+            pipeline_name=pipeline_name or "",
+            pipeline_id=pipeline_id or "",
             status=AuditStatus.SUCCEEDED,
             source_system=source_system,
             source_uri=source_uri,

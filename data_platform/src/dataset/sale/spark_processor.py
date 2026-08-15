@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 import dataset.sale.model as schema
-from dataset.definition import DataProcessor
+from processor.base import DataProcessor
 from util.spark_dataframe_utils import (
     remove_duplicates,
     convert_numeric_column,

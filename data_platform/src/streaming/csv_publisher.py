@@ -5,12 +5,13 @@ from typing import Any
 
 from app_config import env_config as ec
 from dataset.definition import Dataset
-from factory.streamming_connection_factory import create_streaming_producer
+from connector.messaging import kafka_connector as streamming_connection_factory
 from streaming.delivery import topic_on_delivery
 from util.file_utils import read_csv_file
 from util.string_utils import should_be_not_none
 
 logger = logging.getLogger(__name__)
+create_streaming_producer = streamming_connection_factory.create_producer
 
 
 class CsvPublisher:

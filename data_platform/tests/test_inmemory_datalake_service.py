@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from service.datalake import inmemory_datalake_service as system_under_test
+from persistence.datalake import datalake_service as system_under_test
 
 
 def create_connection_context(mocker):
@@ -38,7 +38,10 @@ class TestUploadParquet:
         # Given
         given_dataframe = mocker.Mock()
         given_client, _, mock_create_connection = create_connection_context(mocker)
-        mock_get_bucket_names = mocker.patch.object(system_under_test, "get_bucket_names", return_value=[])
+        mock_get_bucket_names = mocker.patch(
+            "persistence.datalake.datalake_service.get_bucket_names",
+            return_value=[],
+        )
         given_client.put_object.return_value = None
 
         # When

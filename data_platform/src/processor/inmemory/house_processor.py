@@ -1,0 +1,2 @@
+from dataset.house.inmemory_processor import InmemoryHouseProcessor
+

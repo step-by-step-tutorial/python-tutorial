@@ -4,7 +4,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
 import dataset.house.model as schema
-from dataset.definition import DataProcessor
+from processor.base import DataProcessor
 from util.spark_dataframe_utils import (
     average_by_group,
     convert_boolean_column,

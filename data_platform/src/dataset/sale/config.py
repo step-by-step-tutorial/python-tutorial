@@ -14,8 +14,8 @@ from dataset.definition import (
     Source,
     StageDatabase,
 )
-from dataset.sale.inmemory_processor import InmemorySaleProcessor
-from dataset.sale.spark_processor import SparkSaleProcessor
+from processor.inmemory.sale_processor import InmemorySaleProcessor
+from processor.distributed.sale_processor import DistributedSaleProcessor
 from model.sale_event import SaleEvent
 from util.file_utils import read_text_file
 
@@ -89,6 +89,6 @@ SALE_DATASET = Dataset(
     ),
     processors={
         "inmemory": InmemorySaleProcessor(),
-        "spark": SparkSaleProcessor()
+        "spark": DistributedSaleProcessor()
     },
 )

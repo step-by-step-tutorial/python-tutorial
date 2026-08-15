@@ -3,7 +3,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType
 
 from dataset.sale.config import SALE_DATASET
-from service import spark_service as system_under_test
+from connector.distributed import spark_service as system_under_test
 
 
 class TestReadSaleData:
@@ -17,7 +17,9 @@ class TestReadSaleData:
 
         given_session.read.option.return_value.schema.return_value.csv.return_value = given_dataframe
 
-        mock_requires_column = mocker.patch.object(system_under_test, "requires_column")
+        mock_requires_column = mocker.patch(
+            "connector.distributed.spark_service.requires_column"
+        )
         mocker.patch.object(system_under_test.spark_connection_factory, "create_connection", return_value=given_session)
 
         # When

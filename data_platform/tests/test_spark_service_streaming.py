@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType
 
 from dataset.sale.config import SALE_DATASET
-from service import spark_service as system_under_test
+from connector.distributed import spark_service as system_under_test
 
 
 class TestReadStream:
@@ -44,7 +44,10 @@ class TestConvertStream:
 
         mocker.patch.object(system_under_test.sf, "from_json", return_value=mocker.MagicMock())
         mocker.patch.object(system_under_test.sf, "col", return_value=mocker.MagicMock())
-        mock_requires_column = mocker.patch.object(system_under_test, "requires_column", return_value=None)
+        mock_requires_column = mocker.patch(
+            "connector.distributed.spark_service.requires_column",
+            return_value=None,
+        )
         given_dataframe.select.return_value.filter.return_value.select.return_value = given_converted_dataframe
 
         # When

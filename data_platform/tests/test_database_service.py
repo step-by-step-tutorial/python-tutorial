@@ -1,5 +1,5 @@
 from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Event, FileSource, Messaging, Source, StageDatabase
-from service.database import database_service as system_under_test
+from persistence.database import database_service as system_under_test
 
 
 def build_dataset() -> Dataset:
@@ -33,9 +33,8 @@ class TestPopulateStageTable:
         # Given
         given_dataset = build_dataset()
         given_dataframe = mocker.MagicMock()
-        mock_lookup_population_strategy = mocker.patch.object(
-            system_under_test,
-            "lookup_population_strategy",
+        mock_lookup_population_strategy = mocker.patch(
+            "persistence.database.database_service.lookup_population_strategy"
         )
         mock_population_function = mocker.Mock()
         mock_lookup_population_strategy.return_value = mock_population_function

@@ -5,6 +5,8 @@ from typing import Any
 import pandas as pd
 from pandas.errors import EmptyDataError
 
+from transformation.conversion.type_converter import convert_to_integer, convert_to_optional_float, normalize_optional_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,30 +29,3 @@ def csv_to_dataframe(path: Path) -> pd.DataFrame:
     return df
 
 
-def convert_to_integer(value: str | None) -> int:
-    if value is None or value.strip() == "":
-        raise ValueError("Cannot convert an empty value to integer.")
-
-    return int(value)
-
-
-def convert_to_optional_float(value: str | None) -> float | None:
-    if value is None or value.strip() == "":
-        return None
-
-    try:
-        return float(value)
-    except ValueError:
-        return None
-
-
-def normalize_optional_text(value: Any) -> str | None:
-    if value is None:
-        return None
-
-    normalized_value = str(value).strip()
-
-    if normalized_value == "":
-        return None
-
-    return normalized_value

@@ -1,27 +1,13 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Generic, TypeVar
 
+from processor.base import DataProcessor
+
 DataFrameType = TypeVar("DataFrameType")
-
-
-class DataProcessor(ABC, Generic[DataFrameType]):
-
-    @abstractmethod
-    def clean(self, dataframe: DataFrameType) -> DataFrameType:
-        pass
-
-    @abstractmethod
-    def enrich(self, dataframe: DataFrameType) -> DataFrameType:
-        pass
-
-    @abstractmethod
-    def analyze(self, dataframe: DataFrameType) -> Mapping[str, DataFrameType]:
-        pass
 
 
 @dataclass(frozen=True)

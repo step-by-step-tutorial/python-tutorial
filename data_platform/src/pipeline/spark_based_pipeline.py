@@ -6,10 +6,10 @@ from pyspark.sql import DataFrame
 
 from app_config import env_config as ec
 from dataset.definition import Dataset
-from service.database import database_service
-from service import datawarehouse_service
-from service.spark_service import SparkService
-from util.datalake_utils import DatalakeLayer, generate_relative_path
+from persistence.database import database_service
+from persistence.datawarehouse import datawarehouse_service
+from connector.distributed.spark_service import SparkService
+from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
 from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id

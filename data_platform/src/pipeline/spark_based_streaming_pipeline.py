@@ -6,11 +6,11 @@ from pyspark.sql import DataFrame
 from pyspark.sql.streaming import StreamingQuery
 
 from dataset.definition import Dataset
-from service.database import database_service
-from service import datawarehouse_service
-from service.spark_service import SparkService
-from streaming.csv_publisher import CsvPublisher
-from util.datalake_utils import DatalakeLayer, generate_relative_path, persisted_dataframes
+from persistence.database import database_service
+from persistence.datawarehouse import datawarehouse_service
+from connector.distributed.spark_service import SparkService
+from ingestion.batch.csv_ingestion import CsvPublisher
+from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path, persisted_dataframes
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import generate_ingestion_time

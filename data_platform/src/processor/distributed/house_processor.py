@@ -1,0 +1,1 @@
+from dataset.house.spark_processor import SparkHouseProcessor as DistributedHouseProcessor

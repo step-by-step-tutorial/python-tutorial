@@ -14,8 +14,8 @@ from dataset.definition import (
     Source,
     StageDatabase,
 )
-from dataset.house.inmemory_processor import InmemoryHouseProcessor
-from dataset.house.spark_processor import SparkHouseProcessor
+from processor.inmemory.house_processor import InmemoryHouseProcessor
+from processor.distributed.house_processor import DistributedHouseProcessor
 from model.house_event import HouseEvent
 from util.file_utils import read_text_file
 
@@ -83,6 +83,7 @@ HOUSE_DATASET = Dataset(
         ),
     ),
     processors={
-        "inmemory": InmemoryHouseProcessor(), "spark": SparkHouseProcessor()
+        "inmemory": InmemoryHouseProcessor(),
+        "spark": DistributedHouseProcessor(),
     },
 )
