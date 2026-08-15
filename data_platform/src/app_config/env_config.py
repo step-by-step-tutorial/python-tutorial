@@ -1,70 +1,57 @@
-import os
-from pathlib import Path
+from config.app import settings as app_settings
+from config.audit import settings as audit_settings
+from config.database import settings as database_settings
+from config.datalake import settings as datalake_settings
+from config.datawarehouse import settings as datawarehouse_settings
+from config.messaging import settings as messaging_settings
+from config.spark import settings as spark_settings
 
-DATASET_NAME = os.getenv("DATASET_NAME", "Sale")
-PIPELINE_TYPE = os.getenv("PIPELINE_TYPE", "inmemory")
+DATASET_NAME = app_settings.dataset_name
+PIPELINE_TYPE = app_settings.pipeline_type
+ROOT = app_settings.root
+RESOURCES_DIR = app_settings.resources_dir
+OUTPUT_DIR = app_settings.output_dir
+SCRIPTS_DIR = app_settings.scripts_dir
+SPARK_DIR = app_settings.spark_dir
+DATA_FILE = app_settings.data_file
 
-ROOT = os.getenv("ROOT", Path(__file__).resolve().parents[2])
-RESOURCES_DIR = os.getenv("RESOURCES_DIR", "resources")
-OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
-SCRIPTS_DIR = Path(os.getenv("SCRIPTS_DIR", "scripts"))
-SPARK_DIR = Path(os.getenv("SPARK_DIR", "spark"))
-MACHINE_LEARNING_MODEL_PATH = Path(os.getenv("MACHINE_LEARNING_MODEL_PATH", "models/sale_model.joblib"))
-DEEP_LEARNING_MODEL_PATH = Path(os.getenv("DEEP_LEARNING_MODEL_PATH", "models/sale_neural_network.pt"))
-ML_MODEL_PATH = MACHINE_LEARNING_MODEL_PATH
-DL_MODEL_PATH = DEEP_LEARNING_MODEL_PATH
+SPARK_APPLICATION_NAME = spark_settings.application_name
+SPARK_MASTER_URL = spark_settings.master_url
+SPARK_DRIVER_HOST = spark_settings.driver_host
+SPARK_DRIVER_BIND_ADDRESS = spark_settings.driver_bind_address
+SPARK_BUFFER = spark_settings.buffer
+SPARK_ACTIVE_BLOCKS = spark_settings.active_blocks
+SPARK_THREADS_MAX = spark_settings.threads_max
+SPARK_MAX_TOTAL_TASKS = spark_settings.max_total_tasks
+MAX_DIRECT_MEMORY_SIZE = spark_settings.max_direct_memory_size
 
-DATA_FILE = os.getenv("DATA_FILE", "sale.csv")
+APP_DATABASE_HOST = database_settings.host
+APP_DATABASE_PORT = database_settings.port
+APP_DATABASE_NAME = database_settings.database_name
+APP_DATABASE_USER = database_settings.user
+APP_DATABASE_PASSWORD = database_settings.password
+APP_DATABASE_DRIVER = database_settings.driver
+APP_DATABASE_JDBC_URL = database_settings.jdbc_url
+APP_DATABASE_SQLALCHEMY_URL = database_settings.sqlalchemy_url
 
-SPARK_APPLICATION_NAME = os.getenv("SPARK_APPLICATION_NAME", "data_platform")
-SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "local[*]")
-SPARK_DRIVER_HOST = os.getenv("SPARK_DRIVER_HOST", "127.0.0.1")
-SPARK_DRIVER_BIND_ADDRESS = os.getenv("SPARK_DRIVER_BIND_ADDRESS", "127.0.0.1")
-SPARK_BUFFER = os.getenv("SPARK_BUFFER", "array")
-SPARK_ACTIVE_BLOCKS = os.getenv("SPARK_ACTIVE_BLOCKS", "1")
-SPARK_THREADS_MAX = os.getenv("SPARK_THREADS_MAX", "4")
-SPARK_MAX_TOTAL_TASKS = os.getenv("SPARK_MAX_TOTAL_TASKS", "4")
-MAX_DIRECT_MEMORY_SIZE = os.getenv("MAX_DIRECT_MEMORY_SIZE", "2g")
+APP_DATALAKE_ENDPOINT = datalake_settings.endpoint
+APP_DATALAKE_ACCESS_KEY = datalake_settings.access_key
+APP_DATALAKE_SECRET_KEY = datalake_settings.secret_key
+APP_DATALAKE_BUCKET_NAME = datalake_settings.bucket_name
+APP_DATALAKE_AUDIT_BUCKET_NAME = datalake_settings.audit_bucket_name
+APP_DATALAKE_SCHEME = datalake_settings.scheme
+APP_DATALAKE_ENVIRONMENT = datalake_settings.environment
 
-APP_DATABASE_HOST = os.getenv("APP_DATABASE_HOST", "localhost")
-APP_DATABASE_PORT = int(os.getenv("APP_DATABASE_PORT", "5432"))
-APP_DATABASE_NAME = os.getenv("APP_DATABASE_NAME", "app_database")
-APP_DATABASE_USER = os.getenv("APP_DATABASE_USER", "admin")
-APP_DATABASE_PASSWORD = os.getenv("APP_DATABASE_PASSWORD", "admin")
-APP_DATABASE_DRIVER = os.getenv("APP_DATABASE_DRIVER", "org.postgresql.Driver")
-APP_DATABASE_JDBC_URL = os.getenv(
-    "APP_DATABASE_JDBC_URL",
-    f"jdbc:postgresql://{APP_DATABASE_HOST}:{APP_DATABASE_PORT}/{APP_DATABASE_NAME}"
-)
-APP_DATABASE_SQLALCHEMY_URL = os.getenv(
-    "APP_DATABASE_SQLALCHEMY_URL",
-    f"postgresql+psycopg2://{APP_DATABASE_USER}:{APP_DATABASE_PASSWORD}@{APP_DATABASE_HOST}:{APP_DATABASE_PORT}/{APP_DATABASE_NAME}")
-APP_DATALAKE_ENDPOINT = os.getenv("APP_DATALAKE_ENDPOINT", "http://localhost:9000")
-APP_DATALAKE_ACCESS_KEY = os.getenv("APP_DATALAKE_ACCESS_KEY", "admin")
-APP_DATALAKE_SECRET_KEY = os.getenv("APP_DATALAKE_SECRET_KEY", "administrator")
-APP_DATALAKE_BUCKET_NAME = os.getenv("APP_DATALAKE_BUCKET_NAME", "app-datalake")
-APP_DATALAKE_AUDIT_BUCKET_NAME = os.getenv("APP_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit")
-APP_DATALAKE_SCHEME = os.getenv("APP_DATALAKE_SCHEME", "s3a")
-APP_DATALAKE_ENVIRONMENT = os.getenv("APP_DATALAKE_ENVIRONMENT", "dev")
+APP_DATAWAREHOUSE_HOST = datawarehouse_settings.host
+APP_DATAWAREHOUSE_PORT = datawarehouse_settings.port
+APP_DATAWAREHOUSE_NAME = datawarehouse_settings.database_name
+APP_DATAWAREHOUSE_USER = datawarehouse_settings.user
+APP_DATAWAREHOUSE_PASSWORD = datawarehouse_settings.password
 
-APP_DATAWAREHOUSE_HOST = os.getenv("APP_DATAWAREHOUSE_HOST", "localhost")
-APP_DATAWAREHOUSE_PORT = int(os.getenv("APP_DATAWAREHOUSE_PORT", "8123"))
-APP_DATAWAREHOUSE_NAME = os.getenv("APP_DATAWAREHOUSE_NAME", "app_datawarehouse")
-APP_DATAWAREHOUSE_USER = os.getenv("APP_DATAWAREHOUSE_USER", "admin")
-APP_DATAWAREHOUSE_PASSWORD = os.getenv("APP_DATAWAREHOUSE_PASSWORD", "admin")
+APP_STREAMING_BOOTSTRAP_SERVERS = messaging_settings.bootstrap_servers
+APP_STREAMING_TOPIC = messaging_settings.topic
+APP_STREAMING_AUDIT_TOPIC = messaging_settings.audit_topic
+APP_STREAMING_STARTING_OFFSETS = messaging_settings.starting_offsets
+APP_STREAMING_CHECKPOINT_PATH = f"{APP_DATALAKE_SCHEME}://{APP_DATALAKE_BUCKET_NAME}/checkpoints/{APP_STREAMING_TOPIC}"
 
-APP_STREAMING_BOOTSTRAP_SERVERS = os.getenv("APP_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092")
-APP_STREAMING_TOPIC = os.getenv("APP_STREAMING_TOPIC", "sale-events")
-APP_STREAMING_AUDIT_TOPIC = os.getenv("APP_STREAMING_AUDIT_TOPIC", "sale.audit.event.v1")
-APP_STREAMING_STARTING_OFFSETS = os.getenv("APP_STREAMING_STARTING_OFFSETS", "earliest")
-APP_STREAMING_CHECKPOINT_PATH = os.getenv(
-    "APP_STREAMING_CHECKPOINT_PATH",
-    f"{APP_DATALAKE_SCHEME}://{APP_DATALAKE_BUCKET_NAME}/checkpoints/{APP_STREAMING_TOPIC}",
-)
-
-APP_AUDIT_ARCHIVE_ENABLED = os.getenv("APP_AUDIT_ARCHIVE_ENABLED", "true").lower() in {"1", "true", "yes", "on"}
-
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
-SALE_MLFLOW_TRACKING_URI = MLFLOW_TRACKING_URI
-SALE_ML_MODEL_PATH = MACHINE_LEARNING_MODEL_PATH
-SALE_DL_MODEL_PATH = DEEP_LEARNING_MODEL_PATH
+APP_AUDIT_ARCHIVE_ENABLED = audit_settings.archive_enabled

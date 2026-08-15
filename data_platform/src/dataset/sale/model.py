@@ -1,64 +1,36 @@
-from dataclasses import dataclass
+from dataset.sale.columns import SaleColumns, sale_columns as model
+from dataset.sale.spark_schema import build_schema
 
-from pyspark.sql.types import DoubleType, LongType, StringType, StructField, StructType
-
-
-@dataclass(frozen=True)
-class DatasetModel:
-    ORDER_ID: str = "order_id"
-    CUSTOMER_NAME: str = "customer_name"
-    PRODUCT_NAME: str = "product_name"
-    CATEGORY: str = "category"
-    QUANTITY: str = "quantity"
-    UNIT_PRICE: str = "unit_price"
-    ORDER_DATE: str = "order_date"
-    COUNTRY: str = "country"
-    TOTAL_PRICE: str = "total_price"
-    YEAR: str = "year"
-    MONTH: str = "month"
-    REVENUE: str = "revenue"
-
-
-model = DatasetModel()
 SALE_COLUMNS = model
 
-required_columns = frozenset[str](
+
+required_columns = frozenset(
     {
-        model.ORDER_ID,
-        model.CUSTOMER_NAME,
-        model.PRODUCT_NAME,
-        model.CATEGORY,
-        model.QUANTITY,
-        model.UNIT_PRICE,
-        model.ORDER_DATE,
-        model.COUNTRY
+        model.order_id,
+        model.customer_name,
+        model.product_name,
+        model.category,
+        model.quantity,
+        model.unit_price,
+        model.order_date,
+        model.country,
     }
 )
 
 all_columns: tuple[str, ...] = (
-    model.ORDER_ID,
-    model.CUSTOMER_NAME,
-    model.PRODUCT_NAME,
-    model.CATEGORY,
-    model.QUANTITY,
-    model.UNIT_PRICE,
-    model.ORDER_DATE,
-    model.COUNTRY,
-    model.TOTAL_PRICE,
-    model.YEAR,
-    model.MONTH,
-    model.REVENUE
+    model.order_id,
+    model.customer_name,
+    model.product_name,
+    model.category,
+    model.quantity,
+    model.unit_price,
+    model.order_date,
+    model.country,
+    model.total_price,
+    model.year,
+    model.month,
+    model.revenue,
 )
 
-struct_type = StructType(
-    [
-        StructField(model.ORDER_ID, LongType(), nullable=False),
-        StructField(model.CUSTOMER_NAME, StringType(), nullable=False),
-        StructField(model.PRODUCT_NAME, StringType(), nullable=False),
-        StructField(model.CATEGORY, StringType(), nullable=False),
-        StructField(model.QUANTITY, DoubleType(), nullable=True),
-        StructField(model.UNIT_PRICE, DoubleType(), nullable=True),
-        StructField(model.ORDER_DATE, StringType(), nullable=True),
-        StructField(model.COUNTRY, StringType(), nullable=False),
-    ]
-)
+def get_struct_type():
+    return build_schema()

@@ -15,6 +15,12 @@ def truncate_and_populate(datawarehouse: DataWarehouse, dataframe: DataFrame) ->
             query = read_text_file(query_file)
             connection.command(query)
 
+        if hasattr(dataframe, "foreachPartition"):
+            from persistence.datawarehouse.writer import write_spark
+
+            write_spark(datawarehouse, dataframe)
+            return
+
         connection.insert_df(table=datawarehouse.full_table_name, df=dataframe)
 
 

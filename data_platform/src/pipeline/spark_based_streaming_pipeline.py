@@ -4,6 +4,8 @@ from datetime import datetime
 from pyspark.sql import DataFrame
 from pyspark.sql.streaming import StreamingQuery
 
+from config.datalake import settings as datalake_settings
+from config.streaming import settings as streaming_settings
 from connector.distributed.spark_service import SparkService
 from connector.distributed.spark_runtime import persisted_dataframes
 from dataset.definition import Dataset
@@ -102,12 +104,12 @@ class SparkStreamingPipeline:
             required_columns=self.dataset.dataframe.required_columns
         )
 
-        logger.info("Starting streaming query with checkpoint location %s", self.dataset.messaging.checkpoint_path)
+        logger.info("Starting streaming query with checkpoint location %s", streaming_settings.checkpoint_path)
 
         return (
             event_dataframe.writeStream
             .foreachBatch(self.store_batch)
-            .option("checkpointLocation", self.dataset.messaging.checkpoint_path)
+            .option("checkpointLocation", streaming_settings.checkpoint_path)
             .trigger(availableNow=True)
             .start()
         )
@@ -134,7 +136,7 @@ class SparkStreamingPipeline:
 
             self.spark.append(
                 dataframe=raw_dataframe.coalesce(1),
-                bucket_name=self.dataset.datalake.bucket_name,
+                bucket_name=datalake_settings.bucket_name,
                 path=raw_relative_path
             )
 
@@ -146,7 +148,7 @@ class SparkStreamingPipeline:
 
             self.spark.append(
                 dataframe=cleaned_dataframe.coalesce(1),
-                bucket_name=self.dataset.datalake.bucket_name,
+                bucket_name=datalake_settings.bucket_name,
                 path=cleaned_relative_path
             )
 
@@ -158,7 +160,7 @@ class SparkStreamingPipeline:
 
             self.spark.append(
                 dataframe=enriched_dataframe.coalesce(1),
-                bucket_name=self.dataset.datalake.bucket_name,
+                bucket_name=datalake_settings.bucket_name,
                 path=enriched_relative_path
             )
 
@@ -166,7 +168,7 @@ class SparkStreamingPipeline:
 
     def download_enriched_data(self, relative_path: str) -> DataFrame:
         return self.spark.read(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             path=relative_path
         )
 
@@ -181,7 +183,7 @@ class SparkStreamingPipeline:
 
         datawarehouse_service.truncate_and_populate(
             self.dataset.datawarehouse,
-            enriched_dataframe.toPandas()
+            enriched_dataframe
         )
 
     def show_dataframe(self, enriched_data_path: str) -> None:

@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from dataset.sale.model import SALE_COLUMNS
+from dataset.sale.columns import SALE_COLUMNS
 from transformation.conversion.type_converter import convert_to_integer, convert_to_optional_float, \
     normalize_optional_text
 
@@ -23,12 +23,12 @@ class SaleEvent:
     @classmethod
     def from_dict(cls, row: dict[str, str]) -> "SaleEvent":
         return cls(
-            order_id=convert_to_integer(row.get(SALE_COLUMNS.ORDER_ID)),
-            customer_name=row[SALE_COLUMNS.CUSTOMER_NAME],
-            product_name=row[SALE_COLUMNS.PRODUCT_NAME],
-            category=row[SALE_COLUMNS.CATEGORY],
-            quantity=convert_to_optional_float(row.get(SALE_COLUMNS.QUANTITY)),
-            unit_price=convert_to_optional_float(row.get(SALE_COLUMNS.UNIT_PRICE)),
-            order_date=normalize_optional_text(row.get(SALE_COLUMNS.ORDER_DATE)),
-            country=row[SALE_COLUMNS.COUNTRY]
+            order_id=convert_to_integer(row.get(SALE_COLUMNS.order_id)),
+            customer_name=row[SALE_COLUMNS.customer_name],
+            product_name=row[SALE_COLUMNS.product_name],
+            category=row[SALE_COLUMNS.category],
+            quantity=convert_to_optional_float(row.get(SALE_COLUMNS.quantity)),
+            unit_price=convert_to_optional_float(row.get(SALE_COLUMNS.unit_price)),
+            order_date=normalize_optional_text(row.get(SALE_COLUMNS.order_date)),
+            country=row[SALE_COLUMNS.country]
         )

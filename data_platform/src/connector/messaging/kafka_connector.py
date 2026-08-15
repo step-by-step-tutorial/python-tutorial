@@ -1,12 +1,12 @@
 from confluent_kafka import Producer
 
-from app_config import env_config as ec
+from config.messaging import settings as messaging_settings
 
 
-def create_producer() -> Producer:
+def create_producer(bootstrap_servers: str | None = None) -> Producer:
     return Producer(
         {
-            "bootstrap.servers": ec.APP_STREAMING_BOOTSTRAP_SERVERS,
+            "bootstrap.servers": bootstrap_servers or messaging_settings.bootstrap_servers,
             "enable.idempotence": True,
             "acks": "all",
             "retries": 10,

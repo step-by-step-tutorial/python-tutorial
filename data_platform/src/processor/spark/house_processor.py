@@ -1,22 +1,20 @@
-import hashlib
 from collections.abc import Mapping
 
-import pandas as pd
-from pandas import DataFrame
+from pyspark.sql import DataFrame
+from pyspark.sql import functions as sf
 
-import dataset.house.model as schema
+from dataset.house import model as schema
 from processor.base import DataProcessor
-from transformation.inmemory.pandas_ops import (
+from transformation.spark.spark_ops import (
     average_by_group,
     convert_boolean_column,
     convert_numeric_column,
-    create_column,
+    create_hash_column,
     divide_columns,
+    filter_dataframe,
     remove_duplicates,
-    remove_rows_with_missing_values,
     rename_columns,
-    reset_index,
-    strip_string_column,
+    trim_string_column,
 )
 
 _RENAME = {
@@ -31,69 +29,35 @@ _RENAME = {
 }
 
 
-def create_listing_key(row: pd.Series) -> str:
-    price_usd = (
-        ""
-        if pd.isna(row[schema.model.price_usd])
-        else f"{float(row[schema.model.price_usd]):.6f}"
-    )
-
-    parts = (
-        f"{float(row[schema.model.area]):.6f}",
-        str(int(row[schema.model.room])),
-        str(bool(row[schema.model.parking])).lower(),
-        str(bool(row[schema.model.warehouse])).lower(),
-        str(bool(row[schema.model.elevator])).lower(),
-        "" if pd.isna(row[schema.model.address]) else str(row[schema.model.address]),
-        f"{float(row[schema.model.price]):.6f}",
-        price_usd,
-    )
-
-    return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()
-
-
-class InmemoryHouseProcessor(DataProcessor[DataFrame]):
-
+class SparkHouseProcessor(DataProcessor[DataFrame]):
     def clean(self, dataframe: DataFrame) -> DataFrame:
-        df = dataframe.copy()
+        df = dataframe
 
         df = rename_columns(df, _RENAME)
-
         df = convert_numeric_column(df, schema.model.area)
         df = convert_numeric_column(df, schema.model.room)
         df = convert_numeric_column(df, schema.model.price)
         df = convert_numeric_column(df, schema.model.price_usd)
-
-        df = convert_boolean_column(df, schema.model.parking)
-        df = convert_boolean_column(df, schema.model.warehouse)
-        df = convert_boolean_column(df, schema.model.elevator)
-
-        df = strip_string_column(df, schema.model.address)
-
-        df = remove_rows_with_missing_values(
-            df,
-            [
-                schema.model.area,
-                schema.model.room,
-                schema.model.price,
-            ],
-        )
-
-        df = reset_index(
-            df=df,
-            conditions=[
-                df[schema.model.area] > 0,
-                df[schema.model.room] >= 0,
-                df[schema.model.price] > 0,
-            ],
-        )
-
+        df = convert_boolean_column(df, schema.model.parking, default_value=False)
+        df = convert_boolean_column(df, schema.model.warehouse, default_value=False)
+        df = convert_boolean_column(df, schema.model.elevator, default_value=False)
+        df = trim_string_column(df, schema.model.address)
         df = remove_duplicates(df)
 
-        return df
+        return filter_dataframe(
+            df=df,
+            conditions=[
+                sf.col(schema.model.area).isNotNull(),
+                sf.col(schema.model.room).isNotNull(),
+                sf.col(schema.model.price).isNotNull(),
+                sf.col(schema.model.area) > 0,
+                sf.col(schema.model.room) >= 0,
+                sf.col(schema.model.price) > 0,
+            ],
+        )
 
     def enrich(self, dataframe: DataFrame) -> DataFrame:
-        df = dataframe.copy()
+        df = dataframe
 
         df = divide_columns(
             df=df,
@@ -109,13 +73,25 @@ class InmemoryHouseProcessor(DataProcessor[DataFrame]):
             alias_field=schema.model.price_usd_per_square_meter,
         )
 
-        df = create_column(
+        return create_hash_column(
             df=df,
             alias_field=schema.model.listing_key,
-            function=create_listing_key,
+            source_columns=[
+                sf.format_string("%.6f", sf.col(schema.model.area)),
+                sf.col(schema.model.room).cast("long").cast("string"),
+                sf.lower(sf.col(schema.model.parking).cast("string")),
+                sf.lower(sf.col(schema.model.warehouse).cast("string")),
+                sf.lower(sf.col(schema.model.elevator).cast("string")),
+                sf.coalesce(sf.col(schema.model.address), sf.lit("")),
+                sf.format_string("%.6f", sf.col(schema.model.price)),
+                sf.when(
+                    sf.col(schema.model.price_usd).isNull(),
+                    sf.lit(""),
+                ).otherwise(
+                    sf.format_string("%.6f", sf.col(schema.model.price_usd))
+                ),
+            ],
         )
-
-        return df
 
     def analyze(self, dataframe: DataFrame) -> Mapping[str, DataFrame]:
         return {
@@ -125,10 +101,11 @@ class InmemoryHouseProcessor(DataProcessor[DataFrame]):
                 original_field=schema.model.price,
                 alias_field="average_price",
             ),
-            "average_price_by_square_meter": average_by_group(
+            "average_price_per_square_meter_by_room": average_by_group(
                 df=dataframe,
                 group_field=schema.model.room,
                 original_field=schema.model.price_per_square_meter,
-                alias_field="average_price_by_square_meter",
+                alias_field="average_price_per_square_meter",
             ),
         }
+

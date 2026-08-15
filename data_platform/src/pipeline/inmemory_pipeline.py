@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 
 from app_config import env_config as ec
+from config.datalake import settings as datalake_settings
 from dataset.definition import Dataset
 from persistence.database import database_service
 from persistence.datalake import datalake_service as inmemory_datalake_service
@@ -82,7 +83,7 @@ class InmemoryPipeline:
         relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(
             df=dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=relative_path
         )
 
@@ -90,7 +91,7 @@ class InmemoryPipeline:
 
     def cleaning(self, raw_relative_path: str) -> str:
         dataframe = inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=raw_relative_path
         )
 
@@ -99,7 +100,7 @@ class InmemoryPipeline:
         relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(
             df=cleaned_dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=relative_path
         )
 
@@ -107,7 +108,7 @@ class InmemoryPipeline:
 
     def enriching(self, cleaned_relative_path: str) -> str:
         dataframe = inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=cleaned_relative_path
         )
         enriched_dataframe = self.dataset.processors["inmemory"].enrich(dataframe)
@@ -115,7 +116,7 @@ class InmemoryPipeline:
         relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(
             df=enriched_dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=relative_path
         )
 
@@ -123,7 +124,7 @@ class InmemoryPipeline:
 
     def download_enriched_data(self, relative_path: str) -> pd.DataFrame:
         return inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=relative_path
         )
 

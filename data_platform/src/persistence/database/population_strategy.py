@@ -2,7 +2,6 @@ from collections.abc import Callable
 from typing import Any
 
 import pandas
-import pyspark.sql
 
 from connector.database import postgres_connector as database_connection_factory
 
@@ -18,7 +17,7 @@ def populate_stage_from_pandas(dataframe: pandas.DataFrame, table_name: str) -> 
 
 
 def populate_stage_from_spark(
-        dataframe: pyspark.sql.DataFrame,
+        dataframe: Any,
         table_name: str,
         jdbc_url: str,
         user: str,
@@ -38,17 +37,27 @@ def populate_stage_from_spark(
     )
 
 
-POPULATION_FUNCTIONS: dict[type[Any], Callable[..., None]] = {
-    pandas.DataFrame: populate_stage_from_pandas,
-    pyspark.sql.DataFrame: populate_stage_from_spark,
-}
-
-
 def lookup_population_strategy(dataframe: Any) -> Callable[..., None]:
-    dataframe_type = type(dataframe)
+    if isinstance(dataframe, pandas.DataFrame):
+        return populate_stage_from_pandas
 
-    for registered_type, function in POPULATION_FUNCTIONS.items():
-        if issubclass(dataframe_type, registered_type):
-            return function
+    try:
+        from pyspark.sql import DataFrame as SparkDataFrame
+    except ModuleNotFoundError:
+        SparkDataFrame = None
 
-    raise TypeError(f"Unsupported DataFrame type: {dataframe_type.__name__}")
+    if SparkDataFrame is not None and isinstance(dataframe, SparkDataFrame):
+        return populate_stage_from_spark
+
+    raise TypeError(f"Unsupported DataFrame type: {type(dataframe).__name__}")
+
+
+try:
+    from pyspark.sql import DataFrame as SparkDataFrame
+except ModuleNotFoundError:
+    SparkDataFrame = None
+
+
+POPULATION_FUNCTIONS: dict[type[Any], Callable[..., None]] = {pandas.DataFrame: populate_stage_from_pandas}
+if SparkDataFrame is not None:
+    POPULATION_FUNCTIONS[SparkDataFrame] = populate_stage_from_spark

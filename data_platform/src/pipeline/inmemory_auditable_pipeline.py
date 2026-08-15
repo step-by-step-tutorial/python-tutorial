@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from app_config import env_config as ec
+from config.datalake import settings as datalake_settings
 from audit.audit_service import AuditService
 from dataset.definition import Dataset
 from persistence.database import database_service
@@ -118,11 +119,11 @@ class InmemoryAuditablePipeline:
         self.raw_row_count = len(dataframe)
 
         relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time, self.dataset.name.lower())
-        full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
+        full_path = generate_full_path(datalake_settings.bucket_name, relative_path)
 
         inmemory_datalake_service.upload(
             df=dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=relative_path
         )
 
@@ -164,11 +165,11 @@ class InmemoryAuditablePipeline:
         )
 
         dataframe = inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=raw_relative_path
         )
 
-        raw_full_path = generate_full_path(self.dataset.datalake.bucket_name, raw_relative_path)
+        raw_full_path = generate_full_path(datalake_settings.bucket_name, raw_relative_path)
         input_row_count = len(dataframe)
 
         self.audit_service.read_dataset(
@@ -184,11 +185,11 @@ class InmemoryAuditablePipeline:
         self.cleaned_row_count = len(cleaned_dataframe)
 
         relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time, self.dataset.name.lower())
-        cleaned_full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
+        cleaned_full_path = generate_full_path(datalake_settings.bucket_name, relative_path)
 
         inmemory_datalake_service.upload(
             df=cleaned_dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=relative_path
         )
 
@@ -231,11 +232,11 @@ class InmemoryAuditablePipeline:
         )
 
         dataframe = inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=cleaned_relative_path
         )
 
-        cleaned_full_path = generate_full_path(self.dataset.datalake.bucket_name, cleaned_relative_path)
+        cleaned_full_path = generate_full_path(datalake_settings.bucket_name, cleaned_relative_path)
         input_row_count = len(dataframe)
 
         self.audit_service.read_dataset(
@@ -251,11 +252,11 @@ class InmemoryAuditablePipeline:
         self.enriched_row_count = len(enriched_dataframe)
 
         relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
-        enriched_full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
+        enriched_full_path = generate_full_path(datalake_settings.bucket_name, relative_path)
 
         inmemory_datalake_service.upload(
             df=enriched_dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=relative_path
         )
 
@@ -297,11 +298,11 @@ class InmemoryAuditablePipeline:
         )
 
         enriched_dataframe = inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=enriched_data_path
         )
 
-        full_path = generate_full_path(self.dataset.datalake.bucket_name, enriched_data_path)
+        full_path = generate_full_path(datalake_settings.bucket_name, enriched_data_path)
         row_count = len(enriched_dataframe)
 
         self.audit_service.read_dataset(
@@ -340,11 +341,11 @@ class InmemoryAuditablePipeline:
         )
 
         enriched_dataframe = inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=enriched_data_path
         )
 
-        full_path = generate_full_path(self.dataset.datalake.bucket_name, enriched_data_path)
+        full_path = generate_full_path(datalake_settings.bucket_name, enriched_data_path)
         row_count = len(enriched_dataframe)
 
         self.audit_service.read_dataset(
@@ -383,11 +384,11 @@ class InmemoryAuditablePipeline:
         )
 
         enriched_dataframe = inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=enriched_data_path
         )
 
-        full_path = generate_full_path(self.dataset.datalake.bucket_name, enriched_data_path)
+        full_path = generate_full_path(datalake_settings.bucket_name, enriched_data_path)
 
         self.audit_service.read_dataset(
             source_system="datalake",
@@ -443,11 +444,11 @@ class InmemoryAuditablePipeline:
 
     def show_dataframe(self, enriched_data_path: str) -> None:
         enriched_dataframe = inmemory_datalake_service.download(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             relative_path=enriched_data_path
         )
 
-        full_path = generate_full_path(self.dataset.datalake.bucket_name, enriched_data_path)
+        full_path = generate_full_path(datalake_settings.bucket_name, enriched_data_path)
 
         self.audit_service.read_dataset(
             source_system="datalake",

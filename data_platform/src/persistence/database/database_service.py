@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from config.database import settings as database_settings
 from dataset.definition import Dataset
 from persistence.database.population_strategy import lookup_population_strategy
 from util.database_utils import execute_sql
@@ -12,14 +13,14 @@ def populate_stage_table(dataset: Dataset, dataframe: Any) -> None:
     population_function = lookup_population_strategy(dataframe)
     database = dataset.database
 
-    if database.connection.jdbc_url and hasattr(dataframe, "write"):
+    if hasattr(dataframe, "write"):
         population_function(
             dataframe,
             database.table_name,
-            database.connection.jdbc_url,
-            database.connection.user,
-            database.connection.password,
-            database.connection.driver,
+            database_settings.jdbc_url,
+            database_settings.user,
+            database_settings.password,
+            database_settings.driver,
         )
         return
 

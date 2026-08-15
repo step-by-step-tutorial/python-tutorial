@@ -3,7 +3,7 @@ import logging
 from functools import partial
 from typing import Any
 
-from app_config import env_config as ec
+from config.messaging import settings as messaging_settings
 from connector.messaging import kafka_connector as streaming_connection_factory
 from dataset.definition import Dataset
 from streaming.delivery import topic_on_delivery
@@ -22,10 +22,10 @@ class CsvPublisher:
         should_be_not_none(dataset.event.converter, "event_converter")
         should_be_not_none(dataset.messaging.topic, "streaming_topic")
 
-        producer = create_streaming_producer()
+        producer = create_streaming_producer(messaging_settings.bootstrap_servers)
 
         event_counter = read_csv_file(
-            path_str=dataset.source.file.file_path or str(dataset.source.file.resolve_path(ec.RESOURCES_DIR)),
+            path_str=dataset.source.file.file_path or str(dataset.source.file.resolve_path("resources")),
             consumer=partial(self.publish_row_as_event, dataset=dataset, producer=producer)
         )
 

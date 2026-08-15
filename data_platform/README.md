@@ -1,4 +1,4 @@
-# Sale Distributed Processing Platform
+# Data Engineering and Distributed Processing Platform
 
 ## Prerequisite
 

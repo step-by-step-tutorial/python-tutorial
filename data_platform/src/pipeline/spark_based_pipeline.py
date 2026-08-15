@@ -4,6 +4,7 @@ from datetime import datetime
 from pyspark.sql import DataFrame
 
 from app_config import env_config as ec
+from config.datalake import settings as datalake_settings
 from connector.distributed.spark_service import SparkService
 from dataset.definition import Dataset
 from persistence.database import database_service
@@ -84,7 +85,7 @@ class SparkPipeline:
 
         self.spark.overwrite(
             dataframe=dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             path=relative_path
         )
 
@@ -92,7 +93,7 @@ class SparkPipeline:
 
     def cleaning(self, raw_relative_path: str) -> str:
         dataframe = self.spark.read(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             path=raw_relative_path
         )
 
@@ -102,7 +103,7 @@ class SparkPipeline:
 
         self.spark.overwrite(
             dataframe=cleaned_dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             path=relative_path
         )
 
@@ -110,7 +111,7 @@ class SparkPipeline:
 
     def enriching(self, cleaned_relative_path: str) -> str:
         dataframe = self.spark.read(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             path=cleaned_relative_path
         )
 
@@ -120,7 +121,7 @@ class SparkPipeline:
 
         self.spark.overwrite(
             dataframe=enriched_dataframe,
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             path=relative_path
         )
 
@@ -128,7 +129,7 @@ class SparkPipeline:
 
     def download_enriched_data(self, relative_path: str) -> DataFrame:
         return self.spark.read(
-            bucket_name=self.dataset.datalake.bucket_name,
+            bucket_name=datalake_settings.bucket_name,
             path=relative_path
         )
 
@@ -143,7 +144,7 @@ class SparkPipeline:
 
         datawarehouse_service.truncate_and_populate(
             self.dataset.datawarehouse,
-            enriched_dataframe.toPandas()
+            enriched_dataframe
         )
 
     def analyzing_via_spark(self, enriched_data_path: str) -> None:

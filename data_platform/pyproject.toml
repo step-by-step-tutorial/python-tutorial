@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "data_platform"
 version = "1.0.0"
-description = "Integrated data engineering, machine learning and MLOps platform"
+description = "Data engineering and distributed processing platform"
 requires-python = ">=3.12"
 dependencies = [
     "pandas",
@@ -19,6 +19,7 @@ dependencies = [
     "asyncpg",
     "apache-airflow",
     "confluent-kafka",
+    "pydantic",
     #    "scikit-learn",
     #    "joblib",
     #    "torch",
@@ -33,7 +34,8 @@ dependencies = [
 test = [
     "pytest",
     "pytest-cov",
-    "pytest-html"
+    "pytest-html",
+    "pytest-mock"
 ]
 
 [tool.setuptools.packages.find]
