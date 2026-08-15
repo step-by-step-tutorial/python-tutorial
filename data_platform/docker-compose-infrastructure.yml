@@ -2,22 +2,24 @@ name: ${COMPOSE_PROJECT_NAME}
 services:
   database:
     image: ${DATABASE_IMAGE}
-    hostname: ${DATABASE_HOST}
+    hostname: ${APP_DATABASE_HOST}
     container_name: ${DATABASE_CONTAINER_NAME}
     environment:
-      POSTGRES_DB: ${DATABASE_NAME}
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${APP_DATABASE_NAME}
+      POSTGRES_USER: ${APP_DATABASE_USER}
+      POSTGRES_PASSWORD: ${APP_DATABASE_PASSWORD}
     ports:
-      - "${DATABASE_PORT}:5432"
+      - "${APP_DATABASE_PORT}:5432"
     volumes:
       - ${DATABASE_VOLUME}:/var/lib/postgresql/data
-      - ./scripts/create_postgres_tables.sql:/docker-entrypoint-initdb.d/create_postgres_tables.sql
+      - ./scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
+      - ./scripts/database/sale/create_tables.sql:/docker-entrypoint-initdb.d/20_sale_create_tables.sql
+      - ./scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready --username ${DATABASE_USER} --dbname ${DATABASE_NAME}"
+          "pg_isready --username ${APP_DATABASE_USER} --dbname ${APP_DATABASE_NAME}"
         ]
       interval: 5s
       timeout: 5s
@@ -37,8 +39,8 @@ services:
       server /data
       --console-address ":${DATALAKE_CONSOLE_PORT}"
     environment:
-      MINIO_ROOT_USER: ${DATALAKE_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${DATALAKE_SECRET_KEY}
+      MINIO_ROOT_USER: ${APP_DATALAKE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${APP_DATALAKE_SECRET_KEY}
     ports:
       - "${DATALAKE_API_PORT}:9000"
       - "${DATALAKE_CONSOLE_PORT}:9001"
@@ -63,9 +65,10 @@ services:
       datalake:
         condition: service_healthy
     environment:
-      MINIO_ROOT_USER: ${DATALAKE_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${DATALAKE_SECRET_KEY}
-      MINIO_BUCKET_NAME: ${DATALAKE_BUCKET_NAME}
+      MINIO_ROOT_USER: ${APP_DATALAKE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${APP_DATALAKE_SECRET_KEY}
+      MINIO_BUCKET_NAME: ${APP_DATALAKE_BUCKET_NAME}
+      MINIO_AUDIT_BUCKET_NAME: ${APP_DATALAKE_AUDIT_BUCKET_NAME}
     entrypoint:
       - /bin/sh
       - -c
@@ -77,25 +80,31 @@ services:
         mc mb --ignore-existing \
           "local/$${MINIO_BUCKET_NAME}"
 
+        mc mb --ignore-existing \
+          "local/$${MINIO_AUDIT_BUCKET_NAME}"
+
   datawarehouse:
     image: ${DATAWAREHOUSE_IMAGE}
-    hostname: ${DATAWAREHOUSE_HOST}
+    hostname: ${APP_DATAWAREHOUSE_HOST}
     container_name: ${DATAWAREHOUSE_CONTAINER_NAME}
     environment:
-      CLICKHOUSE_DB: ${DATAWAREHOUSE_DATABASE}
-      CLICKHOUSE_USER: ${DATAWAREHOUSE_USER}
-      CLICKHOUSE_PASSWORD: ${DATAWAREHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${APP_DATAWAREHOUSE_NAME}
+      CLICKHOUSE_USER: ${APP_DATAWAREHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${APP_DATAWAREHOUSE_PASSWORD}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${DATAWAREHOUSE_DEFAULT_ACCESS_MANAGEMENT}
     ports:
-      - "${DATAWAREHOUSE_HTTP_PORT}:8123"
+      - "${APP_DATAWAREHOUSE_PORT}:8123"
     volumes:
       - ${DATAWAREHOUSE_VOLUME}:/var/lib/clickhouse
-      - ./scripts/create_clickhouse_tables.sql:/docker-entrypoint-initdb.d/create_clickhouse_tables.sql
+      - ./scripts/datawarehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
+      - ./scripts/datawarehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
+      - ./scripts/datawarehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
+      - ./scripts/datawarehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "clickhouse-client --user ${DATAWAREHOUSE_USER} --password ${DATAWAREHOUSE_PASSWORD} --query 'SELECT 1'"
+          "clickhouse-client --user ${APP_DATAWAREHOUSE_USER} --password ${APP_DATAWAREHOUSE_PASSWORD} --query 'SELECT 1'"
         ]
       interval: 5s
       timeout: 5s
@@ -139,3 +148,4 @@ volumes:
     name: ${DATALAKE_VOLUME}
   datawarehouse_data:
     name: ${DATAWAREHOUSE_VOLUME}
+

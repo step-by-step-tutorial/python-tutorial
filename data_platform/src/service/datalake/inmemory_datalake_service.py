@@ -5,7 +5,11 @@ from uuid import uuid4
 import pandas as pd
 
 from factory import datalake_connection_factory
-from service.datalake import datalake_sale_service
+
+
+def get_bucket_names(client) -> list[str]:
+    response = client.list_buckets()
+    return [bucket["Name"] for bucket in response.get("Buckets", [])]
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +23,7 @@ def upload(df: pd.DataFrame, bucket_name: str, relative_path: str, file_extensio
     logger.info("Upload a %s file in bucket %s with path %s", file_extension, bucket_name, object_key)
 
     with datalake_connection_factory.create_connection() as client:
-        if bucket_name not in datalake_sale_service.get_bucket_names(client):
+        if bucket_name not in get_bucket_names(client):
             client.create_bucket(Bucket=bucket_name)
 
         client.put_object(Bucket=bucket_name, Key=object_key, Body=parquet_buffer)

@@ -14,9 +14,9 @@ class AuditService:
 
     def __init__(self) -> None:
         self.database = AuditDatabaseService()
-        self.streaming = AuditStreamingService(ec.STREAMING_AUDIT_TOPIC)
+        self.streaming = AuditStreamingService(ec.APP_STREAMING_AUDIT_TOPIC)
         self.log = AuditLogService()
-        self.bucket_name = ec.DATALAKE_BUCKET_NAME
+        self.bucket_name = ec.APP_DATALAKE_AUDIT_BUCKET_NAME
 
     def start_pipeline(self, pipeline_name: str, pipeline_id: str, metadata: dict | None = None) -> float:
         started_at = time.perf_counter()

@@ -7,7 +7,7 @@ from factory.streamming_connection_factory import create_audit_topic_consumer
 class AuditEventConsumer:
     def __init__(self) -> None:
         self.consumer = create_audit_topic_consumer()
-        self.consumer.subscribe([ec.STREAMING_AUDIT_TOPIC])
+        self.consumer.subscribe([ec.APP_STREAMING_AUDIT_TOPIC])
 
     def consume(self, timeout_seconds: float = 5.0) -> dict | None:
         message = self.consumer.poll(timeout_seconds)

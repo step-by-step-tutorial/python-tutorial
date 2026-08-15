@@ -11,9 +11,9 @@ from app_config import env_config as ec
 def create_connection() -> Iterator[Any]:
     client = boto3.client(
         service_name="s3",
-        endpoint_url=ec.DATALAKE_ENDPOINT,
-        aws_access_key_id=ec.DATALAKE_ACCESS_KEY,
-        aws_secret_access_key=ec.DATALAKE_SECRET_KEY,
+        endpoint_url=ec.APP_DATALAKE_ENDPOINT,
+        aws_access_key_id=ec.APP_DATALAKE_ACCESS_KEY,
+        aws_secret_access_key=ec.APP_DATALAKE_SECRET_KEY,
     )
 
     try:

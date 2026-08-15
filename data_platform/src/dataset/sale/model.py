@@ -20,6 +20,7 @@ class DatasetModel:
 
 
 model = DatasetModel()
+SALE_COLUMNS = model
 
 required_columns = frozenset[str](
     {

@@ -6,7 +6,7 @@ from factory.database_connection_factory import create_connection
 from model.audit_event import AuditEvent
 from util.file_utils import read_text_file
 
-EVENT_INSERT_SQL = read_text_file("insert_audit_event.sql")
+EVENT_INSERT_SQL = read_text_file("database/audit/insert_event.sql")
 
 
 class AuditDatabaseService:
@@ -15,5 +15,5 @@ class AuditDatabaseService:
         with create_connection().begin() as connection:
             connection.execute(
                 text(EVENT_INSERT_SQL),
-                to_audit_event_model(event, ec.STREAMING_AUDIT_TOPIC)
+                to_audit_event_model(event, ec.APP_STREAMING_AUDIT_TOPIC)
             )

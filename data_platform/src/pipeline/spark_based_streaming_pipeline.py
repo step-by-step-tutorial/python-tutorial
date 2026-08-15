@@ -5,10 +5,9 @@ from itables import show
 from pyspark.sql import DataFrame
 from pyspark.sql.streaming import StreamingQuery
 
-from app_config import env_config as ec
 from dataset.definition import Dataset
-from service.database import database_sale_service
-from service.datawarehouse import datawarehouse_sale_service
+from service.database import database_service
+from service import datawarehouse_service
 from service.spark_service import SparkService
 from streaming.csv_publisher import CsvPublisher
 from util.datalake_utils import DatalakeLayer, generate_relative_path, persisted_dataframes
@@ -46,7 +45,7 @@ class SparkStreamingPipeline:
             self.start_batch_storage().awaitTermination()
             log_line()
 
-            enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+            enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
 
             logger.info("step 3")
             self.populate_database(enriched_data_path)
@@ -78,8 +77,8 @@ class SparkStreamingPipeline:
     def publish_events(self) -> int:
         logger.info(
             "Publishing events from file %s to streaming topic %s",
-            self.dataset.file_name,
-            self.dataset.streaming_topic
+            self.dataset.source.file.file_name,
+            self.dataset.streaming.topic
         )
 
         return self.publisher.publish(self.dataset)
@@ -87,12 +86,12 @@ class SparkStreamingPipeline:
     def process_stream(self) -> str:
         self.start_batch_storage().awaitTermination()
 
-        return generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+        return generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
 
     def start_batch_storage(self) -> StreamingQuery:
-        logger.info("Creating Spark stream for streaming topic %s", self.dataset.streaming_topic)
+        logger.info("Creating Spark stream for streaming topic %s", self.dataset.streaming.topic)
 
-        dataframe = self.spark.read_stream(self.dataset.streaming_topic)
+        dataframe = self.spark.read_stream(self.dataset.streaming.topic)
 
         event_dataframe = self.spark.convert_stream(
             dataframe=dataframe,
@@ -100,12 +99,12 @@ class SparkStreamingPipeline:
             required_columns=self.dataset.required_columns
         )
 
-        logger.info("Starting streaming query with checkpoint location %s", ec.STREAMING_CHECKPOINT_PATH)
+        logger.info("Starting streaming query with checkpoint location %s", self.dataset.streaming.checkpoint_path)
 
         return (
             event_dataframe.writeStream
             .foreachBatch(self.store_batch)
-            .option("checkpointLocation", ec.STREAMING_CHECKPOINT_PATH)
+            .option("checkpointLocation", self.dataset.streaming.checkpoint_path)
             .trigger(availableNow=True)
             .start()
         )
@@ -127,7 +126,7 @@ class SparkStreamingPipeline:
 
             persisted.append(raw_dataframe)
 
-            raw_relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
+            raw_relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time, self.dataset.name.lower())
 
             self.spark.append(
                 dataframe=raw_dataframe.coalesce(1),
@@ -138,7 +137,7 @@ class SparkStreamingPipeline:
             cleaned_dataframe = self.dataset.processors["spark"].clean(raw_dataframe).persist()
             persisted.append(cleaned_dataframe)
 
-            cleaned_relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time)
+            cleaned_relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time, self.dataset.name.lower())
 
             self.spark.append(
                 dataframe=cleaned_dataframe.coalesce(1),
@@ -149,7 +148,7 @@ class SparkStreamingPipeline:
             enriched_dataframe = self.dataset.processors["spark"].enrich(cleaned_dataframe).persist()
             persisted.append(enriched_dataframe)
 
-            enriched_relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+            enriched_relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
 
             self.spark.append(
                 dataframe=enriched_dataframe.coalesce(1),
@@ -168,13 +167,13 @@ class SparkStreamingPipeline:
     def populate_database(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating operational database with enriched data")
-        database_sale_service.populate(enriched_dataframe)
+        database_service.populate(self.dataset, enriched_dataframe)
 
     def populate_datawarehouse(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating data warehouse with enriched data")
 
-        datawarehouse_sale_service.truncate_and_populate(
+        datawarehouse_service.truncate_and_populate(
             self.dataset.datawarehouse,
             enriched_dataframe.toPandas()
         )
@@ -196,7 +195,7 @@ class SparkStreamingPipeline:
             dataframe.show()
 
     def analyzing_via_datawarehouse(self) -> None:
-        results = datawarehouse_sale_service.analyze(self.dataset.datawarehouse)
+        results = datawarehouse_service.analyze(self.dataset.datawarehouse)
         logger.info("Analyzing enriched data via data warehouse")
 
         for dataframe in results.values():

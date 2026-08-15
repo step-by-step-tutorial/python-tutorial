@@ -6,9 +6,9 @@ from itables import show
 from app_config import env_config as ec
 from audit.audit_service import AuditService
 from dataset.definition import Dataset
-from service.database import database_sale_service
+from service.database import database_service
 from service.datalake import inmemory_datalake_service
-from service.datawarehouse import datawarehouse_sale_service
+from service import datawarehouse_service
 from util.csv_utils import csv_to_dataframe
 from util.datalake_utils import DatalakeLayer, generate_full_path, generate_relative_path
 from util.file_utils import generate_full_file_path
@@ -117,7 +117,7 @@ class InmemoryAuditablePipeline:
 
         self.raw_row_count = len(dataframe)
 
-        relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time)
+        relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time, self.dataset.name.lower())
         full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
 
         inmemory_datalake_service.upload(
@@ -183,7 +183,7 @@ class InmemoryAuditablePipeline:
         cleaned_dataframe = self.dataset.processors["inmemory"].clean(dataframe)
         self.cleaned_row_count = len(cleaned_dataframe)
 
-        relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time)
+        relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time, self.dataset.name.lower())
         cleaned_full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
 
         inmemory_datalake_service.upload(
@@ -250,7 +250,7 @@ class InmemoryAuditablePipeline:
         enriched_dataframe = self.dataset.processors["inmemory"].enrich(dataframe)
         self.enriched_row_count = len(enriched_dataframe)
 
-        relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time)
+        relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
         enriched_full_path = generate_full_path(self.dataset.datalake.bucket_name, relative_path)
 
         inmemory_datalake_service.upload(
@@ -314,7 +314,7 @@ class InmemoryAuditablePipeline:
         )
 
         logger.info("Populating operational database with enriched data")
-        database_sale_service.populate(enriched_dataframe)
+        database_service.populate(self.dataset, enriched_dataframe)
 
         self.audit_service.complete_task(
             pipeline_name=self.pipeline_name,
@@ -328,7 +328,7 @@ class InmemoryAuditablePipeline:
             source_system="datalake",
             source_uri=full_path,
             destination_system="postgresql",
-            destination_uri=ec.DATABASE_STAGE_TABLE_NAME
+            destination_uri=self.dataset.database.table_name
         )
 
     def populate_datawarehouse(self, enriched_data_path: str) -> None:
@@ -357,7 +357,7 @@ class InmemoryAuditablePipeline:
         )
 
         logger.info("Populating data warehouse with enriched data")
-        datawarehouse_sale_service.truncate_and_populate(self.dataset.datawarehouse, enriched_dataframe)
+        datawarehouse_service.truncate_and_populate(self.dataset.datawarehouse, enriched_dataframe)
 
         self.audit_service.complete_task(
             pipeline_name=self.pipeline_name,
@@ -371,7 +371,7 @@ class InmemoryAuditablePipeline:
             source_system="datalake",
             source_uri=full_path,
             destination_system="datawarehouse",
-            destination_uri=ec.DATAWAREHOUSE_NAME
+            destination_uri=ec.APP_DATAWAREHOUSE_NAME
         )
 
     def analyzing_via_memory(self, enriched_data_path: str) -> None:
@@ -425,7 +425,7 @@ class InmemoryAuditablePipeline:
         )
 
         logger.info("Analyzing enriched data via data warehouse")
-        results = datawarehouse_sale_service.analyze(self.dataset.datawarehouse)
+        results = datawarehouse_service.analyze(self.dataset.datawarehouse)
 
         show_map_of_dataframe(results)
 
@@ -438,7 +438,7 @@ class InmemoryAuditablePipeline:
             started_at=started_at,
             output_row_count=sum(len(result) for result in results.values()),
             source_system="datawarehouse",
-            source_uri=ec.DATAWAREHOUSE_NAME
+            source_uri=ec.APP_DATAWAREHOUSE_NAME
         )
 
     def show_dataframe(self, enriched_data_path: str) -> None:

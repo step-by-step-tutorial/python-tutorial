@@ -45,6 +45,7 @@ python -m http.server 8000 --directory ./report
 
 ```shell
 cd ./data_platform
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
 ```
 
@@ -89,7 +90,7 @@ docker rmi samanalishiri/application:latest
     * Server: database:5432
     * Username: admin
     * Password: admin
-    * Database: sale_database
+    * Database: app_database
     * =======================
     * Server: airflow-database:5432
     * Username: admin

@@ -1,7 +1,7 @@
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from app_config.dataframe_schema import SALE_COLUMNS
+from dataset.sale.model import SALE_COLUMNS
 from util.csv_utils import convert_to_integer, convert_to_optional_float, normalize_optional_text
 
 

@@ -17,4 +17,4 @@ def get_dataset(name: str) -> Dataset:
 
 
 def get_dataset_names() -> tuple[str, ...]:
-    return tuple[str](sorted(_DATASETS))
+    return tuple(sorted(_DATASETS))

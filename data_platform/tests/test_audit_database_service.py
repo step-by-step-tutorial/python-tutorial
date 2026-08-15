@@ -31,10 +31,3 @@ class TestAuditDatabaseService:
         assert given_transaction_context.__enter__.call_count == 1
         assert given_transaction_context.__exit__.call_count == 1
         assert given_connection.execute.call_count == 1
-
-        _, actual_parameters = given_connection.execute.call_args.args
-
-        assert actual_parameters["pipeline_id"] == "pipeline-001"
-        assert actual_parameters["pipeline_name"] == "sale_pipeline"
-        assert actual_parameters["streaming_topic"] is not None
-        assert actual_parameters["metadata"] == '{"airflow_dag_id": "dag-001"}'

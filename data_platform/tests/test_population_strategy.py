@@ -8,21 +8,15 @@ from service.database import database_population_strategy as system_under_test
 class TestPopulationFunctions:
 
     def test_should_contain_pandas_population_function(self) -> None:
-        # Given
-        given_dataframe_type = pandas.DataFrame
-
         # When
-        actual = system_under_test.POPULATION_FUNCTIONS[given_dataframe_type]
+        actual = system_under_test.POPULATION_FUNCTIONS[pandas.DataFrame]
 
         # Then
         assert actual is system_under_test.populate_stage_from_pandas
 
     def test_should_contain_spark_population_function(self) -> None:
-        # Given
-        given_dataframe_type = pyspark.sql.DataFrame
-
         # When
-        actual = system_under_test.POPULATION_FUNCTIONS[given_dataframe_type]
+        actual = system_under_test.POPULATION_FUNCTIONS[pyspark.sql.DataFrame]
 
         # Then
         assert actual is system_under_test.populate_stage_from_spark
@@ -40,10 +34,14 @@ class TestPopulateStageFromPandas:
         given_transaction_context.__enter__.return_value = given_database_connection
         given_database_engine.begin.return_value = given_transaction_context
 
-        mock_create_connection = mocker.patch.object(system_under_test.database_connection_factory, "create_connection", return_value=given_database_engine)
+        mock_create_connection = mocker.patch.object(
+            system_under_test.database_connection_factory,
+            "create_connection",
+            return_value=given_database_engine,
+        )
 
         # When
-        actual = system_under_test.populate_stage_from_pandas(given_dataframe)
+        actual = system_under_test.populate_stage_from_pandas(given_dataframe, "sale.example_stage")
 
         # Then
         assert actual is None
@@ -63,11 +61,15 @@ class TestPopulateStageFromPandas:
         given_database_engine.begin.return_value = given_transaction_context
         given_dataframe.to_sql.side_effect = RuntimeError(given_error_message)
 
-        mocker.patch.object(system_under_test.database_connection_factory, "create_connection", return_value=given_database_engine)
+        mocker.patch.object(
+            system_under_test.database_connection_factory,
+            "create_connection",
+            return_value=given_database_engine,
+        )
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.populate_stage_from_pandas(given_dataframe)
+            system_under_test.populate_stage_from_pandas(given_dataframe, "sale.example_stage")
 
         # Then
         assert str(actual.value) == given_error_message
@@ -86,7 +88,14 @@ class TestPopulateStageFromSpark:
         given_writer.mode.return_value = given_writer
 
         # When
-        actual = system_under_test.populate_stage_from_spark(given_dataframe)
+        actual = system_under_test.populate_stage_from_spark(
+            given_dataframe,
+            "sale.example_stage",
+            "jdbc:example",
+            "user",
+            "password",
+            "driver",
+        )
 
         # Then
         assert actual is None
@@ -109,7 +118,14 @@ class TestPopulateStageFromSpark:
 
         # When
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.populate_stage_from_spark(given_dataframe)
+            system_under_test.populate_stage_from_spark(
+                given_dataframe,
+                "sale.example_stage",
+                "jdbc:example",
+                "user",
+                "password",
+                "driver",
+            )
 
         # Then
         assert str(actual.value) == given_error_message
