@@ -9,10 +9,10 @@ from dataset.definition import (
     DataWarehouse,
     FileSource,
     Dataframe,
+    Event,
     Messaging,
     Source,
     StageDatabase,
-    Serialization,
 )
 from dataset.house.inmemory_processor import InmemoryHouseProcessor
 from dataset.house.spark_processor import SparkHouseProcessor
@@ -25,22 +25,19 @@ HOUSE_DATASET = Dataset(
         schema=schema.struct_type,
         required_columns=schema.required_columns,
     ),
-    serialization=Serialization(
-        event_key_column=schema.model.ADDRESS_RAW,
-        event_converter=lambda row: HouseEvent.from_dict(row).to_dict(),
+    event=Event(
+        key_column=schema.model.ADDRESS_RAW,
+        converter=lambda row: HouseEvent.from_dict(row).to_dict(),
     ),
     messaging=Messaging(
         server=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
         bootstrap_servers=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
         topic="house-events",
-        consumer_group="house-spark-consumer",
         checkpoint_path=f"{ec.APP_DATALAKE_SCHEME}://{ec.APP_DATALAKE_BUCKET_NAME}/checkpoints/house-events",
         starting_offsets=ec.APP_STREAMING_STARTING_OFFSETS,
     ),
     audit=Audit(
         topic=ec.APP_STREAMING_AUDIT_TOPIC,
-        consumer_group=ec.APP_STREAMING_AUDIT_CONSUMER_GROUP,
-        dead_letter_topic=ec.APP_STREAMING_AUDIT_DEAD_LETTER_TOPIC,
         archive_enabled=ec.APP_AUDIT_ARCHIVE_ENABLED,
     ),
     source=Source(
@@ -62,12 +59,6 @@ HOUSE_DATASET = Dataset(
                 jdbc_url=ec.APP_DATABASE_JDBC_URL,
             ),
             table_name="house.house_stage",
-            columns=(schema.model.LISTING_KEY, schema.model.AREA,
-                     schema.model.ROOM, schema.model.PARKING,
-                     schema.model.WAREHOUSE, schema.model.ELEVATOR,
-                     schema.model.ADDRESS, schema.model.PRICE,
-                     schema.model.PRICE_USD, schema.model.PRICE_PER_SQUARE_METER,
-                     schema.model.PRICE_USD_PER_SQUARE_METER),
             before_load_sql_files=("database/house/truncate_stage.sql",),
             after_load_sql_files=(),
         ),
@@ -82,7 +73,6 @@ HOUSE_DATASET = Dataset(
             ),
             table_name="house_table",
             full_table_name=f"{ec.APP_DATAWAREHOUSE_NAME}.house_table",
-            columns=schema.all_columns,
             preparing_sql_files={
                 "truncate": read_text_file("datawarehouse/house/truncate_datawarehouse.sql"),
             },

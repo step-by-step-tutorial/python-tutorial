@@ -16,8 +16,6 @@ class AuditService:
     def __init__(self, audit: Audit | None = None) -> None:
         audit = audit or Audit(
             topic=ec.APP_STREAMING_AUDIT_TOPIC,
-            consumer_group=ec.APP_STREAMING_AUDIT_CONSUMER_GROUP,
-            dead_letter_topic=ec.APP_STREAMING_AUDIT_DEAD_LETTER_TOPIC,
             archive_enabled=ec.APP_AUDIT_ARCHIVE_ENABLED,
         )
         self.database = AuditDatabaseService()
@@ -30,7 +28,7 @@ class AuditService:
         started_at = time.perf_counter()
         event = AuditEventFactory.create_pipeline_started_event(pipeline_name, pipeline_id, metadata)
 
-        self.database.save(event)
+        self.database.save(event, self.streaming.topic)
         self.streaming.publish(event)
         self.log.log(event)
         if self.archive_enabled:
@@ -58,7 +56,7 @@ class AuditService:
             metadata=metadata
         )
 
-        self.database.save(event)
+        self.database.save(event, self.streaming.topic)
         self.streaming.publish(event)
         self.streaming.producer.flush()
         self.log.log(event)
@@ -81,7 +79,7 @@ class AuditService:
             metadata=metadata
         )
 
-        self.database.save(event)
+        self.database.save(event, self.streaming.topic)
         self.streaming.publish(event)
         self.streaming.producer.flush()
         self.log.log(event)
@@ -105,7 +103,7 @@ class AuditService:
             metadata=metadata
         )
 
-        self.database.save(event)
+        self.database.save(event, self.streaming.topic)
         self.streaming.publish(event)
         self.log.log(event)
         if self.archive_enabled:
@@ -153,7 +151,7 @@ class AuditService:
             metadata=metadata
         )
 
-        self.database.save(event)
+        self.database.save(event, self.streaming.topic)
         self.streaming.publish(event)
         self.log.log(event)
         if self.archive_enabled:
@@ -201,7 +199,7 @@ class AuditService:
             metadata=metadata
         )
 
-        self.database.save(event)
+        self.database.save(event, self.streaming.topic)
         self.streaming.publish(event)
         self.log.log(event)
         if self.archive_enabled:

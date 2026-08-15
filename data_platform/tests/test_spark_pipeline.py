@@ -1,4 +1,4 @@
-from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Datalake, DataWarehouse, FileSource, Messaging, Serialization, Source, StageDatabase
+from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Datalake, DataWarehouse, Event, FileSource, Messaging, Source, StageDatabase
 from pipeline.spark_based_pipeline import SparkPipeline
 
 
@@ -6,7 +6,7 @@ def build_dataset() -> Dataset:
     return Dataset(
         name="example",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
-        serialization=Serialization(event_converter=lambda row: row),
+        event=Event(converter=lambda row: row),
         messaging=Messaging(topic="example-events"),
         audit=Audit(),
         processors={

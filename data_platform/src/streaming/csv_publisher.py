@@ -6,8 +6,8 @@ from typing import Any
 from app_config import env_config as ec
 from dataset.definition import Dataset
 from factory.streamming_connection_factory import create_streaming_producer
+from streaming.delivery import topic_on_delivery
 from util.file_utils import read_csv_file
-from util.streaming_utils import topic_on_delivery
 from util.string_utils import should_be_not_none
 
 logger = logging.getLogger(__name__)
@@ -17,8 +17,8 @@ class CsvPublisher:
 
     def publish(self, dataset: Dataset) -> int:
         should_be_not_none(dataset.source.file.file_name, "file_name")
-        should_be_not_none(dataset.serialization.event_key_column, "event_key_column")
-        should_be_not_none(dataset.serialization.event_converter, "event_converter")
+        should_be_not_none(dataset.event.key_column, "event_key_column")
+        should_be_not_none(dataset.event.converter, "event_converter")
         should_be_not_none(dataset.messaging.topic, "streaming_topic")
 
         producer = create_streaming_producer()
@@ -37,8 +37,8 @@ class CsvPublisher:
 
     @staticmethod
     def publish_row_as_event(row: dict[str, str], dataset: Dataset, producer: Any) -> None:
-        event = dataset.serialization.event_converter(row)
-        event_key = event.get(dataset.serialization.event_key_column)
+        event = dataset.event.converter(row)
+        event_key = event.get(dataset.event.key_column)
 
         producer.produce(
             topic=dataset.messaging.topic,

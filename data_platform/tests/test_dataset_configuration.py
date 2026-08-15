@@ -11,9 +11,9 @@ from dataset.definition import (
     Destination,
     Datalake,
     DataWarehouse,
+    Event,
     FileSource,
     Messaging,
-    Serialization,
     Source,
     StageDatabase,
 )
@@ -52,20 +52,18 @@ class TestDataset:
         given_dataset = Dataset(
             name="example",
             dataframe=Dataframe(schema=None, required_columns=frozenset({"id"})),
-            serialization=Serialization(
-                event_converter=lambda row: row,
-                event_key_column="id",
+            event=Event(
+                converter=lambda row: row,
+                key_column="id",
             ),
             messaging=Messaging(
                 server="kafka:9092",
                 bootstrap_servers="kafka:9092",
                 topic="example-events",
-                consumer_group="example-consumer",
                 checkpoint_path="/checkpoints/example",
             ),
             audit=Audit(
                 topic="example-audit",
-                consumer_group="example-audit-consumer",
             ),
             processors={},
             source=Source(
@@ -96,12 +94,10 @@ class TestDataset:
         assert given_dataset.datawarehouse.full_table_name == "app_datawarehouse.example_table"
         assert given_dataset.dataframe.schema is None
         assert given_dataset.dataframe.required_columns == frozenset({"id"})
-        assert given_dataset.serialization.event_key_column == "id"
+        assert given_dataset.event.key_column == "id"
         assert given_dataset.messaging.topic == "example-events"
-        assert given_dataset.messaging.consumer_group == "example-consumer"
         assert given_dataset.messaging.checkpoint_path == "/checkpoints/example"
         assert given_dataset.audit_topic == "example-audit"
-        assert given_dataset.audit_consumer_group == "example-audit-consumer"
 
 
 class TestDatasetRegistry:

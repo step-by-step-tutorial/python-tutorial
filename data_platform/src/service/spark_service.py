@@ -7,8 +7,8 @@ from pyspark.sql.types import StructType
 
 from app_config import env_config as ec
 from dataset.definition import Dataset
+from dataframe.validation import requires_column
 from factory import spark_connection_factory
-from util.spark_dataframe_utils import requires_column
 from util.string_utils import should_be_not_none, should_not_be_none_or_empty
 
 logger = logging.getLogger(__name__)

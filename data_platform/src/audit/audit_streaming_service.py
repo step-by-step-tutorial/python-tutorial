@@ -3,7 +3,7 @@ from functools import partial
 
 from factory.streamming_connection_factory import create_streaming_producer
 from model.audit_event import AuditEvent
-from util.streaming_utils import topic_on_delivery
+from streaming.delivery import topic_on_delivery
 
 logger = logging.getLogger(__name__)
 

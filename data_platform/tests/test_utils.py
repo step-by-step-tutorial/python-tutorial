@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from dataframe.validation import require_columns
 from dataset.sale.model import SALE_COLUMNS
 from util import csv_utils, file_utils, pandas_dataframe_utils
 
@@ -50,7 +51,7 @@ class TestPandasDataframeUtils:
 
         # When / Then
         with pytest.raises(ValueError):
-            pandas_dataframe_utils.require_columns(dataframe, frozenset({SALE_COLUMNS.ORDER_ID, SALE_COLUMNS.CATEGORY}))
+            require_columns(dataframe, frozenset({SALE_COLUMNS.ORDER_ID, SALE_COLUMNS.CATEGORY}))
 
     def test_should_sum_by_group(self) -> None:
         # Given

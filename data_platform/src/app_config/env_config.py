@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 
-from util.file_utils import generate_full_file_path
-
 DATASET_NAME = os.getenv("DATASET_NAME", "Sale")
 PIPELINE_TYPE = os.getenv("PIPELINE_TYPE", "inmemory")
 
@@ -26,7 +24,6 @@ SPARK_BUFFER = os.getenv("SPARK_BUFFER", "array")
 SPARK_ACTIVE_BLOCKS = os.getenv("SPARK_ACTIVE_BLOCKS", "1")
 SPARK_THREADS_MAX = os.getenv("SPARK_THREADS_MAX", "4")
 SPARK_MAX_TOTAL_TASKS = os.getenv("SPARK_MAX_TOTAL_TASKS", "4")
-# S3A_BUFFER_DIR = os.getenv("S3A_BUFFER_DIR", str(build_absolute_path(OUTPUT_DIR / "s3a-buffer")))
 MAX_DIRECT_MEMORY_SIZE = os.getenv("MAX_DIRECT_MEMORY_SIZE", "2g")
 
 APP_DATABASE_HOST = os.getenv("APP_DATABASE_HOST", "localhost")
@@ -58,10 +55,7 @@ APP_DATAWAREHOUSE_PASSWORD = os.getenv("APP_DATAWAREHOUSE_PASSWORD", "admin")
 
 APP_STREAMING_BOOTSTRAP_SERVERS = os.getenv("APP_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092")
 APP_STREAMING_TOPIC = os.getenv("APP_STREAMING_TOPIC", "sale-events")
-APP_STREAMING_CONSUMER_GROUP = os.getenv("APP_STREAMING_CONSUMER_GROUP", "sale-spark-consumer")
 APP_STREAMING_AUDIT_TOPIC = os.getenv("APP_STREAMING_AUDIT_TOPIC", "sale.audit.event.v1")
-APP_STREAMING_AUDIT_DEAD_LETTER_TOPIC = os.getenv("APP_STREAMING_AUDIT_DEAD_LETTER_TOPIC", "sale.audit.dead-letter.v1")
-APP_STREAMING_AUDIT_CONSUMER_GROUP = os.getenv("APP_STREAMING_AUDIT_CONSUMER_GROUP", "sale-audit-consumer")
 APP_STREAMING_STARTING_OFFSETS = os.getenv("APP_STREAMING_STARTING_OFFSETS", "earliest")
 APP_STREAMING_CHECKPOINT_PATH = os.getenv(
     "APP_STREAMING_CHECKPOINT_PATH",

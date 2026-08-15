@@ -1,4 +1,4 @@
-from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, FileSource, Messaging, Serialization, Source, StageDatabase
+from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Event, FileSource, Messaging, Source, StageDatabase
 from service.database import database_service as system_under_test
 
 
@@ -6,7 +6,7 @@ def build_dataset() -> Dataset:
     return Dataset(
         name="example",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
-        serialization=Serialization(event_converter=lambda row: row),
+        event=Event(converter=lambda row: row),
         messaging=Messaging(),
         audit=Audit(),
         processors={},

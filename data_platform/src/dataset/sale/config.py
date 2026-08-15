@@ -9,10 +9,10 @@ from dataset.definition import (
     DataWarehouse,
     FileSource,
     Dataframe,
+    Event,
     Messaging,
     Source,
     StageDatabase,
-    Serialization,
 )
 from dataset.sale.inmemory_processor import InmemorySaleProcessor
 from dataset.sale.spark_processor import SparkSaleProcessor
@@ -25,22 +25,19 @@ SALE_DATASET = Dataset(
         schema=schema.struct_type,
         required_columns=schema.required_columns,
     ),
-    serialization=Serialization(
-        event_key_column=schema.model.ORDER_ID,
-        event_converter=lambda row: SaleEvent.from_dict(row).to_dict(),
+    event=Event(
+        key_column=schema.model.ORDER_ID,
+        converter=lambda row: SaleEvent.from_dict(row).to_dict(),
     ),
     messaging=Messaging(
         server=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
         bootstrap_servers=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
         topic=ec.APP_STREAMING_TOPIC,
-        consumer_group=ec.APP_STREAMING_CONSUMER_GROUP,
         checkpoint_path=f"{ec.APP_DATALAKE_SCHEME}://{ec.APP_DATALAKE_BUCKET_NAME}/checkpoints/{ec.APP_STREAMING_TOPIC}",
         starting_offsets=ec.APP_STREAMING_STARTING_OFFSETS,
     ),
     audit=Audit(
         topic=ec.APP_STREAMING_AUDIT_TOPIC,
-        consumer_group=ec.APP_STREAMING_AUDIT_CONSUMER_GROUP,
-        dead_letter_topic=ec.APP_STREAMING_AUDIT_DEAD_LETTER_TOPIC,
         archive_enabled=ec.APP_AUDIT_ARCHIVE_ENABLED,
     ),
     source=Source(
@@ -62,7 +59,6 @@ SALE_DATASET = Dataset(
                 jdbc_url=ec.APP_DATABASE_JDBC_URL,
             ),
             table_name="sale.sale_stage",
-            columns=schema.all_columns,
             before_load_sql_files=("database/sale/truncate_stage.sql",),
             after_load_sql_files=(
                 "database/sale/upsert_customer.sql",
@@ -82,7 +78,6 @@ SALE_DATASET = Dataset(
             ),
             table_name="sale_table",
             full_table_name=f"{ec.APP_DATAWAREHOUSE_NAME}.sale_table",
-            columns=schema.all_columns,
             preparing_sql_files={
                 "truncate": read_text_file("datawarehouse/sale/truncate_datawarehouse.sql")
             },

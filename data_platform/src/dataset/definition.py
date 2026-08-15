@@ -3,7 +3,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
 from typing import Any, Generic, TypeVar
 
@@ -25,15 +24,6 @@ class DataProcessor(ABC, Generic[DataFrameType]):
         pass
 
 
-class EndpointType(str, Enum):
-    FILE = "file"
-    DATABASE = "database"
-    REST_API = "rest_api"
-    DATALAKE = "datalake"
-    DATAWAREHOUSE = "datawarehouse"
-    MESSAGING = "messaging"
-
-
 @dataclass(frozen=True)
 class Dataframe:
     schema: Any = None
@@ -41,10 +31,9 @@ class Dataframe:
 
 
 @dataclass(frozen=True)
-class Serialization:
-    event_converter: Callable[[dict[str, str]], dict[str, Any]] | None = None
-    event_key_column: str = ""
-    schema_version: str = "1"
+class Event:
+    converter: Callable[[dict[str, str]], dict[str, Any]] | None = None
+    key_column: str = ""
 
 
 @dataclass(frozen=True)
@@ -52,20 +41,13 @@ class Messaging:
     server: str = ""
     bootstrap_servers: str = ""
     topic: str = ""
-    queue: str = ""
-    consumer_group: str = ""
     checkpoint_path: str = ""
     starting_offsets: str = "earliest"
-    audit_topic: str = ""
-    audit_consumer_group: str = ""
-    dead_letter_topic: str = ""
 
 
 @dataclass(frozen=True)
 class Audit:
     topic: str = ""
-    consumer_group: str = ""
-    dead_letter_topic: str = ""
     archive_enabled: bool = True
 
 
@@ -101,8 +83,6 @@ class DatabaseConnection:
 class DatabaseEndpoint:
     connection: DatabaseConnection = field(default_factory=DatabaseConnection)
     table_name: str = ""
-    query: str = ""
-    columns: tuple[str, ...] = ()
     before_load_sql_files: tuple[str, ...] = ()
     after_load_sql_files: tuple[str, ...] = ()
 
@@ -110,26 +90,6 @@ class DatabaseEndpoint:
 @dataclass(frozen=True)
 class StageDatabase(DatabaseEndpoint):
     pass
-
-
-@dataclass(frozen=True)
-class DatabaseSource(DatabaseEndpoint):
-    pass
-
-
-@dataclass(frozen=True)
-class DatabaseDestination(DatabaseEndpoint):
-    pass
-
-
-@dataclass(frozen=True)
-class RestApiSource:
-    base_url: str = ""
-    endpoint: str = ""
-    method: str = "GET"
-    headers: Mapping[str, str] = field(default_factory=dict)
-    query_params: Mapping[str, str] = field(default_factory=dict)
-    timeout_seconds: int = 30
 
 
 @dataclass(frozen=True)
@@ -147,8 +107,7 @@ class DataWarehouse(DatabaseEndpoint):
 @dataclass(frozen=True)
 class EndpointCatalog:
     file: FileSource = field(default_factory=FileSource)
-    database: DatabaseSource = field(default_factory=DatabaseSource)
-    rest_api: RestApiSource = field(default_factory=RestApiSource)
+    database: DatabaseEndpoint = field(default_factory=DatabaseEndpoint)
     datalake: Datalake = field(default_factory=Datalake)
     datawarehouse: DataWarehouse = field(default_factory=DataWarehouse)
     messaging: Messaging = field(default_factory=Messaging)
@@ -163,7 +122,7 @@ Streaming = Messaging
 class Dataset:
     name: str
     dataframe: Dataframe = field(default_factory=Dataframe)
-    serialization: Serialization = field(default_factory=Serialization)
+    event: Event = field(default_factory=Event)
     messaging: Messaging = field(default_factory=Messaging)
     audit: Audit = field(default_factory=Audit)
     processors: dict[str, DataProcessor] = field(default_factory=dict)
@@ -180,15 +139,15 @@ class Dataset:
 
     @property
     def event_converter(self) -> Callable[[dict[str, str]], dict[str, Any]] | None:
-        return self.serialization.event_converter
+        return self.event.converter
 
     @property
     def event_key_column(self) -> str:
-        return self.serialization.event_key_column
+        return self.event.key_column
 
     @property
-    def schema_version(self) -> str:
-        return self.serialization.schema_version
+    def serialization(self) -> Event:
+        return self.event
 
     @property
     def file_name(self) -> str:
@@ -223,17 +182,9 @@ class Dataset:
         return self.messaging.topic
 
     @property
-    def streaming_consumer_group(self) -> str:
-        return self.messaging.consumer_group
-
-    @property
     def streaming_checkpoint_path(self) -> str:
         return self.messaging.checkpoint_path
 
     @property
     def audit_topic(self) -> str:
         return self.audit.topic
-
-    @property
-    def audit_consumer_group(self) -> str:
-        return self.audit.consumer_group

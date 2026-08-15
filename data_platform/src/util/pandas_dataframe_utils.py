@@ -52,16 +52,6 @@ def sum_by_group(df: pd.DataFrame, group_field: str, original_field: str, alias_
     )
 
 
-def require_columns(df: pd.DataFrame, columns: frozenset[str]) -> None:
-    if df is None or columns is None:
-        raise ValueError("required columns or dataframe is None")
-
-    missing_columns = columns.difference(df.columns)
-
-    if missing_columns:
-        raise ValueError(f"Missing required columns: {sorted(missing_columns)}")
-
-
 def rename_columns(df: DataFrame, columns: Mapping[str, str]) -> DataFrame:
     return df.rename(columns=columns)
 

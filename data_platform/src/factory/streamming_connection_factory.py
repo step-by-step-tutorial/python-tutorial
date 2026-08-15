@@ -1,4 +1,4 @@
-from confluent_kafka import Consumer, Producer
+from confluent_kafka import Producer
 
 from app_config import env_config as ec
 
@@ -11,27 +11,5 @@ def create_streaming_producer() -> Producer:
             "retries": 10,
             "delivery.timeout.ms": 120_000,
             "linger.ms": 10,
-        }
-    )
-
-def create_topic_consumer() -> Consumer:
-    return Consumer(
-        {
-            "bootstrap.servers": ec.APP_STREAMING_BOOTSTRAP_SERVERS,
-            "group.id": ec.APP_STREAMING_CONSUMER_GROUP,
-            "auto.offset.reset": "earliest",
-            "enable.auto.commit": False,
-        }
-    )
-
-
-def create_audit_topic_consumer() -> Consumer:
-    return Consumer(
-        {
-            "bootstrap.servers": ec.APP_STREAMING_BOOTSTRAP_SERVERS,
-            "group.id": ec.APP_STREAMING_AUDIT_CONSUMER_GROUP,
-            "auto.offset.reset": "earliest",
-            "enable.auto.commit": False,
-            "isolation.level": "read_committed",
         }
     )
