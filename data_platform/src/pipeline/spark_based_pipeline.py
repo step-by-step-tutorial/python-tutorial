@@ -77,7 +77,7 @@ class SparkPipeline:
     def store_raw_data(self) -> str:
         data_file_path = self.dataset.source.file.resolve_path(generate_full_file_path(ec.RESOURCES_DIR))
 
-        dataframe = self.spark.read_csv(file_path=str(data_file_path), schema=self.dataset.dataframe_schema)
+        dataframe = self.spark.read_csv(file_path=str(data_file_path), schema=self.dataset.dataframe.schema)
 
         relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time, self.dataset.name.lower())
 

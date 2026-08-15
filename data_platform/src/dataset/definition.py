@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
-from typing import Any, Generic, Mapping, TypeVar
+from typing import Any, Generic, TypeVar
 
 DataFrameType = TypeVar("DataFrameType")
 
@@ -22,6 +23,50 @@ class DataProcessor(ABC, Generic[DataFrameType]):
     @abstractmethod
     def analyze(self, dataframe: DataFrameType) -> Mapping[str, DataFrameType]:
         pass
+
+
+class EndpointType(str, Enum):
+    FILE = "file"
+    DATABASE = "database"
+    REST_API = "rest_api"
+    DATALAKE = "datalake"
+    DATAWAREHOUSE = "datawarehouse"
+    MESSAGING = "messaging"
+
+
+@dataclass(frozen=True)
+class Dataframe:
+    schema: Any = None
+    required_columns: frozenset[str] = frozenset()
+
+
+@dataclass(frozen=True)
+class Serialization:
+    event_converter: Callable[[dict[str, str]], dict[str, Any]] | None = None
+    event_key_column: str = ""
+    schema_version: str = "1"
+
+
+@dataclass(frozen=True)
+class Messaging:
+    server: str = ""
+    bootstrap_servers: str = ""
+    topic: str = ""
+    queue: str = ""
+    consumer_group: str = ""
+    checkpoint_path: str = ""
+    starting_offsets: str = "earliest"
+    audit_topic: str = ""
+    audit_consumer_group: str = ""
+    dead_letter_topic: str = ""
+
+
+@dataclass(frozen=True)
+class Audit:
+    topic: str = ""
+    consumer_group: str = ""
+    dead_letter_topic: str = ""
+    archive_enabled: bool = True
 
 
 @dataclass(frozen=True)
@@ -53,24 +98,27 @@ class DatabaseConnection:
 
 
 @dataclass(frozen=True)
-class DatabaseSource:
+class DatabaseEndpoint:
     connection: DatabaseConnection = field(default_factory=DatabaseConnection)
     table_name: str = ""
     query: str = ""
-    columns: tuple[str, ...] = ()
-
-
-@dataclass(frozen=True)
-class DatabaseDestination:
-    connection: DatabaseConnection = field(default_factory=DatabaseConnection)
-    table_name: str = ""
     columns: tuple[str, ...] = ()
     before_load_sql_files: tuple[str, ...] = ()
     after_load_sql_files: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
-class StageDatabase(DatabaseDestination):
+class StageDatabase(DatabaseEndpoint):
+    pass
+
+
+@dataclass(frozen=True)
+class DatabaseSource(DatabaseEndpoint):
+    pass
+
+
+@dataclass(frozen=True)
+class DatabaseDestination(DatabaseEndpoint):
     pass
 
 
@@ -85,73 +133,62 @@ class RestApiSource:
 
 
 @dataclass(frozen=True)
-class TopicSource:
-    server: str = ""
-    topic: str = ""
-    consumer_group: str = ""
-
-
-@dataclass(frozen=True)
-class QueueSource:
-    server: str = ""
-    queue: str = ""
-    consumer_group: str = ""
-
-
-@dataclass(frozen=True)
-class Streaming:
-    server: str = ""
-    bootstrap_servers: str = ""
-    topic: str = ""
-    consumer_group: str = ""
-    checkpoint_path: str = ""
-    starting_offsets: str = "earliest"
-    audit_topic: str = ""
-    audit_consumer_group: str = ""
-    dead_letter_topic: str = ""
-
-
-@dataclass(frozen=True)
-class Source:
-    file: FileSource = field(default_factory=FileSource)
-    database: DatabaseSource = field(default_factory=DatabaseSource)
-    rest_api: RestApiSource = field(default_factory=RestApiSource)
-    topic: TopicSource = field(default_factory=TopicSource)
-    queue: QueueSource = field(default_factory=QueueSource)
-
-
-@dataclass(frozen=True)
-class Destination:
-    database: StageDatabase = field(default_factory=StageDatabase)
-    datawarehouse: "DataWarehouse" = field(default_factory=lambda: DataWarehouse())
-    datalake: "Datalake" = field(default_factory=lambda: Datalake())
-    streaming: Streaming = field(default_factory=Streaming)
-
-
-@dataclass(frozen=True)
 class Datalake:
     bucket_name: str = ""
 
 
 @dataclass(frozen=True)
-class DataWarehouse(DatabaseDestination):
+class DataWarehouse(DatabaseEndpoint):
     full_table_name: str = ""
     preparing_sql_files: Mapping[str, str] = field(default_factory=dict)
     analysis_sql_files: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
+class EndpointCatalog:
+    file: FileSource = field(default_factory=FileSource)
+    database: DatabaseSource = field(default_factory=DatabaseSource)
+    rest_api: RestApiSource = field(default_factory=RestApiSource)
+    datalake: Datalake = field(default_factory=Datalake)
+    datawarehouse: DataWarehouse = field(default_factory=DataWarehouse)
+    messaging: Messaging = field(default_factory=Messaging)
+
+
+Source = EndpointCatalog
+Destination = EndpointCatalog
+Streaming = Messaging
+
+
+@dataclass(frozen=True)
 class Dataset:
     name: str
-    dataframe_schema: Any
-    required_columns: frozenset[str]
-    processors: dict[str, DataProcessor]
-    event_converter: Callable[[dict[str, str]], dict[str, Any]]
+    dataframe: Dataframe = field(default_factory=Dataframe)
+    serialization: Serialization = field(default_factory=Serialization)
+    messaging: Messaging = field(default_factory=Messaging)
+    audit: Audit = field(default_factory=Audit)
+    processors: dict[str, DataProcessor] = field(default_factory=dict)
     source: Source = field(default_factory=Source)
     destination: Destination = field(default_factory=Destination)
-    streaming: Streaming = field(default_factory=Streaming)
-    schema_version: str = "1"
-    event_key_column: str = ""
+
+    @property
+    def dataframe_schema(self) -> Any:
+        return self.dataframe.schema
+
+    @property
+    def required_columns(self) -> frozenset[str]:
+        return self.dataframe.required_columns
+
+    @property
+    def event_converter(self) -> Callable[[dict[str, str]], dict[str, Any]] | None:
+        return self.serialization.event_converter
+
+    @property
+    def event_key_column(self) -> str:
+        return self.serialization.event_key_column
+
+    @property
+    def schema_version(self) -> str:
+        return self.serialization.schema_version
 
     @property
     def file_name(self) -> str:
@@ -166,7 +203,7 @@ class Dataset:
         return self.destination.datalake
 
     @property
-    def database(self) -> DatabaseDestination:
+    def database(self) -> DatabaseEndpoint:
         return self.destination.database
 
     @property
@@ -178,21 +215,25 @@ class Dataset:
         return self.destination.datawarehouse
 
     @property
+    def streaming(self) -> Messaging:
+        return self.messaging
+
+    @property
     def streaming_topic(self) -> str:
-        return self.streaming.topic
+        return self.messaging.topic
 
     @property
     def streaming_consumer_group(self) -> str:
-        return self.streaming.consumer_group
+        return self.messaging.consumer_group
 
     @property
     def streaming_checkpoint_path(self) -> str:
-        return self.streaming.checkpoint_path
+        return self.messaging.checkpoint_path
 
     @property
     def audit_topic(self) -> str:
-        return self.streaming.audit_topic
+        return self.audit.topic
 
     @property
     def audit_consumer_group(self) -> str:
-        return self.streaming.audit_consumer_group
+        return self.audit.consumer_group

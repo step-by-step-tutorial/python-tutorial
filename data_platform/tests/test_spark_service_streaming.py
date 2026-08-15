@@ -21,7 +21,7 @@ class TestReadStream:
         mocker.patch.object(system_under_test.spark_connection_factory, "create_connection", return_value=given_session)
 
         # When
-        actual = system_under_test.SparkService(SALE_DATASET).read_stream(SALE_DATASET.streaming.topic)
+        actual = system_under_test.SparkService(SALE_DATASET).read_stream(SALE_DATASET.messaging.topic)
 
         # Then
         assert actual is given_dataframe

@@ -1,14 +1,15 @@
-from dataset.definition import Dataset, Destination, FileSource, Source, StageDatabase, DatabaseConnection
+from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, FileSource, Messaging, Serialization, Source, StageDatabase
 from service.database import database_service as system_under_test
 
 
 def build_dataset() -> Dataset:
     return Dataset(
         name="example",
-        dataframe_schema=None,
-        required_columns=frozenset(),
+        dataframe=Dataframe(schema=None, required_columns=frozenset()),
+        serialization=Serialization(event_converter=lambda row: row),
+        messaging=Messaging(),
+        audit=Audit(),
         processors={},
-        event_converter=lambda row: row,
         source=Source(file=FileSource(file_name="example.csv")),
         destination=Destination(
             database=StageDatabase(

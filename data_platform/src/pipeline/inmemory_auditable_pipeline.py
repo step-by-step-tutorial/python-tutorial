@@ -31,7 +31,7 @@ class InmemoryAuditablePipeline:
         self.raw_row_count = 0
         self.cleaned_row_count = 0
         self.enriched_row_count = 0
-        self.audit_service = AuditService()
+        self.audit_service = AuditService(self.dataset.audit)
 
     def run(self) -> None:
         logger.info(
@@ -113,7 +113,7 @@ class InmemoryAuditablePipeline:
 
         data_file_path = generate_full_file_path(ec.RESOURCES_DIR) / self.dataset.file_name
         dataframe = csv_to_dataframe(data_file_path)
-        require_columns(dataframe, self.dataset.required_columns)
+        require_columns(dataframe, self.dataset.dataframe.required_columns)
 
         self.raw_row_count = len(dataframe)
 

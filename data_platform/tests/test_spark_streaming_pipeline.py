@@ -1,12 +1,14 @@
-from dataset.definition import DatabaseConnection, Dataset, Destination, Datalake, DataWarehouse, FileSource, Source, StageDatabase, Streaming
+from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Datalake, DataWarehouse, FileSource, Messaging, Serialization, Source, StageDatabase
 from pipeline.spark_based_streaming_pipeline import SparkStreamingPipeline
 
 
 def build_dataset() -> Dataset:
     return Dataset(
         name="example",
-        dataframe_schema=None,
-        required_columns=frozenset(),
+        dataframe=Dataframe(schema=None, required_columns=frozenset()),
+        serialization=Serialization(event_converter=lambda row: row),
+        messaging=Messaging(topic="example-events", checkpoint_path="/tmp/checkpoint"),
+        audit=Audit(),
         processors={
             "spark": type(
                 "Processor",
@@ -18,16 +20,11 @@ def build_dataset() -> Dataset:
                 },
             )()
         },
-        event_converter=lambda row: row,
         source=Source(file=FileSource(file_name="example.csv", file_path="resources/example.csv")),
         destination=Destination(
             datalake=Datalake(bucket_name="bucket"),
             database=StageDatabase(connection=DatabaseConnection(), table_name="sale.example_stage"),
             datawarehouse=DataWarehouse(full_table_name="app_datawarehouse.example"),
-        ),
-        streaming=Streaming(
-            topic="example-events",
-            checkpoint_path="/tmp/checkpoint",
         ),
     )
 

@@ -4,15 +4,18 @@ import pytest
 
 from app_config import env_config as ec
 from dataset.definition import (
+    Audit,
+    Dataframe,
     DatabaseConnection,
     Dataset,
     Destination,
     Datalake,
     DataWarehouse,
     FileSource,
+    Messaging,
+    Serialization,
     Source,
     StageDatabase,
-    Streaming,
 )
 from dataset.house.config import HOUSE_DATASET
 from dataset.registry import get_dataset, get_dataset_names
@@ -48,10 +51,23 @@ class TestDataset:
         # Given
         given_dataset = Dataset(
             name="example",
-            dataframe_schema=None,
-            required_columns=frozenset({"id"}),
+            dataframe=Dataframe(schema=None, required_columns=frozenset({"id"})),
+            serialization=Serialization(
+                event_converter=lambda row: row,
+                event_key_column="id",
+            ),
+            messaging=Messaging(
+                server="kafka:9092",
+                bootstrap_servers="kafka:9092",
+                topic="example-events",
+                consumer_group="example-consumer",
+                checkpoint_path="/checkpoints/example",
+            ),
+            audit=Audit(
+                topic="example-audit",
+                consumer_group="example-audit-consumer",
+            ),
             processors={},
-            event_converter=lambda row: row,
             source=Source(
                 file=FileSource(
                     file_name="example.csv",
@@ -70,15 +86,6 @@ class TestDataset:
                     full_table_name="app_datawarehouse.example_table",
                 ),
             ),
-            streaming=Streaming(
-                server="kafka:9092",
-                bootstrap_servers="kafka:9092",
-                topic="example-events",
-                consumer_group="example-consumer",
-                checkpoint_path="/checkpoints/example",
-                audit_topic="example-audit",
-            ),
-            event_key_column="id",
         )
 
         # Then
@@ -87,10 +94,14 @@ class TestDataset:
         assert given_dataset.datalake.bucket_name == "example-bucket"
         assert given_dataset.database.table_name == "sale.example_stage"
         assert given_dataset.datawarehouse.full_table_name == "app_datawarehouse.example_table"
-        assert given_dataset.streaming_topic == "example-events"
-        assert given_dataset.streaming_consumer_group == "example-consumer"
-        assert given_dataset.streaming_checkpoint_path == "/checkpoints/example"
+        assert given_dataset.dataframe.schema is None
+        assert given_dataset.dataframe.required_columns == frozenset({"id"})
+        assert given_dataset.serialization.event_key_column == "id"
+        assert given_dataset.messaging.topic == "example-events"
+        assert given_dataset.messaging.consumer_group == "example-consumer"
+        assert given_dataset.messaging.checkpoint_path == "/checkpoints/example"
         assert given_dataset.audit_topic == "example-audit"
+        assert given_dataset.audit_consumer_group == "example-audit-consumer"
 
 
 class TestDatasetRegistry:
@@ -126,16 +137,18 @@ class TestConcreteDatasetConfiguration:
 
     def test_sale_dataset_should_include_streaming_server_and_source_path(self) -> None:
         # Then
-        assert SALE_DATASET.streaming.server == ec.APP_STREAMING_BOOTSTRAP_SERVERS
-        assert SALE_DATASET.streaming.bootstrap_servers == ec.APP_STREAMING_BOOTSTRAP_SERVERS
+        assert SALE_DATASET.messaging.server == ec.APP_STREAMING_BOOTSTRAP_SERVERS
+        assert SALE_DATASET.messaging.bootstrap_servers == ec.APP_STREAMING_BOOTSTRAP_SERVERS
         assert SALE_DATASET.source.file.resolve_path(ec.RESOURCES_DIR).name == "sale.csv"
         assert SALE_DATASET.database.table_name == "sale.sale_stage"
         assert SALE_DATASET.datawarehouse.full_table_name == "app_datawarehouse.sale_table"
+        assert SALE_DATASET.audit.topic == ec.APP_STREAMING_AUDIT_TOPIC
 
     def test_house_dataset_should_include_streaming_server_and_source_path(self) -> None:
         # Then
-        assert HOUSE_DATASET.streaming.server == ec.APP_STREAMING_BOOTSTRAP_SERVERS
-        assert HOUSE_DATASET.streaming.bootstrap_servers == ec.APP_STREAMING_BOOTSTRAP_SERVERS
+        assert HOUSE_DATASET.messaging.server == ec.APP_STREAMING_BOOTSTRAP_SERVERS
+        assert HOUSE_DATASET.messaging.bootstrap_servers == ec.APP_STREAMING_BOOTSTRAP_SERVERS
         assert HOUSE_DATASET.source.file.resolve_path(ec.RESOURCES_DIR).name == "house.csv"
         assert HOUSE_DATASET.database.table_name == "house.house_stage"
         assert HOUSE_DATASET.datawarehouse.full_table_name == "app_datawarehouse.house_table"
+        assert HOUSE_DATASET.audit.topic == ec.APP_STREAMING_AUDIT_TOPIC

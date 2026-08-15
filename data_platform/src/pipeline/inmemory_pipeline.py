@@ -76,7 +76,7 @@ class InmemoryPipeline:
     def store_raw_data(self) -> str:
         data_file_path = self.dataset.source.file.resolve_path(generate_full_file_path(ec.RESOURCES_DIR))
         dataframe = csv_to_dataframe(data_file_path)
-        require_columns(dataframe, self.dataset.required_columns)
+        require_columns(dataframe, self.dataset.dataframe.required_columns)
 
         relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(

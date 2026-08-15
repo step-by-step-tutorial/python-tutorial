@@ -17,8 +17,9 @@ class CsvPublisher:
 
     def publish(self, dataset: Dataset) -> int:
         should_be_not_none(dataset.source.file.file_name, "file_name")
-        should_be_not_none(dataset.event_key_column, "event_key_column")
-        should_be_not_none(dataset.streaming.topic, "streaming_topic")
+        should_be_not_none(dataset.serialization.event_key_column, "event_key_column")
+        should_be_not_none(dataset.serialization.event_converter, "event_converter")
+        should_be_not_none(dataset.messaging.topic, "streaming_topic")
 
         producer = create_streaming_producer()
 
@@ -30,17 +31,17 @@ class CsvPublisher:
         producer.poll(0)
         producer.flush()
 
-        logger.info("Published %s events to streaming topic %s", event_counter, dataset.streaming.topic)
+        logger.info("Published %s events to streaming topic %s", event_counter, dataset.messaging.topic)
 
         return event_counter
 
     @staticmethod
     def publish_row_as_event(row: dict[str, str], dataset: Dataset, producer: Any) -> None:
-        event = dataset.event_converter(row)
-        event_key = event.get(dataset.event_key_column)
+        event = dataset.serialization.event_converter(row)
+        event_key = event.get(dataset.serialization.event_key_column)
 
         producer.produce(
-            topic=dataset.streaming.topic,
+            topic=dataset.messaging.topic,
             key=None if event_key is None else str(event_key),
             value=json.dumps(event),
             on_delivery=partial(topic_on_delivery, event_id=event_key)

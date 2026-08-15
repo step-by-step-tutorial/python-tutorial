@@ -38,21 +38,21 @@ class SparkService:
             .csv(file_path)
         )
 
-        requires_column(dataframe, self.dataset.required_columns)
+        requires_column(dataframe, self.dataset.dataframe.required_columns)
 
         return dataframe
 
     def read_stream(self, topic: str) -> DataFrame:
         should_not_be_none_or_empty(topic, "topic")
 
-        bootstrap_servers = self.dataset.streaming.bootstrap_servers or self.dataset.streaming.server or ec.APP_STREAMING_BOOTSTRAP_SERVERS
+        bootstrap_servers = self.dataset.messaging.bootstrap_servers or self.dataset.messaging.server or ec.APP_STREAMING_BOOTSTRAP_SERVERS
 
         return (
             self.session.readStream
             .format("kafka")
             .option("kafka.bootstrap.servers", bootstrap_servers)
             .option("subscribe", topic)
-            .option("startingOffsets", self.dataset.streaming.starting_offsets or ec.APP_STREAMING_STARTING_OFFSETS)
+            .option("startingOffsets", self.dataset.messaging.starting_offsets or ec.APP_STREAMING_STARTING_OFFSETS)
             .option("failOnDataLoss", "false")
             .load()
         )

@@ -1,15 +1,18 @@
 import dataset.house.model as schema
 from app_config import env_config as ec
 from dataset.definition import (
+    Audit,
     DatabaseConnection,
     Dataset,
     Destination,
     Datalake,
     DataWarehouse,
     FileSource,
+    Dataframe,
+    Messaging,
     Source,
     StageDatabase,
-    Streaming,
+    Serialization,
 )
 from dataset.house.inmemory_processor import InmemoryHouseProcessor
 from dataset.house.spark_processor import SparkHouseProcessor
@@ -18,8 +21,28 @@ from util.file_utils import read_text_file
 
 HOUSE_DATASET = Dataset(
     name="house",
-    dataframe_schema=schema.struct_type,
-    required_columns=schema.required_columns,
+    dataframe=Dataframe(
+        schema=schema.struct_type,
+        required_columns=schema.required_columns,
+    ),
+    serialization=Serialization(
+        event_key_column=schema.model.ADDRESS_RAW,
+        event_converter=lambda row: HouseEvent.from_dict(row).to_dict(),
+    ),
+    messaging=Messaging(
+        server=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
+        bootstrap_servers=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
+        topic="house-events",
+        consumer_group="house-spark-consumer",
+        checkpoint_path=f"{ec.APP_DATALAKE_SCHEME}://{ec.APP_DATALAKE_BUCKET_NAME}/checkpoints/house-events",
+        starting_offsets=ec.APP_STREAMING_STARTING_OFFSETS,
+    ),
+    audit=Audit(
+        topic=ec.APP_STREAMING_AUDIT_TOPIC,
+        consumer_group=ec.APP_STREAMING_AUDIT_CONSUMER_GROUP,
+        dead_letter_topic=ec.APP_STREAMING_AUDIT_DEAD_LETTER_TOPIC,
+        archive_enabled=ec.APP_AUDIT_ARCHIVE_ENABLED,
+    ),
     source=Source(
         file=FileSource(
             file_name="house.csv",
@@ -69,17 +92,7 @@ HOUSE_DATASET = Dataset(
             },
         ),
     ),
-    streaming=Streaming(
-        server=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
-        bootstrap_servers=ec.APP_STREAMING_BOOTSTRAP_SERVERS,
-        topic="house-events",
-        consumer_group="house-spark-consumer",
-        checkpoint_path=f"{ec.APP_DATALAKE_SCHEME}://{ec.APP_DATALAKE_BUCKET_NAME}/checkpoints/house-events",
-        starting_offsets=ec.APP_STREAMING_STARTING_OFFSETS,
-    ),
     processors={
         "inmemory": InmemoryHouseProcessor(), "spark": SparkHouseProcessor()
     },
-    event_key_column=schema.model.ADDRESS_RAW,
-    event_converter=lambda row: HouseEvent.from_dict(row).to_dict(),
 )

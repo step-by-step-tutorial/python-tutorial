@@ -78,7 +78,7 @@ class SparkStreamingPipeline:
         logger.info(
             "Publishing events from file %s to streaming topic %s",
             self.dataset.source.file.file_name,
-            self.dataset.streaming.topic
+            self.dataset.messaging.topic
         )
 
         return self.publisher.publish(self.dataset)
@@ -89,22 +89,22 @@ class SparkStreamingPipeline:
         return generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
 
     def start_batch_storage(self) -> StreamingQuery:
-        logger.info("Creating Spark stream for streaming topic %s", self.dataset.streaming.topic)
+        logger.info("Creating Spark stream for streaming topic %s", self.dataset.messaging.topic)
 
-        dataframe = self.spark.read_stream(self.dataset.streaming.topic)
+        dataframe = self.spark.read_stream(self.dataset.messaging.topic)
 
         event_dataframe = self.spark.convert_stream(
             dataframe=dataframe,
-            schema=self.dataset.dataframe_schema,
-            required_columns=self.dataset.required_columns
+            schema=self.dataset.dataframe.schema,
+            required_columns=self.dataset.dataframe.required_columns
         )
 
-        logger.info("Starting streaming query with checkpoint location %s", self.dataset.streaming.checkpoint_path)
+        logger.info("Starting streaming query with checkpoint location %s", self.dataset.messaging.checkpoint_path)
 
         return (
             event_dataframe.writeStream
             .foreachBatch(self.store_batch)
-            .option("checkpointLocation", self.dataset.streaming.checkpoint_path)
+            .option("checkpointLocation", self.dataset.messaging.checkpoint_path)
             .trigger(availableNow=True)
             .start()
         )

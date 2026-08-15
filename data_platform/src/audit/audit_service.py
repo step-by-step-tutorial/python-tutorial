@@ -7,16 +7,24 @@ from audit.audit_database_service import AuditDatabaseService
 from audit.audit_event_factory import AuditEventFactory
 from audit.audit_log_service import AuditLogService
 from audit.audit_streaming_service import AuditStreamingService
+from dataset.definition import Audit
 from util.time_utils import elapsed_milliseconds
 
 
 class AuditService:
 
-    def __init__(self) -> None:
+    def __init__(self, audit: Audit | None = None) -> None:
+        audit = audit or Audit(
+            topic=ec.APP_STREAMING_AUDIT_TOPIC,
+            consumer_group=ec.APP_STREAMING_AUDIT_CONSUMER_GROUP,
+            dead_letter_topic=ec.APP_STREAMING_AUDIT_DEAD_LETTER_TOPIC,
+            archive_enabled=ec.APP_AUDIT_ARCHIVE_ENABLED,
+        )
         self.database = AuditDatabaseService()
-        self.streaming = AuditStreamingService(ec.APP_STREAMING_AUDIT_TOPIC)
+        self.streaming = AuditStreamingService(audit.topic or ec.APP_STREAMING_AUDIT_TOPIC)
         self.log = AuditLogService()
         self.bucket_name = ec.APP_DATALAKE_AUDIT_BUCKET_NAME
+        self.archive_enabled = audit.archive_enabled
 
     def start_pipeline(self, pipeline_name: str, pipeline_id: str, metadata: dict | None = None) -> float:
         started_at = time.perf_counter()
@@ -25,7 +33,8 @@ class AuditService:
         self.database.save(event)
         self.streaming.publish(event)
         self.log.log(event)
-        audit_archive_service.save_event(event, bucket_name=self.bucket_name)
+        if self.archive_enabled:
+            audit_archive_service.save_event(event, bucket_name=self.bucket_name)
 
         return started_at
 
@@ -53,7 +62,8 @@ class AuditService:
         self.streaming.publish(event)
         self.streaming.producer.flush()
         self.log.log(event)
-        audit_archive_service.save_event(event, bucket_name=self.bucket_name)
+        if self.archive_enabled:
+            audit_archive_service.save_event(event, bucket_name=self.bucket_name)
 
     def fail_pipeline(
             self,
@@ -98,7 +108,8 @@ class AuditService:
         self.database.save(event)
         self.streaming.publish(event)
         self.log.log(event)
-        audit_archive_service.save_event(event, bucket_name=self.bucket_name)
+        if self.archive_enabled:
+            audit_archive_service.save_event(event, bucket_name=self.bucket_name)
 
         return task_id, started_at
 
@@ -145,7 +156,8 @@ class AuditService:
         self.database.save(event)
         self.streaming.publish(event)
         self.log.log(event)
-        audit_archive_service.save_event(event, bucket_name=self.bucket_name)
+        if self.archive_enabled:
+            audit_archive_service.save_event(event, bucket_name=self.bucket_name)
 
     def fail_task(
             self,
@@ -192,7 +204,8 @@ class AuditService:
         self.database.save(event)
         self.streaming.publish(event)
         self.log.log(event)
-        audit_archive_service.save_event(event, bucket_name=self.bucket_name)
+        if self.archive_enabled:
+            audit_archive_service.save_event(event, bucket_name=self.bucket_name)
 
     def read_dataset(
             self,
