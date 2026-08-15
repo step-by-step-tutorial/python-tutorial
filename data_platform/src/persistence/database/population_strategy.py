@@ -18,12 +18,12 @@ def populate_stage_from_pandas(dataframe: pandas.DataFrame, table_name: str) -> 
 
 
 def populate_stage_from_spark(
-    dataframe: pyspark.sql.DataFrame,
-    table_name: str,
-    jdbc_url: str,
-    user: str,
-    password: str,
-    driver: str,
+        dataframe: pyspark.sql.DataFrame,
+        table_name: str,
+        jdbc_url: str,
+        user: str,
+        password: str,
+        driver: str,
 ) -> None:
     (
         dataframe.write

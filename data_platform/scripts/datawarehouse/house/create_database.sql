@@ -1,1 +1,2 @@
-CREATE DATABASE IF NOT EXISTS app_datawarehouse
+CREATE
+DATABASE IF NOT EXISTS app_datawarehouse

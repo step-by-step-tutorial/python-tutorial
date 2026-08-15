@@ -1,8 +1,8 @@
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType
 
-from dataset.sale.config import SALE_DATASET
 from connector.distributed import spark_service as system_under_test
+from dataset.sale.config import SALE_DATASET
 
 
 class TestReadStream:

@@ -2,7 +2,8 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from dataset.house.model import model
-from transformation.conversion.type_converter import convert_to_integer, convert_to_optional_float, normalize_optional_text
+from transformation.conversion.type_converter import convert_to_integer, convert_to_optional_float, \
+    normalize_optional_text
 
 
 @dataclass(frozen=True)

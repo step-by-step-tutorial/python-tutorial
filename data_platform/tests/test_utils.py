@@ -3,9 +3,15 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from dataframe.validation import require_columns
 from dataset.sale.model import SALE_COLUMNS
-from util import csv_utils, file_utils, pandas_dataframe_utils
+from transformation.inmemory.pandas_ops import sum_by_group
+from transformation.conversion.type_converter import (
+    convert_to_integer,
+    convert_to_optional_float,
+    normalize_optional_text,
+)
+from transformation.validation.schema_validator import require_columns
+from util import csv_utils, file_utils
 
 
 class TestFileUtils:
@@ -34,13 +40,13 @@ class TestFileUtils:
 class TestCsvUtils:
 
     def test_should_convert_integer_value(self) -> None:
-        assert csv_utils.convert_to_integer("12") == 12
+        assert convert_to_integer("12") == 12
 
     def test_should_return_none_for_blank_optional_float(self) -> None:
-        assert csv_utils.convert_to_optional_float(" ") is None
+        assert convert_to_optional_float(" ") is None
 
     def test_should_normalize_optional_text(self) -> None:
-        assert csv_utils.normalize_optional_text("  hello  ") == "hello"
+        assert normalize_optional_text("  hello  ") == "hello"
 
 
 class TestPandasDataframeUtils:
@@ -63,7 +69,7 @@ class TestPandasDataframeUtils:
         )
 
         # When
-        actual = pandas_dataframe_utils.sum_by_group(
+        actual = sum_by_group(
             dataframe,
             SALE_COLUMNS.CATEGORY,
             SALE_COLUMNS.TOTAL_PRICE,

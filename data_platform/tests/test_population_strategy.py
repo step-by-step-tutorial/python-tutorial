@@ -1,8 +1,8 @@
 import pandas
-import pytest
 import pyspark.sql
+import pytest
 
-from service.database import database_population_strategy as system_under_test
+from persistence.database import population_strategy as system_under_test
 
 
 class TestPopulationFunctions:

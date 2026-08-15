@@ -2,19 +2,19 @@ import logging
 from datetime import datetime
 
 import pandas as pd
-from itables import show
 
 from app_config import env_config as ec
 from dataset.definition import Dataset
 from persistence.database import database_service
 from persistence.datalake import datalake_service as inmemory_datalake_service
+from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
+from presentation.dataframe_display import show
+from presentation.dataframe_display import show_map_of_dataframe
 from transformation.validation.schema_validator import require_columns
 from util.csv_utils import csv_to_dataframe
-from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
 from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
-from util.pandas_dataframe_utils import show_map_of_dataframe
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import generate_ingestion_time
 

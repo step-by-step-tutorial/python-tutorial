@@ -1,12 +1,12 @@
 import logging
 from functools import partial
 
-from connector.messaging import kafka_connector as streamming_connection_factory
+from connector.messaging import kafka_connector as streaming_connection_factory
 from model.audit_event import AuditEvent
 from streaming.delivery import topic_on_delivery
 
 logger = logging.getLogger(__name__)
-create_streaming_producer = streamming_connection_factory.create_producer
+create_streaming_producer = streaming_connection_factory.create_producer
 
 
 class AuditStreamingService:

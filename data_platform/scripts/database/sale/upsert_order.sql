@@ -3,5 +3,4 @@ SELECT DISTINCT sale.sale_stage.order_id, sale.customer.customer_id, sale.sale_s
 FROM sale.sale_stage
          JOIN sale.customer
               ON sale.customer.customer_name = sale.sale_stage.customer_name
-                 AND sale.customer.country = sale.sale_stage.country
-ON CONFLICT (order_id) DO NOTHING;
+                  AND sale.customer.country = sale.sale_stage.country ON CONFLICT (order_id) DO NOTHING;

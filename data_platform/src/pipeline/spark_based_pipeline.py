@@ -1,15 +1,16 @@
 import logging
 from datetime import datetime
 
-from itables import show
 from pyspark.sql import DataFrame
 
 from app_config import env_config as ec
+from connector.distributed.spark_service import SparkService
 from dataset.definition import Dataset
 from persistence.database import database_service
-from persistence.datawarehouse import datawarehouse_service
-from connector.distributed.spark_service import SparkService
 from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
+from persistence.datawarehouse import datawarehouse_service
+from presentation.dataframe_display import show
+from presentation.dataframe_display import show_map_of_dataframe
 from util.file_utils import generate_full_file_path
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id

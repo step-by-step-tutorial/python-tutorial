@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from processor.base import DataProcessor
 

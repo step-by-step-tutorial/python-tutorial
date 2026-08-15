@@ -6,10 +6,17 @@ from uuid import UUID
 import pandas as pd
 import pytest
 
-from dataframe.validation import require_columns, requires_column
-from streaming.delivery import topic_on_delivery
-from util import csv_utils, datalake_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, time_utils
 from persistence.datalake import path_utils as datalake_path_utils
+from streaming.delivery import topic_on_delivery
+from transformation.conversion.type_converter import (
+    convert_to_integer,
+    convert_to_optional_float,
+    normalize_optional_text,
+)
+from transformation.validation.schema_validator import require_columns, requires_column
+from connector.distributed import spark_runtime
+from util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
+    time_utils
 
 
 class TestStringUtils:
@@ -57,7 +64,8 @@ class TestDatalakeUtils:
         mocker.patch.object(datalake_path_utils.ec, "APP_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit")
 
         # When
-        actual_relative = datalake_path_utils.generate_relative_path(datalake_path_utils.DatalakeLayer.RAW, given_time, "sale")
+        actual_relative = datalake_path_utils.generate_relative_path(datalake_path_utils.DatalakeLayer.RAW, given_time,
+                                                                     "sale")
         actual_full = datalake_path_utils.generate_full_path("bucket", "path/to/file")
         actual_datalake_uri = datalake_path_utils.build_datalake_uri("path/to/file")
         actual_audit_uri = datalake_path_utils.build_audit_datalake_uri("audit/file.json")
@@ -87,7 +95,7 @@ class TestDatalakeUtils:
         given_second = mocker.Mock()
 
         # When
-        with datalake_utils.persisted_dataframes() as actual:
+        with spark_runtime.persisted_dataframes() as actual:
             actual.extend([given_first, given_second])
 
         # Then
@@ -174,15 +182,15 @@ class TestDataframeValidation:
 class TestCsvUtils:
 
     def test_should_convert_and_normalize_values(self) -> None:
-        assert csv_utils.convert_to_integer("12") == 12
-        assert csv_utils.convert_to_optional_float("12.5") == 12.5
-        assert csv_utils.convert_to_optional_float(" ") is None
-        assert csv_utils.normalize_optional_text("  hello  ") == "hello"
-        assert csv_utils.normalize_optional_text(None) is None
+        assert convert_to_integer("12") == 12
+        assert convert_to_optional_float("12.5") == 12.5
+        assert convert_to_optional_float(" ") is None
+        assert normalize_optional_text("  hello  ") == "hello"
+        assert normalize_optional_text(None) is None
 
     def test_should_reject_empty_integer_values(self) -> None:
         with pytest.raises(ValueError):
-            csv_utils.convert_to_integer("")
+            convert_to_integer("")
 
     def test_should_raise_on_missing_or_invalid_csv(self, tmp_path: Path) -> None:
         # Given
@@ -199,13 +207,13 @@ class TestCsvUtils:
 
     def test_should_convert_invalid_integer_values(self) -> None:
         with pytest.raises(ValueError):
-            csv_utils.convert_to_integer("abc")
+            convert_to_integer("abc")
 
     def test_should_return_none_for_invalid_optional_float(self) -> None:
-        assert csv_utils.convert_to_optional_float("not-a-number") is None
+        assert convert_to_optional_float("not-a-number") is None
 
     def test_should_normalize_blank_text_to_none(self) -> None:
-        assert csv_utils.normalize_optional_text("   ") is None
+        assert normalize_optional_text("   ") is None
 
     def test_should_raise_for_missing_column_only_csv(self, tmp_path: Path) -> None:
         # Given

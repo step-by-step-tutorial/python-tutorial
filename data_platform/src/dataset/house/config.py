@@ -14,11 +14,9 @@ from dataset.definition import (
     Source,
     StageDatabase,
 )
-from processor.inmemory.house_processor import InmemoryHouseProcessor
-from processor.distributed.house_processor import DistributedHouseProcessor
 from model.house_event import HouseEvent
-from util.file_utils import read_text_file
-
+from processor.distributed.house_processor import DistributedHouseProcessor
+from processor.inmemory.house_processor import InmemoryHouseProcessor
 HOUSE_DATASET = Dataset(
     name="house",
     dataframe=Dataframe(
@@ -74,11 +72,11 @@ HOUSE_DATASET = Dataset(
             table_name="house_table",
             full_table_name=f"{ec.APP_DATAWAREHOUSE_NAME}.house_table",
             preparing_sql_files={
-                "truncate": read_text_file("datawarehouse/house/truncate_datawarehouse.sql"),
+                "truncate": "datawarehouse/house/truncate_datawarehouse.sql",
             },
             analysis_sql_files={
-                "average_price_by_address": read_text_file("datawarehouse/house/select_average_price_by_address.sql"),
-                "average_price_per_square_meter_by_room": read_text_file("datawarehouse/house/select_average_price_per_square_meter_by_room.sql"),
+                "average_price_by_address": "datawarehouse/house/select_average_price_by_address.sql",
+                "average_price_per_square_meter_by_room": "datawarehouse/house/select_average_price_per_square_meter_by_room.sql",
             },
         ),
     ),

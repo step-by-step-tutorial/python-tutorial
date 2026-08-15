@@ -1,4 +1,5 @@
 import traceback
+
 from model.audit_event import AuditEvent, AuditEventType, AuditStatus
 
 
@@ -37,7 +38,8 @@ class AuditEventFactory:
         )
 
     @staticmethod
-    def create_pipeline_failed_event(pipeline_name: str, pipeline_id: str, duration_ms: int, error: Exception, metadata: dict | None = None) -> AuditEvent:
+    def create_pipeline_failed_event(pipeline_name: str, pipeline_id: str, duration_ms: int, error: Exception,
+                                     metadata: dict | None = None) -> AuditEvent:
         return AuditEvent(
             event_type=AuditEventType.PIPELINE_FAILED,
             pipeline_name=pipeline_name,

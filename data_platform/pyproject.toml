@@ -19,14 +19,14 @@ dependencies = [
     "asyncpg",
     "apache-airflow",
     "confluent-kafka",
-#    "scikit-learn",
-#    "joblib",
-#    "torch",
-#    "mlflow",
-#    "fastapi",
-#    "uvicorn",
-#    "pydantic",
-#    "prometheus-client"
+    #    "scikit-learn",
+    #    "joblib",
+    #    "torch",
+    #    "mlflow",
+    #    "fastapi",
+    #    "uvicorn",
+    #    "pydantic",
+    #    "prometheus-client"
 ]
 
 [project.optional-dependencies]

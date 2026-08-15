@@ -1,4 +1,5 @@
-from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Event, FileSource, Messaging, Source, StageDatabase
+from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Event, FileSource, Messaging, \
+    Source, StageDatabase
 from persistence.database import database_service as system_under_test
 
 

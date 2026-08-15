@@ -14,11 +14,9 @@ from dataset.definition import (
     Source,
     StageDatabase,
 )
-from processor.inmemory.sale_processor import InmemorySaleProcessor
-from processor.distributed.sale_processor import DistributedSaleProcessor
 from model.sale_event import SaleEvent
-from util.file_utils import read_text_file
-
+from processor.distributed.sale_processor import DistributedSaleProcessor
+from processor.inmemory.sale_processor import InmemorySaleProcessor
 SALE_DATASET = Dataset(
     name="Sale",
     dataframe=Dataframe(
@@ -79,11 +77,11 @@ SALE_DATASET = Dataset(
             table_name="sale_table",
             full_table_name=f"{ec.APP_DATAWAREHOUSE_NAME}.sale_table",
             preparing_sql_files={
-                "truncate": read_text_file("datawarehouse/sale/truncate_datawarehouse.sql")
+                "truncate": "datawarehouse/sale/truncate_datawarehouse.sql"
             },
             analysis_sql_files={
-                "revenue_by_category": read_text_file("datawarehouse/sale/select_revenue_by_category.sql"),
-                "revenue_by_country": read_text_file("datawarehouse/sale/select_revenue_by_country.sql"),
+                "revenue_by_category": "datawarehouse/sale/select_revenue_by_category.sql",
+                "revenue_by_country": "datawarehouse/sale/select_revenue_by_country.sql",
             },
         ),
     ),

@@ -1,4 +1,5 @@
-from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Datalake, DataWarehouse, Event, FileSource, Messaging, Source, StageDatabase
+from dataset.definition import Audit, Dataframe, DatabaseConnection, Dataset, Destination, Datalake, DataWarehouse, \
+    Event, FileSource, Messaging, Source, StageDatabase
 from pipeline.inmemory_pipeline import InmemoryPipeline
 
 

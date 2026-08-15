@@ -1,21 +1,19 @@
 import logging
-from collections.abc import Iterable, Mapping, Sequence, Callable
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import reduce
 from operator import and_
 
 import pandas as pd
-from itables import show
 from pandas import DataFrame
 
 logger = logging.getLogger(__name__)
 
 
 def convert_numeric_column(df: DataFrame, column: str, default_value: float | int | None = None) -> DataFrame:
-    if default_value is None:
-        pd.to_numeric(df[column], errors="coerce")
-    else:
-        df[column] = pd.to_numeric(df[column], errors="coerce").fillna(default_value)
-
+    converted = pd.to_numeric(df[column], errors="coerce")
+    if default_value is not None:
+        converted = converted.fillna(default_value)
+    df[column] = converted
     return df
 
 
@@ -72,7 +70,6 @@ def convert_boolean_column(df: DataFrame, column: str, default_value: bool = Fal
         .fillna(default_value)
         .astype(bool)
     )
-
     return df
 
 
@@ -86,11 +83,11 @@ def remove_rows_with_missing_values(df: DataFrame, columns: Sequence[str]) -> Da
 
 
 def divide_columns(
-        df: DataFrame,
-        numerator_field: str,
-        denominator_field: str,
-        alias_field: str,
-        decimal_places: int = 2
+    df: DataFrame,
+    numerator_field: str,
+    denominator_field: str,
+    alias_field: str,
+    decimal_places: int = 2,
 ) -> DataFrame:
     df[alias_field] = (df[numerator_field] / df[denominator_field]).round(decimal_places)
     return df
@@ -101,12 +98,7 @@ def create_column(df: DataFrame, alias_field: str, function: Callable[[pd.Series
     return df
 
 
-def average_by_group(
-        df: DataFrame,
-        group_field: str,
-        original_field: str,
-        alias_field: str
-) -> DataFrame:
+def average_by_group(df: DataFrame, group_field: str, original_field: str, alias_field: str) -> DataFrame:
     return (
         df.groupby(group_field, as_index=False)[original_field]
         .mean()
@@ -116,5 +108,5 @@ def average_by_group(
 
 def show_map_of_dataframe(map_of_dataframe: Mapping[str, DataFrame]) -> None:
     for key, value in map_of_dataframe.items():
-        logger.info(f"{key}")
-        show(value)
+        logger.info("%s", key)
+        print(value)

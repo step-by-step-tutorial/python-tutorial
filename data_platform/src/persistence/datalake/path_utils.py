@@ -1,10 +1,6 @@
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC
 from datetime import datetime
 from enum import StrEnum
-
-from pyspark.sql import DataFrame
 
 from app_config import env_config as ec
 
@@ -47,14 +43,3 @@ def build_audit_datalake_uri(object_key: str) -> str:
 
 def build_datalake_uri(path: str) -> str:
     return generate_full_path(ec.APP_DATALAKE_BUCKET_NAME, path)
-
-
-@contextmanager
-def persisted_dataframes() -> Iterator[list[DataFrame]]:
-    dataframes: list[DataFrame] = []
-
-    try:
-        yield dataframes
-    finally:
-        for dataframe in reversed(dataframes):
-            dataframe.unpersist()

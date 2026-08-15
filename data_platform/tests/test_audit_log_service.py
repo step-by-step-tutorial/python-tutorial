@@ -1,5 +1,5 @@
-from audit.audit_log_service import AuditLogService
 from audit.audit_event_factory import AuditEventFactory
+from audit.audit_log_service import AuditLogService
 
 
 class TestAuditLogService:

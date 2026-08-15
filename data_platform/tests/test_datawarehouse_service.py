@@ -1,7 +1,7 @@
 import pandas as pd
 
 from dataset.definition import DataWarehouse
-from service import datawarehouse_service as system_under_test
+from persistence.datawarehouse import datawarehouse_service as system_under_test
 
 
 class TestTruncateAndPopulate:
@@ -21,12 +21,17 @@ class TestTruncateAndPopulate:
             "create_connection",
             return_value=given_context,
         )
+        mock_read_text_file = mocker.patch(
+            "persistence.datawarehouse.datawarehouse_service.read_text_file",
+            return_value="truncate table warehouse.example",
+        )
 
         # When
         system_under_test.truncate_and_populate(given_datawarehouse, given_dataframe)
 
         # Then
         assert mock_create_connection.call_count == 1
+        assert mock_read_text_file.call_count == 1
         assert given_connection.command.call_count == 1
         assert given_connection.insert_df.call_count == 1
 
@@ -46,11 +51,16 @@ class TestAnalyze:
             "create_connection",
             return_value=given_context,
         )
+        mock_read_text_file = mocker.patch(
+            "persistence.datawarehouse.datawarehouse_service.read_text_file",
+            return_value="select 1",
+        )
 
         # When
         actual = system_under_test.analyze(given_datawarehouse)
 
         # Then
         assert mock_create_connection.call_count == 1
+        assert mock_read_text_file.call_count == 1
         assert given_connection.query_df.call_count == 1
         assert actual["revenue"] == given_connection.query_df.return_value

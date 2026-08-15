@@ -1,6 +1,6 @@
-from streaming.csv_publisher import CsvPublisher
 from dataset.sale.config import SALE_DATASET
 from dataset.sale.model import SALE_COLUMNS
+from ingestion.batch.csv_ingestion import CsvPublisher
 
 
 class TestCsvPublisher:
@@ -25,11 +25,11 @@ class TestCsvPublisher:
             return 1
 
         mock_create_streaming_producer = mocker.patch(
-            "streaming.csv_publisher.create_streaming_producer",
+            "ingestion.batch.csv_ingestion.create_streaming_producer",
             return_value=given_producer,
         )
         mock_read_csv_file = mocker.patch(
-            "streaming.csv_publisher.read_csv_file",
+            "ingestion.batch.csv_ingestion.read_csv_file",
             side_effect=given_read_csv_file,
         )
 
