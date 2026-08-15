@@ -7,6 +7,7 @@ from dataset.sale.columns import SALE_COLUMNS
 from transformation.inmemory.pandas_ops import sum_by_group
 from transformation.conversion.type_converter import (
     convert_to_integer,
+    convert_to_float,
     convert_to_optional_float,
     normalize_optional_text,
 )
@@ -41,6 +42,9 @@ class TestCsvUtils:
 
     def test_should_convert_integer_value(self) -> None:
         assert convert_to_integer("12") == 12
+
+    def test_should_convert_comma_formatted_float_value(self) -> None:
+        assert convert_to_float(" 3,310,000,000 ") == 3310000000.0
 
     def test_should_return_none_for_blank_optional_float(self) -> None:
         assert convert_to_optional_float(" ") is None

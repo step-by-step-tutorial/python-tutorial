@@ -16,7 +16,6 @@ from dataset.definition import (
 )
 from dataset.sale.columns import sale_columns as columns
 from dataset.sale.spark_schema import build_schema
-from model.sale_event import SaleEvent
 
 
 def _schema():
@@ -54,7 +53,6 @@ SALE_DATASET = Dataset(
     ),
     event=Event(
         key_column=columns.order_id,
-        converter=lambda row: SaleEvent.from_dict(row).to_dict(),
     ),
     audit=Audit(
         topic=audit_settings.streaming_topic,

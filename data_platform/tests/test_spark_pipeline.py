@@ -26,7 +26,7 @@ def build_dataset() -> Dataset:
     return Dataset(
         name="example",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
-        event=Event(converter=lambda row: row),
+        event=Event(),
         audit=Audit(),
         processor_factories={"spark": lambda: processor},
         sources={

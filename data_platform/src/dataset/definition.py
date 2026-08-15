@@ -80,7 +80,6 @@ class Dataframe:
 
 @dataclass(frozen=True)
 class Event:
-    converter: Callable[[dict[str, str]], dict[str, Any]] | None = None
     key_column: str = ""
 
 
@@ -157,13 +156,5 @@ class Dataset:
         return self.dataframe.required_columns
 
     @property
-    def event_converter(self) -> Callable[[dict[str, str]], dict[str, Any]] | None:
-        return self.event.converter
-
-    @property
     def event_key_column(self) -> str:
         return self.event.key_column
-
-    @property
-    def serialization(self) -> Event:
-        return self.event

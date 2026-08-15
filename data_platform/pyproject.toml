@@ -46,3 +46,12 @@ include = ["*"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+    "unit: unit tests that do not require external infrastructure",
+    "integration: tests that require real infrastructure components",
+    "e2e: end-to-end tests with live services",
+    "spark: tests that exercise Spark-specific behavior",
+    "kafka: tests that exercise Kafka-specific behavior",
+    "database: tests that exercise database behavior",
+    "datawarehouse: tests that exercise data warehouse behavior",
+]

@@ -6,10 +6,8 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any
 
-from dataset.definition import Dataset
 from streaming.delivery import topic_on_delivery
-from util.file_utils import read_csv_file
-from util.string_utils import should_be_not_none
+from transformation.conversion.event_mapper import MappedEvent
 
 logger = logging.getLogger(__name__)
 
@@ -31,34 +29,24 @@ class EventPublisher:
 
         return self._producer
 
-    def publish_row_as_event(self, row: dict[str, str], dataset: Dataset) -> None:
-        messaging_endpoint = dataset.get_source("messaging")
-        should_be_not_none(dataset.event.key_column, "event_key_column")
-        should_be_not_none(dataset.event.converter, "event_converter")
-        should_be_not_none(messaging_endpoint.topic, "streaming_topic")
-
-        event = dataset.event.converter(row)
-        event_key = event.get(dataset.event.key_column)
+    def publish(self, topic: str, message: MappedEvent) -> None:
+        key = None if message.key is None else str(message.key).encode("utf-8")
+        value = json.dumps(message.payload, ensure_ascii=False).encode("utf-8")
 
         self._get_producer().produce(
-            topic=messaging_endpoint.topic,
-            key=None if event_key is None else str(event_key),
-            value=json.dumps(event),
-            on_delivery=partial(topic_on_delivery, event_id=str(event_key)),
+            topic=topic,
+            key=key,
+            value=value,
+            on_delivery=partial(topic_on_delivery, event_id=str(message.key)),
         )
 
-    def publish_csv(self, file_path: str, dataset: Dataset) -> int:
-        event_counter = read_csv_file(
-            path_str=file_path,
-            consumer=partial(self.publish_row_as_event, dataset=dataset),
-        )
+    def publish_many(self, topic: str, messages: list[MappedEvent] | tuple[MappedEvent, ...]) -> int:
+        for message in messages:
+            self.publish(topic=topic, message=message)
+
         self.flush()
-        logger.info(
-            "Published %s events to streaming topic %s",
-            event_counter,
-            dataset.get_source("messaging").topic,
-        )
-        return event_counter
+        logger.info("Published %s events to streaming topic %s", len(messages), topic)
+        return len(messages)
 
     def flush(self) -> None:
         producer = self._get_producer()

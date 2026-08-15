@@ -7,17 +7,19 @@ from pyspark.sql.streaming import StreamingQuery
 from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
 from config.messaging import settings as messaging_settings
-from connector.messaging.kafka_connector import create_producer
 from config.streaming import settings as streaming_settings
+from connector.messaging.kafka_connector import create_producer
+from dataset.definition import Dataset
+from ingestion.file_reader import read_rows
+from service.messaging.event_publisher import EventPublisher
 from service.spark.batch_service import SparkBatchService as SparkService
 from service.spark.runtime import persisted_dataframes
-from dataset.definition import Dataset
-from service.messaging.event_publisher import EventPublisher
 from persistence.database import database_service
 from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
+from transformation.conversion.event_mapper import get_event_mapper
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import generate_ingestion_time
@@ -26,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class SparkStreamingPipeline:
+    """Hybrid micro-batch pipeline: Kafka ingestion is streamed, downstream loading runs after the stream completes."""
 
     def __init__(self, ds: Dataset) -> None:
         self.dataset = ds
@@ -85,16 +88,23 @@ class SparkStreamingPipeline:
     def publish_events(self) -> int:
         file_endpoint = self.dataset.get_source("file")
         messaging_endpoint = self.dataset.get_source("messaging")
+        event_mapper = get_event_mapper(self.dataset.name)
         logger.info(
             "Publishing events from file %s to streaming topic %s",
             file_endpoint.file_name,
             messaging_endpoint.topic
         )
 
-        return self.publisher.publish_csv(
-            file_path=file_endpoint.resolve_path(app_settings.resources_dir).as_posix(),
-            dataset=self.dataset,
-        )
+        event_counter = 0
+
+        def collect(row: dict[str, str]) -> None:
+            nonlocal event_counter
+            self.publisher.publish(messaging_endpoint.topic, event_mapper.map(row))
+            event_counter += 1
+
+        read_rows(file_endpoint.resolve_path(app_settings.resources_dir), collect)
+        self.publisher.flush()
+        return event_counter
 
     def process_stream(self) -> str:
         self.start_batch_storage().awaitTermination()

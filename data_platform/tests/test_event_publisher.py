@@ -1,53 +1,35 @@
+import pytest
+
 from service.messaging.event_publisher import EventPublisher
-from dataset.sale.config import SALE_DATASET
-from dataset.sale.columns import SALE_COLUMNS
+from transformation.conversion.event_mapper import MappedEvent
+
+pytestmark = pytest.mark.unit
 
 
 class TestEventPublisher:
 
-    def test_should_publish_a_single_row_as_event(self, mocker) -> None:
+    def test_should_publish_a_prepared_event(self, mocker) -> None:
         given_producer = mocker.Mock()
-        given_row = {
-            SALE_COLUMNS.ORDER_ID: "1",
-            SALE_COLUMNS.CUSTOMER_NAME: "Ali Ahmadi",
-            SALE_COLUMNS.PRODUCT_NAME: "Laptop",
-            SALE_COLUMNS.CATEGORY: "Electronics",
-            SALE_COLUMNS.QUANTITY: "2",
-            SALE_COLUMNS.UNIT_PRICE: "1000",
-            SALE_COLUMNS.ORDER_DATE: "2026-01-10",
-            SALE_COLUMNS.COUNTRY: "Iran",
-        }
+        given_message = MappedEvent(key="1", payload={"order_id": 1, "customer_name": "Ali Ahmadi"})
 
-        EventPublisher(producer=given_producer).publish_row_as_event(given_row, SALE_DATASET)
+        EventPublisher(producer=given_producer).publish("sale-events", given_message)
 
         assert given_producer.produce.call_count == 1
         kwargs = given_producer.produce.call_args.kwargs
         assert kwargs["topic"] == "sale-events"
-        assert kwargs["key"] == "1"
+        assert kwargs["key"] == b"1"
+        assert kwargs["value"] == b'{"order_id": 1, "customer_name": "Ali Ahmadi"}'
 
-    def test_should_publish_rows_from_csv_and_flush_producer(self, mocker) -> None:
+    def test_should_publish_many_prepared_events_and_flush(self, mocker) -> None:
         given_producer = mocker.Mock()
+        given_messages = (
+            MappedEvent(key="1", payload={"order_id": 1}),
+            MappedEvent(key="2", payload={"order_id": 2}),
+        )
 
-        def given_read_csv_file(path_str, consumer):
-            consumer(
-                {
-                    SALE_COLUMNS.ORDER_ID: "1",
-                    SALE_COLUMNS.CUSTOMER_NAME: "Ali Ahmadi",
-                    SALE_COLUMNS.PRODUCT_NAME: "Laptop",
-                    SALE_COLUMNS.CATEGORY: "Electronics",
-                    SALE_COLUMNS.QUANTITY: "2",
-                    SALE_COLUMNS.UNIT_PRICE: "1000",
-                    SALE_COLUMNS.ORDER_DATE: "2026-01-10",
-                    SALE_COLUMNS.COUNTRY: "Iran",
-                }
-            )
-            return 1
+        actual = EventPublisher(producer=given_producer).publish_many("sale-events", given_messages)
 
-        mocker.patch("service.messaging.event_publisher.read_csv_file", side_effect=given_read_csv_file)
-
-        actual = EventPublisher(producer=given_producer).publish_csv("resources/sale.csv", SALE_DATASET)
-
-        assert actual == 1
+        assert actual == 2
+        assert given_producer.produce.call_count == 2
         assert given_producer.poll.call_count == 1
         assert given_producer.flush.call_count == 1
-        assert given_producer.produce.call_count == 1

@@ -16,7 +16,6 @@ from dataset.definition import (
 )
 from dataset.house.columns import house_columns as columns
 from dataset.house.spark_schema import build_schema
-from model.house_event import HouseEvent
 
 
 def _schema():
@@ -54,7 +53,6 @@ HOUSE_DATASET = Dataset(
     ),
     event=Event(
         key_column=columns.address_raw,
-        converter=lambda row: HouseEvent.from_dict(row).to_dict(),
     ),
     audit=Audit(
         topic=audit_settings.streaming_topic,
