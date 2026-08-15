@@ -51,9 +51,8 @@ class TestRun:
         mocker.patch.object(given_pipeline, "populate_database")
         mocker.patch.object(given_pipeline, "populate_datawarehouse")
         mocker.patch.object(given_pipeline, "show_dataframe")
-        mocker.patch.object(given_pipeline, "analyzing_via_spark")
+        mocker.patch.object(given_pipeline, "analyze_primary")
         mocker.patch.object(given_pipeline, "analyzing_via_datawarehouse")
-        mocker.patch("pipeline.spark_based_pipeline.log_line")
         mocker.patch.object(given_pipeline.spark, "stop")
 
         given_pipeline.run()
@@ -64,6 +63,6 @@ class TestRun:
         assert given_pipeline.populate_database.call_count == 1
         assert given_pipeline.populate_datawarehouse.call_count == 1
         assert given_pipeline.show_dataframe.call_count == 1
-        assert given_pipeline.analyzing_via_spark.call_count == 1
+        assert given_pipeline.analyze_primary.call_count == 1
         assert given_pipeline.analyzing_via_datawarehouse.call_count == 1
         assert given_pipeline.spark.stop.call_count == 1

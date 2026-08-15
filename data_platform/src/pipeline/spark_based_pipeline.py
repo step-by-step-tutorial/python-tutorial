@@ -12,68 +12,17 @@ from persistence.datalake.path_utils import DatalakeLayer, generate_relative_pat
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
-from util.log_utils import log_line
-from util.pipeline_utils import create_pipeline_id
-from util.time_utils import generate_ingestion_time
+from pipeline.batch_pipeline import BatchPipeline
 
 logger = logging.getLogger(__name__)
 
 
-class SparkPipeline:
+class SparkPipeline(BatchPipeline):
 
     def __init__(self, ds: Dataset) -> None:
-        self.dataset = ds
+        super().__init__(ds)
         self.pipeline_name = "spark_pipeline"
-        self.pipeline_id = create_pipeline_id()
-        self.ingestion_time: datetime = generate_ingestion_time()
         self.spark = SparkService()
-
-    def run(self) -> None:
-        logger.info(
-            f"Starting ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
-            f"with dataset {self.dataset.name} "
-            f"at ingestion time {self.ingestion_time.isoformat()}"
-        )
-        log_line()
-
-        logger.info("step 1")
-        raw_relative_path = self.store_raw_data()
-        log_line()
-
-        logger.info("step 2")
-        cleaned_data_path = self.cleaning(raw_relative_path)
-        log_line()
-
-        logger.info("step 3")
-        enriched_data_path = self.enriching(cleaned_data_path)
-        log_line()
-
-        logger.info("step 4")
-        self.populate_database(enriched_data_path)
-        log_line()
-
-        logger.info("step 5")
-        self.populate_datawarehouse(enriched_data_path)
-        log_line()
-
-        logger.info("step 6")
-        self.show_dataframe(enriched_data_path)
-
-        logger.info("step 7")
-        self.analyzing_via_spark(enriched_data_path)
-        log_line()
-
-        logger.info("step 8")
-        self.analyzing_via_datawarehouse()
-        log_line()
-
-        logger.info(
-            f"Finished ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
-            f"with dataset {self.dataset.name} "
-            f"at ingestion time {self.ingestion_time.isoformat()}"
-        )
-
-        self.spark.stop()
 
     def store_raw_data(self) -> str:
         file_endpoint = self.dataset.get_source("file")
@@ -153,16 +102,6 @@ class SparkPipeline:
             enriched_dataframe
         )
 
-    def analyzing_via_spark(self, enriched_data_path: str) -> None:
-        enriched_dataframe = self.download_enriched_data(enriched_data_path)
-        logger.info("Analyzing enriched data via Spark")
-
-        results = self.dataset.get_processor("spark").analyze(enriched_dataframe)
-
-        for name, dataframe in results.items():
-            logger.info("Displaying analysis result %s", name)
-            dataframe.show()
-
     def analyzing_via_datawarehouse(self) -> None:
         results = datawarehouse_service.analyze(self.dataset.get_destination("datawarehouse"))
         logger.info("Analyzing enriched data via data warehouse")
@@ -174,4 +113,17 @@ class SparkPipeline:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Displaying enriched data")
         enriched_dataframe.show()
-        log_line()
+        return None
+
+    def analyze_primary(self, enriched_data_path: str) -> None:
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Analyzing enriched data via Spark")
+
+        results = self.dataset.get_processor("spark").analyze(enriched_dataframe)
+
+        for name, dataframe in results.items():
+            logger.info("Displaying analysis result %s", name)
+            dataframe.show()
+
+    def after_run(self) -> None:
+        self.spark.stop()

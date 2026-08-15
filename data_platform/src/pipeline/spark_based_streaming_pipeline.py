@@ -4,12 +4,15 @@ from datetime import datetime
 from pyspark.sql import DataFrame
 from pyspark.sql.streaming import StreamingQuery
 
+from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
+from config.messaging import settings as messaging_settings
+from connector.messaging.kafka_connector import create_producer
 from config.streaming import settings as streaming_settings
 from service.spark.batch_service import SparkBatchService as SparkService
 from service.spark.runtime import persisted_dataframes
 from dataset.definition import Dataset
-from ingestion.batch.csv_ingestion import CsvPublisher
+from service.messaging.event_publisher import EventPublisher
 from persistence.database import database_service
 from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
@@ -30,7 +33,7 @@ class SparkStreamingPipeline:
         self.pipeline_id = create_pipeline_id()
         self.ingestion_time: datetime = generate_ingestion_time()
         self.spark = SparkService()
-        self.publisher = CsvPublisher()
+        self.publisher = EventPublisher(producer_factory=create_producer)
 
     def run(self) -> None:
         try:
@@ -88,7 +91,10 @@ class SparkStreamingPipeline:
             messaging_endpoint.topic
         )
 
-        return self.publisher.publish(self.dataset)
+        return self.publisher.publish_csv(
+            file_path=file_endpoint.resolve_path(app_settings.resources_dir).as_posix(),
+            dataset=self.dataset,
+        )
 
     def process_stream(self) -> str:
         self.start_batch_storage().awaitTermination()
@@ -101,7 +107,7 @@ class SparkStreamingPipeline:
 
         dataframe = self.spark.read_stream(
             topic=messaging_endpoint.topic,
-            bootstrap_servers=streaming_settings.bootstrap_servers,
+            bootstrap_servers=messaging_settings.bootstrap_servers,
             starting_offsets=streaming_settings.starting_offsets,
         )
 
