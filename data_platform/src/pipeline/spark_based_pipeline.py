@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pyspark.sql import DataFrame
 
+from audit.audit_service import AuditService
 from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
 from service.spark.batch_service import SparkBatchService as SparkService
@@ -19,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 class SparkPipeline(BatchPipeline):
 
-    def __init__(self, ds: Dataset) -> None:
-        super().__init__(ds)
+    def __init__(self, ds: Dataset, audit_service: AuditService | None = None) -> None:
+        super().__init__(ds, audit_service=audit_service)
         self.pipeline_name = "spark_pipeline"
         self.spark = SparkService()
 

@@ -5,6 +5,7 @@ import pandas as pd
 
 from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
+from audit.audit_service import AuditService
 from dataset.definition import Dataset
 from persistence.database import database_service
 from persistence.datalake import datalake_service as inmemory_datalake_service
@@ -22,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 class InmemoryPipeline(BatchPipeline):
 
-    def __init__(self, ds: Dataset) -> None:
-        super().__init__(ds)
+    def __init__(self, ds: Dataset, audit_service: AuditService | None = None) -> None:
+        super().__init__(ds, audit_service=audit_service)
         self.pipeline_name = "inmemory_pipeline"
 
     def store_raw_data(self) -> str:

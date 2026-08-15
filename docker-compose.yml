@@ -12,9 +12,9 @@ services:
       - "${APP_DATABASE_PORT}:5432"
     volumes:
       - ${DATABASE_VOLUME}:/var/lib/postgresql/data
-      - ./scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
-      - ./scripts/database/sale/create_tables.sql:/docker-entrypoint-initdb.d/20_sale_create_tables.sql
-      - ./scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
+      - ./data_platform/scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
+      - ./data_platform/scripts/database/sale/create_tables.sql:/docker-entrypoint-initdb.d/20_sale_create_tables.sql
+      - ./data_platform/scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
     healthcheck:
       test:
         [
@@ -96,10 +96,10 @@ services:
       - "${APP_DATAWAREHOUSE_PORT}:8123"
     volumes:
       - ${DATAWAREHOUSE_VOLUME}:/var/lib/clickhouse
-      - ./scripts/datawarehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
-      - ./scripts/datawarehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
-      - ./scripts/datawarehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
-      - ./scripts/datawarehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
+      - ./data_platform/scripts/datawarehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
+      - ./data_platform/scripts/datawarehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
+      - ./data_platform/scripts/datawarehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
+      - ./data_platform/scripts/datawarehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
     healthcheck:
       test:
         [
@@ -112,7 +112,7 @@ services:
   master:
     image: ${SPARK_IMAGE}
     build:
-      context: .
+      context: data_platform
       dockerfile: ${SPARK_DOCKERFILE}
     hostname: ${SPARK_MASTER_HOST}
     container_name: ${SPARK_MASTER_CONTAINER_NAME}
@@ -126,12 +126,12 @@ services:
       - "${SPARK_MASTER_RPC_PORT}:${SPARK_MASTER_RPC_PORT}"
       - "${SPARK_MASTER_UI_PORT}:${SPARK_MASTER_UI_PORT}"
     volumes:
-      - ./resources:/app/resources
-      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
+      - ./data_platform/resources:/app/resources
+      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
   worker:
     image: ${SPARK_IMAGE}
     build:
-      context: .
+      context: data_platform
       dockerfile: ${SPARK_DOCKERFILE}
     hostname: ${SPARK_WORKER_HOST}
     container_name: ${SPARK_WORKER_CONTAINER_NAME}
@@ -146,8 +146,8 @@ services:
     ports:
       - "${SPARK_WORKER_UI_PORT}:${SPARK_WORKER_UI_PORT}"
     volumes:
-      - ./resources:/app/resources
-      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
+      - ./data_platform/resources:/app/resources
+      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
   airflow-database:
     image: ${DATABASE_IMAGE}
     container_name: ${AIRFLOW_DATABASE_CONTAINER_NAME}
@@ -221,15 +221,15 @@ services:
       APP_STREAMING_STARTING_OFFSETS: ${APP_STREAMING_STARTING_OFFSETS}
       APP_STREAMING_AUDIT_TOPIC: ${APP_STREAMING_AUDIT_TOPIC}
     volumes:
-      - ./dags:${AIRFLOW_DAGS_DIR}
-      - ./src:${AIRFLOW_SRC_DIR}
-      - ./plugins:${AIRFLOW_PLUGINS_DIR}
-      - ./resources:${AIRFLOW_RESOURCES_DIR}
-      - ./output:${AIRFLOW_OUTPUT_DIR}
-      - ./scripts:${AIRFLOW_SCRIPTS_DIR}
-      - ./airflow/simple_auth_manager_passwords.json.generated:${AIRFLOW_PASSWORD_FILE}
-      - ./requirements-docker.txt:${AIRFLOW_REQUIREMENTS_FILE}
-      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
+      - ./data_platform/dags:${AIRFLOW_DAGS_DIR}
+      - ./data_platform/src:${AIRFLOW_SRC_DIR}
+      - ./data_platform/plugins:${AIRFLOW_PLUGINS_DIR}
+      - ./data_platform/resources:${AIRFLOW_RESOURCES_DIR}
+      - ./data_platform/output:${AIRFLOW_OUTPUT_DIR}
+      - ./data_platform/scripts:${AIRFLOW_SCRIPTS_DIR}
+      - ./data_platform/airflow/simple_auth_manager_passwords.json.generated:${AIRFLOW_PASSWORD_FILE}
+      - ./data_platform/requirements-docker.txt:${AIRFLOW_REQUIREMENTS_FILE}
+      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
     ports:
       - "${AIRFLOW_PORT}:8080"
     command:
@@ -315,7 +315,7 @@ services:
   application:
     image: ${APPLICATION_IMAGE}
     build:
-      context: .
+      context: data_platform
       dockerfile: Dockerfile
     hostname: ${APPLICATION_HOST}
     container_name: ${APPLICATION_CONTAINER_NAME}
@@ -362,10 +362,10 @@ services:
       APP_STREAMING_STARTING_OFFSETS: ${APP_STREAMING_STARTING_OFFSETS}
       APP_STREAMING_AUDIT_TOPIC: ${APP_STREAMING_AUDIT_TOPIC}
     volumes:
-      - ./resources:/app/resources
-      - ./output:/app/output
-      - ./scripts:/app/scripts
-      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
+      - ./data_platform/resources:/app/resources
+      - ./data_platform/output:/app/output
+      - ./data_platform/scripts:/app/scripts
+      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
     depends_on:
       database:
         condition: service_healthy

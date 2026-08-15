@@ -44,7 +44,20 @@ def build_dataset() -> Dataset:
 class TestRun:
 
     def test_should_execute_each_pipeline_step_once(self, mocker) -> None:
-        given_pipeline = InmemoryPipeline(build_dataset())
+        given_audit_service = mocker.Mock()
+        given_audit_service.start_pipeline.return_value = 10.0
+        given_audit_service.start_task.side_effect = [
+            ("task-1", 1.0),
+            ("task-2", 2.0),
+            ("task-3", 3.0),
+            ("task-4", 4.0),
+            ("task-5", 5.0),
+            ("task-6", 6.0),
+            ("task-7", 7.0),
+            ("task-8", 8.0),
+        ]
+
+        given_pipeline = InmemoryPipeline(build_dataset(), audit_service=given_audit_service)
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
         mocker.patch.object(given_pipeline, "cleaning", return_value="clean")
         mocker.patch.object(given_pipeline, "enriching", return_value="enriched")
@@ -65,3 +78,6 @@ class TestRun:
         assert given_pipeline.show_dataframe.call_count == 1
         assert given_pipeline.analyze_primary.call_count == 1
         assert given_pipeline.analyzing_via_datawarehouse.call_count == 1
+        assert given_audit_service.start_pipeline.call_count == 1
+        assert given_audit_service.complete_pipeline.call_count == 1
+        assert given_audit_service.fail_pipeline.call_count == 0

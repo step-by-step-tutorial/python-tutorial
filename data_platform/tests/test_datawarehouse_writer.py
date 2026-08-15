@@ -23,12 +23,23 @@ class TestWriteSpark:
         class _Frame:
             columns = ["value"]
 
-            def foreachPartition(self, callback):
-                callback(iter(_Row(i) for i in range(1001)))
+            class _RDD:
+                def mapPartitions(self, callback):
+                    batches = list(callback(iter(_Row(i) for i in range(1001))))
+
+                    class _Iterator:
+                        def toLocalIterator(self_inner):
+                            return iter(batches)
+
+                    return _Iterator()
+
+            @property
+            def rdd(self):
+                return self._RDD()
 
         system_under_test.write_spark(DataWarehouseEndpoint(full_table_name="db.table"), _Frame())
 
-        assert given_client.insert_df.call_count == 2
+        assert given_client.insert.call_count == 2
         assert given_client.close.call_count == 2
 
     def test_should_write_pandas_dataframe_through_clickhouse_client(self, mocker) -> None:
