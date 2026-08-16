@@ -33,9 +33,10 @@ class TestAuditSinks:
 
     def test_archive_sink_should_respect_enabled_flag(self, mocker) -> None:
         given_event = AuditEventFactory.create_pipeline_started_event("sale_pipeline", "pipeline-001")
-        mock_archive_event = mocker.patch("audit.sinks.archive_event")
+        mocker.patch("audit.sinks.audit_archive_service")
+        mock_save_event = mocker.patch("audit.sinks.audit_archive_service.save_event")
 
         ArchiveAuditSink(bucket_name="audit-bucket", enabled=True).write(given_event)
         ArchiveAuditSink(bucket_name="audit-bucket", enabled=False).write(given_event)
 
-        assert mock_archive_event.call_count == 1
+        assert mock_save_event.call_count == 1

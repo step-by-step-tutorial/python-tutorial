@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Protocol
 
-from audit.audit_archive_service import save_event as archive_event
+import audit.audit_archive_service as audit_archive_service
 from audit.audit_database_service import AuditDatabaseService
 from audit.audit_streaming_service import AuditStreamingService
 from model.audit_event import AuditEvent
@@ -49,4 +49,4 @@ class ArchiveAuditSink:
         if not self.enabled:
             return
 
-        archive_event(event, bucket_name=self.bucket_name)
+        audit_archive_service.save_event(event, bucket_name=self.bucket_name)

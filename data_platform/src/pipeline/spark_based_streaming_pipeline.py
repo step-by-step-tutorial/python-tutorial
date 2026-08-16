@@ -15,7 +15,7 @@ from service.messaging.event_publisher import EventPublisher
 from service.spark.batch_service import SparkBatchService as SparkService
 from service.spark.runtime import persisted_dataframes
 from persistence.database import database_service
-from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
+from persistence.datalake.path_utils import DatalakeEnv, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
@@ -55,7 +55,7 @@ class SparkStreamingPipeline:
             self.start_batch_storage().awaitTermination()
             log_line()
 
-            enriched_data_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time,
+            enriched_data_path = generate_relative_path(DatalakeEnv.ENRICHED, self.ingestion_time,
                                                         self.dataset.name.lower())
 
             logger.info("step 3")
@@ -109,7 +109,7 @@ class SparkStreamingPipeline:
     def process_stream(self) -> str:
         self.start_batch_storage().awaitTermination()
 
-        return generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
+        return generate_relative_path(DatalakeEnv.ENRICHED, self.ingestion_time, self.dataset.name.lower())
 
     def start_batch_storage(self) -> StreamingQuery:
         messaging_endpoint = self.dataset.get_source("messaging")
@@ -154,7 +154,7 @@ class SparkStreamingPipeline:
 
             persisted.append(raw_dataframe)
 
-            raw_relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time,
+            raw_relative_path = generate_relative_path(DatalakeEnv.RAW, self.ingestion_time,
                                                        self.dataset.name.lower())
 
             self.spark.append(
@@ -167,7 +167,7 @@ class SparkStreamingPipeline:
             cleaned_dataframe = self.dataset.get_processor("spark").clean(raw_dataframe).persist()
             persisted.append(cleaned_dataframe)
 
-            cleaned_relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time,
+            cleaned_relative_path = generate_relative_path(DatalakeEnv.CLEANED, self.ingestion_time,
                                                            self.dataset.name.lower())
 
             self.spark.append(
@@ -180,7 +180,7 @@ class SparkStreamingPipeline:
             enriched_dataframe = self.dataset.get_processor("spark").enrich(cleaned_dataframe).persist()
             persisted.append(enriched_dataframe)
 
-            enriched_relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time,
+            enriched_relative_path = generate_relative_path(DatalakeEnv.ENRICHED, self.ingestion_time,
                                                             self.dataset.name.lower())
 
             self.spark.append(

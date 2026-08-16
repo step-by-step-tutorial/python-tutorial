@@ -9,7 +9,7 @@ from config.datalake import settings as datalake_settings
 from service.spark.batch_service import SparkBatchService as SparkService
 from dataset.definition import Dataset
 from persistence.database import database_service
-from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
+from persistence.datalake.path_utils import DatalakeEnv, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
@@ -31,7 +31,7 @@ class SparkPipeline(BatchPipeline):
 
         dataframe = self.spark.read_csv(file_path=str(data_file_path), schema=self.dataset.dataframe.schema)
 
-        relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DatalakeEnv.RAW, self.ingestion_time, self.dataset.name.lower())
 
         self.spark.overwrite(
             dataframe=dataframe,
@@ -51,7 +51,7 @@ class SparkPipeline(BatchPipeline):
 
         cleaned_dataframe = self.dataset.get_processor("spark").clean(dataframe)
 
-        relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DatalakeEnv.CLEANED, self.ingestion_time, self.dataset.name.lower())
 
         self.spark.overwrite(
             dataframe=cleaned_dataframe,
@@ -71,7 +71,7 @@ class SparkPipeline(BatchPipeline):
 
         enriched_dataframe = self.dataset.get_processor("spark").enrich(dataframe)
 
-        relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DatalakeEnv.ENRICHED, self.ingestion_time, self.dataset.name.lower())
 
         self.spark.overwrite(
             dataframe=enriched_dataframe,

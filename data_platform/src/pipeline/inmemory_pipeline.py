@@ -9,7 +9,7 @@ from audit.audit_service import AuditService
 from dataset.definition import Dataset
 from persistence.database import database_service
 from persistence.datalake import datalake_service as inmemory_datalake_service
-from persistence.datalake.path_utils import DatalakeLayer, generate_relative_path
+from persistence.datalake.path_utils import DatalakeEnv, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
@@ -33,7 +33,7 @@ class InmemoryPipeline(BatchPipeline):
         dataframe = csv_to_dataframe(data_file_path)
         require_columns(dataframe, self.dataset.dataframe.required_columns)
 
-        relative_path = generate_relative_path(DatalakeLayer.RAW, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DatalakeEnv.RAW, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(
             df=dataframe,
             bucket_name=datalake_settings.bucket_name,
@@ -50,7 +50,7 @@ class InmemoryPipeline(BatchPipeline):
 
         cleaned_dataframe = self.dataset.get_processor("inmemory").clean(dataframe)
 
-        relative_path = generate_relative_path(DatalakeLayer.CLEANED, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DatalakeEnv.CLEANED, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(
             df=cleaned_dataframe,
             bucket_name=datalake_settings.bucket_name,
@@ -66,7 +66,7 @@ class InmemoryPipeline(BatchPipeline):
         )
         enriched_dataframe = self.dataset.get_processor("inmemory").enrich(dataframe)
 
-        relative_path = generate_relative_path(DatalakeLayer.ENRICHED, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DatalakeEnv.ENRICHED, self.ingestion_time, self.dataset.name.lower())
         inmemory_datalake_service.upload(
             df=enriched_dataframe,
             bucket_name=datalake_settings.bucket_name,

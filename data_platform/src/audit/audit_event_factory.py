@@ -6,7 +6,11 @@ from model.audit_event import AuditEvent, AuditEventType, AuditStatus
 class AuditEventFactory:
 
     @staticmethod
-    def create_pipeline_started_event(pipeline_name: str, pipeline_id: str, metadata: dict | None = None) -> AuditEvent:
+    def create_pipeline_started_event(
+            pipeline_name: str,
+            pipeline_id: str,
+            metadata: dict | None = None
+    ) -> AuditEvent:
         return AuditEvent(
             event_type=AuditEventType.PIPELINE_STARTED,
             pipeline_name=pipeline_name,

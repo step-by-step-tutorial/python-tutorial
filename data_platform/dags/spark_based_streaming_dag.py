@@ -7,7 +7,7 @@ from config.app import settings as app_settings
 from dataset.registry import get_dataset
 from pipeline.spark_based_streaming_pipeline import SparkStreamingPipeline
 
-DAG_ID = "spark_streaming_dag"
+DAG_ID = "spark_streaming_etl_dag"
 
 pipeline = SparkStreamingPipeline(get_dataset(app_settings.dataset_name))
 
