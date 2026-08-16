@@ -13,8 +13,8 @@ class TestCollectRows:
                 self.value = value
                 self.name = name
 
-            def __iter__(self):
-                return iter([("value", self.value), ("name", self.name)])
+            def asDict(self, recursive: bool = True):
+                return {"value": self.value, "name": self.name}
 
         dataframe = mocker.Mock()
         dataframe.columns = ["name", "value"]
