@@ -1,20 +1,18 @@
 import logging
 import sys
+from importlib import import_module
 
 from config.app import settings as app_settings
 from dataset.registry import get_dataset
-from pipeline.inmemory_pipeline import InmemoryPipeline
-from pipeline.spark_based_pipeline import SparkPipeline
-from pipeline.spark_based_streaming_pipeline import SparkStreamingPipeline
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
 logger = logging.getLogger(__name__)
 
 PIPELINES = {
-    "inmemory": InmemoryPipeline,
-    "spark": SparkPipeline,
-    "spark_streaming": SparkStreamingPipeline,
+    "inmemory": lambda dataset: import_module("pipeline.inmemory_pipeline").InmemoryPipeline(dataset),
+    "spark": lambda dataset: import_module("pipeline.spark_based_pipeline").SparkPipeline(dataset),
+    "spark_streaming": lambda dataset: import_module("pipeline.spark_based_streaming_pipeline").SparkStreamingPipeline(dataset),
 }
 
 DATASETS = {

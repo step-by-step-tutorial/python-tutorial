@@ -1,7 +1,6 @@
 from audit.sinks import ArchiveAuditSink, DatabaseAuditSink, LogAuditSink, StreamingAuditSink
 from audit.audit_event_factory import AuditEventFactory
 from audit.audit_database_service import AuditDatabaseService
-from audit.audit_log_service import AuditLogService
 from audit.audit_streaming_service import AuditStreamingService
 
 
@@ -24,13 +23,13 @@ class TestAuditSinks:
 
         assert given_service.publish.call_count == 1
 
-    def test_log_sink_should_delegate_to_audit_log_service(self, mocker) -> None:
+    def test_log_sink_should_log_event_identifier(self, mocker) -> None:
         given_event = AuditEventFactory.create_pipeline_started_event("sale_pipeline", "pipeline-001")
-        given_service = mocker.Mock(spec=AuditLogService)
+        mock_logger_info = mocker.patch("audit.sinks.logger.info")
 
-        LogAuditSink(service=given_service).write(given_event)
+        LogAuditSink().write(given_event)
 
-        assert given_service.log.call_count == 1
+        assert mock_logger_info.call_count == 1
 
     def test_archive_sink_should_respect_enabled_flag(self, mocker) -> None:
         given_event = AuditEventFactory.create_pipeline_started_event("sale_pipeline", "pipeline-001")

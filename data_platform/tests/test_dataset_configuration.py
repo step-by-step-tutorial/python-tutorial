@@ -10,7 +10,6 @@ from dataset.definition import (
     Dataframe,
     DatabaseEndpoint,
     Dataset,
-    Event,
     FileEndpoint,
     MessagingEndpoint,
 )
@@ -42,7 +41,6 @@ class TestDataset:
         given_dataset = Dataset(
             name="example",
             dataframe=Dataframe(schema=None, required_columns=frozenset({"id"})),
-            event=Event(key_column="id"),
             audit=Audit(topic="example-audit"),
             processor_factories={},
             sources={
@@ -62,9 +60,8 @@ class TestDataset:
         assert given_dataset.get_destination("datawarehouse").full_table_name == "app_datawarehouse.example_table"
         assert given_dataset.dataframe.schema is None
         assert given_dataset.dataframe.required_columns == frozenset({"id"})
-        assert given_dataset.event.key_column == "id"
-        assert not hasattr(given_dataset.event, "converter")
         assert given_dataset.audit.topic == "example-audit"
+        assert not hasattr(given_dataset, "event")
 
     def test_should_raise_error_for_missing_endpoint(self) -> None:
         given_dataset = Dataset(name="example")

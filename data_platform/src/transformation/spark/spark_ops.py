@@ -4,11 +4,18 @@ from pyspark.sql import Column, DataFrame, functions as sf
 
 
 def remove_duplicates(df: DataFrame, *columns: str) -> DataFrame:
+    if not columns:
+        return df.dropDuplicates()
+
     return df.dropDuplicates(list(columns))
 
 
 def convert_numeric_column(df: DataFrame, column: str, default_value: float | int | None = None) -> DataFrame:
-    converted_column = sf.col(column).cast("double")
+    cleaned_column = sf.regexp_replace(sf.trim(sf.col(column).cast("string")), ",", "")
+    converted_column = sf.when(
+        cleaned_column.isNull() | (cleaned_column == ""),
+        sf.lit(None).cast("double"),
+    ).otherwise(cleaned_column.cast("double"))
     if default_value is not None:
         converted_column = sf.coalesce(converted_column, sf.lit(default_value))
     return df.withColumn(column, converted_column)

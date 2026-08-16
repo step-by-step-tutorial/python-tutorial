@@ -1,4 +1,4 @@
-from dataset.definition import Audit, Dataframe, DatabaseEndpoint, Dataset, Event, FileEndpoint
+from dataset.definition import Audit, Dataframe, DatabaseEndpoint, Dataset, FileEndpoint
 from persistence.database import database_service as system_under_test
 
 
@@ -6,7 +6,6 @@ def build_dataset() -> Dataset:
     return Dataset(
         name="example",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
-        event=Event(),
         audit=Audit(),
         processor_factories={},
         sources={

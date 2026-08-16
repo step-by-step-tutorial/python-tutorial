@@ -4,6 +4,8 @@ from pyspark.sql.types import StructType
 
 from service.spark import batch_service as system_under_test
 
+pytestmark = pytest.mark.unit
+
 
 class TestReadSaleData:
 

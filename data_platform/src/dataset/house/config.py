@@ -10,7 +10,6 @@ from dataset.definition import (
     Dataframe,
     DatabaseEndpoint,
     Dataset,
-    Event,
     FileEndpoint,
     MessagingEndpoint,
 )
@@ -50,9 +49,6 @@ HOUSE_DATASET = Dataset(
                 columns.price_usd_raw,
             }
         ),
-    ),
-    event=Event(
-        key_column=columns.address_raw,
     ),
     audit=Audit(
         topic=audit_settings.streaming_topic,

@@ -1,3 +1,5 @@
+import pytest
+
 from dataset.definition import (
     Audit,
     DataLakeEndpoint,
@@ -5,11 +7,12 @@ from dataset.definition import (
     Dataframe,
     DatabaseEndpoint,
     Dataset,
-    Event,
     FileEndpoint,
     MessagingEndpoint,
 )
 from pipeline.spark_based_pipeline import SparkPipeline
+
+pytestmark = pytest.mark.unit
 
 
 def build_dataset() -> Dataset:
@@ -26,7 +29,6 @@ def build_dataset() -> Dataset:
     return Dataset(
         name="example",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
-        event=Event(),
         audit=Audit(),
         processor_factories={"spark": lambda: processor},
         sources={

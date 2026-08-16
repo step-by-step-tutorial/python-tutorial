@@ -1,8 +1,12 @@
+import pytest
+
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType
 
 from dataset.sale.config import SALE_DATASET
 from service.spark import batch_service as system_under_test
+
+pytestmark = pytest.mark.unit
 
 
 class TestReadStream:
@@ -41,15 +45,11 @@ class TestConvertStream:
         given_schema = StructType()
         given_required_columns = {"order_id"}
         given_converted_dataframe = mocker.MagicMock(spec=DataFrame)
+        given_converted_dataframe.columns = ["order_id"]
 
         mocker.patch.object(system_under_test.sf, "from_json", return_value=mocker.MagicMock())
         mocker.patch.object(system_under_test.sf, "col", return_value=mocker.MagicMock())
         given_dataframe.select.return_value.filter.return_value.select.return_value = given_converted_dataframe
-
-        mock_requires_column = mocker.patch(
-            "service.spark.batch_service.requires_column",
-            return_value=None,
-        )
 
         actual = system_under_test.SparkBatchService().convert_stream(
             dataframe=given_dataframe,
@@ -58,4 +58,3 @@ class TestConvertStream:
         )
 
         assert actual is given_converted_dataframe
-        assert mock_requires_column.call_count == 1

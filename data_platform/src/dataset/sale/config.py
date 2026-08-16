@@ -10,7 +10,6 @@ from dataset.definition import (
     Dataframe,
     DatabaseEndpoint,
     Dataset,
-    Event,
     FileEndpoint,
     MessagingEndpoint,
 )
@@ -50,9 +49,6 @@ SALE_DATASET = Dataset(
                 columns.country,
             }
         ),
-    ),
-    event=Event(
-        key_column=columns.order_id,
     ),
     audit=Audit(
         topic=audit_settings.streaming_topic,

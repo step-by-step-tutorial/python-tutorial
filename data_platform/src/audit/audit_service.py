@@ -7,7 +7,6 @@ from audit.audit_event_factory import AuditEventFactory
 from dataset.definition import Audit
 from audit.sinks import ArchiveAuditSink, AuditSink, DatabaseAuditSink, LogAuditSink, StreamingAuditSink
 from audit.audit_database_service import AuditDatabaseService
-from audit.audit_log_service import AuditLogService
 from audit.audit_streaming_service import AuditStreamingService
 from util.time_utils import elapsed_milliseconds
 
@@ -29,7 +28,7 @@ class AuditService:
                 StreamingAuditSink(
                     service=AuditStreamingService(audit.topic or audit_settings.streaming_topic),
                 ),
-                LogAuditSink(service=AuditLogService()),
+                LogAuditSink(),
                 ArchiveAuditSink(
                     bucket_name=audit_settings.archive_bucket_name,
                     enabled=audit.archive_enabled,

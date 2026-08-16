@@ -10,7 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 def convert_numeric_column(df: DataFrame, column: str, default_value: float | int | None = None) -> DataFrame:
-    converted = pd.to_numeric(df[column], errors="coerce")
+    converted = pd.to_numeric(
+        df[column].astype("string").str.replace(",", "", regex=False).str.strip(),
+        errors="coerce",
+    )
     if default_value is not None:
         converted = converted.fillna(default_value)
     df[column] = converted
@@ -59,17 +62,26 @@ def remove_duplicates(df: DataFrame, subset: str | Sequence[str] | None = None) 
 
 
 def convert_boolean_column(df: DataFrame, column: str, default_value: bool = False) -> DataFrame:
-    df[column] = (
-        df[column]
-        .map({
-            True: True,
-            False: False,
-            "True": True,
-            "False": False,
-        })
-        .fillna(default_value)
-        .astype(bool)
-    )
+    def _convert(value: object) -> bool:
+        if pd.isna(value):
+            return default_value
+
+        if isinstance(value, bool):
+            return value
+
+        if isinstance(value, (int, float)):
+            return bool(value)
+
+        normalized = str(value).strip().lower()
+        if normalized == "":
+            return default_value
+        if normalized in {"true", "1", "yes", "y"}:
+            return True
+        if normalized in {"false", "0", "no", "n"}:
+            return False
+        return default_value
+
+    df[column] = df[column].map(_convert).astype(bool)
     return df
 
 

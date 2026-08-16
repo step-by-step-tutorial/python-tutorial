@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Protocol
 
 from audit.audit_archive_service import save_event as archive_event
 from audit.audit_database_service import AuditDatabaseService
-from audit.audit_log_service import AuditLogService
 from audit.audit_streaming_service import AuditStreamingService
 from model.audit_event import AuditEvent
+
+logger = logging.getLogger(__name__)
 
 
 class AuditSink(Protocol):
@@ -34,10 +36,8 @@ class StreamingAuditSink:
 
 @dataclass
 class LogAuditSink:
-    service: AuditLogService
-
     def write(self, event: AuditEvent) -> None:
-        self.service.log(event)
+        logger.info("Audit event: %s", event.event_id)
 
 
 @dataclass

@@ -5,7 +5,6 @@ from dataset.definition import (
     Dataframe,
     DatabaseEndpoint,
     Dataset,
-    Event,
     FileEndpoint,
     MessagingEndpoint,
 )
@@ -26,7 +25,6 @@ def build_dataset() -> Dataset:
     return Dataset(
         name="example",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
-        event=Event(),
         audit=Audit(),
         processor_factories={"inmemory": lambda: processor},
         sources={

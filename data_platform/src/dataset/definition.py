@@ -79,25 +79,21 @@ class Dataframe:
 
 
 @dataclass(frozen=True)
-class Event:
-    key_column: str = ""
-
-
-@dataclass(frozen=True)
 class Audit:
     topic: str = ""
     archive_enabled: bool = True
 
 
 class Endpoint(Protocol):
-    name: str
+    @property
+    def name(self) -> str:
+        ...
 
 
 @dataclass(frozen=True, init=False)
 class Dataset:
     name: str
     dataframe: Dataframe
-    event: Event
     audit: Audit
     processor_factories: Mapping[str, Callable[[], DataProcessor]]
     sources: Mapping[str, Endpoint]
@@ -107,7 +103,6 @@ class Dataset:
         self,
         name: str,
         dataframe: Dataframe | None = None,
-        event: Event | None = None,
         audit: Audit | None = None,
         processor_factories: Mapping[str, Callable[[], DataProcessor]] | None = None,
         sources: Mapping[str, Endpoint] | None = None,
@@ -115,7 +110,6 @@ class Dataset:
     ) -> None:
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "dataframe", dataframe or Dataframe())
-        object.__setattr__(self, "event", event or Event())
         object.__setattr__(self, "audit", audit or Audit())
         object.__setattr__(self, "processor_factories", dict(processor_factories or {}))
         object.__setattr__(self, "sources", dict(sources or {}))
@@ -154,7 +148,3 @@ class Dataset:
     @property
     def required_columns(self) -> frozenset[str]:
         return self.dataframe.required_columns
-
-    @property
-    def event_key_column(self) -> str:
-        return self.event.key_column
