@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
-from dataset.sale.columns import sale_columns as schema
+from dataset.sale.attribute import SALE_ATTRIBUTE as schema
 from processor.base import DataProcessor
 from transformation.spark.spark_ops import (
     convert_datetime_column,

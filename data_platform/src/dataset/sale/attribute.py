@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class SaleColumns:
+class SaleAttribute:
     order_id: str = "order_id"
     customer_name: str = "customer_name"
     product_name: str = "product_name"
@@ -23,5 +23,4 @@ class SaleColumns:
         raise AttributeError(item)
 
 
-sale_columns = SaleColumns()
-SALE_COLUMNS = sale_columns
+SALE_ATTRIBUTE = SaleAttribute()

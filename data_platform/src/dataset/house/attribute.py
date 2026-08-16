@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class HouseColumns:
+class HouseAttribute:
     area_raw: str = "Area"
     room_raw: str = "Room"
     parking_raw: str = "Parking"
@@ -30,5 +30,4 @@ class HouseColumns:
         raise AttributeError(item)
 
 
-house_columns = HouseColumns()
-HOUSE_COLUMNS = house_columns
+HOUSE_ATTRIBUTE = HouseAttribute()

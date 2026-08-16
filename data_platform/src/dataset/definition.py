@@ -30,8 +30,8 @@ class FileEndpoint:
 class DatabaseEndpoint:
     name: str = "database"
     table_name: str = ""
-    before_load_sql_files: tuple[str, ...] = ()
-    after_load_sql_files: tuple[str, ...] = ()
+    preparing_sql_files: tuple[str, ...] = ()
+    analytical_sql_files: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -55,27 +55,10 @@ class MessagingEndpoint:
     topic: str = ""
 
 
-@dataclass(frozen=True, init=False)
+@dataclass(frozen=True)
 class Dataframe:
-    _schema: Any = None
-    schema_factory: Callable[[], Any] | None = None
+    schema: Any = None
     required_columns: frozenset[str] = frozenset()
-
-    def __init__(
-        self,
-        schema: Any = None,
-        required_columns: frozenset[str] = frozenset(),
-        schema_factory: Callable[[], Any] | None = None,
-    ) -> None:
-        object.__setattr__(self, "_schema", schema)
-        object.__setattr__(self, "schema_factory", schema_factory)
-        object.__setattr__(self, "required_columns", required_columns)
-
-    @property
-    def schema(self) -> Any:
-        if self.schema_factory is not None:
-            return self.schema_factory()
-        return self._schema
 
 
 @dataclass(frozen=True)

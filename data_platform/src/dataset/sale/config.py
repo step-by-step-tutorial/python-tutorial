@@ -13,40 +13,25 @@ from dataset.definition import (
     FileEndpoint,
     MessagingEndpoint,
 )
-from dataset.sale.columns import sale_columns as columns
+from dataset.sale.attribute import SALE_ATTRIBUTE
 from dataset.sale.spark_schema import build_schema
-
-
-def _schema():
-    return build_schema()
-
-
-def _inmemory_processor():
-    from processor.inmemory.sale_processor import InmemorySaleProcessor
-
-    return InmemorySaleProcessor()
-
-
-def _spark_processor():
-    from processor.spark.sale_processor import SparkSaleProcessor
-
-    return SparkSaleProcessor()
-
+from processor.inmemory.sale_processor import InmemorySaleProcessor
+from processor.spark.sale_processor import SparkSaleProcessor
 
 SALE_DATASET = Dataset(
     name="Sale",
     dataframe=Dataframe(
-        schema_factory=_schema,
+        schema=build_schema(),
         required_columns=frozenset(
             {
-                columns.order_id,
-                columns.customer_name,
-                columns.product_name,
-                columns.category,
-                columns.quantity,
-                columns.unit_price,
-                columns.order_date,
-                columns.country,
+                SALE_ATTRIBUTE.order_id,
+                SALE_ATTRIBUTE.customer_name,
+                SALE_ATTRIBUTE.product_name,
+                SALE_ATTRIBUTE.category,
+                SALE_ATTRIBUTE.quantity,
+                SALE_ATTRIBUTE.unit_price,
+                SALE_ATTRIBUTE.order_date,
+                SALE_ATTRIBUTE.country,
             }
         ),
     ),
@@ -70,8 +55,8 @@ SALE_DATASET = Dataset(
         "database": DatabaseEndpoint(
             name="database",
             table_name="sale.sale_stage",
-            before_load_sql_files=("database/sale/truncate_stage.sql",),
-            after_load_sql_files=(
+            preparing_sql_files=("database/sale/truncate_stage.sql",),
+            analytical_sql_files=(
                 "database/sale/upsert_customer.sql",
                 "database/sale/upsert_product.sql",
                 "database/sale/upsert_order.sql",
@@ -92,7 +77,7 @@ SALE_DATASET = Dataset(
         ),
     },
     processor_factories={
-        "inmemory": _inmemory_processor,
-        "spark": _spark_processor,
+        "inmemory": InmemorySaleProcessor,
+        "spark": SparkSaleProcessor,
     },
 )

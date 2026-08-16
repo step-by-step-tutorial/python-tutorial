@@ -4,7 +4,7 @@ from typing import Any
 
 from connector.datalake import object_storage_connector as datalake_connection_factory
 from model.audit_event import AuditEvent
-from persistence.datalake.path_utils import generate_full_path
+from util.path_utils import generate_full_path
 
 
 def save_event(event: AuditEvent, bucket_name: str) -> str:

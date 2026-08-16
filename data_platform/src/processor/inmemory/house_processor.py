@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import pandas as pd
 from pandas import DataFrame
 
-from dataset.house.columns import house_columns as schema
+from dataset.house.attribute import HOUSE_ATTRIBUTE as schema
 from processor.base import DataProcessor
 from transformation.inmemory.pandas_ops import (
     average_by_group,

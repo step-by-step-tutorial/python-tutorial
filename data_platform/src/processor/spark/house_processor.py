@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
-from dataset.house.columns import house_columns as schema
+from dataset.house.attribute import HOUSE_ATTRIBUTE as schema
 from processor.base import DataProcessor
 from transformation.spark.spark_ops import (
     average_by_group,

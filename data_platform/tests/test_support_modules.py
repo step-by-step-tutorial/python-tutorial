@@ -7,7 +7,6 @@ import pandas as pd
 import pytest
 
 from config.datalake import settings
-from persistence.datalake import path_utils as datalake_path_utils
 from service.spark import runtime as spark_runtime
 from streaming.delivery import topic_on_delivery
 from transformation.conversion.type_converter import (
@@ -17,7 +16,7 @@ from transformation.conversion.type_converter import (
 )
 from transformation.validation.schema_validator import require_columns, requires_column
 from util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
-    time_utils
+    time_utils, path_utils as datalake_path_utils
 
 
 class TestStringUtils:

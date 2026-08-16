@@ -15,14 +15,12 @@ class TestAuditStreamingService:
             pipeline_id="pipeline-001",
         )
         given_producer = mocker.Mock()
-        mock_create_streaming_producer = mocker.Mock(return_value=given_producer)
 
         # When
-        actual = AuditStreamingService("audit-topic", producer_factory=mock_create_streaming_producer)
+        actual = AuditStreamingService("audit-topic", producer=given_producer)
         actual.publish(given_event)
 
         # Then
-        assert mock_create_streaming_producer.call_count == 1
         assert given_producer.produce.call_count == 1
         assert given_producer.poll.call_count == 1
         assert given_producer.produce.call_args.kwargs["key"] == str(given_event.event_id)
@@ -47,12 +45,12 @@ class TestAuditStreamingService:
 
     def test_should_lazily_create_producer_only_on_publish(self, mocker) -> None:
         given_producer = mocker.Mock()
-        producer_factory = mocker.Mock(return_value=given_producer)
+        mock_create_producer = mocker.patch("connector.messaging.kafka_connector.create_producer", return_value=given_producer)
 
-        service = AuditStreamingService("audit-topic", producer_factory=producer_factory)
+        service = AuditStreamingService("audit-topic")
 
-        assert producer_factory.call_count == 0
+        assert mock_create_producer.call_count == 0
 
         service.publish(AuditEventFactory.create_pipeline_started_event("sale_pipeline", "pipeline-001"))
 
-        assert producer_factory.call_count == 1
+        assert mock_create_producer.call_count == 1

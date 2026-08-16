@@ -3,8 +3,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from dataset.house.columns import house_columns
-from dataset.sale.columns import sale_columns
+from dataset.house.attribute import HOUSE_ATTRIBUTE
+from dataset.sale.attribute import SALE_ATTRIBUTE
 from processor.inmemory.house_processor import InmemoryHouseProcessor
 from processor.inmemory.sale_processor import InmemorySaleProcessor
 
@@ -17,44 +17,44 @@ class TestInmemorySaleProcessor:
         dataframe = pd.DataFrame(
             [
                 {
-                    sale_columns.order_id: "1",
-                    sale_columns.customer_name: "Alice",
-                    sale_columns.product_name: "Chair",
-                    sale_columns.category: "Furniture",
-                    sale_columns.quantity: "2",
-                    sale_columns.unit_price: "10",
-                    sale_columns.order_date: "2026-01-10",
-                    sale_columns.country: "USA",
+                    SALE_ATTRIBUTE.order_id: "1",
+                    SALE_ATTRIBUTE.customer_name: "Alice",
+                    SALE_ATTRIBUTE.product_name: "Chair",
+                    SALE_ATTRIBUTE.category: "Furniture",
+                    SALE_ATTRIBUTE.quantity: "2",
+                    SALE_ATTRIBUTE.unit_price: "10",
+                    SALE_ATTRIBUTE.order_date: "2026-01-10",
+                    SALE_ATTRIBUTE.country: "USA",
                 },
                 {
-                    sale_columns.order_id: "1",
-                    sale_columns.customer_name: "Alice",
-                    sale_columns.product_name: "Chair",
-                    sale_columns.category: "Furniture",
-                    sale_columns.quantity: "2",
-                    sale_columns.unit_price: "10",
-                    sale_columns.order_date: "2026-01-10",
-                    sale_columns.country: "USA",
+                    SALE_ATTRIBUTE.order_id: "1",
+                    SALE_ATTRIBUTE.customer_name: "Alice",
+                    SALE_ATTRIBUTE.product_name: "Chair",
+                    SALE_ATTRIBUTE.category: "Furniture",
+                    SALE_ATTRIBUTE.quantity: "2",
+                    SALE_ATTRIBUTE.unit_price: "10",
+                    SALE_ATTRIBUTE.order_date: "2026-01-10",
+                    SALE_ATTRIBUTE.country: "USA",
                 },
                 {
-                    sale_columns.order_id: "2",
-                    sale_columns.customer_name: "Bob",
-                    sale_columns.product_name: "Desk",
-                    sale_columns.category: "Electronics",
-                    sale_columns.quantity: "",
-                    sale_columns.unit_price: "20",
-                    sale_columns.order_date: "2026-01-11",
-                    sale_columns.country: "Canada",
+                    SALE_ATTRIBUTE.order_id: "2",
+                    SALE_ATTRIBUTE.customer_name: "Bob",
+                    SALE_ATTRIBUTE.product_name: "Desk",
+                    SALE_ATTRIBUTE.category: "Electronics",
+                    SALE_ATTRIBUTE.quantity: "",
+                    SALE_ATTRIBUTE.unit_price: "20",
+                    SALE_ATTRIBUTE.order_date: "2026-01-11",
+                    SALE_ATTRIBUTE.country: "Canada",
                 },
                 {
-                    sale_columns.order_id: "3",
-                    sale_columns.customer_name: "Carol",
-                    sale_columns.product_name: "Lamp",
-                    sale_columns.category: "Furniture",
-                    sale_columns.quantity: "-1",
-                    sale_columns.unit_price: "5",
-                    sale_columns.order_date: "invalid",
-                    sale_columns.country: "UK",
+                    SALE_ATTRIBUTE.order_id: "3",
+                    SALE_ATTRIBUTE.customer_name: "Carol",
+                    SALE_ATTRIBUTE.product_name: "Lamp",
+                    SALE_ATTRIBUTE.category: "Furniture",
+                    SALE_ATTRIBUTE.quantity: "-1",
+                    SALE_ATTRIBUTE.unit_price: "5",
+                    SALE_ATTRIBUTE.order_date: "invalid",
+                    SALE_ATTRIBUTE.country: "UK",
                 },
             ]
         )
@@ -64,9 +64,9 @@ class TestInmemorySaleProcessor:
         enriched = processor.enrich(cleaned)
 
         assert len(cleaned) == 2
-        assert list(cleaned[sale_columns.order_id]) == [1, 2]
-        assert list(enriched[sale_columns.total_price]) == [20.0, 20.0]
-        assert list(enriched[sale_columns.year]) == [2026, 2026]
+        assert list(cleaned[SALE_ATTRIBUTE.order_id]) == [1, 2]
+        assert list(enriched[SALE_ATTRIBUTE.total_price]) == [20.0, 20.0]
+        assert list(enriched[SALE_ATTRIBUTE.year]) == [2026, 2026]
 
 
 class TestInmemoryHouseProcessor:
@@ -75,44 +75,44 @@ class TestInmemoryHouseProcessor:
         dataframe = pd.DataFrame(
             [
                 {
-                    house_columns.area_raw: " 3,310,000,000 ",
-                    house_columns.room_raw: "2",
-                    house_columns.parking_raw: "true",
-                    house_columns.warehouse_raw: "false",
-                    house_columns.elevator_raw: "true",
-                    house_columns.address_raw: " Ostad Moein ",
-                    house_columns.price_raw: "3310000000.0",
-                    house_columns.price_usd_raw: "110333.33",
+                    HOUSE_ATTRIBUTE.area_raw: " 3,310,000,000 ",
+                    HOUSE_ATTRIBUTE.room_raw: "2",
+                    HOUSE_ATTRIBUTE.parking_raw: "true",
+                    HOUSE_ATTRIBUTE.warehouse_raw: "false",
+                    HOUSE_ATTRIBUTE.elevator_raw: "true",
+                    HOUSE_ATTRIBUTE.address_raw: " Ostad Moein ",
+                    HOUSE_ATTRIBUTE.price_raw: "3310000000.0",
+                    HOUSE_ATTRIBUTE.price_usd_raw: "110333.33",
                 },
                 {
-                    house_columns.area_raw: " 3,310,000,000 ",
-                    house_columns.room_raw: "2",
-                    house_columns.parking_raw: "true",
-                    house_columns.warehouse_raw: "false",
-                    house_columns.elevator_raw: "true",
-                    house_columns.address_raw: " Ostad Moein ",
-                    house_columns.price_raw: "3310000000.0",
-                    house_columns.price_usd_raw: "110333.33",
+                    HOUSE_ATTRIBUTE.area_raw: " 3,310,000,000 ",
+                    HOUSE_ATTRIBUTE.room_raw: "2",
+                    HOUSE_ATTRIBUTE.parking_raw: "true",
+                    HOUSE_ATTRIBUTE.warehouse_raw: "false",
+                    HOUSE_ATTRIBUTE.elevator_raw: "true",
+                    HOUSE_ATTRIBUTE.address_raw: " Ostad Moein ",
+                    HOUSE_ATTRIBUTE.price_raw: "3310000000.0",
+                    HOUSE_ATTRIBUTE.price_usd_raw: "110333.33",
                 },
                 {
-                    house_columns.area_raw: "100",
-                    house_columns.room_raw: "1",
-                    house_columns.parking_raw: "false",
-                    house_columns.warehouse_raw: "false",
-                    house_columns.elevator_raw: "false",
-                    house_columns.address_raw: " Noor ",
-                    house_columns.price_raw: "1000",
-                    house_columns.price_usd_raw: "",
+                    HOUSE_ATTRIBUTE.area_raw: "100",
+                    HOUSE_ATTRIBUTE.room_raw: "1",
+                    HOUSE_ATTRIBUTE.parking_raw: "false",
+                    HOUSE_ATTRIBUTE.warehouse_raw: "false",
+                    HOUSE_ATTRIBUTE.elevator_raw: "false",
+                    HOUSE_ATTRIBUTE.address_raw: " Noor ",
+                    HOUSE_ATTRIBUTE.price_raw: "1000",
+                    HOUSE_ATTRIBUTE.price_usd_raw: "",
                 },
                 {
-                    house_columns.area_raw: "0",
-                    house_columns.room_raw: "1",
-                    house_columns.parking_raw: "false",
-                    house_columns.warehouse_raw: "false",
-                    house_columns.elevator_raw: "false",
-                    house_columns.address_raw: "Invalid",
-                    house_columns.price_raw: "10",
-                    house_columns.price_usd_raw: "1",
+                    HOUSE_ATTRIBUTE.area_raw: "0",
+                    HOUSE_ATTRIBUTE.room_raw: "1",
+                    HOUSE_ATTRIBUTE.parking_raw: "false",
+                    HOUSE_ATTRIBUTE.warehouse_raw: "false",
+                    HOUSE_ATTRIBUTE.elevator_raw: "false",
+                    HOUSE_ATTRIBUTE.address_raw: "Invalid",
+                    HOUSE_ATTRIBUTE.price_raw: "10",
+                    HOUSE_ATTRIBUTE.price_usd_raw: "1",
                 },
             ]
         )
@@ -122,6 +122,6 @@ class TestInmemoryHouseProcessor:
         enriched = processor.enrich(cleaned)
 
         assert len(cleaned) == 2
-        assert list(cleaned[house_columns.address]) == ["Ostad Moein", "Noor"]
-        assert house_columns.listing_key in enriched.columns
-        assert list(enriched[house_columns.price_per_square_meter]) == [1.0, 10.0]
+        assert list(cleaned[HOUSE_ATTRIBUTE.address]) == ["Ostad Moein", "Noor"]
+        assert HOUSE_ATTRIBUTE.listing_key in enriched.columns
+        assert list(enriched[HOUSE_ATTRIBUTE.price_per_square_meter]) == [1.0, 10.0]

@@ -1,10 +1,5 @@
 from __future__ import annotations
 
-import tempfile
-from functools import lru_cache
-from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
-
 from pyspark.sql import SparkSession
 
 from config.datalake import settings as datalake_settings
@@ -18,34 +13,6 @@ SPARK_JARS = [
     "ch.qos.reload4j:reload4j:1.2.22",
     "org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.2",
 ]
-
-
-def _source_root() -> Path:
-    current_file = Path(__file__).resolve()
-    for candidate in current_file.parents:
-        if candidate.name == "src":
-            return candidate
-
-    return current_file.parents[2]
-
-
-@lru_cache(maxsize=1)
-def _build_source_archive() -> str:
-    source_root = _source_root()
-    archive_path = Path(tempfile.gettempdir()) / "data_platform_sources.zip"
-
-    with ZipFile(archive_path, "w", compression=ZIP_DEFLATED) as archive:
-        for path in source_root.rglob("*"):
-            if not path.is_file():
-                continue
-            if path.suffix == ".pyc":
-                continue
-            if "__pycache__" in path.parts:
-                continue
-
-            archive.write(path, path.relative_to(source_root))
-
-    return str(archive_path)
 
 
 def create_session() -> SparkSession:
@@ -73,5 +40,4 @@ def create_session() -> SparkSession:
         .getOrCreate()
     )
 
-    session.sparkContext.addPyFile(_build_source_archive())
     return session

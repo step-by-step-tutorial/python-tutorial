@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 import pandas as pd
 
@@ -9,7 +8,7 @@ from audit.audit_service import AuditService
 from dataset.definition import Dataset
 from persistence.database import database_service
 from persistence.datalake import datalake_service as inmemory_datalake_service
-from persistence.datalake.path_utils import DatalakeEnv, generate_relative_path
+from util.path_utils import DatalakeEnv, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
@@ -84,12 +83,15 @@ class InmemoryPipeline(BatchPipeline):
     def populate_database(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating operational database with enriched data")
-        database_service.populate(self.dataset, enriched_dataframe)
+        database_service.truncate_and_populate_from_pandas(self.dataset, enriched_dataframe)
 
     def populate_datawarehouse(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating data warehouse with enriched data")
-        datawarehouse_service.truncate_and_populate(self.dataset.get_destination("datawarehouse"), enriched_dataframe)
+        datawarehouse_service.truncate_and_populate_from_pandas(
+            self.dataset.get_destination("datawarehouse"),
+            enriched_dataframe,
+        )
 
     def show_dataframe(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)

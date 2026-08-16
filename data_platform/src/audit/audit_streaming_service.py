@@ -1,6 +1,5 @@
 import logging
 from functools import partial
-from collections.abc import Callable
 from typing import Any
 
 from model.audit_event import AuditEvent
@@ -11,18 +10,15 @@ logger = logging.getLogger(__name__)
 
 class AuditStreamingService:
 
-    def __init__(self, topic: str, producer: Any | None = None, producer_factory: Callable[[], Any] | None = None) -> None:
+    def __init__(self, topic: str, producer: Any | None = None) -> None:
         self.topic = topic
         self._producer = producer
-        self._producer_factory = producer_factory
 
     def _get_producer(self) -> Any:
         if self._producer is None:
-            if self._producer_factory is None:
-                from connector.messaging.kafka_connector import create_producer
+            from connector.messaging.kafka_connector import create_producer
 
-                self._producer_factory = create_producer
-            self._producer = self._producer_factory()
+            self._producer = create_producer()
         return self._producer
 
     def publish(self, event: AuditEvent) -> None:

@@ -2,7 +2,6 @@ from config.app import settings as app_settings
 from config.audit import settings as audit_settings
 from config.datalake import settings as datalake_settings
 from config.datawarehouse import settings as datawarehouse_settings
-from config.messaging import settings as messaging_settings
 from dataset.definition import (
     Audit,
     DataLakeEndpoint,
@@ -13,30 +12,15 @@ from dataset.definition import (
     FileEndpoint,
     MessagingEndpoint,
 )
-from dataset.house.columns import house_columns as columns
+from dataset.house.attribute import HOUSE_ATTRIBUTE as columns
 from dataset.house.spark_schema import build_schema
-
-
-def _schema():
-    return build_schema()
-
-
-def _inmemory_processor():
-    from processor.inmemory.house_processor import InmemoryHouseProcessor
-
-    return InmemoryHouseProcessor()
-
-
-def _spark_processor():
-    from processor.spark.house_processor import SparkHouseProcessor
-
-    return SparkHouseProcessor()
-
+from processor.inmemory.house_processor import InmemoryHouseProcessor
+from processor.spark.house_processor import SparkHouseProcessor
 
 HOUSE_DATASET = Dataset(
     name="house",
     dataframe=Dataframe(
-        schema_factory=_schema,
+        schema=build_schema(),
         required_columns=frozenset(
             {
                 columns.area_raw,
@@ -50,10 +34,7 @@ HOUSE_DATASET = Dataset(
             }
         ),
     ),
-    audit=Audit(
-        topic=audit_settings.streaming_topic,
-        archive_enabled=audit_settings.archive_enabled,
-    ),
+    audit=Audit(topic=audit_settings.streaming_topic, archive_enabled=audit_settings.archive_enabled),
     sources={
         "file": FileEndpoint(
             name="file",
@@ -70,8 +51,8 @@ HOUSE_DATASET = Dataset(
         "database": DatabaseEndpoint(
             name="database",
             table_name="house.house_stage",
-            before_load_sql_files=("database/house/truncate_stage.sql",),
-            after_load_sql_files=(),
+            preparing_sql_files=("database/house/truncate_stage.sql",),
+            analytical_sql_files=(),
         ),
         "datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
@@ -87,7 +68,7 @@ HOUSE_DATASET = Dataset(
         ),
     },
     processor_factories={
-        "inmemory": _inmemory_processor,
-        "spark": _spark_processor,
+        "inmemory": InmemoryHouseProcessor,
+        "spark": SparkHouseProcessor,
     },
 )

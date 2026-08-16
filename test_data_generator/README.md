@@ -159,7 +159,7 @@ A config file is a JSON object with three required keys plus the column list.
 | --- | --- | --- |
 | `row_count` | yes | Number of data rows to generate |
 | `output_file` | yes | Destination CSV, relative to the config file's folder |
-| `columns` | yes | Ordered list of column definitions |
+| `attribute.py` | yes | Ordered list of column definitions |
 | `seed` | no | Integer seed; omit for different data on every run |
 
 ### Column Types
@@ -220,7 +220,7 @@ Germany,EUR,Europe/Berlin
 
 ### Column Order and Dependencies
 
-The order of `columns` is the column order of the generated CSV. Dependencies are resolved
+The order of `attribute.py` is the column order of the generated CSV. Dependencies are resolved
 automatically, so a column may reference a `source_field` that is declared *after* it — which is how
 `country` can be the last column while the name, phone, and address columns all follow from it.
 Circular references are rejected with a clear error instead of hanging.

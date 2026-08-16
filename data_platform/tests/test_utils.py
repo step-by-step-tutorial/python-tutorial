@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from dataset.sale.columns import SALE_COLUMNS
+from dataset.sale.attribute import SALE_ATTRIBUTE
 from transformation.inmemory.pandas_ops import sum_by_group
 from transformation.conversion.type_converter import (
     convert_to_integer,
@@ -57,29 +57,29 @@ class TestPandasDataframeUtils:
 
     def test_should_require_columns(self) -> None:
         # Given
-        dataframe = pd.DataFrame({SALE_COLUMNS.ORDER_ID: [1]})
+        dataframe = pd.DataFrame({SALE_ATTRIBUTE.ORDER_ID: [1]})
 
         # When / Then
         with pytest.raises(ValueError):
-            require_columns(dataframe, frozenset({SALE_COLUMNS.ORDER_ID, SALE_COLUMNS.CATEGORY}))
+            require_columns(dataframe, frozenset({SALE_ATTRIBUTE.ORDER_ID, SALE_ATTRIBUTE.CATEGORY}))
 
     def test_should_sum_by_group(self) -> None:
         # Given
         dataframe = pd.DataFrame(
             {
-                SALE_COLUMNS.CATEGORY: ["A", "A", "B"],
-                SALE_COLUMNS.TOTAL_PRICE: [10.0, 20.0, 5.0],
+                SALE_ATTRIBUTE.CATEGORY: ["A", "A", "B"],
+                SALE_ATTRIBUTE.TOTAL_PRICE: [10.0, 20.0, 5.0],
             }
         )
 
         # When
         actual = sum_by_group(
             dataframe,
-            SALE_COLUMNS.CATEGORY,
-            SALE_COLUMNS.TOTAL_PRICE,
-            SALE_COLUMNS.REVENUE,
+            SALE_ATTRIBUTE.CATEGORY,
+            SALE_ATTRIBUTE.TOTAL_PRICE,
+            SALE_ATTRIBUTE.REVENUE,
         )
 
         # Then
-        assert actual.iloc[0][SALE_COLUMNS.CATEGORY] == "A"
-        assert actual.iloc[0][SALE_COLUMNS.REVENUE] == 30.0
+        assert actual.iloc[0][SALE_ATTRIBUTE.CATEGORY] == "A"
+        assert actual.iloc[0][SALE_ATTRIBUTE.REVENUE] == 30.0

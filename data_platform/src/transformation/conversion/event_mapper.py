@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from dataset.house.columns import HOUSE_COLUMNS as house_columns
-from dataset.sale.columns import SALE_COLUMNS as sale_columns
+from dataset.house.attribute import HOUSE_ATTRIBUTE
+from dataset.sale.attribute import SALE_ATTRIBUTE
 from model.house_event import HouseEvent
 from model.sale_event import SaleEvent
 from transformation.conversion.type_converter import (
@@ -31,26 +31,26 @@ class EventMapper(Protocol):
 class SaleEventMapper:
     def map(self, row: dict[str, str]) -> MappedEvent:
         event = SaleEvent(
-            order_id=convert_to_integer(row.get(sale_columns.order_id)),
-            customer_name=row[sale_columns.customer_name],
-            product_name=row[sale_columns.product_name],
-            category=row[sale_columns.category],
-            quantity=convert_to_optional_float(row.get(sale_columns.quantity)),
-            unit_price=convert_to_optional_float(row.get(sale_columns.unit_price)),
-            order_date=normalize_optional_text(row.get(sale_columns.order_date)),
-            country=row[sale_columns.country],
+            order_id=convert_to_integer(row.get(SALE_ATTRIBUTE.order_id)),
+            customer_name=row[SALE_ATTRIBUTE.customer_name],
+            product_name=row[SALE_ATTRIBUTE.product_name],
+            category=row[SALE_ATTRIBUTE.category],
+            quantity=convert_to_optional_float(row.get(SALE_ATTRIBUTE.quantity)),
+            unit_price=convert_to_optional_float(row.get(SALE_ATTRIBUTE.unit_price)),
+            order_date=normalize_optional_text(row.get(SALE_ATTRIBUTE.order_date)),
+            country=row[SALE_ATTRIBUTE.country],
         )
         return MappedEvent(
             key=str(event.order_id),
             payload={
-                sale_columns.order_id: event.order_id,
-                sale_columns.customer_name: event.customer_name,
-                sale_columns.product_name: event.product_name,
-                sale_columns.category: event.category,
-                sale_columns.quantity: event.quantity,
-                sale_columns.unit_price: event.unit_price,
-                sale_columns.order_date: event.order_date,
-                sale_columns.country: event.country,
+                SALE_ATTRIBUTE.order_id: event.order_id,
+                SALE_ATTRIBUTE.customer_name: event.customer_name,
+                SALE_ATTRIBUTE.product_name: event.product_name,
+                SALE_ATTRIBUTE.category: event.category,
+                SALE_ATTRIBUTE.quantity: event.quantity,
+                SALE_ATTRIBUTE.unit_price: event.unit_price,
+                SALE_ATTRIBUTE.order_date: event.order_date,
+                SALE_ATTRIBUTE.country: event.country,
             },
         )
 
@@ -59,26 +59,26 @@ class SaleEventMapper:
 class HouseEventMapper:
     def map(self, row: dict[str, str]) -> MappedEvent:
         event = HouseEvent(
-            area=convert_to_float(row.get(house_columns.area_raw)),
-            room=convert_to_integer(row.get(house_columns.room_raw)),
-            parking=convert_to_optional_boolean(row.get(house_columns.parking_raw)),
-            warehouse=convert_to_optional_boolean(row.get(house_columns.warehouse_raw)),
-            elevator=convert_to_optional_boolean(row.get(house_columns.elevator_raw)),
-            address=normalize_optional_text(row.get(house_columns.address_raw)),
-            price=convert_to_float(row.get(house_columns.price_raw)),
-            price_usd=convert_to_optional_float(row.get(house_columns.price_usd_raw)),
+            area=convert_to_float(row.get(HOUSE_ATTRIBUTE.area_raw)),
+            room=convert_to_integer(row.get(HOUSE_ATTRIBUTE.room_raw)),
+            parking=convert_to_optional_boolean(row.get(HOUSE_ATTRIBUTE.parking_raw)),
+            warehouse=convert_to_optional_boolean(row.get(HOUSE_ATTRIBUTE.warehouse_raw)),
+            elevator=convert_to_optional_boolean(row.get(HOUSE_ATTRIBUTE.elevator_raw)),
+            address=normalize_optional_text(row.get(HOUSE_ATTRIBUTE.address_raw)),
+            price=convert_to_float(row.get(HOUSE_ATTRIBUTE.price_raw)),
+            price_usd=convert_to_optional_float(row.get(HOUSE_ATTRIBUTE.price_usd_raw)),
         )
         return MappedEvent(
             key=event.address,
             payload={
-                house_columns.area_raw: event.area,
-                house_columns.room_raw: event.room,
-                house_columns.parking_raw: event.parking,
-                house_columns.warehouse_raw: event.warehouse,
-                house_columns.elevator_raw: event.elevator,
-                house_columns.address_raw: event.address,
-                house_columns.price_raw: event.price,
-                house_columns.price_usd_raw: event.price_usd,
+                HOUSE_ATTRIBUTE.area_raw: event.area,
+                HOUSE_ATTRIBUTE.room_raw: event.room,
+                HOUSE_ATTRIBUTE.parking_raw: event.parking,
+                HOUSE_ATTRIBUTE.warehouse_raw: event.warehouse,
+                HOUSE_ATTRIBUTE.elevator_raw: event.elevator,
+                HOUSE_ATTRIBUTE.address_raw: event.address,
+                HOUSE_ATTRIBUTE.price_raw: event.price,
+                HOUSE_ATTRIBUTE.price_usd_raw: event.price_usd,
             },
         )
 

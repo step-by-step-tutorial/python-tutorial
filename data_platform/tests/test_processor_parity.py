@@ -8,8 +8,8 @@ import pytest
 from pandas.testing import assert_frame_equal
 from pyspark.sql import SparkSession
 
-from dataset.house.columns import house_columns
-from dataset.sale.columns import sale_columns
+from dataset.house.attribute import HOUSE_ATTRIBUTE
+from dataset.sale.attribute import SALE_ATTRIBUTE
 from processor.inmemory.house_processor import InmemoryHouseProcessor
 from processor.inmemory.sale_processor import InmemorySaleProcessor
 from processor.spark.house_processor import SparkHouseProcessor
@@ -39,9 +39,9 @@ def _normalize(frame: pd.DataFrame, sort_columns: list[str] | None = None) -> pd
     normalized = frame.copy()
 
     for column in normalized.columns:
-        if column == sale_columns.order_id:
+        if column == SALE_ATTRIBUTE.order_id:
             normalized[column] = normalized[column].astype("string")
-        if column == sale_columns.order_date:
+        if column == SALE_ATTRIBUTE.order_date:
             normalized[column] = pd.to_datetime(normalized[column], errors="coerce").dt.strftime("%Y-%m-%d")
         else:
             normalized[column] = normalized[column]
@@ -65,34 +65,34 @@ class TestSaleProcessorParity:
         raw = pd.DataFrame(
             [
                 {
-                    sale_columns.order_id: "1",
-                    sale_columns.customer_name: "Alice",
-                    sale_columns.product_name: "Chair",
-                    sale_columns.category: "Furniture",
-                    sale_columns.quantity: "2",
-                    sale_columns.unit_price: "10",
-                    sale_columns.order_date: "2026-01-10",
-                    sale_columns.country: "USA",
+                    SALE_ATTRIBUTE.order_id: "1",
+                    SALE_ATTRIBUTE.customer_name: "Alice",
+                    SALE_ATTRIBUTE.product_name: "Chair",
+                    SALE_ATTRIBUTE.category: "Furniture",
+                    SALE_ATTRIBUTE.quantity: "2",
+                    SALE_ATTRIBUTE.unit_price: "10",
+                    SALE_ATTRIBUTE.order_date: "2026-01-10",
+                    SALE_ATTRIBUTE.country: "USA",
                 },
                 {
-                    sale_columns.order_id: "1",
-                    sale_columns.customer_name: "Alice",
-                    sale_columns.product_name: "Chair",
-                    sale_columns.category: "Furniture",
-                    sale_columns.quantity: "2",
-                    sale_columns.unit_price: "10",
-                    sale_columns.order_date: "2026-01-10",
-                    sale_columns.country: "USA",
+                    SALE_ATTRIBUTE.order_id: "1",
+                    SALE_ATTRIBUTE.customer_name: "Alice",
+                    SALE_ATTRIBUTE.product_name: "Chair",
+                    SALE_ATTRIBUTE.category: "Furniture",
+                    SALE_ATTRIBUTE.quantity: "2",
+                    SALE_ATTRIBUTE.unit_price: "10",
+                    SALE_ATTRIBUTE.order_date: "2026-01-10",
+                    SALE_ATTRIBUTE.country: "USA",
                 },
                 {
-                    sale_columns.order_id: "2",
-                    sale_columns.customer_name: "Bob",
-                    sale_columns.product_name: "Desk",
-                    sale_columns.category: "Electronics",
-                    sale_columns.quantity: "",
-                    sale_columns.unit_price: "20",
-                    sale_columns.order_date: "2026-01-11",
-                    sale_columns.country: "Canada",
+                    SALE_ATTRIBUTE.order_id: "2",
+                    SALE_ATTRIBUTE.customer_name: "Bob",
+                    SALE_ATTRIBUTE.product_name: "Desk",
+                    SALE_ATTRIBUTE.category: "Electronics",
+                    SALE_ATTRIBUTE.quantity: "",
+                    SALE_ATTRIBUTE.unit_price: "20",
+                    SALE_ATTRIBUTE.order_date: "2026-01-11",
+                    SALE_ATTRIBUTE.country: "Canada",
                 },
             ]
         )
@@ -103,7 +103,7 @@ class TestSaleProcessorParity:
         spark_enriched = SparkSaleProcessor().enrich(spark_cleaned)
         spark = spark_enriched.toPandas()
 
-        _compare_frames(in_memory, spark, sort_columns=[sale_columns.order_id])
+        _compare_frames(in_memory, spark, sort_columns=[SALE_ATTRIBUTE.order_id])
 
         in_memory_analysis = InmemorySaleProcessor().analyze(in_memory)
         spark_analysis = SparkSaleProcessor().analyze(spark_enriched)
@@ -111,12 +111,12 @@ class TestSaleProcessorParity:
         _compare_frames(
             in_memory_analysis["revenue_by_category"],
             spark_analysis["revenue_by_category"].toPandas(),
-            sort_columns=[sale_columns.category],
+            sort_columns=[SALE_ATTRIBUTE.category],
         )
         _compare_frames(
             in_memory_analysis["revenue_by_country"],
             spark_analysis["revenue_by_country"].toPandas(),
-            sort_columns=[sale_columns.country],
+            sort_columns=[SALE_ATTRIBUTE.country],
         )
 
 
@@ -126,24 +126,24 @@ class TestHouseProcessorParity:
         raw = pd.DataFrame(
             [
                 {
-                    house_columns.area_raw: "200",
-                    house_columns.room_raw: "2",
-                    house_columns.parking_raw: "true",
-                    house_columns.warehouse_raw: "false",
-                    house_columns.elevator_raw: "true",
-                    house_columns.address_raw: " Ostad Moein ",
-                    house_columns.price_raw: "2000",
-                    house_columns.price_usd_raw: "50",
+                    HOUSE_ATTRIBUTE.area_raw: "200",
+                    HOUSE_ATTRIBUTE.room_raw: "2",
+                    HOUSE_ATTRIBUTE.parking_raw: "true",
+                    HOUSE_ATTRIBUTE.warehouse_raw: "false",
+                    HOUSE_ATTRIBUTE.elevator_raw: "true",
+                    HOUSE_ATTRIBUTE.address_raw: " Ostad Moein ",
+                    HOUSE_ATTRIBUTE.price_raw: "2000",
+                    HOUSE_ATTRIBUTE.price_usd_raw: "50",
                 },
                 {
-                    house_columns.area_raw: "100",
-                    house_columns.room_raw: "1",
-                    house_columns.parking_raw: "false",
-                    house_columns.warehouse_raw: "false",
-                    house_columns.elevator_raw: "false",
-                    house_columns.address_raw: " Noor ",
-                    house_columns.price_raw: "1000",
-                    house_columns.price_usd_raw: "25",
+                    HOUSE_ATTRIBUTE.area_raw: "100",
+                    HOUSE_ATTRIBUTE.room_raw: "1",
+                    HOUSE_ATTRIBUTE.parking_raw: "false",
+                    HOUSE_ATTRIBUTE.warehouse_raw: "false",
+                    HOUSE_ATTRIBUTE.elevator_raw: "false",
+                    HOUSE_ATTRIBUTE.address_raw: " Noor ",
+                    HOUSE_ATTRIBUTE.price_raw: "1000",
+                    HOUSE_ATTRIBUTE.price_usd_raw: "25",
                 },
             ]
         )
@@ -154,7 +154,7 @@ class TestHouseProcessorParity:
         spark_enriched = SparkHouseProcessor().enrich(spark_cleaned)
         spark = spark_enriched.toPandas()
 
-        _compare_frames(in_memory, spark, sort_columns=[house_columns.address])
+        _compare_frames(in_memory, spark, sort_columns=[HOUSE_ATTRIBUTE.address])
 
         in_memory_analysis = InmemoryHouseProcessor().analyze(in_memory)
         spark_analysis = SparkHouseProcessor().analyze(spark_enriched)
@@ -162,12 +162,12 @@ class TestHouseProcessorParity:
         _compare_frames(
             in_memory_analysis["average_price_by_address"],
             spark_analysis["average_price_by_address"].toPandas(),
-            sort_columns=[house_columns.address],
+            sort_columns=[HOUSE_ATTRIBUTE.address],
         )
         _compare_frames(
             in_memory_analysis["average_price_by_square_meter"],
             spark_analysis["average_price_per_square_meter_by_room"].toPandas().rename(
                 columns={"average_price_per_square_meter": "average_price_by_square_meter"}
             ),
-            sort_columns=[house_columns.room],
+            sort_columns=[HOUSE_ATTRIBUTE.room],
         )

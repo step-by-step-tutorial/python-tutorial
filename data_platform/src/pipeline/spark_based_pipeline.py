@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from pyspark.sql import DataFrame
 
@@ -9,10 +8,9 @@ from config.datalake import settings as datalake_settings
 from service.spark.batch_service import SparkBatchService as SparkService
 from dataset.definition import Dataset
 from persistence.database import database_service
-from persistence.datalake.path_utils import DatalakeEnv, generate_relative_path
+from util.path_utils import DatalakeEnv, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
-from presentation.dataframe_display import show_map_of_dataframe
 from pipeline.batch_pipeline import BatchPipeline
 
 logger = logging.getLogger(__name__)
@@ -92,13 +90,13 @@ class SparkPipeline(BatchPipeline):
     def populate_database(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating operational database with enriched data")
-        database_service.populate(self.dataset, enriched_dataframe)
+        database_service.truncate_and_populate_from_spark(self.dataset, enriched_dataframe)
 
     def populate_datawarehouse(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating data warehouse with enriched data")
 
-        datawarehouse_service.truncate_and_populate(
+        datawarehouse_service.truncate_and_populate_from_spark(
             self.dataset.get_destination("datawarehouse"),
             enriched_dataframe
         )

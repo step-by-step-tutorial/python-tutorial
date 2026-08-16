@@ -1,30 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import cast
 
-from config.database import settings as database_settings
-from dataset.definition import Dataset
-from persistence.database.population_strategy import lookup_population_strategy
+import pandas
+import pyspark
+
+from config.database import settings
+from connector.database import postgres_connector as database_connection_factory
+from dataset.definition import Dataset, DatabaseEndpoint
 from util.database_utils import execute_sql
 from util.file_utils import read_text_file
-
-
-def populate_stage_table(dataset: Dataset, dataframe: Any) -> None:
-    population_function = lookup_population_strategy(dataframe)
-    database = dataset.get_destination("database")
-
-    if hasattr(dataframe, "write"):
-        population_function(
-            dataframe,
-            database.table_name,
-            database_settings.jdbc_url,
-            database_settings.user,
-            database_settings.password,
-            database_settings.driver,
-        )
-        return
-
-    population_function(dataframe, database.table_name)
 
 
 def run_sql_files(sql_files: tuple[str, ...]) -> None:
@@ -34,8 +19,41 @@ def run_sql_files(sql_files: tuple[str, ...]) -> None:
     execute_sql(*(read_text_file(file_name) for file_name in sql_files))
 
 
-def populate(dataset: Dataset, dataframe: Any) -> None:
-    database = dataset.get_destination("database")
-    run_sql_files(database.before_load_sql_files)
-    populate_stage_table(dataset, dataframe)
-    run_sql_files(database.after_load_sql_files)
+def populate_stage_from_pandas(dataset: Dataset, dataframe: pandas.DataFrame) -> None:
+    database = cast(DatabaseEndpoint, dataset.get_destination("database"))
+    with database_connection_factory.create_connection().begin() as connection:
+        dataframe.to_sql(
+            name=database.table_name,
+            con=connection,
+            if_exists="append",
+            index=False,
+        )
+
+
+def populate_stage_from_spark(dataset: Dataset, dataframe: pyspark.sql.DataFrame) -> None:
+    database = cast(DatabaseEndpoint, dataset.get_destination("database"))
+    (
+        dataframe.write
+        .format("jdbc")
+        .option("url", settings.jdbc_url)
+        .option("dbtable", database.table_name)
+        .option("user", settings.user)
+        .option("password", settings.password)
+        .option("driver", settings.driver)
+        .mode("append")
+        .save()
+    )
+
+
+def truncate_and_populate_from_pandas(dataset: Dataset, dataframe: pandas.DataFrame) -> None:
+    database = cast(DatabaseEndpoint, dataset.get_destination("database"))
+    run_sql_files(database.preparing_sql_files)
+    populate_stage_from_pandas(dataset, dataframe)
+    run_sql_files(database.analytical_sql_files)
+
+
+def truncate_and_populate_from_spark(dataset: Dataset, dataframe: pyspark.sql.DataFrame) -> None:
+    database = cast(DatabaseEndpoint, dataset.get_destination("database"))
+    run_sql_files(database.preparing_sql_files)
+    populate_stage_from_spark(dataset, dataframe)
+    run_sql_files(database.analytical_sql_files)

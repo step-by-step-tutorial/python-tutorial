@@ -4,16 +4,15 @@ from __future__ import annotations
 def build_schema():
     from pyspark.sql.types import BooleanType, DoubleType, LongType, StringType, StructField, StructType
 
-    from dataset.house.columns import house_columns as c
+    from dataset.house.attribute import HOUSE_ATTRIBUTE
 
     return StructType([
-        StructField(c.area_raw, DoubleType(), nullable=False),
-        StructField(c.room_raw, LongType(), nullable=False),
-        StructField(c.parking_raw, BooleanType(), nullable=True),
-        StructField(c.warehouse_raw, BooleanType(), nullable=True),
-        StructField(c.elevator_raw, BooleanType(), nullable=True),
-        StructField(c.address_raw, StringType(), nullable=True),
-        StructField(c.price_raw, DoubleType(), nullable=False),
-        StructField(c.price_usd_raw, DoubleType(), nullable=True),
+        StructField(HOUSE_ATTRIBUTE.area_raw, DoubleType(), nullable=False),
+        StructField(HOUSE_ATTRIBUTE.room_raw, LongType(), nullable=False),
+        StructField(HOUSE_ATTRIBUTE.parking_raw, BooleanType(), nullable=True),
+        StructField(HOUSE_ATTRIBUTE.warehouse_raw, BooleanType(), nullable=True),
+        StructField(HOUSE_ATTRIBUTE.elevator_raw, BooleanType(), nullable=True),
+        StructField(HOUSE_ATTRIBUTE.address_raw, StringType(), nullable=True),
+        StructField(HOUSE_ATTRIBUTE.price_raw, DoubleType(), nullable=False),
+        StructField(HOUSE_ATTRIBUTE.price_usd_raw, DoubleType(), nullable=True),
     ])
-

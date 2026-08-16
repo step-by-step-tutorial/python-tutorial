@@ -10,15 +10,14 @@ from config.messaging import settings as messaging_settings
 from config.streaming import settings as streaming_settings
 from connector.messaging.kafka_connector import create_producer
 from dataset.definition import Dataset
-from ingestion.file_reader import read_rows
+from ingestion.file_reader import read_csv_file
 from service.messaging.event_publisher import EventPublisher
 from service.spark.batch_service import SparkBatchService as SparkService
 from service.spark.runtime import persisted_dataframes
 from persistence.database import database_service
-from persistence.datalake.path_utils import DatalakeEnv, generate_relative_path
+from util.path_utils import DatalakeEnv, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
-from presentation.dataframe_display import show_map_of_dataframe
 from transformation.conversion.event_mapper import get_event_mapper
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id
@@ -102,7 +101,7 @@ class SparkStreamingPipeline:
             self.publisher.publish(messaging_endpoint.topic, event_mapper.map(row))
             event_counter += 1
 
-        read_rows(file_endpoint.resolve_path(app_settings.resources_dir), collect)
+        read_csv_file(file_endpoint.resolve_path(app_settings.resources_dir), collect)
         self.publisher.flush()
         return event_counter
 
@@ -202,13 +201,13 @@ class SparkStreamingPipeline:
     def populate_database(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating operational database with enriched data")
-        database_service.populate(self.dataset, enriched_dataframe)
+        database_service.truncate_and_populate_from_spark(self.dataset, enriched_dataframe)
 
     def populate_datawarehouse(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating data warehouse with enriched data")
 
-        datawarehouse_service.truncate_and_populate(
+        datawarehouse_service.truncate_and_populate_from_spark(
             self.dataset.get_destination("datawarehouse"),
             enriched_dataframe
         )
