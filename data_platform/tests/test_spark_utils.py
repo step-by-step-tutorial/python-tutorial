@@ -1,6 +1,6 @@
 import pytest
 
-from util.spark_utils import batch_rows, collect_rows
+from util.spark_utils import batch_of_list, dataframe_to_list
 
 pytestmark = pytest.mark.unit
 
@@ -20,7 +20,7 @@ class TestCollectRows:
         dataframe.columns = ["name", "value"]
         dataframe.collect.return_value = [_Row(1, "A"), _Row(2, "B")]
 
-        actual = collect_rows(dataframe)
+        actual = dataframe_to_list(dataframe)
 
         assert actual == [("A", 1), ("B", 2)]
 
@@ -30,6 +30,6 @@ class TestBatchRows:
     def test_should_split_rows_into_batches(self) -> None:
         rows = [(1,), (2,), (3,)]
 
-        actual = batch_rows(rows, batch_size=2)
+        actual = batch_of_list(rows, batch_size=2)
 
         assert actual == [[(1,), (2,)], [(3,)]]

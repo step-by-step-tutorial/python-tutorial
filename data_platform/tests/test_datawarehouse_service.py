@@ -12,7 +12,7 @@ class TestTruncateAndPopulateFromPandas:
     def test_should_execute_preparing_sql_and_insert_dataframe(self, mocker) -> None:
         given_datawarehouse = DataWarehouseEndpoint(
             full_table_name="warehouse.example",
-            preparing_sql_files={"truncate": "truncate.sql"},
+            before_setup_sql_files={"truncate": "truncate.sql"},
         )
         given_dataframe = pd.DataFrame({"id": [1]})
         given_connection = mocker.Mock()
@@ -28,7 +28,7 @@ class TestTruncateAndPopulateFromPandas:
             return_value="truncate table warehouse.example",
         )
 
-        actual = system_under_test.truncate_and_populate_from_pandas(given_datawarehouse, given_dataframe)
+        actual = system_under_test.truncate_and_populate_from_memory(given_datawarehouse, given_dataframe)
 
         assert actual is None
         assert mock_create_connection.call_count == 1
@@ -42,7 +42,7 @@ class TestTruncateAndPopulateFromSpark:
     def test_should_execute_preparing_sql_and_insert_rows(self, mocker) -> None:
         given_datawarehouse = DataWarehouseEndpoint(
             full_table_name="warehouse.example",
-            preparing_sql_files={"truncate": "truncate.sql"},
+            before_setup_sql_files={"truncate": "truncate.sql"},
         )
         given_dataframe = mocker.Mock()
         given_dataframe.columns = ["value"]
@@ -88,7 +88,7 @@ class TestAnalyze:
 
     def test_should_execute_analysis_queries(self, mocker) -> None:
         given_datawarehouse = DataWarehouseEndpoint(
-            analysis_sql_files={"revenue": "select 1"},
+            after_setup_sql_files={"revenue": "select 1"},
         )
         given_connection = mocker.Mock()
         given_context = mocker.MagicMock()

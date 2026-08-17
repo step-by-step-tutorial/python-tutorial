@@ -30,8 +30,8 @@ class FileEndpoint:
 class DatabaseEndpoint:
     name: str = "database"
     table_name: str = ""
-    preparing_sql_files: tuple[str, ...] = ()
-    analytical_sql_files: tuple[str, ...] = ()
+    before_setup_sql_files: tuple[str, ...] = ()
+    after_setup_sql_files: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -45,8 +45,8 @@ class DataWarehouseEndpoint:
     name: str = "datawarehouse"
     table_name: str = ""
     full_table_name: str = ""
-    preparing_sql_files: Mapping[str, str] = field(default_factory=dict)
-    analysis_sql_files: Mapping[str, str] = field(default_factory=dict)
+    before_setup_sql_files: Mapping[str, str] = field(default_factory=dict)
+    after_setup_sql_files: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

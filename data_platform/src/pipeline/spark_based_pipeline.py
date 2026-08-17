@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 
 from pyspark.sql import DataFrame
 
@@ -6,7 +7,7 @@ from audit.audit_service import AuditService
 from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
 from service.spark.batch_service import SparkBatchService as SparkService
-from dataset.definition import Dataset
+from dataset.definition import Dataset, DataWarehouseEndpoint
 from persistence.database import database_service
 from util.path_utils import DatalakeEnv, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
@@ -97,12 +98,14 @@ class SparkPipeline(BatchPipeline):
         logger.info("Populating data warehouse with enriched data")
 
         datawarehouse_service.truncate_and_populate_from_spark(
-            self.dataset.get_destination("datawarehouse"),
+            cast(DataWarehouseEndpoint, self.dataset.get_destination("datawarehouse")),
             enriched_dataframe
         )
 
     def analyzing_via_datawarehouse(self) -> None:
-        results = datawarehouse_service.analyze(self.dataset.get_destination("datawarehouse"))
+        results = datawarehouse_service.analyze(
+            cast(DataWarehouseEndpoint, self.dataset.get_destination("datawarehouse"))
+        )
         logger.info("Analyzing enriched data via data warehouse")
 
         for dataframe in results.values():

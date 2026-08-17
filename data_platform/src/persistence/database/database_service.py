@@ -19,7 +19,11 @@ def run_sql_files(sql_files: tuple[str, ...]) -> None:
     execute_sql(*(read_text_file(file_name) for file_name in sql_files))
 
 
-def populate_stage_from_pandas(dataset: Dataset, dataframe: pandas.DataFrame) -> None:
+def truncate_stage_table(database: DatabaseEndpoint):
+    run_sql_files(database.before_setup_sql_files)
+
+
+def populate_stage_table_from_memory(dataset: Dataset, dataframe: pandas.DataFrame) -> None:
     database = cast(DatabaseEndpoint, dataset.get_destination("database"))
     with database_connection_factory.create_connection().begin() as connection:
         dataframe.to_sql(
@@ -30,7 +34,7 @@ def populate_stage_from_pandas(dataset: Dataset, dataframe: pandas.DataFrame) ->
         )
 
 
-def populate_stage_from_spark(dataset: Dataset, dataframe: pyspark.sql.DataFrame) -> None:
+def populate_stage_table_from_spark(dataset: Dataset, dataframe: pyspark.sql.DataFrame) -> None:
     database = cast(DatabaseEndpoint, dataset.get_destination("database"))
     (
         dataframe.write
@@ -45,15 +49,23 @@ def populate_stage_from_spark(dataset: Dataset, dataframe: pyspark.sql.DataFrame
     )
 
 
-def truncate_and_populate_from_pandas(dataset: Dataset, dataframe: pandas.DataFrame) -> None:
+def populate_stage_from_memory(dataset: Dataset, dataframe: pandas.DataFrame) -> None:
+    populate_stage_table_from_memory(dataset, dataframe)
+
+
+def populate_stage_from_spark(dataset: Dataset, dataframe: pyspark.sql.DataFrame) -> None:
+    populate_stage_table_from_spark(dataset, dataframe)
+
+
+def truncate_and_populate_from_memory(dataset: Dataset, dataframe: pandas.DataFrame) -> None:
     database = cast(DatabaseEndpoint, dataset.get_destination("database"))
-    run_sql_files(database.preparing_sql_files)
-    populate_stage_from_pandas(dataset, dataframe)
-    run_sql_files(database.analytical_sql_files)
+    truncate_stage_table(database)
+    populate_stage_from_memory(dataset, dataframe)
+    run_sql_files(database.after_setup_sql_files)
 
 
 def truncate_and_populate_from_spark(dataset: Dataset, dataframe: pyspark.sql.DataFrame) -> None:
     database = cast(DatabaseEndpoint, dataset.get_destination("database"))
-    run_sql_files(database.preparing_sql_files)
+    truncate_stage_table(database)
     populate_stage_from_spark(dataset, dataframe)
-    run_sql_files(database.analytical_sql_files)
+    run_sql_files(database.after_setup_sql_files)

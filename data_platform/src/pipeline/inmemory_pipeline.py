@@ -1,13 +1,15 @@
 import logging
+from typing import cast
 
 import pandas as pd
 
 from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
 from audit.audit_service import AuditService
-from dataset.definition import Dataset
+from dataset.definition import Dataset, FileEndpoint, DataWarehouseEndpoint
 from persistence.database import database_service
 from persistence.datalake import datalake_service as inmemory_datalake_service
+from processor.base import DataProcessor
 from util.path_utils import DatalakeEnv, generate_relative_path
 from persistence.datawarehouse import datawarehouse_service
 from presentation.dataframe_display import show
@@ -27,7 +29,7 @@ class InmemoryPipeline(BatchPipeline):
         self.pipeline_name = "inmemory_pipeline"
 
     def store_raw_data(self) -> str:
-        file_endpoint = self.dataset.get_source("file")
+        file_endpoint = cast(FileEndpoint, self.dataset.get_source("file"))
         data_file_path = file_endpoint.resolve_path(app_settings.resources_dir)
         dataframe = csv_to_dataframe(data_file_path)
         require_columns(dataframe, self.dataset.dataframe.required_columns)
@@ -83,13 +85,13 @@ class InmemoryPipeline(BatchPipeline):
     def populate_database(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating operational database with enriched data")
-        database_service.truncate_and_populate_from_pandas(self.dataset, enriched_dataframe)
+        database_service.truncate_and_populate_from_memory(self.dataset, enriched_dataframe)
 
     def populate_datawarehouse(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating data warehouse with enriched data")
-        datawarehouse_service.truncate_and_populate_from_pandas(
-            self.dataset.get_destination("datawarehouse"),
+        datawarehouse_service.truncate_and_populate_from_memory(
+            cast(DataWarehouseEndpoint, self.dataset.get_destination("datawarehouse")),
             enriched_dataframe,
         )
 
@@ -106,6 +108,8 @@ class InmemoryPipeline(BatchPipeline):
         show_map_of_dataframe(results)
 
     def analyzing_via_datawarehouse(self):
-        result = datawarehouse_service.analyze(self.dataset.get_destination("datawarehouse"))
+        result = datawarehouse_service.analyze(
+            cast(DataWarehouseEndpoint, self.dataset.get_destination("datawarehouse"))
+        )
         logger.info("Analyzing enriched data via data warehouse")
         show_map_of_dataframe(result)

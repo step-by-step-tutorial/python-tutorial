@@ -51,17 +51,17 @@ HOUSE_DATASET = Dataset(
         "database": DatabaseEndpoint(
             name="database",
             table_name="house.house_stage",
-            preparing_sql_files=("database/house/truncate_stage.sql",),
-            analytical_sql_files=(),
+            before_setup_sql_files=("database/house/truncate_stage.sql",),
+            after_setup_sql_files=(),
         ),
         "datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
             table_name="house_table",
             full_table_name=f"{datawarehouse_settings.database_name}.house_table",
-            preparing_sql_files={
+            before_setup_sql_files={
                 "truncate": "datawarehouse/house/truncate_datawarehouse.sql",
             },
-            analysis_sql_files={
+            after_setup_sql_files={
                 "average_price_by_address": "datawarehouse/house/select_average_price_by_address.sql",
                 "average_price_per_square_meter_by_room": "datawarehouse/house/select_average_price_per_square_meter_by_room.sql",
             },

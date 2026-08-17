@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import cast
 
 from pyspark.sql import DataFrame
 from pyspark.sql.streaming import StreamingQuery
@@ -8,18 +9,17 @@ from config.app import settings as app_settings
 from config.datalake import settings as datalake_settings
 from config.messaging import settings as messaging_settings
 from config.streaming import settings as streaming_settings
-from connector.messaging.kafka_connector import create_producer
-from dataset.definition import Dataset
+from dataset.definition import DataWarehouseEndpoint, Dataset, FileEndpoint, MessagingEndpoint
 from ingestion.file_reader import read_csv_file
+from persistence.database import database_service
+from persistence.datawarehouse import datawarehouse_service
+from presentation.dataframe_display import show
 from service.messaging.event_publisher import EventPublisher
 from service.spark.batch_service import SparkBatchService as SparkService
 from service.spark.runtime import persisted_dataframes
-from persistence.database import database_service
-from util.path_utils import DatalakeEnv, generate_relative_path
-from persistence.datawarehouse import datawarehouse_service
-from presentation.dataframe_display import show
 from transformation.conversion.event_mapper import get_event_mapper
 from util.log_utils import log_line
+from util.path_utils import DatalakeEnv, generate_relative_path
 from util.pipeline_utils import create_pipeline_id
 from util.time_utils import generate_ingestion_time
 
@@ -35,7 +35,7 @@ class SparkStreamingPipeline:
         self.pipeline_id = create_pipeline_id()
         self.ingestion_time: datetime = generate_ingestion_time()
         self.spark = SparkService()
-        self.publisher = EventPublisher(producer_factory=create_producer)
+        self.publisher = EventPublisher()
 
     def run(self) -> None:
         try:
@@ -85,8 +85,8 @@ class SparkStreamingPipeline:
             self.spark.stop()
 
     def publish_events(self) -> int:
-        file_endpoint = self.dataset.get_source("file")
-        messaging_endpoint = self.dataset.get_source("messaging")
+        file_endpoint = cast(FileEndpoint, self.dataset.get_source("file"))
+        messaging_endpoint = cast(MessagingEndpoint, self.dataset.get_source("messaging"))
         event_mapper = get_event_mapper(self.dataset.name)
         logger.info(
             "Publishing events from file %s to streaming topic %s",
@@ -208,7 +208,7 @@ class SparkStreamingPipeline:
         logger.info("Populating data warehouse with enriched data")
 
         datawarehouse_service.truncate_and_populate_from_spark(
-            self.dataset.get_destination("datawarehouse"),
+            cast(DataWarehouseEndpoint, self.dataset.get_destination("datawarehouse")),
             enriched_dataframe
         )
 
@@ -229,7 +229,9 @@ class SparkStreamingPipeline:
             dataframe.show()
 
     def analyzing_via_datawarehouse(self) -> None:
-        results = datawarehouse_service.analyze(self.dataset.get_destination("datawarehouse"))
+        results = datawarehouse_service.analyze(
+            cast(DataWarehouseEndpoint, self.dataset.get_destination("datawarehouse"))
+        )
         logger.info("Analyzing enriched data via data warehouse")
 
         for dataframe in results.values():

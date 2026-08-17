@@ -55,8 +55,8 @@ SALE_DATASET = Dataset(
         "database": DatabaseEndpoint(
             name="database",
             table_name="sale.sale_stage",
-            preparing_sql_files=("database/sale/truncate_stage.sql",),
-            analytical_sql_files=(
+            before_setup_sql_files=("database/sale/truncate_stage.sql",),
+            after_setup_sql_files=(
                 "database/sale/upsert_customer.sql",
                 "database/sale/upsert_product.sql",
                 "database/sale/upsert_order.sql",
@@ -67,10 +67,10 @@ SALE_DATASET = Dataset(
             name="datawarehouse",
             table_name="sale_table",
             full_table_name=f"{datawarehouse_settings.database_name}.sale_table",
-            preparing_sql_files={
+            before_setup_sql_files={
                 "truncate": "datawarehouse/sale/truncate_datawarehouse.sql"
             },
-            analysis_sql_files={
+            after_setup_sql_files={
                 "revenue_by_category": "datawarehouse/sale/select_revenue_by_category.sql",
                 "revenue_by_country": "datawarehouse/sale/select_revenue_by_country.sql",
             },

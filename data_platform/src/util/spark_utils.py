@@ -11,7 +11,7 @@ def row_to_dict(row: Any) -> dict[str, Any]:
     return dict(row)
 
 
-def collect_rows(dataframe: pyspark.sql.DataFrame) -> list[tuple[Any, ...]]:
+def dataframe_to_list(dataframe: pyspark.sql.DataFrame) -> list[tuple[Any, ...]]:
     column_names = list(dataframe.columns)
     rows = []
     for row in dataframe.collect():
@@ -21,5 +21,5 @@ def collect_rows(dataframe: pyspark.sql.DataFrame) -> list[tuple[Any, ...]]:
     return rows
 
 
-def batch_rows(rows: list[tuple[Any, ...]], batch_size: int = 1000) -> list[list[tuple[Any, ...]]]:
+def batch_of_list(rows: list[tuple[Any, ...]], batch_size: int = 1000) -> list[list[tuple[Any, ...]]]:
     return [rows[index : index + batch_size] for index in range(0, len(rows), batch_size)]

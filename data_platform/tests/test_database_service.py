@@ -17,8 +17,8 @@ def build_dataset() -> Dataset:
         destinations={
             "database": DatabaseEndpoint(
                 table_name="sale.example_stage",
-                preparing_sql_files=("before.sql",),
-                analytical_sql_files=("after.sql",),
+                before_setup_sql_files=("before.sql",),
+                after_setup_sql_files=("after.sql",),
             ),
         },
     )
@@ -42,7 +42,7 @@ class TestPopulateStageFromPandas:
             return_value=given_database_engine,
         )
 
-        actual = system_under_test.populate_stage_from_pandas(given_dataset, given_dataframe)
+        actual = system_under_test.populate_stage_table_from_memory(given_dataset, given_dataframe)
 
         assert actual is None
         assert mock_create_connection.call_count == 1
@@ -68,7 +68,7 @@ class TestPopulateStageFromPandas:
         )
 
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.populate_stage_from_pandas(given_dataset, given_dataframe)
+            system_under_test.populate_stage_table_from_memory(given_dataset, given_dataframe)
 
         assert str(actual.value) == given_error_message
 
@@ -85,7 +85,7 @@ class TestPopulateStageFromSpark:
         given_writer.option.return_value = given_writer
         given_writer.mode.return_value = given_writer
 
-        actual = system_under_test.populate_stage_from_spark(given_dataset, given_dataframe)
+        actual = system_under_test.populate_stage_table_from_spark(given_dataset, given_dataframe)
 
         assert actual is None
         assert given_writer.format.call_count == 1
@@ -106,7 +106,7 @@ class TestPopulateStageFromSpark:
         given_writer.save.side_effect = RuntimeError(given_error_message)
 
         with pytest.raises(RuntimeError) as actual:
-            system_under_test.populate_stage_from_spark(given_dataset, given_dataframe)
+            system_under_test.populate_stage_table_from_spark(given_dataset, given_dataframe)
 
         assert str(actual.value) == given_error_message
 
@@ -117,9 +117,9 @@ class TestPopulate:
         given_dataset = build_dataset()
         given_dataframe = mocker.Mock(spec=pd.DataFrame)
         mock_run_sql_files = mocker.patch.object(system_under_test, "run_sql_files")
-        mock_populate_stage = mocker.patch.object(system_under_test, "populate_stage_from_pandas")
+        mock_populate_stage = mocker.patch.object(system_under_test, "populate_stage_from_memory")
 
-        system_under_test.truncate_and_populate_from_pandas(given_dataset, given_dataframe)
+        system_under_test.truncate_and_populate_from_memory(given_dataset, given_dataframe)
 
         assert mock_run_sql_files.call_count == 2
         assert mock_populate_stage.call_count == 1
