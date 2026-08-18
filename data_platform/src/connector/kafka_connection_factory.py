@@ -5,7 +5,7 @@ from typing import Any
 
 from confluent_kafka import Consumer, Producer
 
-from config.messaging import audit_settings, house_settings, sale_settings
+from config.settings import settings as main_settings
 
 registry: dict[str, Any] = {}
 
@@ -13,7 +13,7 @@ registry: dict[str, Any] = {}
 def create_sale_publisher_connection() -> Producer:
     return Producer(
         {
-            "bootstrap.servers": sale_settings.bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging["sale"].bootstrap_servers,
             "enable.idempotence": True,
             "acks": "all",
             "retries": 10,
@@ -26,7 +26,7 @@ def create_sale_publisher_connection() -> Producer:
 def create_house_publisher_connection() -> Producer:
     return Producer(
         {
-            "bootstrap.servers": house_settings.bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging["house"].bootstrap_servers,
             "enable.idempotence": True,
             "acks": "all",
             "retries": 10,
@@ -39,7 +39,7 @@ def create_house_publisher_connection() -> Producer:
 def create_audit_publisher_connection() -> Producer:
     return Producer(
         {
-            "bootstrap.servers": audit_settings.bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging["audit"].bootstrap_servers,
             "enable.idempotence": True,
             "acks": "all",
             "retries": 10,
@@ -52,7 +52,7 @@ def create_audit_publisher_connection() -> Producer:
 def create_sale_listener_connection() -> Consumer:
     return Consumer(
         {
-            "bootstrap.servers": sale_settings.bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging["sale"].bootstrap_servers,
             "group.id": "data-platform-messaging",
             "auto.offset.reset": "earliest",
             "enable.auto.commit": False,
@@ -63,7 +63,7 @@ def create_sale_listener_connection() -> Consumer:
 def create_house_listener_connection() -> Consumer:
     return Consumer(
         {
-            "bootstrap.servers": house_settings.bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging["house"].bootstrap_servers,
             "group.id": "data-platform-messaging",
             "auto.offset.reset": "earliest",
             "enable.auto.commit": False,
@@ -74,7 +74,7 @@ def create_house_listener_connection() -> Consumer:
 def create_audit_listener_connection() -> Consumer:
     return Consumer(
         {
-            "bootstrap.servers": audit_settings.bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging["audit"].bootstrap_servers,
             "group.id": "data-platform-messaging",
             "auto.offset.reset": "earliest",
             "enable.auto.commit": False,

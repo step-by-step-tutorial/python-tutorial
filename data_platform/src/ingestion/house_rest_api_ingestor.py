@@ -5,12 +5,17 @@ from urllib.request import Request
 
 import pandas as pd
 
-from config.rest import house_settings
+from config.settings import settings as main_settings
 from connector.rest_connection_factory import get_connection
 
 
 class HouseRestApiIngestor:
-    def __init__(self, url: str = house_settings.url, method: str = house_settings.method, headers: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        url: str = main_settings.rest["house"].url,
+        method: str = main_settings.rest["house"].method,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         self.url = url
         self.method = method
         self.headers = headers or {}

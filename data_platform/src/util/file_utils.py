@@ -4,7 +4,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from config.app import settings as app_settings
+from config.settings import settings as main_settings
 from util.string_utils import should_not_be_none
 
 logger = logging.getLogger(__name__)
@@ -16,13 +16,13 @@ def should_be_exists(path: Path) -> None:
 
 
 def generate_full_file_path(path: Path) -> Path:
-    full_path = app_settings.root / path
+    full_path = main_settings.app.root / path
     should_be_exists(full_path)
     return full_path
 
 
 def read_text_file(file_name: str) -> str:
-    path = generate_full_file_path(app_settings.scripts_dir) / file_name
+    path = generate_full_file_path(main_settings.app.scripts_dir) / file_name
     logger.info("Reading SQL file from %s", path)
     return path.read_text(encoding="utf-8")
 

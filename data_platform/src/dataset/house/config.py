@@ -1,9 +1,4 @@
-from config.app import settings as app_settings
-from config.audit import settings as audit_settings
-from config.datalake import settings as datalake_settings
-from config.datawarehouse import settings as datawarehouse_settings
-from config.messaging import house_settings
-from config.streaming import settings as streaming_settings
+from config.settings import settings as main_settings
 from dataset.definition import (
     AuditEndpoint,
     DataLakeEndpoint,
@@ -40,29 +35,30 @@ HOUSE_DATASET = Dataset(
         database_connection_name="audit.database",
         messaging_connection_name="audit.kafka.producer",
         datalake_connection_name="audit.datalake",
+        schema="audit",
         create_sql_files={"create": "database/audit/create_tables.sql"},
-        channel_name=audit_settings.channel_name,
-        bucket_name=audit_settings.archive_bucket_name,
+        channel_name=main_settings.messaging["audit"].audit_channel_name,
+        bucket_name=main_settings.datalake["audit.datalake"].audit_bucket_name,
         write_sql_files={"write": "database/audit/insert_event.sql"},
     ),
     endpoints={
         "house.file.csv": FileEndpoint(
             name="file",
             file_name="house.csv",
-            file_path=str(app_settings.root / app_settings.resources_dir / "house.csv"),
+            file_path=str(main_settings.app.root / main_settings.app.resources_dir / "house.csv"),
         ),
         "house.kafka.listener": MessagingEndpoint(
             name="messaging",
             connection_name="house.kafka.listener",
-            channel_name=house_settings.channel_name,
-            bootstrap_servers=house_settings.bootstrap_servers,
-            starting_offsets=streaming_settings.starting_offsets,
+            channel_name=main_settings.messaging["house"].channel_name,
+            bootstrap_servers=main_settings.messaging["house"].bootstrap_servers,
+            starting_offsets=main_settings.messaging["house"].starting_offsets,
         ),
         "house.datalake": DataLakeEndpoint(
             name="datalake",
             connection_name="house.datalake",
-            bucket_name=datalake_settings.bucket_name,
-            scheme=datalake_settings.scheme,
+            bucket_name=main_settings.datalake["house.datalake"].bucket_name,
+            scheme=main_settings.datalake["house.datalake"].scheme,
         ),
         "house.database": DatabaseEndpoint(
             name="database",
@@ -79,9 +75,9 @@ HOUSE_DATASET = Dataset(
         "house.datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
             connection_name="house.datawarehouse",
-            schema=datawarehouse_settings.database_name,
+            schema=main_settings.datawarehouse["house.datawarehouse"].database_name,
             table_name="house_table",
-            full_table_name=f"{datawarehouse_settings.database_name}.house_table",
+            full_table_name=f"{main_settings.datawarehouse['house.datawarehouse'].database_name}.house_table",
             create_sql_files={
                 "create_database": "datawarehouse/house/create_database.sql",
                 "create_table": "datawarehouse/house/create_table.sql",

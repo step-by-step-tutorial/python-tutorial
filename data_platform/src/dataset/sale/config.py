@@ -1,9 +1,4 @@
-from config.app import settings as app_settings
-from config.audit import settings as audit_settings
-from config.datalake import settings as datalake_settings
-from config.datawarehouse import settings as datawarehouse_settings
-from config.messaging import settings as messaging_settings
-from config.streaming import settings as streaming_settings
+from config.settings import settings as main_settings
 from dataset.definition import (
     AuditEndpoint,
     DataLakeEndpoint,
@@ -40,29 +35,30 @@ SALE_DATASET = Dataset(
         database_connection_name="audit.database",
         messaging_connection_name="audit.kafka.producer",
         datalake_connection_name="audit.datalake",
+        schema="audit",
         create_sql_files={"create": "database/audit/create_tables.sql"},
-        channel_name=audit_settings.channel_name,
-        bucket_name=audit_settings.archive_bucket_name,
+        channel_name=main_settings.messaging["audit"].audit_channel_name,
+        bucket_name=main_settings.datalake["audit.datalake"].audit_bucket_name,
         write_sql_files={"write": "database/audit/insert_event.sql"},
     ),
     endpoints={
         "sale.file.csv": FileEndpoint(
             name="file",
             file_name="sale.csv",
-            file_path=str(app_settings.root / app_settings.resources_dir / "sale.csv"),
+            file_path=str(main_settings.app.root / main_settings.app.resources_dir / "sale.csv"),
         ),
         "sale.kafka.listener": MessagingEndpoint(
             name="messaging",
             connection_name="sale.kafka.listener",
-            channel_name=messaging_settings.channel_name,
-            bootstrap_servers=messaging_settings.bootstrap_servers,
-            starting_offsets=streaming_settings.starting_offsets,
+            channel_name=main_settings.messaging["sale"].channel_name,
+            bootstrap_servers=main_settings.messaging["sale"].bootstrap_servers,
+            starting_offsets=main_settings.messaging["sale"].starting_offsets,
         ),
         "sale.datalake": DataLakeEndpoint(
             name="datalake",
             connection_name="sale.datalake",
-            bucket_name=datalake_settings.bucket_name,
-            scheme=datalake_settings.scheme,
+            bucket_name=main_settings.datalake["sale.datalake"].bucket_name,
+            scheme=main_settings.datalake["sale.datalake"].scheme,
         ),
         "sale.database": DatabaseEndpoint(
             name="database",
@@ -90,9 +86,9 @@ SALE_DATASET = Dataset(
         "sale.datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
             connection_name="sale.datawarehouse",
-            schema=datawarehouse_settings.database_name,
+            schema=main_settings.datawarehouse["sale.datawarehouse"].database_name,
             table_name="sale_table",
-            full_table_name=f"{datawarehouse_settings.database_name}.sale_table",
+            full_table_name=f"{main_settings.datawarehouse['sale.datawarehouse'].database_name}.sale_table",
             create_sql_files={
                 "create_database": "datawarehouse/sale/create_database.sql",
                 "create_table": "datawarehouse/sale/create_table.sql",

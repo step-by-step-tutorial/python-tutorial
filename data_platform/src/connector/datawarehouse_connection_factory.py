@@ -5,38 +5,38 @@ from typing import Any
 
 import clickhouse_connect
 
-from config.datawarehouse import audit_settings, house_settings, sale_settings
+from config.settings import settings as main_settings
 
 registry: dict[str, Any] = {}
 
 
 def create_sale_connection():
     return clickhouse_connect.get_client(
-        host=sale_settings.host,
-        port=sale_settings.port,
-        database=sale_settings.database_name,
-        username=sale_settings.user,
-        password=sale_settings.password,
+        host=main_settings.datawarehouse["sale.datawarehouse"].host,
+        port=main_settings.datawarehouse["sale.datawarehouse"].port,
+        database=main_settings.datawarehouse["sale.datawarehouse"].database_name,
+        username=main_settings.datawarehouse["sale.datawarehouse"].user,
+        password=main_settings.datawarehouse["sale.datawarehouse"].password,
     )
 
 
 def create_house_connection():
     return clickhouse_connect.get_client(
-        host=house_settings.host,
-        port=house_settings.port,
-        database=house_settings.database_name,
-        username=house_settings.user,
-        password=house_settings.password,
+        host=main_settings.datawarehouse["house.datawarehouse"].host,
+        port=main_settings.datawarehouse["house.datawarehouse"].port,
+        database=main_settings.datawarehouse["house.datawarehouse"].database_name,
+        username=main_settings.datawarehouse["house.datawarehouse"].user,
+        password=main_settings.datawarehouse["house.datawarehouse"].password,
     )
 
 
 def create_audit_connection():
     return clickhouse_connect.get_client(
-        host=audit_settings.host,
-        port=audit_settings.port,
-        database=audit_settings.database_name,
-        username=audit_settings.user,
-        password=audit_settings.password,
+        host=main_settings.datawarehouse["audit.datawarehouse"].host,
+        port=main_settings.datawarehouse["audit.datawarehouse"].port,
+        database=main_settings.datawarehouse["audit.datawarehouse"].database_name,
+        username=main_settings.datawarehouse["audit.datawarehouse"].user,
+        password=main_settings.datawarehouse["audit.datawarehouse"].password,
     )
 
 

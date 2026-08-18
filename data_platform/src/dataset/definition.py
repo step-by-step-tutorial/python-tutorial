@@ -4,7 +4,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol, TypeVar, cast
 
-from config.audit import AuditSettings
 from processor.base import DataProcessor
 
 
@@ -94,6 +93,7 @@ class AuditEndpoint:
     database_connection_name: str
     messaging_connection_name: str
     datalake_connection_name: str
+    schema: str = ""
     create_sql_files: Mapping[str, str] = field(default_factory=dict)
     truncate_sql_files: Mapping[str, str] = field(default_factory=dict)
     write_sql_files: Mapping[str, str] = field(default_factory=dict)
@@ -114,6 +114,7 @@ class Dataset:
             database_connection_name="audit.database",
             messaging_connection_name="audit.kafka.producer",
             datalake_connection_name="audit.datalake",
+            schema="audit",
             create_sql_files={"create": "database/audit/create_tables.sql"},
             write_sql_files={"write": "database/audit/insert_event.sql"},
         )

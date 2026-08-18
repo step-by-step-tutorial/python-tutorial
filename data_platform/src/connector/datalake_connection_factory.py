@@ -5,7 +5,7 @@ from typing import Any
 
 import boto3
 
-from config.datalake import audit_settings, house_settings, sale_settings
+from config.settings import settings as main_settings
 
 registry: dict[str, Any] = {}
 
@@ -13,27 +13,27 @@ registry: dict[str, Any] = {}
 def create_sale_connection():
     return boto3.client(
         service_name="s3",
-        endpoint_url=sale_settings.endpoint,
-        aws_access_key_id=sale_settings.access_key,
-        aws_secret_access_key=sale_settings.secret_key,
+        endpoint_url=main_settings.datalake["sale.datalake"].endpoint,
+        aws_access_key_id=main_settings.datalake["sale.datalake"].access_key,
+        aws_secret_access_key=main_settings.datalake["sale.datalake"].secret_key,
     )
 
 
 def create_house_connection():
     return boto3.client(
         service_name="s3",
-        endpoint_url=house_settings.endpoint,
-        aws_access_key_id=house_settings.access_key,
-        aws_secret_access_key=house_settings.secret_key,
+        endpoint_url=main_settings.datalake["house.datalake"].endpoint,
+        aws_access_key_id=main_settings.datalake["house.datalake"].access_key,
+        aws_secret_access_key=main_settings.datalake["house.datalake"].secret_key,
     )
 
 
 def create_audit_connection():
     return boto3.client(
         service_name="s3",
-        endpoint_url=audit_settings.endpoint,
-        aws_access_key_id=audit_settings.access_key,
-        aws_secret_access_key=audit_settings.secret_key,
+        endpoint_url=main_settings.datalake["audit.datalake"].endpoint,
+        aws_access_key_id=main_settings.datalake["audit.datalake"].access_key,
+        aws_secret_access_key=main_settings.datalake["audit.datalake"].secret_key,
     )
 
 

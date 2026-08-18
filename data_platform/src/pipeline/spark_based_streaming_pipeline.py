@@ -5,7 +5,7 @@ import logging
 from pyspark.sql import DataFrame
 
 from audit.audit_service import AuditService
-from config.streaming import settings as streaming_settings
+from config.settings import settings as main_settings
 from connector.session import create_session
 from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, DataWarehouseEndpoint, Dataset, MessagingEndpoint
 from ingestion.registry import get_ingestor
@@ -43,7 +43,7 @@ class SparkStreamingPipeline(BatchPipeline):
         self.spark.append_stream_to_object_storage(
             dataframe=raw_data,
             path=relative_path,
-            checkpoint_path=streaming_settings.checkpoint_path,
+            checkpoint_path=main_settings.datalake["app.datalake"].checkpoint_path,
         )
 
         return relative_path

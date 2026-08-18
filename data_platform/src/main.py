@@ -2,7 +2,7 @@ import logging
 import sys
 from importlib import import_module
 
-from config.app import settings as app_settings
+from config.settings import settings as main_settings
 from dataset.registry import get_dataset
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
@@ -35,7 +35,7 @@ def run_pipeline(pipeline_type: str, dataset_name: str) -> None:
 def main() -> None:
     if len(sys.argv) > 1:
         pipeline_type = sys.argv[1]
-        dataset_name = sys.argv[2] if len(sys.argv) > 2 else app_settings.dataset_name
+        dataset_name = sys.argv[2] if len(sys.argv) > 2 else main_settings.app.dataset_name
         run_pipeline(pipeline_type, dataset_name)
         return
 

@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import pandas
 import pyspark
 
-from config.database import audit_settings, house_settings, sale_settings
+from config.settings import settings as main_settings
 from connector.database_connection_factory import get_connection
 from dataset.definition import DatabaseEndpoint
 
@@ -14,9 +14,9 @@ from util.file_utils import read_text_file
 
 
 DATABASE_SETTINGS = {
-    "sale.database": sale_settings,
-    "house.database": house_settings,
-    "audit.database": audit_settings,
+    "sale.database": main_settings.database["sale.database"],
+    "house.database": main_settings.database["house.database"],
+    "audit.database": main_settings.database["audit.database"],
 }
 
 

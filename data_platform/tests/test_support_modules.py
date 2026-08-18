@@ -6,7 +6,7 @@ from uuid import UUID
 import pandas as pd
 import pytest
 
-from config.datalake import settings
+from config.settings import settings
 from service import runtime as spark_runtime
 from streaming.delivery import topic_on_delivery
 from transformation.conversion.type_converter import (
@@ -58,15 +58,19 @@ class TestDatalakeUtils:
     def test_should_generate_paths(self, mocker) -> None:
         # Given
         given_time = datetime(2026, 8, 15, 12, 30, 45, 123456, tzinfo=UTC)
-        mocker.patch.object(datalake_path_utils.app, "settings", SimpleNamespace(dataset_name="Sale"))
         mocker.patch.object(
-            datalake_path_utils.datalake,
-            "settings",
+            datalake_path_utils,
+            "main_settings",
             SimpleNamespace(
-                environment="dev",
-                scheme="s3a",
-                bucket_name="app-datalake",
-                audit_bucket_name="app-datalake-audit",
+                app=SimpleNamespace(dataset_name="Sale"),
+                datalake={
+                    "app.datalake": SimpleNamespace(
+                        environment="dev",
+                        scheme="s3a",
+                        bucket_name="app-datalake",
+                        audit_bucket_name="app-datalake-audit",
+                    )
+                },
             ),
         )
 
@@ -77,8 +81,8 @@ class TestDatalakeUtils:
             "sale"
         )
         actual_full = datalake_path_utils.generate_full_path("bucket", "path/to/file")
-        actual_datalake_uri = datalake_path_utils.generate_full_path(settings.bucket_name, "path/to/file")
-        actual_audit_uri = datalake_path_utils.generate_full_path(settings.audit_bucket_name, "audit/file.json")
+        actual_datalake_uri = datalake_path_utils.generate_full_path(settings.datalake["app.datalake"].bucket_name, "path/to/file")
+        actual_audit_uri = datalake_path_utils.generate_full_path(settings.datalake["app.datalake"].audit_bucket_name, "audit/file.json")
 
         # Then
         assert actual_relative.startswith("dev/raw/sale/")
@@ -89,15 +93,19 @@ class TestDatalakeUtils:
     def test_should_generate_relative_path_using_environment_defaults(self, mocker) -> None:
         # Given
         given_time = datetime(2026, 8, 15, 12, 30, 45, 123456, tzinfo=UTC)
-        mocker.patch.object(datalake_path_utils.app, "settings", SimpleNamespace(dataset_name="Sale"))
         mocker.patch.object(
-            datalake_path_utils.datalake,
-            "settings",
+            datalake_path_utils,
+            "main_settings",
             SimpleNamespace(
-                environment="dev",
-                scheme="s3a",
-                bucket_name="app-datalake",
-                audit_bucket_name="app-datalake-audit",
+                app=SimpleNamespace(dataset_name="Sale"),
+                datalake={
+                    "app.datalake": SimpleNamespace(
+                        environment="dev",
+                        scheme="s3a",
+                        bucket_name="app-datalake",
+                        audit_bucket_name="app-datalake-audit",
+                    )
+                },
             ),
         )
         mocker.patch.object(datalake_path_utils, "datetime", SimpleNamespace(now=lambda tz=None: given_time))

@@ -2,7 +2,7 @@ from datetime import UTC
 from datetime import datetime
 from enum import StrEnum
 
-from config import app, datalake
+from config.settings import settings as main_settings
 
 class DatalakeEnv(StrEnum):
     RAW = "raw"
@@ -19,12 +19,12 @@ def generate_relative_path(
         ingestion_time = datetime.now(UTC)
 
     if dataset_name is None:
-        dataset_name = app.settings.dataset_name.lower()
+        dataset_name = main_settings.app.dataset_name.lower()
 
     ingestion_id = ingestion_time.strftime("%Y%m%dT%H%M%S%fZ")
 
     return (
-        f"{datalake.settings.environment}/{env.value}/{dataset_name.lower()}/"
+        f"{main_settings.datalake['app.datalake'].environment}/{env.value}/{dataset_name.lower()}/"
         f"ingestion_year={ingestion_time.year}/"
         f"ingestion_month={ingestion_time.month:02d}/"
         f"ingestion_day={ingestion_time.day:02d}/"
@@ -33,4 +33,4 @@ def generate_relative_path(
 
 
 def generate_full_path(bucket_name: str, relative_path: str) -> str:
-    return f"{datalake.settings.scheme}://{bucket_name.strip()}/{relative_path.strip('/')}"
+    return f"{main_settings.datalake['app.datalake'].scheme}://{bucket_name.strip()}/{relative_path.strip('/')}"

@@ -5,12 +5,17 @@ from urllib.request import Request
 
 import pandas as pd
 
-from config.rest import sale_settings
+from config.settings import settings as main_settings
 from connector.rest_connection_factory import get_connection
 
 
 class SaleRestApiIngestor:
-    def __init__(self, url: str = sale_settings.url, method: str = sale_settings.method, headers: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        url: str = main_settings.rest["sale"].url,
+        method: str = main_settings.rest["sale"].method,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         self.url = url
         self.method = method
         self.headers = headers or {}
