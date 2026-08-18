@@ -8,6 +8,7 @@ from dataset.definition import (
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
+    RestApiEndpoint,
 )
 from dataset.sale.attribute import SALE_ATTRIBUTE
 from dataset.sale.spark_schema import build_schema
@@ -47,6 +48,11 @@ SALE_DATASET = Dataset(
             file_name="sale.csv",
             file_path=str(main_settings.app.root / main_settings.app.resources_dir / "sale.csv"),
         ),
+        "sale.rest": RestApiEndpoint(
+            name="rest_api",
+            url="http://localhost:8080",
+            method="GET",
+        ),
         "sale.kafka.listener": MessagingEndpoint(
             name="messaging",
             connection_name="sale.kafka.listener",
@@ -81,7 +87,7 @@ SALE_DATASET = Dataset(
                 "order": "database/sale/upsert_order.sql",
                 "order_item": "database/sale/upsert_order_item.sql",
             },
-            query_sql_files={},
+            query_sql_files={"select_all": "database/read_table.sql"},
         ),
         "sale.datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
@@ -98,6 +104,7 @@ SALE_DATASET = Dataset(
             },
             write_sql_files={},
             query_sql_files={
+                "select_all": "datawarehouse/select_all.sql",
                 "revenue_by_category": "datawarehouse/sale/select_revenue_by_category.sql",
                 "revenue_by_country": "datawarehouse/sale/select_revenue_by_country.sql",
             },

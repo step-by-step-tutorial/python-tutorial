@@ -3,8 +3,8 @@ import logging
 import pandas as pd
 
 from audit.audit_service import AuditService
-from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, Dataset, FileEndpoint, DataWarehouseEndpoint
-from ingestion.csv_file_ingestor import CsvFileIngestor
+from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, Dataset, DataWarehouseEndpoint
+from ingestion.registry import get_ingestor
 from persistence.database_repository import DatabaseRepository
 from persistence.datalake_repository import DataLakeRepository
 from persistence.datawarehouse_repository import DataWarehouseRepository
@@ -31,9 +31,7 @@ class InmemoryPipeline(BatchPipeline):
         self.datawarehouse_repository = DataWarehouseRepository(
             self.dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint)
         )
-        self.raw_data_ingestor = CsvFileIngestor(
-            self.dataset.get_endpoint("sale.file.csv", FileEndpoint)
-        )
+        self.raw_data_ingestor = get_ingestor("sale.file.csv")
 
     def ingest_raw_data(self) -> pd.DataFrame:
         return self.raw_data_ingestor.ingest()
@@ -81,7 +79,8 @@ class InmemoryPipeline(BatchPipeline):
         show_map_of_dataframe(results)
 
     def analyzing_via_datawarehouse(self):
-        result = self.datawarehouse_repository.analyze()
+        query_names = [name for name in self.datawarehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
+        result = self.datawarehouse_repository.analyze(query_names)
         logger.info("Analyzing enriched data via data warehouse")
         show_map_of_dataframe(result)
 

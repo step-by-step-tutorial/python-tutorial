@@ -2,18 +2,17 @@ from __future__ import annotations
 
 import logging
 
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 
-from connector.session import create_session
 from dataset.definition import MessagingEndpoint
 
 logger = logging.getLogger(__name__)
 
 
-class StreamingChannelIngestor:
-    def __init__(self, endpoint: MessagingEndpoint) -> None:
+class SparkKafkaIngestor:
+    def __init__(self, endpoint: MessagingEndpoint, session: SparkSession) -> None:
         self.endpoint = endpoint
-        self.session = create_session()
+        self.session = session
 
     def ingest(self) -> DataFrame:
         logger.info("Reading data from Kafka topic %s", self.endpoint.channel_name)

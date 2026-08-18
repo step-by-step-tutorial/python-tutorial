@@ -4,10 +4,10 @@ from pathlib import Path
 from pyspark.sql import DataFrame
 
 from audit.audit_service import AuditService
-from connector.session import create_session
+from connector.spark_session_factory import create_session
 from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, Dataset, DataWarehouseEndpoint, FileEndpoint, \
     MessagingEndpoint
-from ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
+from ingestion.registry import get_ingestor
 from persistence.database_repository import DatabaseRepository
 from persistence.datawarehouse_repository import DataWarehouseRepository
 from pipeline.batch_pipeline import BatchPipeline
@@ -34,7 +34,7 @@ class SparkPipeline(BatchPipeline):
         self.database_repository = DatabaseRepository(database_endpoint)
         self.datawarehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
         self.file_path = Path(file_endpoint.file_path)
-        self.raw_data_ingestor = SparkCsvFileIngestor(spark_session)
+        self.raw_data_ingestor = get_ingestor("sale.spark.csv")
 
     def ingest_raw_data(self) -> DataFrame:
         return self.raw_data_ingestor.ingest(self.file_path, self.dataset.dataframe.schema)
@@ -76,7 +76,8 @@ class SparkPipeline(BatchPipeline):
         self.datawarehouse_repository.truncate_and_populate_from_spark(enriched_dataframe)
 
     def analyzing_via_datawarehouse(self) -> None:
-        results = self.datawarehouse_repository.analyze()
+        query_names = [name for name in self.datawarehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
+        results = self.datawarehouse_repository.analyze(query_names)
         logger.info("Analyzing enriched data via data warehouse")
         for dataframe in results.values():
             show(dataframe)

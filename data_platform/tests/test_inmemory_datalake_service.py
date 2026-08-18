@@ -5,7 +5,7 @@ from dataset.definition import DataLakeEndpoint
 def create_connection_context(mocker):
     given_client = mocker.Mock()
     mock_create_connection = mocker.patch(
-        "persistence.datalake_repository.get_connection",
+        "connector.datalake_connection_factory.get_connection",
         return_value=given_client,
     )
 

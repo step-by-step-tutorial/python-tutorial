@@ -67,14 +67,12 @@ class TestTruncateAndPopulateFromSpark:
             return_value="truncate table warehouse.example",
         )
         repository = system_under_test.DataWarehouseRepository(given_datawarehouse)
-        mock_collect_rows = mocker.patch.object(
-            repository,
-            "collect_rows",
+        mock_collect_rows = mocker.patch(
+            "persistence.datawarehouse_repository.dataframe_to_list",
             return_value=[(1,), (2,)],
         )
-        mock_batch_rows = mocker.patch.object(
-            repository,
-            "batch_rows",
+        mock_batch_rows = mocker.patch(
+            "persistence.datawarehouse_repository.batch_of_list",
             return_value=[[(1,)], [(2,)]],
         )
         actual = repository.truncate_and_populate_from_spark(given_dataframe)
@@ -86,9 +84,9 @@ class TestTruncateAndPopulateFromSpark:
         assert given_connection.command.call_count == 1
         assert mock_collect_rows.call_count == 1
         assert mock_batch_rows.call_count == 1
-        assert given_connection.insert.call_count == 2
         assert mock_batch_rows.call_args.args[0] == [(1,), (2,)]
         assert given_datawarehouse.full_table_name == "warehouse.example"
+        assert given_connection.insert.call_count == 2
         assert given_connection.insert.call_args_list[0].kwargs["table"] == "warehouse.example"
         assert given_connection.insert.call_args_list[0].kwargs["column_names"] == list(given_dataframe.columns)
         assert given_connection.insert.call_args_list[0].kwargs["data"] == [(1,)]
@@ -117,7 +115,7 @@ class TestAnalyze:
         )
 
         repository = system_under_test.DataWarehouseRepository(given_datawarehouse)
-        actual = repository.analyze()
+        actual = repository.analyze(["revenue"])
 
         assert mock_create_connection.call_count == 1
         assert mock_create_connection.call_args.args[0] == "sale.datawarehouse"

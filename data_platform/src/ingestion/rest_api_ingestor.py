@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from urllib.request import Request
+from urllib.request import Request, build_opener
 
 import pandas as pd
 
@@ -13,9 +13,7 @@ class RestApiIngestor:
         self.endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:
-        from connector.rest_connection_factory import get_connection
-
-        rest_connection = get_connection(self.endpoint.connection_name)
+        rest_connection = build_opener()
         request = Request(self.endpoint.url, method=self.endpoint.method, headers=self.endpoint.headers)
         with rest_connection.open(request) as response:
             payload = response.read().decode("utf-8")

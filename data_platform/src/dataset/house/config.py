@@ -8,6 +8,7 @@ from dataset.definition import (
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
+    RestApiEndpoint,
 )
 from dataset.house.attribute import HOUSE_ATTRIBUTE as columns
 from dataset.house.spark_schema import build_schema
@@ -47,6 +48,11 @@ HOUSE_DATASET = Dataset(
             file_name="house.csv",
             file_path=str(main_settings.app.root / main_settings.app.resources_dir / "house.csv"),
         ),
+        "house.rest": RestApiEndpoint(
+            name="rest_api",
+            url="http://localhost:8080",
+            method="GET",
+        ),
         "house.kafka.listener": MessagingEndpoint(
             name="messaging",
             connection_name="house.kafka.listener",
@@ -70,7 +76,7 @@ HOUSE_DATASET = Dataset(
             create_sql_files={"create": "database/house/create_tables.sql"},
             truncate_sql_files={"truncate": "database/house/truncate_stage.sql"},
             write_sql_files={},
-            query_sql_files={},
+            query_sql_files={"select_all": "database/read_table.sql"},
         ),
         "house.datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
@@ -87,6 +93,7 @@ HOUSE_DATASET = Dataset(
             },
             write_sql_files={},
             query_sql_files={
+                "select_all": "datawarehouse/select_all.sql",
                 "average_price_by_address": "datawarehouse/house/select_average_price_by_address.sql",
                 "average_price_per_square_meter_by_room": "datawarehouse/house/select_average_price_per_square_meter_by_room.sql",
             },

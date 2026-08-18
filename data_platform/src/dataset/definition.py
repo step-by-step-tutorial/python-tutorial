@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol, TypeVar, cast
 
@@ -64,16 +64,14 @@ class DataLakeEndpoint:
     connection_name: str = ""
     bucket_name: str = ""
     scheme: str = "s3a"
-    relative_path: str = ""
 
 
 @dataclass(frozen=True)
 class RestApiEndpoint:
     name: str = "rest_api"
-    connection_name: str = ""
     url: str = ""
     method: str = "GET"
-    headers: Mapping[str, str] = field(default_factory=dict)
+    headers: MutableMapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -110,15 +108,13 @@ class Dataset:
     dataframe: Dataframe = field(default_factory=Dataframe)
     processors: Mapping[str, DataProcessor] = field(default_factory=dict)
     endpoints: Mapping[str, Endpoint] = field(default_factory=dict)
-    audit: AuditEndpoint = field(
-        default_factory=lambda: AuditEndpoint(
-            database_connection_name="audit.database",
-            messaging_connection_name="audit.kafka.producer",
-            datalake_connection_name="audit.datalake",
-            schema="audit",
-            create_sql_files={"create": "database/audit/create_tables.sql"},
-            write_sql_files={"write": "database/audit/insert_event.sql"},
-        )
+    audit: AuditEndpoint = AuditEndpoint(
+        database_connection_name="audit.database",
+        messaging_connection_name="audit.kafka.producer",
+        datalake_connection_name="audit.datalake",
+        schema="audit",
+        create_sql_files={"create": "database/audit/create_tables.sql"},
+        write_sql_files={"write": "database/audit/insert_event.sql"},
     )
 
     def get_endpoint(self, name: str, endpoint_type: type[EndpointType]) -> EndpointType:

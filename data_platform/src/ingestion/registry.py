@@ -1,46 +1,31 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Any
 
-from dataset.definition import DataLakeEndpoint, DataWarehouseEndpoint, DatabaseEndpoint, MessagingEndpoint, RestApiEndpoint
+from connector.spark_session_factory import create_session
+from dataset.sale.config import SALE_DATASET
+from ingestion.csv_file_ingestor import CsvFileIngestor
 from ingestion.database_ingestor import DatabaseIngestor
 from ingestion.datalake_ingestor import DataLakeIngestor
 from ingestion.datawarehouse_ingestor import DataWarehouseIngestor
-from ingestion.message_queue_ingestor import MessageQueueIngestor
+from ingestion.kafka_ingestor import KafkaIngestor
 from ingestion.rest_api_ingestor import RestApiIngestor
+from ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
 from ingestion.spark_datalake_ingestor import SparkDataLakeIngestor
-from ingestion.streaming_channel_ingestor import StreamingChannelIngestor
+from ingestion.spark_kafka_ingestor import SparkKafkaIngestor
 
-
-IngestorFactory = Callable[[Any], Any]
-
-
-registry: dict[str, IngestorFactory] = {
-    "sale.database": lambda endpoint: DatabaseIngestor(endpoint),
-    "house.database": lambda endpoint: DatabaseIngestor(endpoint),
-    "audit.database": lambda endpoint: DatabaseIngestor(endpoint),
-    "sale.datawarehouse": lambda endpoint: DataWarehouseIngestor(endpoint),
-    "house.datawarehouse": lambda endpoint: DataWarehouseIngestor(endpoint),
-    "audit.datawarehouse": lambda endpoint: DataWarehouseIngestor(endpoint),
-    "sale.datalake": lambda endpoint: DataLakeIngestor(endpoint),
-    "house.datalake": lambda endpoint: DataLakeIngestor(endpoint),
-    "audit.datalake": lambda endpoint: DataLakeIngestor(endpoint),
-    "sale_spark_datalake": lambda endpoint: SparkDataLakeIngestor(endpoint),
-    "house_spark_datalake": lambda endpoint: SparkDataLakeIngestor(endpoint),
-    "audit_spark_datalake": lambda endpoint: SparkDataLakeIngestor(endpoint),
-    "sale.rest": lambda endpoint: RestApiIngestor(endpoint),
-    "house.rest": lambda endpoint: RestApiIngestor(endpoint),
-    "sale.rest.api": lambda endpoint: RestApiIngestor(endpoint),
-    "house.rest.api": lambda endpoint: RestApiIngestor(endpoint),
-    "sale.kafka.listener": lambda endpoint: StreamingChannelIngestor(endpoint),
-    "house.kafka.listener": lambda endpoint: StreamingChannelIngestor(endpoint),
-    "audit.kafka.listener": lambda endpoint: StreamingChannelIngestor(endpoint),
-    "sale.message.queue": lambda endpoint: MessageQueueIngestor(endpoint),
-    "house.message.queue": lambda endpoint: MessageQueueIngestor(endpoint),
-    "audit.message.queue": lambda endpoint: MessageQueueIngestor(endpoint),
+registry: dict[str, Any] = {
+    "sale.file.csv": CsvFileIngestor(SALE_DATASET.endpoints["sale.file.csv"]),
+    "sale.spark.csv": SparkCsvFileIngestor(create_session()),
+    "sale.database": DatabaseIngestor(SALE_DATASET.endpoints["sale.database"]),
+    "sale.datawarehouse": DataWarehouseIngestor(SALE_DATASET.endpoints["sale.datawarehouse"]),
+    "sale.datalake": DataLakeIngestor(SALE_DATASET.endpoints["sale.datalake"]),
+    "sale.spark.datalake": SparkDataLakeIngestor(SALE_DATASET.endpoints["sale.datalake"], create_session()),
+    "sale.rest": RestApiIngestor(SALE_DATASET.endpoints["sale.rest"]),
+    "sale.kafka.listener": KafkaIngestor(SALE_DATASET.endpoints["sale.kafka.listener"]),
+    "sale.spark.kafka": SparkKafkaIngestor(SALE_DATASET.endpoints["sale.kafka.listener"], create_session()),
 }
 
 
-def get_ingestor(name: str, endpoint: Any) -> Any:
-    return registry[name](endpoint)
+def get_ingestor(name: str) -> Any:
+    return registry[name]

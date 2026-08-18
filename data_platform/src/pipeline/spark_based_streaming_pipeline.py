@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame
 
 from audit.audit_service import AuditService
 from config.settings import settings as main_settings
-from connector.session import create_session
+from connector.spark_session_factory import create_session
 from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, DataWarehouseEndpoint, Dataset, MessagingEndpoint
 from ingestion.registry import get_ingestor
 from persistence.database_repository import DatabaseRepository
@@ -31,7 +31,7 @@ class SparkStreamingPipeline(BatchPipeline):
         self.spark = SparkService(spark_session, datalake_endpoint, messaging_endpoint)
         self.database_repository = DatabaseRepository(database_endpoint)
         self.datawarehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
-        self.raw_topic_ingestor = get_ingestor(messaging_endpoint.connection_name, messaging_endpoint)
+        self.raw_topic_ingestor = get_ingestor("sale.spark.kafka")
 
     def ingest_raw_data(self) -> DataFrame:
         return self.raw_topic_ingestor.ingest()
@@ -90,7 +90,8 @@ class SparkStreamingPipeline(BatchPipeline):
             dataframe.show()
 
     def analyzing_via_datawarehouse(self) -> None:
-        results = self.datawarehouse_repository.analyze()
+        query_names = [name for name in self.datawarehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
+        results = self.datawarehouse_repository.analyze(query_names)
         logger.info("Analyzing enriched data via data warehouse")
 
         for dataframe in results.values():

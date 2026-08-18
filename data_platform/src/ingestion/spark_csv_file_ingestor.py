@@ -13,13 +13,13 @@ class SparkCsvFileIngestor:
     def __init__(self, session: SparkSession) -> None:
         self.session = session
 
-    def ingest(self, file_path: str | Path, schema: Any) -> DataFrame:
-        should_not_be_none_or_empty(str(file_path), "file_path")
+    def ingest(self, file_path: str, schema: Any) -> DataFrame:
+        should_not_be_none_or_empty(file_path, "file_path")
         should_not_be_none(schema, "schema")
         return (
             self.session
             .read
             .option("header", "true")
             .schema(schema)
-            .csv(str(file_path))
+            .csv(file_path)
         )

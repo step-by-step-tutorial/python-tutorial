@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import pandas as pd
 
+from connector.datawarehouse_connection_factory import get_connection
 from dataset.definition import DataWarehouseEndpoint
+from util.file_utils import read_text_file
 
 
 class DataWarehouseIngestor:
     def __init__(self, endpoint: DataWarehouseEndpoint) -> None:
         self.endpoint = endpoint
 
-    def ingest(self) -> pd.DataFrame:
-        from connector.datawarehouse_connection_factory import get_connection
+    def ingest(self, table_name: str) -> pd.DataFrame:
+        query_file = self.endpoint.query_sql_files["select_all"]
+        query = read_text_file(query_file).format(table_name=table_name)
 
         connection = get_connection(self.endpoint.connection_name)
-        query = f"select * from {self.endpoint.full_table_name}"
         return connection.query_df(query)

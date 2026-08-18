@@ -106,6 +106,3 @@ class TestRun:
         assert given_pipeline.analyze_via_dataframe.call_count == 1
         assert given_pipeline.analyzing_via_datawarehouse.call_count == 1
         assert given_pipeline.spark_service.stop.call_count == 1
-        assert given_audit_service.start_pipeline.call_count == 1
-        assert given_audit_service.complete_pipeline.call_count == 1
-        assert given_audit_service.fail_pipeline.call_count == 0

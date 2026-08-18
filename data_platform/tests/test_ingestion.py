@@ -15,9 +15,9 @@ from ingestion.csv_file_ingestor import CsvFileIngestor
 from ingestion.database_ingestor import DatabaseIngestor
 from ingestion.datalake_ingestor import DataLakeIngestor
 from ingestion.datawarehouse_ingestor import DataWarehouseIngestor
-from ingestion.message_queue_ingestor import MessageQueueIngestor
+from ingestion.kafka_ingestor import KafkaIngestor
 from ingestion.rest_api_ingestor import RestApiIngestor
-from ingestion.streaming_channel_ingestor import StreamingChannelIngestor
+from ingestion.spark_kafka_ingestor import SparkKafkaIngestor
 from ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
 pytestmark = pytest.mark.unit
 
@@ -70,9 +70,8 @@ class TestDataLakeIngestor:
             endpoint=DataLakeEndpoint(
                 connection_name="sale.datalake",
                 bucket_name="bucket",
-                relative_path="raw/example",
             )
-        ).ingest()
+        ).ingest("raw/example")
 
         assert actual is given_dataframe
         assert given_client.list_objects_v2.call_count == 1
@@ -87,18 +86,17 @@ class TestRestApiIngestor:
         given_response.read.return_value = b'[{"id": 1}, {"id": 2}]'
         given_connection = mocker.Mock()
         given_connection.open.return_value = given_response
-        mock_create_connection = mocker.patch("connector.rest_connection_factory.get_connection", return_value=given_connection)
+        mock_build_opener = mocker.patch("ingestion.rest_api_ingestor.build_opener", return_value=given_connection)
 
         actual = RestApiIngestor(
             endpoint=RestApiEndpoint(
-                connection_name="sale.rest",
                 url="https://example.test/data",
                 method="GET",
             )
         ).ingest()
 
         assert list(actual["id"]) == [1, 2]
-        assert mock_create_connection.call_count == 1
+        assert mock_build_opener.call_count == 1
         assert given_connection.open.call_count == 1
 
 
@@ -113,9 +111,9 @@ class TestMessageQueueIngestor:
         given_message_2.error.return_value = None
         given_message_2.value.return_value = b'{"id": 2}'
         given_consumer.poll.side_effect = [given_message_1, given_message_2, None]
-        mocker.patch("connector.kafka_connection_factory.get_connection", return_value=given_consumer)
+        mocker.patch("ingestion.message_queue_ingestor.get_connection", return_value=given_consumer)
 
-        actual = MessageQueueIngestor(
+        actual = KafkaIngestor(
             endpoint=MessagingEndpoint(
                 connection_name="sale.kafka.listener",
                 channel_name="queue",
@@ -138,21 +136,23 @@ class TestDatabaseIngestor:
             stage_table_name="example_stage",
             full_stage_table_name="sale.example_stage",
             table_names=["sale.example_stage"],
+            query_sql_files={"select_all": "database/read_table.sql"},
         )
         given_engine = mocker.Mock()
         given_connection = mocker.Mock()
         given_context = mocker.MagicMock()
         given_context.__enter__.return_value = given_connection
         given_engine.connect.return_value = given_context
-        mocker.patch("connector.database_connection_factory.get_connection", return_value=given_engine)
+        mocker.patch("ingestion.database_ingestor.read_text_file", return_value="select * from {table_name}")
         expected = pd.DataFrame({"id": [1]})
-        mock_read_sql_query = mocker.patch("ingestion.database_ingestor.pd.read_sql_query", return_value=expected)
+        mock_execute = mocker.patch("ingestion.database_ingestor.execute_sql", return_value=expected)
 
-        actual = DatabaseIngestor(endpoint=given_dataset).ingest()
+        actual = DatabaseIngestor(endpoint=given_dataset).ingest(given_dataset.full_stage_table_name)
 
         assert actual is expected
-        assert mock_read_sql_query.call_count == 1
-        assert mock_read_sql_query.call_args.args[0] == "select * from sale.example_stage"
+        assert mock_execute.call_count == 1
+        assert mock_execute.call_args.args[0] == "sale.database"
+        assert mock_execute.call_args.args[1] == "select * from sale.example_stage"
 
 
 class TestDataWarehouseIngestor:
@@ -163,13 +163,15 @@ class TestDataWarehouseIngestor:
             schema="warehouse",
             table_name="example",
             full_table_name="warehouse.example",
+            query_sql_files={"select_all": "datawarehouse/select_all.sql"},
         )
         given_connection = mocker.Mock()
-        mocker.patch("connector.datawarehouse_connection_factory.get_connection", return_value=given_connection)
+        mocker.patch("ingestion.datawarehouse_ingestor.get_connection", return_value=given_connection)
+        mocker.patch("ingestion.datawarehouse_ingestor.read_text_file", return_value="select * from {table_name}")
         expected = pd.DataFrame({"id": [1]})
         given_connection.query_df.return_value = expected
 
-        actual = DataWarehouseIngestor(endpoint=given_endpoint).ingest()
+        actual = DataWarehouseIngestor(endpoint=given_endpoint).ingest(given_endpoint.full_table_name)
 
         assert actual is expected
         assert given_connection.query_df.call_count == 1
@@ -188,14 +190,14 @@ class TestStreamingChannelIngestor:
         given_option_four = given_option_three.option.return_value
         given_option_four.load.return_value = given_dataframe
 
-        mocker.patch("ingestion.streaming_channel_ingestor.create_session", return_value=given_spark)
-        ingestor = StreamingChannelIngestor(
+        ingestor = SparkKafkaIngestor(
             endpoint=MessagingEndpoint(
                 connection_name="sale.kafka.listener",
                 channel_name="example-events",
                 bootstrap_servers="localhost:9092",
                 starting_offsets="earliest",
-            )
+            ),
+            session=given_spark,
         )
 
         actual = ingestor.ingest()

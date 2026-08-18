@@ -4,16 +4,15 @@ import json
 
 import pandas as pd
 
+from connector.kafka_connection_factory import get_connection
 from dataset.definition import MessagingEndpoint
 
 
-class MessageQueueIngestor:
+class KafkaIngestor:
     def __init__(self, endpoint: MessagingEndpoint) -> None:
         self.endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:
-        from connector.kafka_connection_factory import get_connection
-
         consumer = get_connection(self.endpoint.connection_name)
         consumer.subscribe([self.endpoint.channel_name])
 

@@ -8,8 +8,8 @@ from pandas.errors import EmptyDataError
 logger = logging.getLogger(__name__)
 
 
-def csv_to_dataframe(path: Path) -> pd.DataFrame:
-    if not path.is_file():
+def csv_to_dataframe(path: str) -> pd.DataFrame:
+    if not Path(path).is_file():
         raise FileNotFoundError(f"CSV file not found: {path}")
 
     logger.info("Reading CSV file from %s", path)
@@ -27,8 +27,8 @@ def csv_to_dataframe(path: Path) -> pd.DataFrame:
     return df
 
 
-def read_csv_file(path: str | Path, consumer: Callable[[dict[str, str]], None]) -> int:
-    dataframe = csv_to_dataframe(Path(path))
+def read_csv_file(path: str, consumer: Callable[[dict[str, str]], None]) -> int:
+    dataframe = csv_to_dataframe(path)
     for row in dataframe.to_dict(orient="records"):
         consumer(row)
 
