@@ -64,6 +64,7 @@ class DataLakeEndpoint:
     connection_name: str = ""
     bucket_name: str = ""
     scheme: str = "s3a"
+    relative_path: str = ""
 
 
 @dataclass(frozen=True)

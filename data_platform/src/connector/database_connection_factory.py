@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import atexit
-from typing import Any
+from typing import Any, Callable
 
 from sqlalchemy import create_engine
 
 from config.settings import settings as main_settings
 registry: dict[str, Any] = {}
+factories: dict[str, Callable[[], Any]] = {}
 
 
 def create_sale_connection():
@@ -21,12 +22,14 @@ def create_audit_connection():
     return create_engine(main_settings.database["audit.database"].sqlalchemy_url)
 
 
-registry["sale.database"] = create_sale_connection()
-registry["house.database"] = create_house_connection()
-registry["audit.database"] = create_audit_connection()
+factories["sale.database"] = create_sale_connection
+factories["house.database"] = create_house_connection
+factories["audit.database"] = create_audit_connection
 
 
 def get_connection(name: str):
+    if name not in registry:
+        registry[name] = factories[name]()
     return registry[name]
 
 

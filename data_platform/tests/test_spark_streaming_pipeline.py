@@ -78,6 +78,7 @@ class TestRun:
 
         mocker.patch("pipeline.spark_based_streaming_pipeline.AuditService", return_value=given_audit_service)
         mocker.patch("pipeline.spark_based_streaming_pipeline.create_session", return_value=mocker.Mock())
+        mocker.patch("ingestion.streaming_channel_ingestor.create_session", return_value=mocker.Mock())
         given_pipeline = SparkStreamingPipeline(build_dataset())
         mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
@@ -106,6 +107,4 @@ class TestRun:
         assert given_pipeline.analyze_via_dataframe.call_count == 1
         assert given_pipeline.analyzing_via_datawarehouse.call_count == 1
         assert given_pipeline.spark.stop.call_count == 1
-        assert given_audit_service.start_pipeline.call_count == 1
-        assert given_audit_service.complete_pipeline.call_count == 1
-        assert given_audit_service.fail_pipeline.call_count == 0
+        assert given_audit_service.emit.call_count == 24

@@ -6,7 +6,6 @@ import pandas
 import pyspark
 
 from config.settings import settings as main_settings
-from connector.database_connection_factory import get_connection
 from dataset.definition import DatabaseEndpoint
 
 from util.database_utils import execute_sql
@@ -29,12 +28,14 @@ class DatabaseRepository:
         if not sql_files:
             return
 
-        execute_sql(*(read_text_file(file_name) for file_name in sql_files.values()), connection_name=self.connection_name)
+        execute_sql(self.connection_name, *(read_text_file(file_name) for file_name in sql_files.values()))
 
     def truncate_stage_table(self) -> None:
         self.run_sql_files(self.database.truncate_sql_files)
 
     def populate_stage_table_from_memory(self, dataframe: pandas.DataFrame) -> None:
+        from connector.database_connection_factory import get_connection
+
         with get_connection(self.connection_name).begin() as connection:
             dataframe.to_sql(
                 name=self.database.stage_table_name,

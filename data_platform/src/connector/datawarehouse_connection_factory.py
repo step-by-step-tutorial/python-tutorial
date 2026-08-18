@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import atexit
-from typing import Any
+from typing import Any, Callable
 
 import clickhouse_connect
 
 from config.settings import settings as main_settings
 
 registry: dict[str, Any] = {}
+factories: dict[str, Callable[[], Any]] = {}
 
 
 def create_sale_connection():
@@ -40,12 +41,14 @@ def create_audit_connection():
     )
 
 
-registry["sale.datawarehouse"] = create_sale_connection()
-registry["house.datawarehouse"] = create_house_connection()
-registry["audit.datawarehouse"] = create_audit_connection()
+factories["sale.datawarehouse"] = create_sale_connection
+factories["house.datawarehouse"] = create_house_connection
+factories["audit.datawarehouse"] = create_audit_connection
 
 
 def get_connection(name: str):
+    if name not in registry:
+        registry[name] = factories[name]()
     return registry[name]
 
 

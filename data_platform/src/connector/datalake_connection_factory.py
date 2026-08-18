@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import atexit
-from typing import Any
+from typing import Any, Callable
 
 import boto3
 
 from config.settings import settings as main_settings
 
 registry: dict[str, Any] = {}
+factories: dict[str, Callable[[], Any]] = {}
 
 
 def create_sale_connection():
@@ -37,12 +38,14 @@ def create_audit_connection():
     )
 
 
-registry["sale.datalake"] = create_sale_connection()
-registry["house.datalake"] = create_house_connection()
-registry["audit.datalake"] = create_audit_connection()
+factories["sale.datalake"] = create_sale_connection
+factories["house.datalake"] = create_house_connection
+factories["audit.datalake"] = create_audit_connection
 
 
 def get_connection(name: str):
+    if name not in registry:
+        registry[name] = factories[name]()
     return registry[name]
 
 

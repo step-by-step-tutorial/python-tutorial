@@ -5,15 +5,16 @@ import json
 import pandas as pd
 
 from dataset.definition import MessagingEndpoint
-from connector.kafka_connection_factory import get_connection
 
 
-class AuditMessageQueueIngestor:
+class MessageQueueIngestor:
     def __init__(self, endpoint: MessagingEndpoint) -> None:
         self.endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:
-        consumer = get_connection("audit.kafka.listener")
+        from connector.kafka_connection_factory import get_connection
+
+        consumer = get_connection(self.endpoint.connection_name)
         consumer.subscribe([self.endpoint.channel_name])
 
         records: list[dict[str, object]] = []

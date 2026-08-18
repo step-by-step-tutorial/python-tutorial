@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import atexit
-from typing import Any
+from typing import Any, Callable
 
 from confluent_kafka import Consumer, Producer
 
 from config.settings import settings as main_settings
 
 registry: dict[str, Any] = {}
+factories: dict[str, Callable[[], Any]] = {}
 
 
 def create_sale_publisher_connection() -> Producer:
@@ -82,15 +83,17 @@ def create_audit_listener_connection() -> Consumer:
     )
 
 
-registry["sale.kafka.producer"] = create_sale_publisher_connection()
-registry["house.kafka.producer"] = create_house_publisher_connection()
-registry["audit.kafka.producer"] = create_audit_publisher_connection()
-registry["sale.kafka.listener"] = create_sale_listener_connection()
-registry["house.kafka.listener"] = create_house_listener_connection()
-registry["audit.kafka.listener"] = create_audit_listener_connection()
+factories["sale.kafka.producer"] = create_sale_publisher_connection
+factories["house.kafka.producer"] = create_house_publisher_connection
+factories["audit.kafka.producer"] = create_audit_publisher_connection
+factories["sale.kafka.listener"] = create_sale_listener_connection
+factories["house.kafka.listener"] = create_house_listener_connection
+factories["audit.kafka.listener"] = create_audit_listener_connection
 
 
 def get_connection(name: str):
+    if name not in registry:
+        registry[name] = factories[name]()
     return registry[name]
 
 

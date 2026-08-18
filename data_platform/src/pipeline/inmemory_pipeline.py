@@ -32,7 +32,7 @@ class InmemoryPipeline(BatchPipeline):
             self.dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint)
         )
         self.raw_data_ingestor = CsvFileIngestor(
-            self.dataset.get_endpoint("sale.file.csv", FileEndpoint).file_path
+            self.dataset.get_endpoint("sale.file.csv", FileEndpoint)
         )
 
     def ingest_raw_data(self) -> pd.DataFrame:

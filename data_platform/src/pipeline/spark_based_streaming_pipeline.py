@@ -31,7 +31,7 @@ class SparkStreamingPipeline(BatchPipeline):
         self.spark = SparkService(spark_session, datalake_endpoint, messaging_endpoint)
         self.database_repository = DatabaseRepository(database_endpoint)
         self.datawarehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
-        self.raw_topic_ingestor = get_ingestor(messaging_endpoint.connection_name, spark=self.spark)
+        self.raw_topic_ingestor = get_ingestor(messaging_endpoint.connection_name, messaging_endpoint)
 
     def ingest_raw_data(self) -> DataFrame:
         return self.raw_topic_ingestor.ingest()
