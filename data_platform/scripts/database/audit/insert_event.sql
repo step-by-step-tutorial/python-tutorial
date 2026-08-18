@@ -22,8 +22,7 @@ INSERT INTO audit.event (event_id,
                          error_type,
                          error_message,
                          error_stacktrace,
-                         metadata,
-                         streaming_topic)
+                         metadata)
 VALUES (:event_id,
         :event_version,
         :event_type,
@@ -48,5 +47,4 @@ VALUES (:event_id,
         :error_type,
         :error_message,
         :error_stacktrace,
-        CAST(:metadata AS JSONB),
-        :streaming_topic) ON CONFLICT DO NOTHING;
+        CAST(:metadata AS JSONB)) ON CONFLICT DO NOTHING;

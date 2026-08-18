@@ -14,8 +14,11 @@ class StreamingSettings:
 
 settings = StreamingSettings(
     starting_offsets=os.getenv("APP_STREAMING_STARTING_OFFSETS", "earliest"),
-    checkpoint_path=(
-        f"{datalake_settings.scheme}://"
-        f"{datalake_settings.bucket_name}/checkpoints/{os.getenv('APP_STREAMING_TOPIC', 'sale-events')}"
+    checkpoint_path=os.getenv(
+        "APP_STREAMING_CHECKPOINT_PATH",
+        (
+            f"{datalake_settings.scheme}://"
+            f"{datalake_settings.bucket_name}/checkpoints/{os.getenv('APP_CHANNEL_ID', 'sale-events')}"
+        ),
     ),
 )

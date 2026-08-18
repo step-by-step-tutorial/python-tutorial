@@ -55,7 +55,7 @@ with DAG(
 
     analyze_via_spark_task = PythonOperator(
         task_id="analyze_via_spark",
-        python_callable=pipeline.analyze_primary,
+        python_callable=pipeline.analyze_via_dataframe,
         op_kwargs={"enriched_data_path": enrich_data_task.output}
     )
 

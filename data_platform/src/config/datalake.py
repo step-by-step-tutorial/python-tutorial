@@ -15,13 +15,32 @@ class DataLakeSettings:
     environment: str
 
 
-settings = DataLakeSettings(
-    endpoint=os.getenv("APP_DATALAKE_ENDPOINT", "http://localhost:9000"),
-    access_key=os.getenv("APP_DATALAKE_ACCESS_KEY", "admin"),
-    secret_key=os.getenv("APP_DATALAKE_SECRET_KEY", "administrator"),
-    bucket_name=os.getenv("APP_DATALAKE_BUCKET_NAME", "app-datalake"),
-    audit_bucket_name=os.getenv("APP_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
-    scheme=os.getenv("APP_DATALAKE_SCHEME", "s3a"),
-    environment=os.getenv("APP_DATALAKE_ENVIRONMENT", "dev"),
+sale_settings = DataLakeSettings(
+    endpoint=os.getenv("APP_SALE_DATALAKE_ENDPOINT", "http://localhost:9000"),
+    access_key=os.getenv("APP_SALE_DATALAKE_ACCESS_KEY", "admin"),
+    secret_key=os.getenv("APP_SALE_DATALAKE_SECRET_KEY", "administrator"),
+    bucket_name=os.getenv("APP_SALE_DATALAKE_BUCKET_NAME", "app-datalake"),
+    audit_bucket_name=os.getenv("APP_SALE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
+    scheme=os.getenv("APP_SALE_DATALAKE_SCHEME", "s3a"),
+    environment=os.getenv("APP_SALE_DATALAKE_ENVIRONMENT", "dev"),
+)
+house_settings = DataLakeSettings(
+    endpoint=os.getenv("APP_HOUSE_DATALAKE_ENDPOINT", "http://localhost:9000"),
+    access_key=os.getenv("APP_HOUSE_DATALAKE_ACCESS_KEY", "admin"),
+    secret_key=os.getenv("APP_HOUSE_DATALAKE_SECRET_KEY", "administrator"),
+    bucket_name=os.getenv("APP_HOUSE_DATALAKE_BUCKET_NAME", "app-datalake-house"),
+    audit_bucket_name=os.getenv("APP_HOUSE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
+    scheme=os.getenv("APP_HOUSE_DATALAKE_SCHEME", "s3a"),
+    environment=os.getenv("APP_HOUSE_DATALAKE_ENVIRONMENT", "dev"),
+)
+audit_settings = DataLakeSettings(
+    endpoint=os.getenv("APP_AUDIT_DATALAKE_ENDPOINT", "http://localhost:9000"),
+    access_key=os.getenv("APP_AUDIT_DATALAKE_ACCESS_KEY", "admin"),
+    secret_key=os.getenv("APP_AUDIT_DATALAKE_SECRET_KEY", "administrator"),
+    bucket_name=os.getenv("APP_AUDIT_DATALAKE_BUCKET_NAME", "app-datalake-audit"),
+    audit_bucket_name=os.getenv("APP_AUDIT_ARCHIVE_BUCKET_NAME", "app-datalake-audit"),
+    scheme=os.getenv("APP_AUDIT_DATALAKE_SCHEME", "s3a"),
+    environment=os.getenv("APP_AUDIT_DATALAKE_ENVIRONMENT", "dev"),
 )
 
+settings = sale_settings

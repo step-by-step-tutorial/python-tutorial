@@ -16,28 +16,78 @@ class DatabaseSettings:
     sqlalchemy_url: str
 
 
-settings = DatabaseSettings(
-    host=os.getenv("APP_DATABASE_HOST", "localhost"),
-    port=int(os.getenv("APP_DATABASE_PORT", "5432")),
-    database_name=os.getenv("APP_DATABASE_NAME", "app_database"),
-    user=os.getenv("APP_DATABASE_USER", "admin"),
-    password=os.getenv("APP_DATABASE_PASSWORD", "admin"),
-    driver=os.getenv("APP_DATABASE_DRIVER", "org.postgresql.Driver"),
+sale_settings = DatabaseSettings(
+    host=os.getenv("APP_SALE_DATABASE_HOST", "localhost"),
+    port=int(os.getenv("APP_SALE_DATABASE_PORT", "5432")),
+    database_name=os.getenv("APP_SALE_DATABASE_NAME", "app_database"),
+    user=os.getenv("APP_SALE_DATABASE_USER", "admin"),
+    password=os.getenv("APP_SALE_DATABASE_PASSWORD", "admin"),
+    driver=os.getenv("APP_SALE_DATABASE_DRIVER", "org.postgresql.Driver"),
     jdbc_url=os.getenv(
-        "APP_DATABASE_JDBC_URL",
+        "APP_SALE_DATABASE_JDBC_URL",
         "jdbc:postgresql://"
-        f"{os.getenv('APP_DATABASE_HOST', 'localhost')}:"
-        f"{os.getenv('APP_DATABASE_PORT', '5432')}/"
-        f"{os.getenv('APP_DATABASE_NAME', 'app_database')}",
+        f"{os.getenv('APP_SALE_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('APP_SALE_DATABASE_PORT', '5432')}/"
+        f"{os.getenv('APP_SALE_DATABASE_NAME', 'app_database')}",
     ),
     sqlalchemy_url=os.getenv(
-        "APP_DATABASE_SQLALCHEMY_URL",
+        "APP_SALE_DATABASE_SQLALCHEMY_URL",
         "postgresql+psycopg2://"
-        f"{os.getenv('APP_DATABASE_USER', 'admin')}:"
-        f"{os.getenv('APP_DATABASE_PASSWORD', 'admin')}@"
-        f"{os.getenv('APP_DATABASE_HOST', 'localhost')}:"
-        f"{os.getenv('APP_DATABASE_PORT', '5432')}/"
-        f"{os.getenv('APP_DATABASE_NAME', 'app_database')}",
+        f"{os.getenv('APP_SALE_DATABASE_USER', 'admin')}:"
+        f"{os.getenv('APP_SALE_DATABASE_PASSWORD', 'admin')}@"
+        f"{os.getenv('APP_SALE_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('APP_SALE_DATABASE_PORT', '5432')}/"
+        f"{os.getenv('APP_SALE_DATABASE_NAME', 'app_database')}",
+    ),
+)
+house_settings = DatabaseSettings(
+    host=os.getenv("APP_HOUSE_DATABASE_HOST", "localhost"),
+    port=int(os.getenv("APP_HOUSE_DATABASE_PORT", "5432")),
+    database_name=os.getenv("APP_HOUSE_DATABASE_NAME", "app_database"),
+    user=os.getenv("APP_HOUSE_DATABASE_USER", "admin"),
+    password=os.getenv("APP_HOUSE_DATABASE_PASSWORD", "admin"),
+    driver=os.getenv("APP_HOUSE_DATABASE_DRIVER", "org.postgresql.Driver"),
+    jdbc_url=os.getenv(
+        "APP_HOUSE_DATABASE_JDBC_URL",
+        "jdbc:postgresql://"
+        f"{os.getenv('APP_HOUSE_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('APP_HOUSE_DATABASE_PORT', '5432')}/"
+        f"{os.getenv('APP_HOUSE_DATABASE_NAME', 'app_database')}",
+    ),
+    sqlalchemy_url=os.getenv(
+        "APP_HOUSE_DATABASE_SQLALCHEMY_URL",
+        "postgresql+psycopg2://"
+        f"{os.getenv('APP_HOUSE_DATABASE_USER', 'admin')}:"
+        f"{os.getenv('APP_HOUSE_DATABASE_PASSWORD', 'admin')}@"
+        f"{os.getenv('APP_HOUSE_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('APP_HOUSE_DATABASE_PORT', '5432')}/"
+        f"{os.getenv('APP_HOUSE_DATABASE_NAME', 'app_database')}",
+    ),
+)
+audit_settings = DatabaseSettings(
+    host=os.getenv("APP_AUDIT_DATABASE_HOST", "localhost"),
+    port=int(os.getenv("APP_AUDIT_DATABASE_PORT", "5432")),
+    database_name=os.getenv("APP_AUDIT_DATABASE_NAME", "app_database"),
+    user=os.getenv("APP_AUDIT_DATABASE_USER", "admin"),
+    password=os.getenv("APP_AUDIT_DATABASE_PASSWORD", "admin"),
+    driver=os.getenv("APP_AUDIT_DATABASE_DRIVER", "org.postgresql.Driver"),
+    jdbc_url=os.getenv(
+        "APP_AUDIT_DATABASE_JDBC_URL",
+        "jdbc:postgresql://"
+        f"{os.getenv('APP_AUDIT_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('APP_AUDIT_DATABASE_PORT', '5432')}/"
+        f"{os.getenv('APP_AUDIT_DATABASE_NAME', 'app_database')}",
+    ),
+    sqlalchemy_url=os.getenv(
+        "APP_AUDIT_DATABASE_SQLALCHEMY_URL",
+        "postgresql+psycopg2://"
+        f"{os.getenv('APP_AUDIT_DATABASE_USER', 'admin')}:"
+        f"{os.getenv('APP_AUDIT_DATABASE_PASSWORD', 'admin')}@"
+        f"{os.getenv('APP_AUDIT_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('APP_AUDIT_DATABASE_PORT', '5432')}/"
+        f"{os.getenv('APP_AUDIT_DATABASE_NAME', 'app_database')}",
     ),
 )
 
+# Backward-compatible default alias.
+settings = sale_settings

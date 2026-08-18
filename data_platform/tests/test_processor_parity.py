@@ -15,7 +15,7 @@ from processor.inmemory.sale_processor import InmemorySaleProcessor
 from processor.spark.house_processor import SparkHouseProcessor
 from processor.spark.sale_processor import SparkSaleProcessor
 
-pytestmark = pytest.mark.spark
+pytestmark = pytest.mark.spark_service
 
 
 @pytest.fixture(scope="module")

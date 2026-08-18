@@ -1,0 +1,195 @@
+import pandas as pd
+import pytest
+
+from pyspark.sql import SparkSession
+
+from dataset.definition import (
+    DataLakeEndpoint,
+    DataWarehouseEndpoint,
+    DatabaseEndpoint,
+    MessagingEndpoint,
+)
+from ingestion.csv_file_ingestor import CsvFileIngestor
+from ingestion.sale_database_ingestor import SaleDatabaseIngestor
+from ingestion.sale_datalake_ingestor import SaleDataLakeIngestor
+from ingestion.sale_datawarehouse_ingestor import SaleDataWarehouseIngestor
+from ingestion.sale_message_queue_ingestor import SaleMessageQueueIngestor
+from ingestion.sale_rest_api_ingestor import SaleRestApiIngestor
+from ingestion.sale_streaming_channel_ingestor import SaleStreamingChannelIngestor
+from ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
+from service.spark_service import SparkService
+pytestmark = pytest.mark.unit
+
+
+class TestCsvFileIngestor:
+
+    def test_should_read_csv_file(self, tmp_path) -> None:
+        csv_path = tmp_path / "sample.csv"
+        expected = pd.DataFrame({"id": [1], "name": ["Alice"]})
+        expected.to_csv(csv_path, index=False)
+
+        ingestor = CsvFileIngestor(file_path=csv_path)
+
+        actual = ingestor.ingest()
+
+        pd.testing.assert_frame_equal(actual, expected)
+
+
+class TestSparkCsvFileIngestor:
+
+    def test_should_delegate_to_spark_reader(self, mocker) -> None:
+        given_spark = mocker.MagicMock(spec=SparkSession)
+        given_dataframe = mocker.Mock()
+        given_spark.read.option.return_value.schema.return_value.csv.return_value = given_dataframe
+        ingestor = SparkCsvFileIngestor(session=given_spark)
+
+        actual = ingestor.ingest(file_path="/tmp/sample.csv", schema={"schema": "value"})
+
+        assert actual is given_dataframe
+        assert given_spark.read.option.call_count == 1
+        assert given_spark.read.option.call_args.args == ("header", "true")
+        assert given_spark.read.option.return_value.schema.call_count == 1
+        assert given_spark.read.option.return_value.schema.call_args.args[0] == {"schema": "value"}
+        assert given_spark.read.option.return_value.schema.return_value.csv.call_count == 1
+        assert given_spark.read.option.return_value.schema.return_value.csv.call_args.args[0].endswith("sample.csv")
+
+
+class TestDataLakeIngestor:
+
+    def test_should_delegate_to_datalake_service(self, mocker) -> None:
+        given_dataframe = pd.DataFrame({"id": [1]})
+        given_client = mocker.Mock()
+        given_client.list_objects_v2.return_value = {"Contents": [{"Key": "raw/part-001.parquet"}]}
+        given_client.download_fileobj.side_effect = lambda bucket, key, buffer: buffer.write(b"parquet")
+        mocker.patch("ingestion.sale_datalake_ingestor.get_connection", return_value=given_client)
+        mocker.patch("ingestion.sale_datalake_ingestor.pd.read_parquet", return_value=given_dataframe)
+        mocker.patch("ingestion.sale_datalake_ingestor.pd.concat", return_value=given_dataframe)
+
+        actual = SaleDataLakeIngestor(bucket_name="bucket", relative_path="raw/example").ingest()
+
+        assert actual is given_dataframe
+        assert given_client.list_objects_v2.call_count == 1
+
+
+class TestRestApiIngestor:
+
+    def test_should_normalize_json_payload(self, mocker) -> None:
+        given_response = mocker.Mock()
+        given_response.__enter__ = mocker.Mock(return_value=given_response)
+        given_response.__exit__ = mocker.Mock(return_value=None)
+        given_response.read.return_value = b'[{"id": 1}, {"id": 2}]'
+        given_connection = mocker.Mock()
+        given_connection.open.return_value = given_response
+        mock_create_connection = mocker.patch("ingestion.sale_rest_api_ingestor.get_connection", return_value=given_connection)
+
+        actual = SaleRestApiIngestor(url="https://example.test/data").ingest()
+
+        assert list(actual["id"]) == [1, 2]
+        assert mock_create_connection.call_count == 1
+        assert given_connection.open.call_count == 1
+
+
+class TestMessageQueueIngestor:
+
+    def test_should_collect_json_messages(self, mocker) -> None:
+        given_consumer = mocker.Mock()
+        given_message_1 = mocker.Mock()
+        given_message_1.error.return_value = None
+        given_message_1.value.return_value = b'{"id": 1}'
+        given_message_2 = mocker.Mock()
+        given_message_2.error.return_value = None
+        given_message_2.value.return_value = b'{"id": 2}'
+        given_consumer.poll.side_effect = [given_message_1, given_message_2, None]
+        mocker.patch("ingestion.sale_message_queue_ingestor.get_connection", return_value=given_consumer)
+
+        actual = SaleMessageQueueIngestor(
+            endpoint=MessagingEndpoint(
+                connection_name="sale.kafka.listener",
+                channel_name="queue",
+                timeout_ms=1000,
+                max_messages=1000,
+            )
+        ).ingest()
+
+        assert list(actual["id"]) == [1, 2]
+        assert given_consumer.subscribe.call_count == 1
+        assert given_consumer.close.call_count == 1
+class TestDatabaseIngestor:
+
+    def test_should_read_table_via_sql_connection(self, mocker) -> None:
+        given_dataset = DatabaseEndpoint(
+            connection_name="sale.database",
+            schema="sale",
+            stage_table_name="example_stage",
+            full_stage_table_name="sale.example_stage",
+            table_names=["sale.example_stage"],
+        )
+        given_engine = mocker.Mock()
+        given_connection = mocker.Mock()
+        given_context = mocker.MagicMock()
+        given_context.__enter__.return_value = given_connection
+        given_engine.connect.return_value = given_context
+        mocker.patch("ingestion.sale_database_ingestor.get_connection", return_value=given_engine)
+        expected = pd.DataFrame({"id": [1]})
+        mock_read_sql_query = mocker.patch("ingestion.sale_database_ingestor.pd.read_sql_query", return_value=expected)
+
+        actual = SaleDatabaseIngestor(table_name=given_dataset.full_stage_table_name).ingest()
+
+        assert actual is expected
+        assert mock_read_sql_query.call_count == 1
+        assert mock_read_sql_query.call_args.args[0] == "select * from sale.example_stage"
+
+
+class TestDataWarehouseIngestor:
+
+    def test_should_query_full_table(self, mocker) -> None:
+        given_endpoint = DataWarehouseEndpoint(
+            connection_name="sale.datawarehouse",
+            schema="warehouse",
+            table_name="example",
+            full_table_name="warehouse.example",
+        )
+        given_connection = mocker.Mock()
+        mocker.patch("ingestion.sale_datawarehouse_ingestor.get_connection", return_value=given_connection)
+        expected = pd.DataFrame({"id": [1]})
+        given_connection.query_df.return_value = expected
+
+        actual = SaleDataWarehouseIngestor(full_table_name=given_endpoint.full_table_name).ingest()
+
+        assert actual is expected
+        assert given_connection.query_df.call_count == 1
+        assert given_connection.query_df.call_args.args[0] == "select * from warehouse.example"
+
+
+class TestStreamingChannelIngestor:
+
+    def test_should_read_stream_from_topic(self, mocker) -> None:
+        given_spark = mocker.Mock()
+        given_dataframe = mocker.Mock()
+        given_stream_reader = given_spark.readStream.format.return_value
+        given_option_one = given_stream_reader.option.return_value
+        given_option_two = given_option_one.option.return_value
+        given_option_three = given_option_two.option.return_value
+        given_option_four = given_option_three.option.return_value
+        given_option_four.load.return_value = given_dataframe
+
+        service = SparkService(
+            session=given_spark,
+            datalake_endpoint=DataLakeEndpoint(bucket_name="bucket"),
+            messaging_endpoint=MessagingEndpoint(
+                channel_name="example-events",
+                bootstrap_servers="localhost:9092",
+                starting_offsets="earliest",
+            ),
+        )
+        ingestor = SaleStreamingChannelIngestor(spark=service)
+
+        actual = ingestor.ingest()
+
+        assert actual is given_dataframe
+        assert given_spark.readStream.format.call_count == 1
+        assert given_stream_reader.option.call_count == 1
+        assert given_option_one.option.call_count == 1
+        assert given_option_two.option.call_count == 1
+        assert given_option_three.option.call_count == 1
+        assert given_option_four.load.call_count == 1

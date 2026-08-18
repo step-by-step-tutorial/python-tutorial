@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
@@ -24,3 +25,11 @@ def csv_to_dataframe(path: Path) -> pd.DataFrame:
         raise ValueError(f"CSV file contains no data rows: {path}")
 
     return df
+
+
+def read_csv_file(path: str | Path, consumer: Callable[[dict[str, str]], None]) -> int:
+    dataframe = csv_to_dataframe(Path(path))
+    for row in dataframe.to_dict(orient="records"):
+        consumer(row)
+
+    return len(dataframe)

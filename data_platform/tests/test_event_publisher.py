@@ -1,6 +1,6 @@
 import pytest
 
-from service.messaging.event_publisher import EventPublisher
+from simulation.event_publisher import EventPublisher
 from transformation.conversion.event_mapper import MappedEvent
 
 pytestmark = pytest.mark.unit

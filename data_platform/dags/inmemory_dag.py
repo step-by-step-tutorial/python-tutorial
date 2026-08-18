@@ -65,7 +65,7 @@ with DAG(
 
     analyze_via_memory_task = PythonOperator(
         task_id="analyze_via_memory",
-        python_callable=pipeline.analyze_primary,
+        python_callable=pipeline.analyze_via_dataframe,
         op_kwargs={
             "enriched_data_path": enrich_data_task.output,
         },

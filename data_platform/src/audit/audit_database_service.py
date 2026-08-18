@@ -1,18 +1,21 @@
+from __future__ import annotations
+
 from sqlalchemy import text
 
-from config.audit import settings as audit_settings
-from audit.audit_event_converter import to_audit_event_model
-from connector.database.postgres_connector import create_connection
+from audit.audit_event_converter import to_persistable_event
+from audit.base import AuditWriteService
+from connector.database_connection_factory import get_connection
+from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
 from util.file_utils import read_text_file
 
 
-class AuditDatabaseService:
+class AuditDatabaseService(AuditWriteService):
 
-    def save(self, event: AuditEvent, streaming_topic: str | None = None) -> None:
-        insert_event_sql = read_text_file("database/audit/insert_event.sql")
-        with create_connection().begin() as connection:
-            connection.execute(
-                text(insert_event_sql),
-                to_audit_event_model(event, streaming_topic or audit_settings.streaming_topic)
-            )
+    def __init__(self, audit_endpoint: AuditEndpoint) -> None:
+        self._connection = get_connection(audit_endpoint.database_connection_name)
+        self._insert_event_sql = read_text_file(audit_endpoint.write_sql_files["write"])
+
+    def write(self, event: AuditEvent) -> None:
+        with self._connection.begin() as connection:
+            connection.execute(text(self._insert_event_sql), to_persistable_event(event))

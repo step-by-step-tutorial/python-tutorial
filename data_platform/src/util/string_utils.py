@@ -1,4 +1,4 @@
-def should_be_not_none(obj, name: str):
+def should_not_be_none(obj, name: str):
     if obj is None:
         raise ValueError(f"Value of {name} should not be None")
 

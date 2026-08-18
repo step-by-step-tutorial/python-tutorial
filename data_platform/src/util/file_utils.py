@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from config.app import settings as app_settings
-from util.string_utils import should_be_not_none
+from util.string_utils import should_not_be_none
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ def read_text_file(file_name: str) -> str:
 
 
 def read_csv_file(path_str: str, consumer: Callable[[dict[str, Any]], None]) -> int:
-    should_be_not_none(path_str, "CSV file path")
-    should_be_not_none(consumer, "CSV row processor")
+    should_not_be_none(path_str, "CSV file path")
+    should_not_be_none(consumer, "CSV row processor")
     path = Path(path_str)
     should_be_exists(path)
     logger.info("Reading CSV file from %s", path_str)

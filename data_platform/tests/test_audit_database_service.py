@@ -1,5 +1,6 @@
 from audit.audit_database_service import AuditDatabaseService
 from audit.audit_event_factory import AuditEventFactory
+from dataset.definition import AuditEndpoint
 
 
 class TestAuditDatabaseService:
@@ -18,15 +19,30 @@ class TestAuditDatabaseService:
         given_connection.begin.return_value = given_transaction_context
 
         mock_create_connection = mocker.patch(
-            "audit.audit_database_service.create_connection",
+            "audit.audit_database_service.get_connection",
             return_value=given_connection
+        )
+        mock_read_text_file = mocker.patch(
+            "audit.audit_database_service.read_text_file",
+            return_value="insert into audit.event values (:event_id)"
         )
 
         # When
-        AuditDatabaseService().save(given_event)
+        given_endpoint = AuditEndpoint(
+            database_connection_name="audit.database",
+            messaging_connection_name="audit.kafka.producer",
+            datalake_connection_name="audit.datalake",
+            create_sql_files={"create": "database/audit/create_tables.sql"},
+            write_sql_files={"write": "database/audit/insert_event.sql"},
+        )
+        service = AuditDatabaseService(given_endpoint)
+        service.write(given_event)
 
         # Then
         assert mock_create_connection.call_count == 1
+        assert mock_create_connection.call_args.args[0] == "audit.database"
+        assert mock_read_text_file.call_count == 1
+        assert mock_read_text_file.call_args.args[0] == "database/audit/insert_event.sql"
         assert given_connection.begin.call_count == 1
         assert given_transaction_context.__enter__.call_count == 1
         assert given_transaction_context.__exit__.call_count == 1

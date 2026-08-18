@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from config.datalake import settings
-from service.spark import runtime as spark_runtime
+from service import runtime as spark_runtime
 from streaming.delivery import topic_on_delivery
 from transformation.conversion.type_converter import (
     convert_to_integer,
@@ -23,7 +23,7 @@ class TestStringUtils:
 
     def test_should_be_not_none_rejects_none_value(self) -> None:
         with pytest.raises(ValueError):
-            string_utils.should_be_not_none(None, "value")
+            string_utils.should_not_be_none(None, "value")
 
     def test_should_not_be_none_or_empty_rejects_blank_text(self) -> None:
         with pytest.raises(ValueError):
@@ -135,12 +135,12 @@ class TestDatabaseUtils:
         given_transaction_context.__enter__.return_value = given_connection
         given_connection.begin.return_value = given_transaction_context
         mock_create_connection = mocker.patch(
-            "util.database_utils.create_connection",
+            "util.database_utils.get_connection",
             return_value=given_connection,
         )
 
         # When
-        database_utils.execute_sql("select 1", "select 2")
+        database_utils.execute_sql("select 1", "select 2", connection_name="sale.database")
 
         # Then
         assert mock_create_connection.call_count == 1

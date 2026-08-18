@@ -8,7 +8,7 @@ def pytest_collection_modifyitems(session, config, items):
         path = str(item.path).lower()
         tagged = False
         if "spark" in path:
-            item.add_marker(pytest.mark.spark)
+            item.add_marker(pytest.mark.spark_service)
             tagged = True
         if "kafka" in path or "streaming" in path:
             item.add_marker(pytest.mark.kafka)

@@ -3,8 +3,9 @@ from config.audit import settings as audit_settings
 from config.datalake import settings as datalake_settings
 from config.datawarehouse import settings as datawarehouse_settings
 from config.messaging import settings as messaging_settings
+from config.streaming import settings as streaming_settings
 from dataset.definition import (
-    Audit,
+    AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
     Dataframe,
@@ -35,49 +36,79 @@ SALE_DATASET = Dataset(
             }
         ),
     ),
-    audit=Audit(
-        topic=audit_settings.streaming_topic,
-        archive_enabled=audit_settings.archive_enabled,
+    audit=AuditEndpoint(
+        database_connection_name="audit.database",
+        messaging_connection_name="audit.kafka.producer",
+        datalake_connection_name="audit.datalake",
+        create_sql_files={"create": "database/audit/create_tables.sql"},
+        channel_name=audit_settings.channel_name,
+        bucket_name=audit_settings.archive_bucket_name,
+        write_sql_files={"write": "database/audit/insert_event.sql"},
     ),
-    sources={
-        "file": FileEndpoint(
+    endpoints={
+        "sale.file.csv": FileEndpoint(
             name="file",
             file_name="sale.csv",
             file_path=str(app_settings.root / app_settings.resources_dir / "sale.csv"),
         ),
-        "messaging": MessagingEndpoint(
+        "sale.kafka.listener": MessagingEndpoint(
             name="messaging",
-            topic=messaging_settings.topic,
+            connection_name="sale.kafka.listener",
+            channel_name=messaging_settings.channel_name,
+            bootstrap_servers=messaging_settings.bootstrap_servers,
+            starting_offsets=streaming_settings.starting_offsets,
         ),
-    },
-    destinations={
-        "datalake": DataLakeEndpoint(name="datalake", bucket_name=datalake_settings.bucket_name),
-        "database": DatabaseEndpoint(
+        "sale.datalake": DataLakeEndpoint(
+            name="datalake",
+            connection_name="sale.datalake",
+            bucket_name=datalake_settings.bucket_name,
+            scheme=datalake_settings.scheme,
+        ),
+        "sale.database": DatabaseEndpoint(
             name="database",
-            table_name="sale.sale_stage",
-            before_setup_sql_files=("database/sale/truncate_stage.sql",),
-            after_setup_sql_files=(
-                "database/sale/upsert_customer.sql",
-                "database/sale/upsert_product.sql",
-                "database/sale/upsert_order.sql",
-                "database/sale/upsert_order_item.sql",
-            ),
+            connection_name="sale.database",
+            schema="sale",
+            stage_table_name="sale_stage",
+            full_stage_table_name="sale.sale_stage",
+            table_names=[
+                "sale.sale_stage",
+                "sale.customer",
+                "sale.product",
+                "sale.order",
+                "sale.order_item",
+            ],
+            create_sql_files={"create": "database/sale/create_tables.sql"},
+            truncate_sql_files={"truncate": "database/sale/truncate_stage.sql"},
+            write_sql_files={
+                "customer": "database/sale/upsert_customer.sql",
+                "product": "database/sale/upsert_product.sql",
+                "order": "database/sale/upsert_order.sql",
+                "order_item": "database/sale/upsert_order_item.sql",
+            },
+            query_sql_files={},
         ),
-        "datawarehouse": DataWarehouseEndpoint(
+        "sale.datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
+            connection_name="sale.datawarehouse",
+            schema=datawarehouse_settings.database_name,
             table_name="sale_table",
             full_table_name=f"{datawarehouse_settings.database_name}.sale_table",
-            before_setup_sql_files={
+            create_sql_files={
+                "create_database": "datawarehouse/sale/create_database.sql",
+                "create_table": "datawarehouse/sale/create_table.sql",
+            },
+            truncate_sql_files={
                 "truncate": "datawarehouse/sale/truncate_datawarehouse.sql"
             },
-            after_setup_sql_files={
+            write_sql_files={},
+            query_sql_files={
                 "revenue_by_category": "datawarehouse/sale/select_revenue_by_category.sql",
                 "revenue_by_country": "datawarehouse/sale/select_revenue_by_country.sql",
             },
         ),
     },
-    processor_factories={
-        "inmemory": InmemorySaleProcessor,
-        "spark": SparkSaleProcessor,
+    processors={
+        "inmemory": InmemorySaleProcessor(),
+        "spark": SparkSaleProcessor(),
     },
 )

@@ -2,8 +2,10 @@ from config.app import settings as app_settings
 from config.audit import settings as audit_settings
 from config.datalake import settings as datalake_settings
 from config.datawarehouse import settings as datawarehouse_settings
+from config.messaging import house_settings
+from config.streaming import settings as streaming_settings
 from dataset.definition import (
-    Audit,
+    AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
     Dataframe,
@@ -34,41 +36,68 @@ HOUSE_DATASET = Dataset(
             }
         ),
     ),
-    audit=Audit(topic=audit_settings.streaming_topic, archive_enabled=audit_settings.archive_enabled),
-    sources={
-        "file": FileEndpoint(
+    audit=AuditEndpoint(
+        database_connection_name="audit.database",
+        messaging_connection_name="audit.kafka.producer",
+        datalake_connection_name="audit.datalake",
+        create_sql_files={"create": "database/audit/create_tables.sql"},
+        channel_name=audit_settings.channel_name,
+        bucket_name=audit_settings.archive_bucket_name,
+        write_sql_files={"write": "database/audit/insert_event.sql"},
+    ),
+    endpoints={
+        "house.file.csv": FileEndpoint(
             name="file",
             file_name="house.csv",
             file_path=str(app_settings.root / app_settings.resources_dir / "house.csv"),
         ),
-        "messaging": MessagingEndpoint(
+        "house.kafka.listener": MessagingEndpoint(
             name="messaging",
-            topic="house-events",
+            connection_name="house.kafka.listener",
+            channel_name=house_settings.channel_name,
+            bootstrap_servers=house_settings.bootstrap_servers,
+            starting_offsets=streaming_settings.starting_offsets,
         ),
-    },
-    destinations={
-        "datalake": DataLakeEndpoint(name="datalake", bucket_name=datalake_settings.bucket_name),
-        "database": DatabaseEndpoint(
+        "house.datalake": DataLakeEndpoint(
+            name="datalake",
+            connection_name="house.datalake",
+            bucket_name=datalake_settings.bucket_name,
+            scheme=datalake_settings.scheme,
+        ),
+        "house.database": DatabaseEndpoint(
             name="database",
-            table_name="house.house_stage",
-            before_setup_sql_files=("database/house/truncate_stage.sql",),
-            after_setup_sql_files=(),
+            connection_name="house.database",
+            schema="house",
+            stage_table_name="house_stage",
+            full_stage_table_name="house.house_stage",
+            table_names=["house.house_stage"],
+            create_sql_files={"create": "database/house/create_tables.sql"},
+            truncate_sql_files={"truncate": "database/house/truncate_stage.sql"},
+            write_sql_files={},
+            query_sql_files={},
         ),
-        "datawarehouse": DataWarehouseEndpoint(
+        "house.datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
+            connection_name="house.datawarehouse",
+            schema=datawarehouse_settings.database_name,
             table_name="house_table",
             full_table_name=f"{datawarehouse_settings.database_name}.house_table",
-            before_setup_sql_files={
+            create_sql_files={
+                "create_database": "datawarehouse/house/create_database.sql",
+                "create_table": "datawarehouse/house/create_table.sql",
+            },
+            truncate_sql_files={
                 "truncate": "datawarehouse/house/truncate_datawarehouse.sql",
             },
-            after_setup_sql_files={
+            write_sql_files={},
+            query_sql_files={
                 "average_price_by_address": "datawarehouse/house/select_average_price_by_address.sql",
                 "average_price_per_square_meter_by_room": "datawarehouse/house/select_average_price_per_square_meter_by_room.sql",
             },
         ),
     },
-    processor_factories={
-        "inmemory": InmemoryHouseProcessor,
-        "spark": SparkHouseProcessor,
+    processors={
+        "inmemory": InmemoryHouseProcessor(),
+        "spark": SparkHouseProcessor(),
     },
 )

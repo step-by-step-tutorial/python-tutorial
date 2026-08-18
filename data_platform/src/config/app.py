@@ -27,4 +27,3 @@ settings = AppSettings(
     spark_dir=Path(os.getenv("SPARK_DIR", "spark")),
     data_file=os.getenv("DATA_FILE", "sale.csv"),
 )
-

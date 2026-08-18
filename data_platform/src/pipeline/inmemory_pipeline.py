@@ -1,115 +1,92 @@
 import logging
-from typing import cast
 
 import pandas as pd
 
-from config.app import settings as app_settings
-from config.datalake import settings as datalake_settings
 from audit.audit_service import AuditService
-from dataset.definition import Dataset, FileEndpoint, DataWarehouseEndpoint
-from persistence.database import database_service
-from persistence.datalake import datalake_service as inmemory_datalake_service
-from processor.base import DataProcessor
-from util.path_utils import DatalakeEnv, generate_relative_path
-from persistence.datawarehouse import datawarehouse_service
+from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, Dataset, FileEndpoint, DataWarehouseEndpoint
+from ingestion.csv_file_ingestor import CsvFileIngestor
+from persistence.database_repository import DatabaseRepository
+from persistence.datalake_repository import DataLakeRepository
+from persistence.datawarehouse_repository import DataWarehouseRepository
+from pipeline.batch_pipeline import BatchPipeline
 from presentation.dataframe_display import show
 from presentation.dataframe_display import show_map_of_dataframe
-from pipeline.batch_pipeline import BatchPipeline
-from transformation.validation.schema_validator import require_columns
-from util.csv_utils import csv_to_dataframe
 from util.log_utils import log_line
+from util.path_utils import DatalakeEnv, generate_relative_path
 
 logger = logging.getLogger(__name__)
 
 
 class InmemoryPipeline(BatchPipeline):
 
-    def __init__(self, ds: Dataset, audit_service: AuditService | None = None) -> None:
-        super().__init__(ds, audit_service=audit_service)
+    def __init__(self, ds: Dataset) -> None:
+        super().__init__(ds, audit_service=AuditService(ds.audit))
         self.pipeline_name = "inmemory_pipeline"
+        self.database_repository = DatabaseRepository(
+            self.dataset.get_endpoint("sale.database", DatabaseEndpoint)
+        )
+        self.datalake_repository = DataLakeRepository(
+            self.dataset.get_endpoint("sale.datalake", DataLakeEndpoint)
+        )
+        self.datawarehouse_repository = DataWarehouseRepository(
+            self.dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint)
+        )
+        self.raw_data_ingestor = CsvFileIngestor(
+            self.dataset.get_endpoint("sale.file.csv", FileEndpoint).file_path
+        )
 
-    def store_raw_data(self) -> str:
-        file_endpoint = cast(FileEndpoint, self.dataset.get_source("file"))
-        data_file_path = file_endpoint.resolve_path(app_settings.resources_dir)
-        dataframe = csv_to_dataframe(data_file_path)
-        require_columns(dataframe, self.dataset.dataframe.required_columns)
+    def ingest_raw_data(self) -> pd.DataFrame:
+        return self.raw_data_ingestor.ingest()
 
+    def store_raw_data(self, raw_data: pd.DataFrame) -> str:
         relative_path = generate_relative_path(DatalakeEnv.RAW, self.ingestion_time, self.dataset.name.lower())
-        inmemory_datalake_service.upload(
-            df=dataframe,
-            bucket_name=datalake_settings.bucket_name,
-            relative_path=relative_path
-        )
-
+        self.datalake_repository.upload(df=raw_data, relative_path=relative_path)
         return relative_path
 
-    def cleaning(self, raw_relative_path: str) -> str:
-        dataframe = inmemory_datalake_service.download(
-            bucket_name=datalake_settings.bucket_name,
-            relative_path=raw_relative_path
-        )
+    def cleaning(self, raw_relative_path: str) -> pd.DataFrame:
+        raw_dataframe = self.datalake_repository.download(raw_relative_path)
+        return self.dataset.get_processor("inmemory").clean(raw_dataframe)
 
-        cleaned_dataframe = self.dataset.get_processor("inmemory").clean(dataframe)
-
+    def store_cleaned_data(self, cleaned_data: pd.DataFrame) -> str:
         relative_path = generate_relative_path(DatalakeEnv.CLEANED, self.ingestion_time, self.dataset.name.lower())
-        inmemory_datalake_service.upload(
-            df=cleaned_dataframe,
-            bucket_name=datalake_settings.bucket_name,
-            relative_path=relative_path
-        )
-
+        self.datalake_repository.upload(df=cleaned_data, relative_path=relative_path)
         return relative_path
 
-    def enriching(self, cleaned_relative_path: str) -> str:
-        dataframe = inmemory_datalake_service.download(
-            bucket_name=datalake_settings.bucket_name,
-            relative_path=cleaned_relative_path
-        )
-        enriched_dataframe = self.dataset.get_processor("inmemory").enrich(dataframe)
+    def enriching(self, cleaned_relative_path: str) -> pd.DataFrame:
+        cleaned_dataframe = self.datalake_repository.download(cleaned_relative_path)
+        return self.dataset.get_processor("inmemory").enrich(cleaned_dataframe)
 
+    def store_enriched_data(self, enriched_data: pd.DataFrame) -> str:
         relative_path = generate_relative_path(DatalakeEnv.ENRICHED, self.ingestion_time, self.dataset.name.lower())
-        inmemory_datalake_service.upload(
-            df=enriched_dataframe,
-            bucket_name=datalake_settings.bucket_name,
-            relative_path=relative_path
-        )
-
+        self.datalake_repository.upload(df=enriched_data, relative_path=relative_path)
         return relative_path
 
     def download_enriched_data(self, relative_path: str) -> pd.DataFrame:
-        return inmemory_datalake_service.download(
-            bucket_name=datalake_settings.bucket_name,
-            relative_path=relative_path
-        )
+        return self.datalake_repository.download(relative_path)
 
     def populate_database(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating operational database with enriched data")
-        database_service.truncate_and_populate_from_memory(self.dataset, enriched_dataframe)
+        self.database_repository.truncate_and_populate_from_memory(enriched_dataframe)
 
     def populate_datawarehouse(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating data warehouse with enriched data")
-        datawarehouse_service.truncate_and_populate_from_memory(
-            cast(DataWarehouseEndpoint, self.dataset.get_destination("datawarehouse")),
-            enriched_dataframe,
-        )
+        self.datawarehouse_repository.truncate_and_populate_from_memory(enriched_dataframe)
 
-    def show_dataframe(self, enriched_data_path: str):
-        enriched_dataframe = self.download_enriched_data(enriched_data_path)
-        logger.info("Displaying enriched data")
-        show(enriched_dataframe)
-        log_line()
-
-    def analyze_primary(self, enriched_data_path: str):
+    def analyze_via_dataframe(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Analyzing enriched data via memory")
         results = self.dataset.get_processor("inmemory").analyze(enriched_dataframe)
         show_map_of_dataframe(results)
 
     def analyzing_via_datawarehouse(self):
-        result = datawarehouse_service.analyze(
-            cast(DataWarehouseEndpoint, self.dataset.get_destination("datawarehouse"))
-        )
+        result = self.datawarehouse_repository.analyze()
         logger.info("Analyzing enriched data via data warehouse")
         show_map_of_dataframe(result)
+
+    def show_dataframe(self, enriched_data_path: str):
+        enriched_dataframe = self.download_enriched_data(enriched_data_path)
+        logger.info("Displaying enriched data")
+        show(enriched_dataframe)
+        log_line()

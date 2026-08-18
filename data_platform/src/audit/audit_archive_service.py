@@ -2,21 +2,29 @@ import json
 from datetime import datetime
 from typing import Any
 
-from connector.datalake import object_storage_connector as datalake_connection_factory
+from audit.base import AuditWriteService
+from connector.datalake_connection_factory import get_connection
+from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
 from util.path_utils import generate_full_path
 
 
-def save_event(event: AuditEvent, bucket_name: str) -> str:
-    object_key = (
-        f"events/event_date={event.event_time.date().isoformat()}"
-        f"/pipeline_name={event.pipeline_name}"
-        f"/pipeline_id={event.pipeline_id}/{event.event_id}.json"
-    )
-    content = event.model_dump_json(indent=2).encode("utf-8")
-    with datalake_connection_factory.create_connection() as client:
-        client.put_object(
-            Bucket=bucket_name,
+class AuditArchiveService(AuditWriteService):
+
+    def __init__(self, audit_endpoint: AuditEndpoint) -> None:
+        self._client = get_connection(audit_endpoint.datalake_connection_name)
+        self._bucket_name = audit_endpoint.bucket_name
+
+    def write(self, event: AuditEvent) -> None:
+        object_key = (
+            f"events/event_date={event.event_time.date().isoformat()}"
+            f"/pipeline_name={event.pipeline_name}"
+            f"/pipeline_id={event.pipeline_id}"
+            f"/{event.event_id}.json"
+        )
+        content = event.model_dump_json(indent=2).encode("utf-8")
+        self._client.put_object(
+            Bucket=self._bucket_name,
             Key=object_key,
             Body=content,
             ContentLength=len(content),
@@ -25,31 +33,29 @@ def save_event(event: AuditEvent, bucket_name: str) -> str:
                 "pipeline-name": event.pipeline_name,
                 "pipeline-run-id": event.pipeline_id,
                 "event-type": event.event_type.value,
-                "event-id": str(event.event_id)
-            }
+                "event-id": str(event.event_id),
+            },
         )
-    return generate_full_path(bucket_name=bucket_name, relative_path=object_key)
 
-
-def save_manifest(
-        pipeline_name: str,
-        pipeline_id: str,
-        manifest: dict[str, Any],
-        event_time: datetime,
-        bucket_name: str
-) -> str:
-    object_key = (
-        f"manifests/event_date={event_time.date().isoformat()}"
-        f"/pipeline_name={pipeline_name}"
-        f"/pipeline_id={pipeline_id}"
-        f"/pipeline_manifest.json"
-    )
-    content = json.dumps(manifest, indent=2, default=str).encode("utf-8")
-    with datalake_connection_factory.create_connection() as client:
-        client.put_object(
-            Bucket=bucket_name,
-            Key=object_key, Body=content,
+    def write_manifest(
+            self,
+            pipeline_name: str,
+            pipeline_id: str,
+            manifest: dict[str, Any],
+            event_time: datetime
+    ) -> str:
+        object_key = (
+            f"manifests/event_date={event_time.date().isoformat()}"
+            f"/pipeline_name={pipeline_name}"
+            f"/pipeline_id={pipeline_id}"
+            f"/pipeline_manifest.json"
+        )
+        content = json.dumps(manifest, indent=2, default=str).encode("utf-8")
+        self._client.put_object(
+            Bucket=self._bucket_name,
+            Key=object_key,
+            Body=content,
             ContentLength=len(content),
-            ContentType="application/json"
+            ContentType="application/json",
         )
-    return generate_full_path(bucket_name=bucket_name, relative_path=object_key)
+        return generate_full_path(bucket_name=self._bucket_name, relative_path=object_key)

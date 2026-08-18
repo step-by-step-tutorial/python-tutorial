@@ -1,39 +1,34 @@
 import time
-from collections.abc import Sequence
 from uuid import uuid4
 
+from audit.audit_archive_service import AuditArchiveService
 from audit.audit_database_service import AuditDatabaseService
 from audit.audit_event_factory import AuditEventFactory
-from audit.audit_streaming_service import AuditStreamingService
-from audit.sinks import ArchiveAuditSink, AuditSink, DatabaseAuditSink, LogAuditSink, StreamingAuditSink
-from config.audit import settings as audit_settings
-from dataset.definition import Audit
+from audit.audit_log_service import AuditLogService
+from audit.audit_messaging_service import AuditMessagingService
+from dataset.definition import AuditEndpoint
 from util.time_utils import elapsed_milliseconds
 
 
 class AuditService:
 
-    def __init__(self, audit: Audit | None = None, sinks: Sequence[AuditSink] | None = None) -> None:
-        audit = audit or Audit(topic=audit_settings.streaming_topic, archive_enabled=audit_settings.archive_enabled)
-        self._sinks = tuple(
-            sinks
-            or (
-                DatabaseAuditSink(topic=audit.topic or audit_settings.streaming_topic, service=AuditDatabaseService()),
-                StreamingAuditSink(service=AuditStreamingService(audit.topic or audit_settings.streaming_topic)),
-                LogAuditSink(),
-                ArchiveAuditSink(bucket_name=audit_settings.archive_bucket_name, enabled=audit.archive_enabled),
-            )
-        )
+    def __init__(self, audit_endpoint: AuditEndpoint ) -> None:
+        self._audit_endpoint = audit_endpoint
+        self._log_service = AuditLogService()
+        self._database_service = AuditDatabaseService(self._audit_endpoint)
+        self._messaging_service = AuditMessagingService(self._audit_endpoint)
+        self._archive_service = AuditArchiveService(self._audit_endpoint)
 
     def _emit(self, event) -> None:
-        for sink in self._sinks:
-            sink.write(event)
+        self._log_service.write(event)
+        self._database_service.write(event)
+        self._messaging_service.write(event)
+        self._archive_service.write(event)
 
     def start_pipeline(self, pipeline_name: str, pipeline_id: str, metadata: dict | None = None) -> float:
         started_at = time.perf_counter()
         event = AuditEventFactory.create_pipeline_started_event(pipeline_name, pipeline_id, metadata)
         self._emit(event)
-
         return started_at
 
     def complete_pipeline(
@@ -55,7 +50,6 @@ class AuditService:
             rejected_row_count=rejected_row_count,
             metadata=metadata
         )
-
         self._emit(event)
 
     def fail_pipeline(
@@ -73,7 +67,6 @@ class AuditService:
             error=error,
             metadata=metadata
         )
-
         self._emit(event)
 
     def start_task(
@@ -94,7 +87,6 @@ class AuditService:
             task_attempt=task_attempt,
             metadata=metadata
         )
-
         self._emit(event)
 
         return task_id, started_at
@@ -138,7 +130,6 @@ class AuditService:
             checksum=checksum,
             metadata=metadata
         )
-
         self._emit(event)
 
     def fail_task(
@@ -182,7 +173,6 @@ class AuditService:
             checksum=checksum,
             metadata=metadata
         )
-
         self._emit(event)
 
     def read_dataset(
@@ -202,7 +192,6 @@ class AuditService:
             pipeline_id=pipeline_id,
             metadata=metadata
         )
-
         self._emit(event)
 
     def write_dataset(
@@ -226,5 +215,4 @@ class AuditService:
             pipeline_id=pipeline_id,
             metadata=metadata
         )
-
         self._emit(event)

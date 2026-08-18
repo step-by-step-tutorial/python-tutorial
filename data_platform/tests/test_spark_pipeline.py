@@ -1,7 +1,7 @@
 import pytest
 
 from dataset.definition import (
-    Audit,
+    AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
     Dataframe,
@@ -29,16 +29,30 @@ def build_dataset() -> Dataset:
     return Dataset(
         name="example",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
-        audit=Audit(),
-        processor_factories={"spark": lambda: processor},
-        sources={
-            "file": FileEndpoint(file_name="example.csv", file_path="resources/example.csv"),
-            "messaging": MessagingEndpoint(topic="example-events"),
-        },
-        destinations={
-            "datalake": DataLakeEndpoint(bucket_name="bucket"),
-            "database": DatabaseEndpoint(table_name="sale.example_stage"),
-            "datawarehouse": DataWarehouseEndpoint(full_table_name="app_datawarehouse.example"),
+        audit=AuditEndpoint(
+            database_connection_name="audit.database",
+            messaging_connection_name="audit.kafka.producer",
+            datalake_connection_name="audit.datalake",
+            create_sql_files={"create": "database/audit/create_tables.sql"},
+            write_sql_files={"write": "database/audit/insert_event.sql"},
+        ),
+        processors={"spark": processor},
+        endpoints={
+            "sale.file.csv": FileEndpoint(file_name="sale.csv", file_path="resources/example.csv"),
+            "sale.kafka.listener": MessagingEndpoint(connection_name="sale.kafka.listener", channel_name="example-events"),
+            "sale.datalake": DataLakeEndpoint(connection_name="sale.datalake", bucket_name="bucket"),
+            "sale.database": DatabaseEndpoint(
+                connection_name="sale.database",
+                schema="sale",
+                stage_table_name="example_stage",
+                full_stage_table_name="sale.example_stage",
+                table_names=["sale.example_stage"],
+            ),
+            "sale.datawarehouse": DataWarehouseEndpoint(
+                connection_name="sale.datawarehouse",
+                schema="app_datawarehouse",
+                table_name="example",
+            ),
         },
     )
 
@@ -57,30 +71,41 @@ class TestRun:
             ("task-6", 6.0),
             ("task-7", 7.0),
             ("task-8", 8.0),
-        ]
+            ("task-9", 9.0),
+            ("task-10", 10.0),
+            ("task-11", 11.0),
+        ] 
 
-        given_pipeline = SparkPipeline(build_dataset(), audit_service=given_audit_service)
+        mocker.patch("pipeline.spark_based_pipeline.AuditService", return_value=given_audit_service)
+        mocker.patch("pipeline.spark_based_pipeline.create_session", return_value=mocker.Mock())
+        given_pipeline = SparkPipeline(build_dataset())
+        mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
         mocker.patch.object(given_pipeline, "cleaning", return_value="clean")
+        mocker.patch.object(given_pipeline, "store_cleaned_data", return_value="clean-path")
         mocker.patch.object(given_pipeline, "enriching", return_value="enriched")
+        mocker.patch.object(given_pipeline, "store_enriched_data", return_value="enriched-path")
         mocker.patch.object(given_pipeline, "populate_database")
         mocker.patch.object(given_pipeline, "populate_datawarehouse")
         mocker.patch.object(given_pipeline, "show_dataframe")
-        mocker.patch.object(given_pipeline, "analyze_primary")
+        mocker.patch.object(given_pipeline, "analyze_via_dataframe")
         mocker.patch.object(given_pipeline, "analyzing_via_datawarehouse")
-        mocker.patch.object(given_pipeline.spark, "stop")
+        mocker.patch.object(given_pipeline.spark_service, "stop")
 
         given_pipeline.run()
 
+        assert given_pipeline.ingest_raw_data.call_count == 1
         assert given_pipeline.store_raw_data.call_count == 1
         assert given_pipeline.cleaning.call_count == 1
+        assert given_pipeline.store_cleaned_data.call_count == 1
         assert given_pipeline.enriching.call_count == 1
+        assert given_pipeline.store_enriched_data.call_count == 1
         assert given_pipeline.populate_database.call_count == 1
         assert given_pipeline.populate_datawarehouse.call_count == 1
         assert given_pipeline.show_dataframe.call_count == 1
-        assert given_pipeline.analyze_primary.call_count == 1
+        assert given_pipeline.analyze_via_dataframe.call_count == 1
         assert given_pipeline.analyzing_via_datawarehouse.call_count == 1
-        assert given_pipeline.spark.stop.call_count == 1
+        assert given_pipeline.spark_service.stop.call_count == 1
         assert given_audit_service.start_pipeline.call_count == 1
         assert given_audit_service.complete_pipeline.call_count == 1
         assert given_audit_service.fail_pipeline.call_count == 0
