@@ -1,3 +1,12 @@
+from audit.audit_event_factory import DatasetReadAuditRequest
+from audit.audit_event_factory import DatasetWrittenAuditRequest
+from audit.audit_event_factory import PipelineCompletedAuditRequest
+from audit.audit_event_factory import PipelineFailedAuditRequest
+from audit.audit_event_factory import PipelineStartedAuditRequest
+from audit.audit_event_factory import TaskCompletedAuditRequest
+from audit.audit_event_factory import TaskFailedAuditRequest
+from audit.audit_event_factory import TaskStartedAuditRequest
+from audit.audit_event_factory import AuditEventFactory
 from audit.audit_service import AuditService
 from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEventType
@@ -10,8 +19,6 @@ class TestAuditService:
         given_messaging_service = mocker.Mock()
         given_archive_service = mocker.Mock()
         given_log_service = mocker.Mock()
-        mocker.patch("audit.audit_service.time.perf_counter", return_value=100.0)
-        mocker.patch("audit.audit_service.uuid4", return_value="task-001")
         mock_log_service_ctor = mocker.patch(
             "audit.audit_service.AuditLogService",
             return_value=given_log_service,
@@ -40,38 +47,93 @@ class TestAuditService:
                 write_sql_files={"write": "database/audit/insert_event.sql"},
             )
         )
+        given_service.emit = mocker.Mock(wraps=given_service.emit)
 
-        actual_started_at = given_service.start_pipeline("sale_pipeline", "pipeline-001")
-        actual_task_id, actual_task_started_at = given_service.start_task(
-            "sale_pipeline",
-            "pipeline-001",
-            "populate_database",
-            task_attempt=1,
+        given_service.emit(
+            AuditEventFactory.create_pipeline_started_event(
+                PipelineStartedAuditRequest(
+                    pipeline_name="sale_pipeline",
+                    pipeline_id="pipeline-001",
+                )
+            )
         )
-        given_service.complete_task(
-            "sale_pipeline",
-            "pipeline-001",
-            "populate_database",
-            task_id=actual_task_id,
-            task_attempt=1,
-            started_at=actual_task_started_at,
+        actual_task_id = "task-001"
+        given_service.emit(
+            AuditEventFactory.create_task_started_event(
+                TaskStartedAuditRequest(
+                    pipeline_name="sale_pipeline",
+                    pipeline_id="pipeline-001",
+                    task_name="populate_database",
+                    task_id=actual_task_id,
+                    task_attempt=1,
+                )
+            )
         )
-        given_service.fail_task(
-            "sale_pipeline",
-            "pipeline-001",
-            "populate_database",
-            task_id=actual_task_id,
-            task_attempt=1,
-            started_at=actual_task_started_at,
-            error=RuntimeError("boom"),
+        given_service.emit(
+            AuditEventFactory.create_task_completed_event(
+                TaskCompletedAuditRequest(
+                    pipeline_name="sale_pipeline",
+                    pipeline_id="pipeline-001",
+                    task_name="populate_database",
+                    task_id=actual_task_id,
+                    task_attempt=1,
+                    duration_ms=0,
+                )
+            )
         )
-        given_service.complete_pipeline("sale_pipeline", "pipeline-001", started_at=actual_started_at)
-        given_service.fail_pipeline("sale_pipeline", "pipeline-001", started_at=actual_started_at, error=RuntimeError("boom"))
-        given_service.read_dataset("datalake", "s3://bucket/path", 10)
-        given_service.write_dataset("datalake", "s3://bucket/path", "database", "jdbc:postgresql://db/sale", 9)
+        given_service.emit(
+            AuditEventFactory.create_task_failed_event(
+                TaskFailedAuditRequest(
+                    pipeline_name="sale_pipeline",
+                    pipeline_id="pipeline-001",
+                    task_name="populate_database",
+                    task_id=actual_task_id,
+                    task_attempt=1,
+                    duration_ms=0,
+                    error=RuntimeError("boom"),
+                )
+            )
+        )
+        given_service.emit(
+            AuditEventFactory.create_pipeline_completed_event(
+                PipelineCompletedAuditRequest(
+                    pipeline_name="sale_pipeline",
+                    pipeline_id="pipeline-001",
+                    duration_ms=0,
+                )
+            )
+        )
+        given_service.emit(
+            AuditEventFactory.create_pipeline_failed_event(
+                PipelineFailedAuditRequest(
+                    pipeline_name="sale_pipeline",
+                    pipeline_id="pipeline-001",
+                    duration_ms=0,
+                    error=RuntimeError("boom"),
+                )
+            )
+        )
+        given_service.emit(
+            AuditEventFactory.create_dataset_read_event(
+                DatasetReadAuditRequest(
+                    source_system="datalake",
+                    source_uri="s3://bucket/path",
+                    row_count=10,
+                )
+            )
+        )
+        given_service.emit(
+            AuditEventFactory.create_dataset_written_event(
+                DatasetWrittenAuditRequest(
+                    source_system="datalake",
+                    source_uri="s3://bucket/path",
+                    destination_system="database",
+                    destination_uri="jdbc:postgresql://db/sale",
+                    row_count=9,
+                )
+            )
+        )
 
-        assert actual_started_at == 100.0
-        assert actual_task_started_at == 100.0
         assert actual_task_id == "task-001"
         assert mock_log_service_ctor.call_count == 1
         assert mock_database_service_ctor.call_args.args[0].database_connection_name == "audit.database"
@@ -80,6 +142,7 @@ class TestAuditService:
         assert mock_messaging_service_ctor.call_args.args[0].channel_name == "audit-topic"
         assert mock_archive_service_ctor.call_args.args[0].datalake_connection_name == "audit.datalake"
         assert mock_archive_service_ctor.call_args.args[0].bucket_name == "app-datalake-audit"
+        assert given_service.emit.call_count == 8
         assert given_log_service.write.call_count == 8
         assert given_database_service.write.call_count == 8
         assert given_messaging_service.write.call_count == 8
@@ -90,8 +153,6 @@ class TestAuditService:
         given_messaging_service = mocker.Mock()
         given_archive_service = mocker.Mock()
         given_log_service = mocker.Mock()
-        mocker.patch("audit.audit_service.time.perf_counter", return_value=100.0)
-        mocker.patch("audit.audit_service.uuid4", return_value="task-001")
         mocker.patch("audit.audit_service.AuditLogService", return_value=given_log_service)
         mocker.patch("audit.audit_service.AuditDatabaseService", return_value=given_database_service)
         mocker.patch("audit.audit_service.AuditMessagingService", return_value=given_messaging_service)
@@ -108,21 +169,42 @@ class TestAuditService:
                 write_sql_files={"write": "database/audit/insert_event.sql"},
             )
         )
-        started_at = given_service.start_pipeline("sale_pipeline", "pipeline-001")
+        given_service.emit = mocker.Mock(wraps=given_service.emit)
+        given_service.emit(
+            AuditEventFactory.create_pipeline_started_event(
+                PipelineStartedAuditRequest(
+                    pipeline_name="sale_pipeline",
+                    pipeline_id="pipeline-001",
+                )
+            )
+        )
 
         try:
             raise RuntimeError("boom")
         except RuntimeError as error:
-            given_service.fail_task(
-                "sale_pipeline",
-                "pipeline-001",
-                "populate_database",
-                task_id="task-001",
-                task_attempt=1,
-                started_at=started_at,
-                error=error,
+            given_service.emit(
+                AuditEventFactory.create_task_failed_event(
+                    TaskFailedAuditRequest(
+                        pipeline_name="sale_pipeline",
+                        pipeline_id="pipeline-001",
+                        task_name="populate_database",
+                        task_id="task-001",
+                        task_attempt=1,
+                        duration_ms=0,
+                        error=error,
+                    )
+                )
             )
-            given_service.fail_pipeline("sale_pipeline", "pipeline-001", started_at=started_at, error=error)
+            given_service.emit(
+                AuditEventFactory.create_pipeline_failed_event(
+                    PipelineFailedAuditRequest(
+                        pipeline_name="sale_pipeline",
+                        pipeline_id="pipeline-001",
+                        duration_ms=0,
+                        error=error,
+                    )
+                )
+            )
 
         assert given_database_service.write.call_count == 3
         assert given_messaging_service.write.call_count == 3

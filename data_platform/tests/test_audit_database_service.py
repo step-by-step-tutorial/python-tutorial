@@ -1,5 +1,6 @@
 from audit.audit_database_service import AuditDatabaseService
 from audit.audit_event_factory import AuditEventFactory
+from audit.audit_event_factory import PipelineStartedAuditRequest
 from dataset.definition import AuditEndpoint
 
 
@@ -8,9 +9,11 @@ class TestAuditDatabaseService:
     def test_should_save_audit_event_to_single_table(self, mocker) -> None:
         # Given
         given_event = AuditEventFactory.create_pipeline_started_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
-            metadata={"airflow_dag_id": "dag-001"}
+            PipelineStartedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+                metadata={"airflow_dag_id": "dag-001"},
+            )
         )
 
         given_connection = mocker.Mock()

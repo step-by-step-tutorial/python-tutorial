@@ -45,20 +45,6 @@ class TestBatchPipeline:
 
     def test_should_execute_the_shared_batch_workflow(self, mocker) -> None:
         given_audit_service = mocker.Mock()
-        given_audit_service.start_pipeline.return_value = 10.0
-        given_audit_service.start_task.side_effect = [
-            ("task-1", 1.0),
-            ("task-2", 2.0),
-            ("task-3", 3.0),
-            ("task-4", 4.0),
-            ("task-5", 5.0),
-            ("task-6", 6.0),
-            ("task-7", 7.0),
-            ("task-8", 8.0),
-            ("task-9", 9.0),
-            ("task-10", 10.0),
-            ("task-11", 11.0),
-        ]
 
         given_pipeline = _TestBatchPipeline(
             Dataset(
@@ -82,20 +68,10 @@ class TestBatchPipeline:
 
         given_pipeline.run()
 
-        assert given_audit_service.start_task.call_count == 11
-        assert given_audit_service.complete_task.call_count == 11
-        assert given_audit_service.fail_task.call_count == 0
-        assert given_audit_service.complete_pipeline.call_count == 1
-        assert given_audit_service.fail_pipeline.call_count == 0
+        assert given_audit_service.emit.call_count == 24
 
     def test_should_record_task_and_pipeline_failure(self, mocker) -> None:
         given_audit_service = mocker.Mock()
-        given_audit_service.start_pipeline.return_value = 10.0
-        given_audit_service.start_task.side_effect = [
-            ("task-1", 1.0),
-            ("task-2", 2.0),
-            ("task-3", 3.0),
-        ]
 
         given_pipeline = _TestBatchPipeline(
             Dataset(
@@ -119,5 +95,4 @@ class TestBatchPipeline:
         except RuntimeError:
             pass
 
-        assert given_audit_service.fail_task.call_count == 1
-        assert given_audit_service.fail_pipeline.call_count == 1
+        assert given_audit_service.emit.call_count == 8

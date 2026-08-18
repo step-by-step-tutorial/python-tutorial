@@ -1,6 +1,7 @@
 import pytest
 
 from audit.audit_event_factory import AuditEventFactory
+from audit.audit_event_factory import PipelineStartedAuditRequest
 from audit.audit_messaging_service import AuditMessagingService
 from dataset.definition import AuditEndpoint
 
@@ -12,8 +13,10 @@ class TestAuditMessagingService:
     def test_should_publish_audit_event_to_messaging_channel(self, mocker) -> None:
         # Given
         given_event = AuditEventFactory.create_pipeline_started_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
+            PipelineStartedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+            )
         )
         given_producer = mocker.Mock()
         mock_create_producer = mocker.patch(
@@ -44,8 +47,10 @@ class TestAuditMessagingService:
     def test_should_propagate_publish_errors(self, mocker) -> None:
         # Given
         given_event = AuditEventFactory.create_pipeline_started_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
+            PipelineStartedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+            )
         )
         given_producer = mocker.Mock()
         given_producer.produce.side_effect = RuntimeError("boom")

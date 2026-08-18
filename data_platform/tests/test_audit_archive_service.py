@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from audit.audit_archive_service import AuditArchiveService
 from audit.audit_event_factory import AuditEventFactory
+from audit.audit_event_factory import PipelineStartedAuditRequest
 from dataset.definition import AuditEndpoint
 
 
@@ -10,8 +11,10 @@ class TestAuditArchiveService:
     def test_should_save_audit_event_to_object_storage(self, mocker) -> None:
         # Given
         given_event = AuditEventFactory.create_pipeline_started_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
+            PipelineStartedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+            )
         )
         given_event.event_time = datetime(2026, 8, 15, 12, 0, tzinfo=UTC)
         given_connection = mocker.Mock()

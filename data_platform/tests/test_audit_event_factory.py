@@ -1,4 +1,12 @@
 from audit.audit_event_factory import AuditEventFactory
+from audit.audit_event_factory import DatasetReadAuditRequest
+from audit.audit_event_factory import DatasetWrittenAuditRequest
+from audit.audit_event_factory import PipelineCompletedAuditRequest
+from audit.audit_event_factory import PipelineFailedAuditRequest
+from audit.audit_event_factory import PipelineStartedAuditRequest
+from audit.audit_event_factory import TaskCompletedAuditRequest
+from audit.audit_event_factory import TaskFailedAuditRequest
+from audit.audit_event_factory import TaskStartedAuditRequest
 from model.audit_event import AuditEventType, AuditStatus
 
 
@@ -7,24 +15,30 @@ class TestAuditEventFactory:
     def test_should_create_pipeline_events(self) -> None:
         # When
         given_started = AuditEventFactory.create_pipeline_started_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
-            metadata={"dag_id": "dag-001"},
+            PipelineStartedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+                metadata={"dag_id": "dag-001"},
+            )
         )
         given_completed = AuditEventFactory.create_pipeline_completed_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
-            duration_ms=42,
-            input_row_count=10,
-            output_row_count=9,
-            rejected_row_count=1,
-            metadata={"dag_id": "dag-001"},
+            PipelineCompletedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+                duration_ms=42,
+                input_row_count=10,
+                output_row_count=9,
+                rejected_row_count=1,
+                metadata={"dag_id": "dag-001"},
+            )
         )
         given_failed = AuditEventFactory.create_pipeline_failed_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
-            duration_ms=42,
-            error=RuntimeError("boom"),
+            PipelineFailedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+                duration_ms=42,
+                error=RuntimeError("boom"),
+            )
         )
 
         # Then
@@ -38,46 +52,56 @@ class TestAuditEventFactory:
     def test_should_create_task_and_dataset_events(self) -> None:
         # When
         given_task_started = AuditEventFactory.create_task_started_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
-            task_name="populate_database",
-            task_id="task-001",
-            task_attempt=1,
+            TaskStartedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+                task_name="populate_database",
+                task_id="task-001",
+                task_attempt=1,
+            )
         )
         given_task_completed = AuditEventFactory.create_task_completed_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
-            task_name="populate_database",
-            task_id="task-001",
-            task_attempt=1,
-            duration_ms=42,
-            source_system="datalake",
-            destination_system="database",
+            TaskCompletedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+                task_name="populate_database",
+                task_id="task-001",
+                task_attempt=1,
+                duration_ms=42,
+                source_system="datalake",
+                destination_system="database",
+            )
         )
         given_task_failed = AuditEventFactory.create_task_failed_event(
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
-            task_name="populate_database",
-            task_id="task-001",
-            task_attempt=1,
-            duration_ms=42,
-            error=RuntimeError("boom"),
+            TaskFailedAuditRequest(
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+                task_name="populate_database",
+                task_id="task-001",
+                task_attempt=1,
+                duration_ms=42,
+                error=RuntimeError("boom"),
+            )
         )
         given_dataset_read = AuditEventFactory.create_dataset_read_event(
-            source_system="datalake",
-            source_uri="s3://bucket/path",
-            row_count=10,
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
+            DatasetReadAuditRequest(
+                source_system="datalake",
+                source_uri="s3://bucket/path",
+                row_count=10,
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+            )
         )
         given_dataset_written = AuditEventFactory.create_dataset_written_event(
-            source_system="datalake",
-            source_uri="s3://bucket/path",
-            destination_system="database",
-            destination_uri="jdbc:postgresql://db/sale",
-            row_count=9,
-            pipeline_name="sale_pipeline",
-            pipeline_id="pipeline-001",
+            DatasetWrittenAuditRequest(
+                source_system="datalake",
+                source_uri="s3://bucket/path",
+                destination_system="database",
+                destination_uri="jdbc:postgresql://db/sale",
+                row_count=9,
+                pipeline_name="sale_pipeline",
+                pipeline_id="pipeline-001",
+            )
         )
 
         # Then

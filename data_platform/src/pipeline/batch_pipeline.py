@@ -1,14 +1,23 @@
 from __future__ import annotations
 
 import logging
+import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
 
+from audit.audit_event_factory import AuditEventFactory
+from audit.audit_event_factory import PipelineCompletedAuditRequest
+from audit.audit_event_factory import PipelineFailedAuditRequest
+from audit.audit_event_factory import PipelineStartedAuditRequest
+from audit.audit_event_factory import TaskCompletedAuditRequest
+from audit.audit_event_factory import TaskFailedAuditRequest
+from audit.audit_event_factory import TaskStartedAuditRequest
 from audit.audit_service import AuditService
 from dataset.definition import Dataset
 from util.log_utils import log_line
 from util.pipeline_utils import create_pipeline_id
+from util.time_utils import elapsed_milliseconds
 from util.time_utils import generate_ingestion_time
 
 logger = logging.getLogger(__name__)
@@ -71,34 +80,49 @@ class BatchPipeline(ABC):
         return None
 
     def _run_task(self, task_name: str, task_callable):
-        task_id, started_at = self.audit_service.start_task(
-            pipeline_name=self.pipeline_name,
-            pipeline_id=self.pipeline_id,
-            task_name=task_name,
-            task_attempt=1,
+        task_started_at = time.perf_counter()
+        task_id = f"{self.pipeline_id}-{task_name}"
+        self.audit_service.emit(
+            AuditEventFactory.create_task_started_event(
+                TaskStartedAuditRequest(
+                    pipeline_name=self.pipeline_name,
+                    pipeline_id=self.pipeline_id,
+                    task_name=task_name,
+                    task_id=task_id,
+                    task_attempt=1,
+                )
+            )
         )
 
         try:
             result = task_callable()
         except Exception as error:
-            self.audit_service.fail_task(
-                pipeline_name=self.pipeline_name,
-                pipeline_id=self.pipeline_id,
-                task_name=task_name,
-                task_id=task_id,
-                task_attempt=1,
-                started_at=started_at,
-                error=error,
+            self.audit_service.emit(
+                AuditEventFactory.create_task_failed_event(
+                    TaskFailedAuditRequest(
+                        pipeline_name=self.pipeline_name,
+                        pipeline_id=self.pipeline_id,
+                        task_name=task_name,
+                        task_id=task_id,
+                        task_attempt=1,
+                        duration_ms=elapsed_milliseconds(task_started_at),
+                        error=error,
+                    )
+                )
             )
             raise
         else:
-            self.audit_service.complete_task(
-                pipeline_name=self.pipeline_name,
-                pipeline_id=self.pipeline_id,
-                task_name=task_name,
-                task_id=task_id,
-                task_attempt=1,
-                started_at=started_at,
+            self.audit_service.emit(
+                AuditEventFactory.create_task_completed_event(
+                    TaskCompletedAuditRequest(
+                        pipeline_name=self.pipeline_name,
+                        pipeline_id=self.pipeline_id,
+                        task_name=task_name,
+                        task_id=task_id,
+                        task_attempt=1,
+                        duration_ms=elapsed_milliseconds(task_started_at),
+                    )
+                )
             )
             return result
 
@@ -110,13 +134,18 @@ class BatchPipeline(ABC):
         )
         pipeline_started_at = None
         try:
-            pipeline_started_at = self.audit_service.start_pipeline(
-                pipeline_name=self.pipeline_name,
-                pipeline_id=self.pipeline_id,
-                metadata={
-                    "dataset": self.dataset.name,
-                    "ingestion_time": self.ingestion_time.isoformat(),
-                },
+            pipeline_started_at = time.perf_counter()
+            self.audit_service.emit(
+                AuditEventFactory.create_pipeline_started_event(
+                    PipelineStartedAuditRequest(
+                        pipeline_name=self.pipeline_name,
+                        pipeline_id=self.pipeline_id,
+                        metadata={
+                            "dataset": self.dataset.name,
+                            "ingestion_time": self.ingestion_time.isoformat(),
+                        },
+                    )
+                )
             )
 
             raw_data = self._run_task("ingest_raw_data", self.ingest_raw_data)
@@ -148,27 +177,35 @@ class BatchPipeline(ABC):
             log_line()
         except Exception as error:
             if pipeline_started_at is not None:
-                self.audit_service.fail_pipeline(
-                    pipeline_name=self.pipeline_name,
-                    pipeline_id=self.pipeline_id,
-                    started_at=pipeline_started_at,
-                    error=error,
-                    metadata={
-                        "dataset": self.dataset.name,
-                        "ingestion_time": self.ingestion_time.isoformat(),
-                    },
+                self.audit_service.emit(
+                    AuditEventFactory.create_pipeline_failed_event(
+                        PipelineFailedAuditRequest(
+                            pipeline_name=self.pipeline_name,
+                            pipeline_id=self.pipeline_id,
+                            duration_ms=elapsed_milliseconds(pipeline_started_at),
+                            error=error,
+                            metadata={
+                                "dataset": self.dataset.name,
+                                "ingestion_time": self.ingestion_time.isoformat(),
+                            },
+                        )
+                    )
                 )
             raise
         else:
             if pipeline_started_at is not None:
-                self.audit_service.complete_pipeline(
-                    pipeline_name=self.pipeline_name,
-                    pipeline_id=self.pipeline_id,
-                    started_at=pipeline_started_at,
-                    metadata={
-                        "dataset": self.dataset.name,
-                        "ingestion_time": self.ingestion_time.isoformat(),
-                    },
+                self.audit_service.emit(
+                    AuditEventFactory.create_pipeline_completed_event(
+                        PipelineCompletedAuditRequest(
+                            pipeline_name=self.pipeline_name,
+                            pipeline_id=self.pipeline_id,
+                            duration_ms=elapsed_milliseconds(pipeline_started_at),
+                            metadata={
+                                "dataset": self.dataset.name,
+                                "ingestion_time": self.ingestion_time.isoformat(),
+                            },
+                        )
+                    )
                 )
                 logger.info(
                     f"Finished ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
