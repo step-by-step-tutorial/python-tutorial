@@ -2,14 +2,14 @@ import json
 from datetime import datetime
 from typing import Any
 
-from audit.base import AuditWriteService
+from audit.abstract_audit_service import AbstractAuditService
 from connector.datalake_connection_factory import get_connection
 from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
 from util.path_utils import generate_full_path
 
 
-class AuditArchiveService(AuditWriteService):
+class AuditArchiveService(AbstractAuditService):
 
     def __init__(self, audit_endpoint: AuditEndpoint) -> None:
         self._client = get_connection(audit_endpoint.datalake_connection_name)

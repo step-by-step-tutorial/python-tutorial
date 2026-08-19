@@ -1,7 +1,7 @@
 import logging
 from functools import partial
 
-from audit.base import AuditWriteService
+from audit.abstract_audit_service import AbstractAuditService
 from connector.kafka_connection_factory import get_connection
 from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
@@ -10,7 +10,7 @@ from streaming.delivery import topic_on_delivery
 logger = logging.getLogger(__name__)
 
 
-class AuditMessagingService(AuditWriteService):
+class AuditMessagingService(AbstractAuditService):
 
     def __init__(self, audit_endpoint: AuditEndpoint) -> None:
         self.connection_name = audit_endpoint.messaging_connection_name

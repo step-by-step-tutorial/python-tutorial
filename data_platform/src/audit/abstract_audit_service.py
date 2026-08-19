@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from model.audit_event import AuditEvent
 
 
-class AuditWriteService(ABC):
+class AbstractAuditService(ABC):
 
     @abstractmethod
     def write(self, event: AuditEvent) -> None:
