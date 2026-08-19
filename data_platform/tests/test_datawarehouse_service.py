@@ -115,7 +115,7 @@ class TestAnalyze:
         )
 
         repository = system_under_test.DataWarehouseRepository(given_datawarehouse)
-        actual = repository.analyze(["revenue"])
+        actual = repository.select_by_queries(["revenue"])
 
         assert mock_create_connection.call_count == 1
         assert mock_create_connection.call_args.args[0] == "sale.datawarehouse"

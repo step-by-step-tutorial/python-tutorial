@@ -18,42 +18,34 @@ class DataLakeRepository:
         self.connection_name = endpoint.connection_name
         self.bucket_name = endpoint.bucket_name
 
-    def _list_object_keys(self, relative_path: str) -> list[str]:
+    def list_of_object_keys(self, relative_path: str) -> list[str]:
         client = get_connection(self.connection_name)
         response = client.list_objects_v2(Bucket=self.bucket_name, Prefix=relative_path.strip("/"))
 
         return [object_metadata["Key"] for object_metadata in response.get("Contents", [])]
 
-    def upload(
-        self,
-        df: pd.DataFrame,
-        relative_path: str,
-        file_extension: str = "parquet",
-    ) -> str:
+    def upload(self, df: pd.DataFrame, relative_path: str, file_extension: str = "parquet") -> str:
         parquet_buffer = BytesIO()
         df.to_parquet(parquet_buffer, index=False)
         parquet_buffer.seek(0)
 
         object_key = f"{relative_path.strip('/')}/part-{uuid4()}.{file_extension}"
-        logger.info("Upload a %s file in bucket %s with path %s", file_extension, self.bucket_name, object_key)
-
         client = get_connection(self.connection_name)
-        response = client.list_buckets()
-        bucket_names = [bucket["Name"] for bucket in response.get("Buckets", [])]
-        if self.bucket_name not in bucket_names:
-            client.create_bucket(Bucket=self.bucket_name)
-
         client.put_object(Bucket=self.bucket_name, Key=object_key, Body=parquet_buffer)
 
+        logger.info("Upload a %s file in bucket %s with path %s", file_extension, self.bucket_name, object_key)
         return object_key
 
-    def download(self, relative_path: str, file_extension: str = "parquet") -> pd.DataFrame:
-        logger.info("Download all %s files from bucket %s with path %s", file_extension, self.bucket_name, relative_path)
-        dataframes: list[pd.DataFrame] = []
+    def create_bucket(self, bucket_name: str):
+        client = get_connection(self.connection_name)
+        client.create_bucket(Bucket=bucket_name)
 
+    def download(self, relative_path: str, file_extension: str = "parquet") -> pd.DataFrame:
+
+        dataframes: list[pd.DataFrame] = []
         client = get_connection(self.connection_name)
 
-        for object_key in self._list_object_keys(relative_path):
+        for object_key in self.list_of_object_keys(relative_path):
             if not object_key.endswith(f".{file_extension}"):
                 continue
 
@@ -65,4 +57,5 @@ class DataLakeRepository:
         if not dataframes:
             raise FileNotFoundError(f"No {file_extension} files found under path: {relative_path}")
 
+        logger.info(f"Download all {file_extension} files from bucket {self.bucket_name} with path {relative_path}")
         return pd.concat(dataframes, ignore_index=True)

@@ -78,7 +78,7 @@ class SparkPipeline(BatchPipeline):
 
     def analyzing_via_datawarehouse(self) -> None:
         query_names = [name for name in self.datawarehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
-        results = self.datawarehouse_repository.analyze(query_names)
+        results = self.datawarehouse_repository.select_by_queries(query_names)
         logger.info("Analyzing enriched data via data warehouse")
         for dataframe in results.values():
             show(dataframe)

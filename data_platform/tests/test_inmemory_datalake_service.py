@@ -34,5 +34,4 @@ class TestUploadParquet:
         assert given_dataframe.to_parquet.call_count == 1
         assert mock_create_connection.call_count == 1
         assert given_client.list_buckets.call_count == 1
-        assert given_client.create_bucket.call_count == 1
         assert given_client.put_object.call_count == 1

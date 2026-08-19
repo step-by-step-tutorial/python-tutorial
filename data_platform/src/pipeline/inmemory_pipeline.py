@@ -75,7 +75,7 @@ class InmemoryPipeline(BatchPipeline):
 
     def analyzing_via_datawarehouse(self):
         query_names = [name for name in self.datawarehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
-        result = self.datawarehouse_repository.analyze(query_names)
+        result = self.datawarehouse_repository.select_by_queries(query_names)
         logger.info("Analyzing enriched data via data warehouse")
         show_map_of_dataframe(result)
 
