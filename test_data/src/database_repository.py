@@ -1,6 +1,6 @@
 from collections.abc import Iterable, Mapping, Sequence
 
-from sqlalchemy import Column, MetaData, String, Table, create_engine, delete
+from sqlalchemy import Column, MetaData, String, Table, create_engine
 
 
 DEFAULT_DATABASE_URL = "postgresql+psycopg2://test_data:test_data@localhost:5434/test_data"
@@ -24,9 +24,9 @@ class DatabaseRepository:
             metadata,
             *(Column(header, String(), nullable=True) for header in headers),
         )
+        table.drop(engine, checkfirst=True)
         metadata.create_all(engine, tables=[table])
 
         with engine.begin() as connection:
-            connection.execute(delete(table))
             if row_list:
                 connection.execute(table.insert(), row_list)

@@ -192,6 +192,70 @@ class LookupFromCsvColumn(ColumnGenerator):
         return self._mapped_value(mapping, self._source_value(row))
 
 
+class SubtotalFromQuantityAndUnitPriceColumn(ColumnGenerator):
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return ("quantity", "unit_price")
+
+    def generate(self, row: Row, row_index: int) -> str:
+        quantity = float(row["quantity"])
+        unit_price = float(row["unit_price"])
+        return str(quantity * unit_price)
+
+
+class TaxFromSubtotalColumn(ColumnGenerator):
+
+    def _validate(self) -> None:
+        self.rate = float(self.column.value) if self.column.value is not None else 0.0
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return ("subtotal",)
+
+    def generate(self, row: Row, row_index: int) -> str:
+        subtotal = float(row["subtotal"])
+        return str(subtotal * self.rate)
+
+
+class TotalAmountColumn(ColumnGenerator):
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return ("subtotal", "discount_percent", "shipping_cost", "tax_amount")
+
+    def generate(self, row: Row, row_index: int) -> str:
+        subtotal = float(row["subtotal"])
+        discount_percent = float(row["discount_percent"])
+        shipping_cost = float(row["shipping_cost"])
+        tax_amount = float(row["tax_amount"])
+        discount_amount = subtotal * discount_percent / 100.0
+        return str(subtotal - discount_amount + shipping_cost + tax_amount)
+
+
+class DeliveryDateFromOrderDateColumn(ColumnGenerator):
+
+    def _validate(self) -> None:
+        self._require("source_field")
+        self._min_days = self.column.start if self.column.start is not None else 1
+        self._max_days = self.column.step if self.column.step is not None else 7
+        if self._min_days < 0 or self._max_days < 0:
+            raise ConfigurationError(f"Column {self.column.name!r} needs non-negative day offsets.")
+        if self._min_days > self._max_days:
+            raise ConfigurationError(
+                f"Column {self.column.name!r}: 'start' must not be greater than 'step'."
+            )
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return (self.column.source_field,)  # type: ignore[return-value]
+
+    def generate(self, row: Row, row_index: int) -> str:
+        base_date = date.fromisoformat(self._source_value(row))
+        offset = self._rng.randint(self._min_days, self._max_days)
+        return (base_date + timedelta(days=offset)).isoformat()
+
+
 class EmailFromNameColumn(ColumnGenerator):
 
     NAME_FIELDS = ("first_name", "last_name")
@@ -229,6 +293,10 @@ COLUMN_TYPES: dict[str, type[ColumnGenerator]] = {
 DERIVED_METHODS: dict[str, type[ColumnGenerator]] = {
     "email_from_name": EmailFromNameColumn,
     "lookup_from_csv": LookupFromCsvColumn,
+    "subtotal_from_quantity_and_unit_price": SubtotalFromQuantityAndUnitPriceColumn,
+    "tax_from_subtotal": TaxFromSubtotalColumn,
+    "total_amount": TotalAmountColumn,
+    "delivery_date_from_order_date": DeliveryDateFromOrderDateColumn,
 }
 
 

@@ -102,3 +102,18 @@ def test_load_config_reports_non_object_json(tmp_path: Path) -> None:
 
     with pytest.raises(ConfigurationError, match="must hold a JSON object"):
         load_config(path)
+
+
+def test_online_shopping_config_includes_extended_fields() -> None:
+    project_root = Path(__file__).resolve().parents[2]
+    config = load_config(project_root / "config_online_shopping.json")
+
+    assert config.destinations == ("csv", "json", "database")
+    assert "subtotal" in config.headers
+    assert "discount_percent" in config.headers
+    assert "shipping_cost" in config.headers
+    assert "tax_amount" in config.headers
+    assert "total_amount" in config.headers
+    assert "payment_status" in config.headers
+    assert "fulfillment_status" in config.headers
+    assert "estimated_delivery_date" in config.headers

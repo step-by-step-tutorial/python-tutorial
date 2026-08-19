@@ -89,6 +89,34 @@
       "value_column": "unit_price"
     },
     { "name": "quantity", "type": "random_int", "min": 1, "max": 6 },
+    {
+      "name": "subtotal",
+      "type": "derived",
+      "method": "subtotal_from_quantity_and_unit_price"
+    },
+    { "name": "discount_percent", "type": "random_int", "min": 0, "max": 30 },
+    { "name": "shipping_cost", "type": "random_int", "min": 5, "max": 25 },
+    {
+      "name": "tax_amount",
+      "type": "derived",
+      "method": "tax_from_subtotal",
+      "value": 0.1
+    },
+    {
+      "name": "total_amount",
+      "type": "derived",
+      "method": "total_amount"
+    },
+    { "name": "payment_status", "type": "random_from_file", "file": "data/payment_statuses.txt" },
+    { "name": "fulfillment_status", "type": "random_from_file", "file": "data/fulfillment_statuses.txt" },
+    {
+      "name": "estimated_delivery_date",
+      "type": "derived",
+      "method": "delivery_date_from_order_date",
+      "source_field": "order_date",
+      "start": 2,
+      "step": 10
+    },
     { "name": "coupon_code", "type": "random_from_file", "file": "data/coupon_codes.txt" },
     { "name": "payment_method", "type": "random_from_file", "file": "data/payment_methods.txt" },
     { "name": "shipping_method", "type": "random_from_file", "file": "data/shipping_methods.txt" },

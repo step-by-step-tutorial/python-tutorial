@@ -220,3 +220,56 @@ def test_generate_dataset_writes_json_when_requested(tmp_path: Path) -> None:
     ]
     assert (tmp_path / "output" / "sample.json").is_file()
     assert result.output_path.parent == tmp_path / "output"
+
+
+def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path, mocker) -> None:
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+
+    (data_dir / "payment_statuses.txt").write_text("Paid\n", encoding="utf-8")
+    (data_dir / "fulfillment_statuses.txt").write_text("Shipped\n", encoding="utf-8")
+
+    (tmp_path / "config_online.json").write_text(
+        """
+        {
+          "row_count": 1,
+          "output_file": "output/online.csv",
+          "destinations": ["csv", "json", "database"],
+          "seed": 1,
+          "columns": [
+            {"name": "order_id", "type": "sequence", "start": 1, "step": 1},
+            {"name": "order_date", "type": "fixed", "value": "2026-01-10"},
+            {"name": "product_name", "type": "fixed", "value": "Laptop"},
+            {"name": "quantity", "type": "fixed", "value": "2"},
+            {"name": "unit_price", "type": "fixed", "value": "10"},
+            {"name": "subtotal", "type": "derived", "method": "subtotal_from_quantity_and_unit_price"},
+            {"name": "discount_percent", "type": "fixed", "value": "10"},
+            {"name": "shipping_cost", "type": "fixed", "value": "5"},
+            {"name": "tax_amount", "type": "derived", "method": "tax_from_subtotal", "value": 0.1},
+            {"name": "total_amount", "type": "derived", "method": "total_amount"},
+            {"name": "payment_status", "type": "random_from_file", "file": "data/payment_statuses.txt"},
+            {"name": "fulfillment_status", "type": "random_from_file", "file": "data/fulfillment_statuses.txt"},
+            {
+              "name": "estimated_delivery_date",
+              "type": "derived",
+              "method": "delivery_date_from_order_date",
+              "source_field": "order_date",
+              "start": 2,
+              "step": 2
+            }
+          ]
+        }
+        """.strip(),
+        encoding="utf-8",
+    )
+
+    database_repository = mocker.patch("generator.DatabaseRepository")
+    generate_dataset(tmp_path / "config_online.json")
+
+    output_path = tmp_path / "output" / "online.csv"
+    assert output_path.read_text(encoding="utf-8").splitlines() == [
+        "order_id,order_date,product_name,quantity,unit_price,subtotal,discount_percent,shipping_cost,tax_amount,total_amount,payment_status,fulfillment_status,estimated_delivery_date",
+        "1,2026-01-10,Laptop,2,10,20.0,10,5,2.0,25.0,Paid,Shipped,2026-01-12",
+    ]
+    assert (tmp_path / "output" / "online.json").is_file()
+    assert database_repository.return_value.write_rows.call_count == 1
