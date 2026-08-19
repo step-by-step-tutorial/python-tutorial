@@ -2,7 +2,7 @@ import logging
 from functools import partial
 
 from audit.abstract_audit_service import AbstractAuditService
-from connector.kafka_connection_factory import get_connection
+from connector.registry import get_connection
 from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
 from streaming.delivery import topic_on_delivery

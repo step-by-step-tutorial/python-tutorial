@@ -7,7 +7,7 @@ from typing import Any
 
 from confluent_kafka import Producer
 
-from connector.kafka_connection_factory import get_connection
+from connector.registry import get_connection
 from streaming.delivery import topic_on_delivery
 from transformation.conversion.event_mapper import MappedEvent
 

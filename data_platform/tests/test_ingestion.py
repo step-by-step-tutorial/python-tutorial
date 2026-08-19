@@ -62,7 +62,7 @@ class TestDataLakeIngestor:
         given_client = mocker.Mock()
         given_client.list_objects_v2.return_value = {"Contents": [{"Key": "raw/part-001.parquet"}]}
         given_client.download_fileobj.side_effect = lambda bucket, key, buffer: buffer.write(b"parquet")
-        mocker.patch("connector.datalake_connection_factory.get_connection", return_value=given_client)
+        mocker.patch("persistence.datalake_repository.get_connection", return_value=given_client)
         mocker.patch("ingestion.datalake_ingestor.pd.read_parquet", return_value=given_dataframe)
         mocker.patch("ingestion.datalake_ingestor.pd.concat", return_value=given_dataframe)
 
@@ -111,7 +111,7 @@ class TestMessageQueueIngestor:
         given_message_2.error.return_value = None
         given_message_2.value.return_value = b'{"id": 2}'
         given_consumer.poll.side_effect = [given_message_1, given_message_2, None]
-        mocker.patch("ingestion.message_queue_ingestor.get_connection", return_value=given_consumer)
+        mocker.patch("ingestion.kafka_ingestor.get_connection", return_value=given_consumer)
 
         actual = KafkaIngestor(
             endpoint=MessagingEndpoint(

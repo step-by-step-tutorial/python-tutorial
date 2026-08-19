@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import pandas as pd
 
+from connector.registry import get_connection
 from dataset.definition import DataLakeEndpoint
 
 logger = logging.getLogger(__name__)
@@ -18,8 +19,6 @@ class DataLakeRepository:
         self.bucket_name = endpoint.bucket_name
 
     def _list_object_keys(self, relative_path: str) -> list[str]:
-        from connector.datalake_connection_factory import get_connection
-
         client = get_connection(self.connection_name)
         response = client.list_objects_v2(Bucket=self.bucket_name, Prefix=relative_path.strip("/"))
 
@@ -31,8 +30,6 @@ class DataLakeRepository:
         relative_path: str,
         file_extension: str = "parquet",
     ) -> str:
-        from connector.datalake_connection_factory import get_connection
-
         parquet_buffer = BytesIO()
         df.to_parquet(parquet_buffer, index=False)
         parquet_buffer.seek(0)
@@ -53,7 +50,6 @@ class DataLakeRepository:
     def download(self, relative_path: str, file_extension: str = "parquet") -> pd.DataFrame:
         logger.info("Download all %s files from bucket %s with path %s", file_extension, self.bucket_name, relative_path)
         dataframes: list[pd.DataFrame] = []
-        from connector.datalake_connection_factory import get_connection
 
         client = get_connection(self.connection_name)
 

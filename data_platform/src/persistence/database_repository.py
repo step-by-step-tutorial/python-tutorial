@@ -8,6 +8,7 @@ import pyspark
 from config.settings import settings as main_settings
 from dataset.definition import DatabaseEndpoint
 
+from connector.registry import get_connection
 from util.database_utils import execute_sql
 from util.file_utils import read_text_file
 
@@ -34,8 +35,6 @@ class DatabaseRepository:
         self.run_sql_files(self.database.truncate_sql_files)
 
     def populate_stage_table_from_memory(self, dataframe: pandas.DataFrame) -> None:
-        from connector.database_connection_factory import get_connection
-
         with get_connection(self.connection_name).begin() as connection:
             dataframe.to_sql(
                 name=self.database.stage_table_name,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from connector.datawarehouse_connection_factory import get_connection
+from connector.registry import get_connection
 from dataset.definition import DataWarehouseEndpoint
 from util.file_utils import read_text_file
 

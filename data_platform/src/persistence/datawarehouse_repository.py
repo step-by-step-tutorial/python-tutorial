@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas
 import pyspark
 
-from connector.datawarehouse_connection_factory import get_connection
+from connector.registry import get_connection
 from dataset.definition import DataWarehouseEndpoint
 from util.file_utils import read_text_file
 from util.spark_utils import batch_of_list, dataframe_to_list

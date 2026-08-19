@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from audit.audit_event_converter import to_persistable_event
 from audit.abstract_audit_service import AbstractAuditService
-from connector.database_connection_factory import get_connection
+from connector.registry import get_connection
 from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
 from util.file_utils import read_text_file

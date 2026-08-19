@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from audit.abstract_audit_service import AbstractAuditService
-from connector.datalake_connection_factory import get_connection
+from connector.registry import get_connection
 from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
 from util.path_utils import generate_full_path

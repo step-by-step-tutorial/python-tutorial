@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 from sqlalchemy import text
 
-from connector.database_connection_factory import get_connection
+from connector.registry import get_connection
 
 
 def execute_sql(connection_name: str, *queries: str):

@@ -4,7 +4,7 @@ import json
 
 import pandas as pd
 
-from connector.kafka_connection_factory import get_connection
+from connector.registry import get_connection
 from dataset.definition import MessagingEndpoint
 
 
