@@ -6,7 +6,8 @@ from pyspark.sql import DataFrame
 from audit.audit_service import AuditService
 from config.settings import settings as main_settings
 from connector.spark_session_factory import create_session
-from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, DataWarehouseEndpoint, Dataset, MessagingEndpoint
+from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, DataWarehouseEndpoint, Dataset, FileEndpoint, MessagingEndpoint
+from exposer.csv_publisher import CsvPublisher
 from ingestion.registry import get_ingestor
 from keys import Key
 from persistence.database_repository import DatabaseRepository
@@ -23,10 +24,13 @@ class SparkStreamingPipeline(BatchPipeline):
     def __init__(self, ds: Dataset) -> None:
         super().__init__(ds, audit_service=AuditService(ds.audit))
         self.pipeline_name = "spark_streaming_pipeline"
+        file_endpoint = self.dataset.get_endpoint(Key.SALE_FILE_CSV, FileEndpoint)
         database_endpoint = self.dataset.get_endpoint(Key.SALE_DATABASE, DatabaseEndpoint)
         datawarehouse_endpoint = self.dataset.get_endpoint(Key.SALE_DATAWAREHOUSE, DataWarehouseEndpoint)
         datalake_endpoint = self.dataset.get_endpoint(Key.SALE_DATALAKE, DataLakeEndpoint)
+        producer_endpoint = self.dataset.get_endpoint(Key.SALE_KAFKA_PRODUCER, MessagingEndpoint)
         messaging_endpoint = self.dataset.get_endpoint(Key.SALE_KAFKA_LISTENER, MessagingEndpoint)
+        self.csv_publisher = CsvPublisher(ds, file_endpoint, producer_endpoint)
         spark_session = create_session()
         self.spark = SparkService(spark_session, datalake_endpoint, messaging_endpoint)
         self.database_repository = DatabaseRepository(database_endpoint)
@@ -34,6 +38,7 @@ class SparkStreamingPipeline(BatchPipeline):
         self.raw_topic_ingestor = get_ingestor(Key.SALE_SPARK_KAFKA)
 
     def ingest_raw_data(self) -> DataFrame:
+        self.csv_publisher.publish_data()
         return self.raw_topic_ingestor.ingest()
 
     def store_raw_data(self, raw_data: DataFrame) -> str:

@@ -8,7 +8,14 @@ class TestMainSettings:
         assert set(settings.database) == {"app.database", "sale.database", "house.database", "audit.database"}
         assert set(settings.datalake) == {"app.datalake", "sale.datalake", "house.datalake", "audit.datalake"}
         assert set(settings.datawarehouse) == {"app.datawarehouse", "sale.datawarehouse", "house.datawarehouse", "audit.datawarehouse"}
-        assert set(settings.messaging) == {"sale.kafka.listener", "house.kafka.listener", "audit.kafka.producer", "audit.kafka.listener"}
+        assert set(settings.messaging) == {
+            "sale.kafka.listener",
+            "sale.kafka.producer",
+            "house.kafka.listener",
+            "house.kafka.producer",
+            "audit.kafka.producer",
+            "audit.kafka.listener",
+        }
         assert set(settings.rest) == {"sale.rest", "house.rest"}
         assert settings.messaging["audit.kafka.producer"].audit_channel_name == "sale.audit.event.v1"
         assert settings.datalake["audit.datalake"].audit_bucket_name == "app-datalake-audit"

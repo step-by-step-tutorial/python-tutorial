@@ -22,7 +22,11 @@ registry: dict[str, Any] = {
     Key.SALE_KAFKA_LISTENER: KafkaIngestor(SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER]),
     Key.SALE_SPARK_CSV: SparkCsvFileIngestor(create_session()),
     Key.SALE_SPARK_DATALAKE: SparkDataLakeIngestor(SALE_DATASET.endpoints[Key.SALE_DATALAKE], create_session()),
-    Key.SALE_SPARK_KAFKA: SparkKafkaIngestor(SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER], create_session()),
+    Key.SALE_SPARK_KAFKA: SparkKafkaIngestor(
+        SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER],
+        create_session(),
+        SALE_DATASET.dataframe.schema,
+    ),
     Key.SALE_REST: RestApiIngestor(SALE_DATASET.endpoints[Key.SALE_REST]),
 }
 
@@ -53,7 +57,11 @@ def get_ingestor(name: str) -> Any:
             elif name == Key.SALE_SPARK_DATALAKE:
                 ingestor = SparkDataLakeIngestor(SALE_DATASET.endpoints[Key.SALE_DATALAKE], create_session())
             elif name == Key.SALE_SPARK_KAFKA:
-                ingestor = SparkKafkaIngestor(SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER], create_session())
+                ingestor = SparkKafkaIngestor(
+                    SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER],
+                    create_session(),
+                    SALE_DATASET.dataframe.schema,
+                )
             registry[name] = ingestor
 
     return ingestor

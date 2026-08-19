@@ -23,7 +23,7 @@ def build_dataset() -> Dataset:
     )()
 
     return Dataset(
-        name="example",
+        name="sale",
         dataframe=Dataframe(schema=None, required_columns=frozenset()),
         audit=AuditEndpoint(
             database_connection_name="audit.database",
@@ -35,6 +35,7 @@ def build_dataset() -> Dataset:
         processors={"spark": processor},
         endpoints={
             "sale.file.csv": FileEndpoint(file_name="sale.csv", file_path="resources/example.csv"),
+            "sale.kafka.producer": MessagingEndpoint(connection_name="sale.kafka.producer", channel_name="example-events"),
             "sale.kafka.listener": MessagingEndpoint(connection_name="sale.kafka.listener", channel_name="example-events"),
             "sale.datalake": DataLakeEndpoint(connection_name="sale.datalake", bucket_name="bucket"),
             "sale.database": DatabaseEndpoint(
@@ -74,8 +75,12 @@ class TestRun:
 
         mocker.patch("pipeline.spark_based_streaming_pipeline.AuditService", return_value=given_audit_service)
         mocker.patch("pipeline.spark_based_streaming_pipeline.create_session", return_value=mocker.Mock())
+        given_csv_publisher = mocker.Mock()
+        mock_csv_publisher = mocker.patch("pipeline.spark_based_streaming_pipeline.CsvPublisher", return_value=given_csv_publisher)
+        given_raw_topic_ingestor = mocker.Mock()
+        given_raw_topic_ingestor.ingest.return_value = "raw-data"
+        mocker.patch("pipeline.spark_based_streaming_pipeline.get_ingestor", return_value=given_raw_topic_ingestor)
         given_pipeline = SparkStreamingPipeline(build_dataset())
-        mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
         mocker.patch.object(given_pipeline, "cleaning", return_value="clean")
         mocker.patch.object(given_pipeline, "store_cleaned_data", return_value="clean-path")
@@ -90,7 +95,9 @@ class TestRun:
 
         given_pipeline.run()
 
-        assert given_pipeline.ingest_raw_data.call_count == 1
+        assert mock_csv_publisher.call_count == 1
+        assert given_csv_publisher.publish_data.call_count == 1
+        assert given_raw_topic_ingestor.ingest.call_count == 1
         assert given_pipeline.store_raw_data.call_count == 1
         assert given_pipeline.cleaning.call_count == 1
         assert given_pipeline.store_cleaned_data.call_count == 1

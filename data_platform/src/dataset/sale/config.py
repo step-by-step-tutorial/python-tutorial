@@ -61,6 +61,12 @@ SALE_DATASET = Dataset(
             bootstrap_servers=main_settings.messaging[Key.SALE_KAFKA_LISTENER].bootstrap_servers,
             starting_offsets=main_settings.messaging[Key.SALE_KAFKA_LISTENER].starting_offsets,
         ),
+        Key.SALE_KAFKA_PRODUCER: MessagingEndpoint(
+            name=Key.SALE_KAFKA_PRODUCER,
+            connection_name=Key.SALE_KAFKA_PRODUCER,
+            channel_name=main_settings.messaging[Key.SALE_KAFKA_PRODUCER].channel_name,
+            bootstrap_servers=main_settings.messaging[Key.SALE_KAFKA_PRODUCER].bootstrap_servers,
+        ),
         Key.SALE_DATALAKE: DataLakeEndpoint(
             name=Key.SALE_DATALAKE,
             connection_name=Key.SALE_DATALAKE,

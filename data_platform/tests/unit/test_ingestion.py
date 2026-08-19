@@ -187,6 +187,12 @@ class TestStreamingChannelIngestor:
         given_option_three = given_option_two.option.return_value
         given_option_four = given_option_three.option.return_value
         given_option_four.load.return_value = given_dataframe
+        given_dataframe.select.return_value = given_dataframe
+        given_column = mocker.Mock()
+        given_column.cast.return_value = "value-as-string"
+        mock_col = mocker.patch("ingestion.spark_kafka_ingestor.sf.col", return_value=given_column)
+        mock_from_json = mocker.patch("ingestion.spark_kafka_ingestor.sf.from_json")
+        mock_from_json.return_value.alias.return_value = "payload"
 
         ingestor = SparkKafkaIngestor(
             endpoint=MessagingEndpoint(
@@ -196,14 +202,18 @@ class TestStreamingChannelIngestor:
                 starting_offsets="earliest",
             ),
             session=given_spark,
+            schema={"schema": "value"},
         )
 
         actual = ingestor.ingest()
 
         assert actual is given_dataframe
+        assert mock_col.call_count == 1
+        assert mock_from_json.call_count == 1
         assert given_spark.readStream.format.call_count == 1
         assert given_stream_reader.option.call_count == 1
         assert given_option_one.option.call_count == 1
         assert given_option_two.option.call_count == 1
         assert given_option_three.option.call_count == 1
         assert given_option_four.load.call_count == 1
+        assert given_dataframe.select.call_count == 2

@@ -61,6 +61,12 @@ HOUSE_DATASET = Dataset(
             bootstrap_servers=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].bootstrap_servers,
             starting_offsets=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].starting_offsets,
         ),
+        Key.HOUSE_KAFKA_PRODUCER: MessagingEndpoint(
+            name=Key.HOUSE_KAFKA_PRODUCER,
+            connection_name=Key.HOUSE_KAFKA_PRODUCER,
+            channel_name=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].channel_name,
+            bootstrap_servers=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].bootstrap_servers,
+        ),
         Key.HOUSE_DATALAKE: DataLakeEndpoint(
             name=Key.HOUSE_DATALAKE,
             connection_name=Key.HOUSE_DATALAKE,

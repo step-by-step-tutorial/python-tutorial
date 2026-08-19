@@ -8,7 +8,7 @@ from keys import Key
 def create_sale_publisher_connection() -> Producer:
     return Producer(
         {
-            "bootstrap.servers": main_settings.messaging[Key.SALE_KAFKA_LISTENER].bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging[Key.SALE_KAFKA_PRODUCER].bootstrap_servers,
             "enable.idempotence": True,
             "acks": "all",
             "retries": 10,
@@ -21,7 +21,7 @@ def create_sale_publisher_connection() -> Producer:
 def create_house_publisher_connection() -> Producer:
     return Producer(
         {
-            "bootstrap.servers": main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging[Key.HOUSE_KAFKA_PRODUCER].bootstrap_servers,
             "enable.idempotence": True,
             "acks": "all",
             "retries": 10,
