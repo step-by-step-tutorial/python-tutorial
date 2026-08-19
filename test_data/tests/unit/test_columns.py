@@ -18,7 +18,7 @@ def build(column: ColumnConfig, root: Path):
 
 @pytest.mark.parametrize(
     ("raw", "expected"),
-    [("Ali Reza", "ali.reza"), ("Jalalé", "jalale"), ("  O'Neill  ", "o.neill")],
+    [("Emily Johnson", "emily.johnson"), ("Alyssa", "alyssa"), ("  O'Neill  ", "o.neill")],
 )
 def test_normalize_for_email(raw: str, expected: str) -> None:
     assert normalize_for_email(raw) == expected

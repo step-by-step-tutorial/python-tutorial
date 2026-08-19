@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Mapping, Protocol
 
 from dataset.house.attribute import HOUSE_ATTRIBUTE
 from dataset.sale.attribute import SALE_ATTRIBUTE
@@ -22,13 +22,13 @@ class MappedEvent:
 
 
 class EventMapper(Protocol):
-    def map(self, row: dict[str, str]) -> MappedEvent:
+    def map(self, row: Mapping[str, Any]) -> MappedEvent:
         ...
 
 
 @dataclass(frozen=True)
 class SaleEventMapper:
-    def map(self, row: dict[str, str]) -> MappedEvent:
+    def map(self, row: Mapping[str, Any]) -> MappedEvent:
         event = SaleEvent(
             order_id=convert_to_integer(row.get(SALE_ATTRIBUTE.order_id)),
             customer_name=row[SALE_ATTRIBUTE.customer_name],
@@ -56,7 +56,7 @@ class SaleEventMapper:
 
 @dataclass(frozen=True)
 class HouseEventMapper:
-    def map(self, row: dict[str, str]) -> MappedEvent:
+    def map(self, row: Mapping[str, Any]) -> MappedEvent:
         event = HouseEvent(
             area=convert_to_float(row.get(HOUSE_ATTRIBUTE.area_raw)),
             room=convert_to_integer(row.get(HOUSE_ATTRIBUTE.room_raw)),

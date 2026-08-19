@@ -76,7 +76,7 @@ class TestInmemoryHouseProcessor:
                     HOUSE_ATTRIBUTE.parking_raw: "true",
                     HOUSE_ATTRIBUTE.warehouse_raw: "false",
                     HOUSE_ATTRIBUTE.elevator_raw: "true",
-                    HOUSE_ATTRIBUTE.address_raw: " Ostad Moein ",
+                    HOUSE_ATTRIBUTE.address_raw: " Main Street ",
                     HOUSE_ATTRIBUTE.price_raw: "3310000000.0",
                     HOUSE_ATTRIBUTE.price_usd_raw: "110333.33",
                 },
@@ -86,7 +86,7 @@ class TestInmemoryHouseProcessor:
                     HOUSE_ATTRIBUTE.parking_raw: "true",
                     HOUSE_ATTRIBUTE.warehouse_raw: "false",
                     HOUSE_ATTRIBUTE.elevator_raw: "true",
-                    HOUSE_ATTRIBUTE.address_raw: " Ostad Moein ",
+                    HOUSE_ATTRIBUTE.address_raw: " Main Street ",
                     HOUSE_ATTRIBUTE.price_raw: "3310000000.0",
                     HOUSE_ATTRIBUTE.price_usd_raw: "110333.33",
                 },
@@ -96,7 +96,7 @@ class TestInmemoryHouseProcessor:
                     HOUSE_ATTRIBUTE.parking_raw: "false",
                     HOUSE_ATTRIBUTE.warehouse_raw: "false",
                     HOUSE_ATTRIBUTE.elevator_raw: "false",
-                    HOUSE_ATTRIBUTE.address_raw: " Noor ",
+                    HOUSE_ATTRIBUTE.address_raw: " Oak Avenue ",
                     HOUSE_ATTRIBUTE.price_raw: "1000",
                     HOUSE_ATTRIBUTE.price_usd_raw: "",
                 },
@@ -118,6 +118,6 @@ class TestInmemoryHouseProcessor:
         enriched = processor.enrich(cleaned)
 
         assert len(cleaned) == 2
-        assert list(cleaned[HOUSE_ATTRIBUTE.address]) == ["Ostad Moein", "Noor"]
+        assert list(cleaned[HOUSE_ATTRIBUTE.address]) == ["Main Street", "Oak Avenue"]
         assert HOUSE_ATTRIBUTE.listing_key in enriched.columns
         assert list(enriched[HOUSE_ATTRIBUTE.price_per_square_meter]) == [1.0, 10.0]

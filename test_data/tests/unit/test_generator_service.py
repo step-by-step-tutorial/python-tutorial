@@ -9,8 +9,8 @@ from generator import CsvDataGenerator
 
 
 def test_normalize_for_email_removes_special_characters() -> None:
-    assert normalize_for_email("Ali Reza") == "ali.reza"
-    assert normalize_for_email("Jalalé") == "jalale"
+    assert normalize_for_email("Emily Johnson") == "emily.johnson"
+    assert normalize_for_email("Alyssa") == "alyssa"
 
 
 def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:

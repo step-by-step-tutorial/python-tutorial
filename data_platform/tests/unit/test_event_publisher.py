@@ -6,7 +6,7 @@ class TestEventPublisher:
 
     def test_should_publish_a_prepared_event(self, mocker) -> None:
         given_producer = mocker.Mock()
-        given_message = MappedEvent(key="1", payload={"order_id": 1, "customer_name": "Ali Ahmadi"})
+        given_message = MappedEvent(key="1", payload={"order_id": 1, "customer_name": "Alex Johnson"})
 
         EventPublisher(producer=given_producer).publish("sale-events", given_message)
 
@@ -14,7 +14,7 @@ class TestEventPublisher:
         kwargs = given_producer.produce.call_args.kwargs
         assert kwargs["topic"] == "sale-events"
         assert kwargs["key"] == b"1"
-        assert kwargs["value"] == b'{"order_id": 1, "customer_name": "Ali Ahmadi"}'
+        assert kwargs["value"] == b'{"order_id": 1, "customer_name": "Alex Johnson"}'
 
     def test_should_publish_many_prepared_events_and_flush(self, mocker) -> None:
         given_producer = mocker.Mock()

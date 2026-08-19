@@ -15,6 +15,8 @@ from processor.inmemory.sale_processor import InmemorySaleProcessor
 from processor.spark.house_processor import SparkHouseProcessor
 from processor.spark.sale_processor import SparkSaleProcessor
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope="module")
 def spark_session() -> SparkSession:
@@ -139,7 +141,7 @@ class TestHouseProcessorParity:
                     HOUSE_ATTRIBUTE.parking_raw: "true",
                     HOUSE_ATTRIBUTE.warehouse_raw: "false",
                     HOUSE_ATTRIBUTE.elevator_raw: "true",
-                    HOUSE_ATTRIBUTE.address_raw: " Ostad Moein ",
+                    HOUSE_ATTRIBUTE.address_raw: " Main Street ",
                     HOUSE_ATTRIBUTE.price_raw: "2000",
                     HOUSE_ATTRIBUTE.price_usd_raw: "50",
                 },
@@ -149,7 +151,7 @@ class TestHouseProcessorParity:
                     HOUSE_ATTRIBUTE.parking_raw: "false",
                     HOUSE_ATTRIBUTE.warehouse_raw: "false",
                     HOUSE_ATTRIBUTE.elevator_raw: "false",
-                    HOUSE_ATTRIBUTE.address_raw: " Noor ",
+                    HOUSE_ATTRIBUTE.address_raw: " Oak Avenue ",
                     HOUSE_ATTRIBUTE.price_raw: "1000",
                     HOUSE_ATTRIBUTE.price_usd_raw: "25",
                 },

@@ -13,19 +13,19 @@ class TestEventMapper:
         actual = mapper.map(
             {
                 SALE_ATTRIBUTE.ORDER_ID: "1",
-                SALE_ATTRIBUTE.CUSTOMER_NAME: "Ali Ahmadi",
+                SALE_ATTRIBUTE.CUSTOMER_NAME: "Alex Johnson",
                 SALE_ATTRIBUTE.PRODUCT_NAME: "Laptop",
                 SALE_ATTRIBUTE.CATEGORY: "Electronics",
                 SALE_ATTRIBUTE.QUANTITY: "2",
                 SALE_ATTRIBUTE.UNIT_PRICE: "1000",
                 SALE_ATTRIBUTE.ORDER_DATE: "2026-01-10",
-                SALE_ATTRIBUTE.COUNTRY: "Iran",
+                SALE_ATTRIBUTE.COUNTRY: "USA",
             }
         )
 
         assert actual.key == "1"
         assert actual.payload[SALE_ATTRIBUTE.ORDER_ID] == 1
-        assert actual.payload[SALE_ATTRIBUTE.CUSTOMER_NAME] == "Ali Ahmadi"
+        assert actual.payload[SALE_ATTRIBUTE.CUSTOMER_NAME] == "Alex Johnson"
 
     def test_should_map_sale_rows_with_pandas_typed_values(self) -> None:
         mapper = get_event_mapper("sale")
@@ -33,13 +33,13 @@ class TestEventMapper:
         actual = mapper.map(
             {
                 SALE_ATTRIBUTE.ORDER_ID: 1,
-                SALE_ATTRIBUTE.CUSTOMER_NAME: "Ali Ahmadi",
+                SALE_ATTRIBUTE.CUSTOMER_NAME: "Alex Johnson",
                 SALE_ATTRIBUTE.PRODUCT_NAME: "Laptop",
                 SALE_ATTRIBUTE.CATEGORY: "Electronics",
                 SALE_ATTRIBUTE.QUANTITY: 2,
                 SALE_ATTRIBUTE.UNIT_PRICE: 1000,
                 SALE_ATTRIBUTE.ORDER_DATE: "2026-01-10",
-                SALE_ATTRIBUTE.COUNTRY: "Iran",
+                SALE_ATTRIBUTE.COUNTRY: "USA",
             }
         )
 
@@ -57,14 +57,14 @@ class TestEventMapper:
                 HOUSE_ATTRIBUTE.parking_raw: True,
                 HOUSE_ATTRIBUTE.warehouse_raw: False,
                 HOUSE_ATTRIBUTE.elevator_raw: True,
-                HOUSE_ATTRIBUTE.address_raw: "Tehran",
+                HOUSE_ATTRIBUTE.address_raw: "Austin",
                 HOUSE_ATTRIBUTE.price_raw: "1000",
                 HOUSE_ATTRIBUTE.price_usd_raw: "25",
             }
         )
 
-        assert actual.key == "Tehran"
-        assert actual.payload[HOUSE_ATTRIBUTE.address_raw] == "Tehran"
+        assert actual.key == "Austin"
+        assert actual.payload[HOUSE_ATTRIBUTE.address_raw] == "Austin"
         assert actual.payload[HOUSE_ATTRIBUTE.price_raw] == 1000.0
 
     def test_should_map_house_rows_with_missing_address_to_optional_key(self) -> None:
@@ -96,7 +96,7 @@ class TestEventMapper:
                 HOUSE_ATTRIBUTE.parking_raw: True,
                 HOUSE_ATTRIBUTE.warehouse_raw: True,
                 HOUSE_ATTRIBUTE.elevator_raw: True,
-                HOUSE_ATTRIBUTE.address_raw: "Ostad Moein",
+                HOUSE_ATTRIBUTE.address_raw: "Maple Avenue",
                 HOUSE_ATTRIBUTE.price_raw: "3310000000.0",
                 HOUSE_ATTRIBUTE.price_usd_raw: "110333.33",
             }
