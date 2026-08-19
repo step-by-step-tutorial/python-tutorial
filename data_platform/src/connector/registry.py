@@ -3,39 +3,28 @@ from __future__ import annotations
 import atexit
 from typing import Any, Callable
 
-from connector.database_connection_factory import create_audit_connection as create_database_audit_connection
-from connector.database_connection_factory import create_house_connection as create_database_house_connection
-from connector.database_connection_factory import create_sale_connection as create_database_sale_connection
-from connector.datalake_connection_factory import create_audit_connection as create_datalake_audit_connection
-from connector.datalake_connection_factory import create_house_connection as create_datalake_house_connection
-from connector.datalake_connection_factory import create_sale_connection as create_datalake_sale_connection
-from connector.datawarehouse_connection_factory import create_audit_connection as create_datawarehouse_audit_connection
-from connector.datawarehouse_connection_factory import create_house_connection as create_datawarehouse_house_connection
-from connector.datawarehouse_connection_factory import create_sale_connection as create_datawarehouse_sale_connection
-from connector.kafka_connection_factory import create_audit_listener_connection
-from connector.kafka_connection_factory import create_audit_publisher_connection
-from connector.kafka_connection_factory import create_house_listener_connection
-from connector.kafka_connection_factory import create_house_publisher_connection
-from connector.kafka_connection_factory import create_sale_listener_connection
-from connector.kafka_connection_factory import create_sale_publisher_connection
+import connector.database_connections
+import connector.datalake_connections
+import connector.datawarehouse_connections
+import connector.kafka_connections
 
 registry: dict[str, Any] = {}
 factories: dict[str, Callable[[], Any]] = {
-    "sale.database": create_database_sale_connection,
-    "house.database": create_database_house_connection,
-    "audit.database": create_database_audit_connection,
-    "sale.datalake": create_datalake_sale_connection,
-    "house.datalake": create_datalake_house_connection,
-    "audit.datalake": create_datalake_audit_connection,
-    "sale.datawarehouse": create_datawarehouse_sale_connection,
-    "house.datawarehouse": create_datawarehouse_house_connection,
-    "audit.datawarehouse": create_datawarehouse_audit_connection,
-    "sale.kafka.producer": create_sale_publisher_connection,
-    "house.kafka.producer": create_house_publisher_connection,
-    "audit.kafka.producer": create_audit_publisher_connection,
-    "sale.kafka.listener": create_sale_listener_connection,
-    "house.kafka.listener": create_house_listener_connection,
-    "audit.kafka.listener": create_audit_listener_connection,
+    "sale.database": connector.database_connections.create_sale_connection,
+    "house.database": connector.database_connections.create_house_connection,
+    "audit.database": connector.database_connections.create_audit_connection,
+    "sale.datalake": connector.datalake_connections.create_sale_connection,
+    "house.datalake": connector.datalake_connections.create_house_connection,
+    "audit.datalake": connector.datalake_connections.create_audit_connection,
+    "sale.datawarehouse": connector.datawarehouse_connections.create_sale_connection,
+    "house.datawarehouse": connector.datawarehouse_connections.create_house_connection,
+    "audit.datawarehouse": connector.datawarehouse_connections.create_audit_connection,
+    "sale.kafka.producer": connector.kafka_connections.create_sale_publisher_connection,
+    "house.kafka.producer": connector.kafka_connections.create_house_publisher_connection,
+    "audit.kafka.producer": connector.kafka_connections.create_audit_publisher_connection,
+    "sale.kafka.listener": connector.kafka_connections.create_sale_listener_connection,
+    "house.kafka.listener": connector.kafka_connections.create_house_listener_connection,
+    "audit.kafka.listener": connector.kafka_connections.create_audit_listener_connection,
 }
 
 
