@@ -22,15 +22,9 @@ class InmemoryPipeline(BatchPipeline):
     def __init__(self, ds: Dataset) -> None:
         super().__init__(ds, audit_service=AuditService(ds.audit))
         self.pipeline_name = "inmemory_pipeline"
-        self.database_repository = DatabaseRepository(
-            self.dataset.get_endpoint("sale.database", DatabaseEndpoint)
-        )
-        self.datalake_repository = DataLakeRepository(
-            self.dataset.get_endpoint("sale.datalake", DataLakeEndpoint)
-        )
-        self.datawarehouse_repository = DataWarehouseRepository(
-            self.dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint)
-        )
+        self.database_repository = DatabaseRepository(self.dataset.get_endpoint("sale.database", DatabaseEndpoint))
+        self.datalake_repository = DataLakeRepository(self.dataset.get_endpoint("sale.datalake", DataLakeEndpoint))
+        self.datawarehouse_repository = DataWarehouseRepository(self.dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint))
         self.raw_data_ingestor = get_ingestor("sale.file.csv")
 
     def ingest_raw_data(self) -> pd.DataFrame:

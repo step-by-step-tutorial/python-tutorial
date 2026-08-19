@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
-from typing import Any, Protocol, TypeVar, cast
+from typing import Any, Protocol, TypeVar
 
 from processor.base import DataProcessor
 
@@ -118,7 +118,7 @@ class Dataset:
     )
 
     def get_endpoint(self, name: str, endpoint_type: type[EndpointType]) -> EndpointType:
-        return cast(EndpointType, self.endpoints[name])
+        return self.endpoints[name]
 
     def get_processor(self, name: str) -> DataProcessor:
         return self.processors[name]

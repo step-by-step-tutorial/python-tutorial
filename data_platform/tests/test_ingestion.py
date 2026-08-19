@@ -136,7 +136,7 @@ class TestDatabaseIngestor:
             stage_table_name="example_stage",
             full_stage_table_name="sale.example_stage",
             table_names=["sale.example_stage"],
-            query_sql_files={"select_all": "database/read_table.sql"},
+            query_sql_files={"select_all": "database/select_all.sql"},
         )
         given_engine = mocker.Mock()
         given_connection = mocker.Mock()

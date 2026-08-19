@@ -87,7 +87,7 @@ SALE_DATASET = Dataset(
                 "order": "database/sale/upsert_order.sql",
                 "order_item": "database/sale/upsert_order_item.sql",
             },
-            query_sql_files={"select_all": "database/read_table.sql"},
+            query_sql_files={"select_all": "database/select_all.sql"},
         ),
         "sale.datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",

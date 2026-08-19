@@ -76,7 +76,7 @@ HOUSE_DATASET = Dataset(
             create_sql_files={"create": "database/house/create_tables.sql"},
             truncate_sql_files={"truncate": "database/house/truncate_stage.sql"},
             write_sql_files={},
-            query_sql_files={"select_all": "database/read_table.sql"},
+            query_sql_files={"select_all": "database/select_all.sql"},
         ),
         "house.datawarehouse": DataWarehouseEndpoint(
             name="datawarehouse",
