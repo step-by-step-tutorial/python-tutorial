@@ -44,30 +44,30 @@ HOUSE_DATASET = Dataset(
     ),
     endpoints={
         "house.file.csv": FileEndpoint(
-            name="file",
+            name="house.file.csv",
             file_name="house.csv",
             file_path=str(main_settings.app.root / main_settings.app.resources_dir / "house.csv"),
         ),
         "house.rest": RestApiEndpoint(
-            name="rest_api",
+            name="house.rest",
             url="http://localhost:8080",
             method="GET",
         ),
         "house.kafka.listener": MessagingEndpoint(
-            name="messaging",
+            name="house.kafka.listener",
             connection_name="house.kafka.listener",
             channel_name=main_settings.messaging["house"].channel_name,
             bootstrap_servers=main_settings.messaging["house"].bootstrap_servers,
             starting_offsets=main_settings.messaging["house"].starting_offsets,
         ),
         "house.datalake": DataLakeEndpoint(
-            name="datalake",
+            name="house.datalake",
             connection_name="house.datalake",
             bucket_name=main_settings.datalake["house.datalake"].bucket_name,
             scheme=main_settings.datalake["house.datalake"].scheme,
         ),
         "house.database": DatabaseEndpoint(
-            name="database",
+            name="house.database",
             connection_name="house.database",
             schema="house",
             stage_table_name="house_stage",
@@ -79,7 +79,7 @@ HOUSE_DATASET = Dataset(
             query_sql_files={"select_all": "database/select_all.sql"},
         ),
         "house.datawarehouse": DataWarehouseEndpoint(
-            name="datawarehouse",
+            name="house.datawarehouse",
             connection_name="house.datawarehouse",
             schema=main_settings.datawarehouse["house.datawarehouse"].database_name,
             table_name="house_table",

@@ -44,30 +44,30 @@ SALE_DATASET = Dataset(
     ),
     endpoints={
         "sale.file.csv": FileEndpoint(
-            name="file",
+            name="sale.file.csv",
             file_name="sale.csv",
             file_path=str(main_settings.app.root / main_settings.app.resources_dir / "sale.csv"),
         ),
         "sale.rest": RestApiEndpoint(
-            name="rest_api",
+            name="sale.rest",
             url="http://localhost:8080",
             method="GET",
         ),
         "sale.kafka.listener": MessagingEndpoint(
-            name="messaging",
+            name="sale.kafka.listener",
             connection_name="sale.kafka.listener",
             channel_name=main_settings.messaging["sale"].channel_name,
             bootstrap_servers=main_settings.messaging["sale"].bootstrap_servers,
             starting_offsets=main_settings.messaging["sale"].starting_offsets,
         ),
         "sale.datalake": DataLakeEndpoint(
-            name="datalake",
+            name="sale.datalake",
             connection_name="sale.datalake",
             bucket_name=main_settings.datalake["sale.datalake"].bucket_name,
             scheme=main_settings.datalake["sale.datalake"].scheme,
         ),
         "sale.database": DatabaseEndpoint(
-            name="database",
+            name="sale.database",
             connection_name="sale.database",
             schema="sale",
             stage_table_name="sale_stage",
@@ -90,7 +90,7 @@ SALE_DATASET = Dataset(
             query_sql_files={"select_all": "database/select_all.sql"},
         ),
         "sale.datawarehouse": DataWarehouseEndpoint(
-            name="datawarehouse",
+            name="sale.datawarehouse",
             connection_name="sale.datawarehouse",
             schema=main_settings.datawarehouse["sale.datawarehouse"].database_name,
             table_name="sale_table",

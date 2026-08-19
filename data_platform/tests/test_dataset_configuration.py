@@ -101,6 +101,9 @@ class TestDatasetRegistry:
 class TestConcreteDatasetConfiguration:
 
     def test_sale_dataset_should_expose_logical_endpoints(self) -> None:
+        for endpoint_name, endpoint in SALE_DATASET.endpoints.items():
+            assert endpoint.name == endpoint_name
+
         assert Path(SALE_DATASET.get_endpoint("sale.file.csv", FileEndpoint).file_path).name == "sale.csv"
         assert SALE_DATASET.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name == "sale-events"
         assert SALE_DATASET.get_endpoint("sale.kafka.listener", MessagingEndpoint).connection_name == "sale.kafka.listener"
@@ -127,6 +130,9 @@ class TestConcreteDatasetConfiguration:
         assert SALE_DATASET.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
 
     def test_house_dataset_should_expose_logical_endpoints(self) -> None:
+        for endpoint_name, endpoint in HOUSE_DATASET.endpoints.items():
+            assert endpoint.name == endpoint_name
+
         assert Path(HOUSE_DATASET.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
         assert HOUSE_DATASET.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house-events"
         assert HOUSE_DATASET.get_endpoint("house.kafka.listener", MessagingEndpoint).connection_name == "house.kafka.listener"
