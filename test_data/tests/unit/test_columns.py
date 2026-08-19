@@ -1,4 +1,3 @@
-"""Tests for the per-type column generators and their validation."""
 
 
 from pathlib import Path

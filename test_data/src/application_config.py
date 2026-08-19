@@ -1,10 +1,3 @@
-"""Configuration model and JSON loading.
-
-The dataclasses here mirror the JSON config files one-to-one. They validate shape
-only — that keys are known and of the right kind. Per-type rules such as
-"``random_int`` needs ``min`` and ``max``" live with the column generators in
-:mod:`test_data.columns`, next to the code that uses them.
-"""
 
 
 import json
@@ -20,7 +13,6 @@ DERIVED_TYPE = "derived"
 
 @dataclass(frozen=True)
 class ColumnConfig:
-    """One column of the generated CSV, as declared in the config file."""
 
     name: str
     type: str
@@ -44,7 +36,6 @@ class ColumnConfig:
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "ColumnConfig":
-        """Build a column from one entry of the config's ``columns`` list."""
         label = raw.get("name", "<unnamed>")
         unknown = sorted(set(raw) - {field.name for field in fields(cls)})
         if unknown:
@@ -70,7 +61,6 @@ class ColumnConfig:
 
 @dataclass(frozen=True)
 class GeneratorConfig:
-    """A whole dataset definition: how many rows, where to write, which columns."""
 
     row_count: int
     output_file: str
@@ -79,12 +69,10 @@ class GeneratorConfig:
 
     @property
     def headers(self) -> tuple[str, ...]:
-        """CSV header order, which is the order columns are declared in."""
         return tuple(column.name for column in self.columns)
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "GeneratorConfig":
-        """Build a config from parsed JSON, validating the top-level keys."""
         for required in ("row_count", "output_file", "columns"):
             if required not in raw:
                 raise ConfigurationError(f"Config is missing the {required!r} key.")
@@ -113,12 +101,6 @@ class GeneratorConfig:
 
 
 def load_config(config_path: Path) -> GeneratorConfig:
-    """Read and validate a JSON config file.
-
-    Raises:
-        ConfigurationError: the file is missing, is not valid JSON, or is not a
-            usable config.
-    """
     path = Path(config_path)
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))

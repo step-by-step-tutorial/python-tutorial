@@ -1,4 +1,3 @@
-"""Tests for config loading and validation."""
 
 
 import json

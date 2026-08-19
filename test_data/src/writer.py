@@ -1,8 +1,3 @@
-"""CSV export.
-
-Kept apart from row generation so rows can be streamed straight to disk: the writer
-consumes any iterable, so nothing forces a whole dataset into memory.
-"""
 
 
 import csv
@@ -16,11 +11,6 @@ def write_rows(
     headers: Sequence[str],
     rows: Iterable[Mapping[str, str]],
 ) -> int:
-    """Write ``rows`` as a CSV with a header line, creating parent folders.
-
-    Returns:
-        The number of data rows written, header excluded.
-    """
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 

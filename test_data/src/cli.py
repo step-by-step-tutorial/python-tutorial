@@ -1,4 +1,3 @@
-"""Command line entry point."""
 
 
 import argparse
@@ -14,7 +13,6 @@ EXIT_ERROR = 1
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
-    """Build the CLI parser."""
     parser = argparse.ArgumentParser(description="Generate CSV test data from text files.")
     parser.add_argument(
         "--config",
@@ -25,7 +23,6 @@ def build_argument_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Generate the dataset named by ``--config``. Returns a process exit code."""
     parser = build_argument_parser()
     args = parser.parse_args(argv)
 

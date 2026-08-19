@@ -1,4 +1,3 @@
-"""Shared fixtures: a throwaway project folder with data files and configs."""
 
 
 import json
@@ -8,7 +7,6 @@ import pytest
 
 
 def write_lines(path: Path, *lines: str) -> Path:
-    """Write a ``.txt`` source file, creating parent folders."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path
@@ -16,13 +14,11 @@ def write_lines(path: Path, *lines: str) -> Path:
 
 @pytest.fixture(name="write_lines")
 def write_lines_fixture():
-    """The :func:`write_lines` helper, as a fixture."""
     return write_lines
 
 
 @pytest.fixture
 def data_dir(tmp_path: Path) -> Path:
-    """``data/`` folder of a throwaway project."""
     data = tmp_path / "data"
     data.mkdir()
     return data
@@ -30,7 +26,6 @@ def data_dir(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def project_root(tmp_path: Path, data_dir: Path) -> Path:
-    """A minimal but complete project: two countries, two products, one config."""
     write_lines(data_dir / "countries.txt", "Germany", "USA")
     write_lines(data_dir / "first_names" / "germany.txt", "Hans")
     write_lines(data_dir / "first_names" / "usa.txt", "John")

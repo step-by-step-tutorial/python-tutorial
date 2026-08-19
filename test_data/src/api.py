@@ -1,12 +1,3 @@
-"""REST API over the generated datasets.
-
-Needs the optional ``api`` extra:
-
-    pip install -e .[api]
-    python -m api                            # or: uvicorn api:app
-
-Interactive docs are served at ``/docs``, the OpenAPI schema at ``/openapi.json``.
-"""
 
 
 import os
@@ -35,7 +26,6 @@ from schemas import (
 
 __version__ = "1.1.0"
 
-#: Environment variable that overrides the folder scanned for ``config_*.json``.
 PROJECT_ROOT_ENV = "CSV_GENERATOR_ROOT"
 
 NAME_PARAM = PathParam(description="Dataset name, as in config_<name>.json", examples=["sale"])
@@ -44,7 +34,6 @@ BAD_CONFIG = {400: {"model": ErrorResponse, "description": "Config or source dat
 
 
 def default_project_root() -> Path:
-    """Folder holding the config files: the ``CSV_GENERATOR_ROOT`` env var, or the project root."""
     override = os.environ.get(PROJECT_ROOT_ENV)
     if override:
         return Path(override).resolve()
@@ -52,7 +41,6 @@ def default_project_root() -> Path:
 
 
 def create_app(project_root: Path | None = None) -> FastAPI:
-    """Build the FastAPI application for one project folder."""
     registry = DatasetRegistry(project_root or default_project_root())
 
     app = FastAPI(
@@ -101,7 +89,6 @@ def create_app(project_root: Path | None = None) -> FastAPI:
 
     @app.get("/health", response_model=HealthResponse, tags=["meta"])
     async def health() -> HealthResponse:
-        """Liveness check, plus how many datasets are visible."""
         return HealthResponse(
             status="ok",
             version=__version__,
@@ -111,7 +98,6 @@ def create_app(project_root: Path | None = None) -> FastAPI:
 
     @app.get("/datasets", response_model=list[DatasetSummary], tags=["datasets"])
     async def list_datasets() -> list[DatasetSummary]:
-        """List every dataset and whether its CSV has been generated."""
         return [_summary(dataset) for dataset in registry.list()]
 
     @app.get(
@@ -121,7 +107,6 @@ def create_app(project_root: Path | None = None) -> FastAPI:
         responses={**NOT_FOUND, **BAD_CONFIG},
     )
     async def get_dataset(name: str = NAME_PARAM) -> DatasetDetail:
-        """Read one dataset's configuration and output state."""
         dataset = registry.get(name)
         return DatasetDetail(
             **_summary(dataset).model_dump(),
@@ -136,7 +121,6 @@ def create_app(project_root: Path | None = None) -> FastAPI:
         responses={**NOT_FOUND, **BAD_CONFIG},
     )
     async def generate_dataset(name: str = NAME_PARAM) -> GenerationResponse:
-        """Regenerate a dataset's CSV, replacing any existing file."""
         result = registry.generate(name)
         return GenerationResponse(
             name=name,
@@ -156,7 +140,6 @@ def create_app(project_root: Path | None = None) -> FastAPI:
         offset: int = Query(0, ge=0, description="Rows to skip"),
         limit: int = Query(100, ge=1, le=1000, description="Rows to return"),
     ) -> RowsPage:
-        """Read a page of rows back from the generated CSV as JSON."""
         rows = registry.read_rows(name, offset=offset, limit=limit)
         status = registry.status(registry.get(name))
         return RowsPage(
@@ -175,7 +158,6 @@ def create_app(project_root: Path | None = None) -> FastAPI:
         responses={**NOT_FOUND, 200: {"content": {"text/csv": {}}, "description": "The CSV file"}},
     )
     async def download(name: str = NAME_PARAM) -> FileResponse:
-        """Download the generated CSV file."""
         path = registry.output_file(name)
         return FileResponse(path, media_type="text/csv", filename=path.name)
 
@@ -186,7 +168,6 @@ app = create_app()
 
 
 def run() -> None:
-    """Serve the API with uvicorn. Host and port come from ``HOST``/``PORT``."""
     import uvicorn
 
     uvicorn.run(

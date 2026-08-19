@@ -1,13 +1,3 @@
-"""One value generator per column type.
-
-Each column type is a small class with three jobs: validate its own config keys at
-construction time, declare which other columns it depends on, and produce a value
-for a row. Adding a type means adding a class and one registry entry — no changes
-to the row generator.
-
-Validation runs when the generator is built, so a config with a bad column fails
-before the first row is produced rather than midway through a 5000-row run.
-"""
 
 
 import re
@@ -28,10 +18,6 @@ _REPEATED_DOTS = re.compile(r"\.+")
 
 
 def normalize_for_email(value: str) -> str:
-    """Reduce a name to the local part of an email address.
-
-    ``"Jalalé"`` becomes ``"jalale"``, ``"Ali Reza"`` becomes ``"ali.reza"``.
-    """
     ascii_value = (
         unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     )
@@ -43,7 +29,6 @@ def normalize_for_email(value: str) -> str:
 
 
 class ColumnGenerator(ABC):
-    """Produces the value of one CSV column."""
 
     def __init__(self, column: ColumnConfig, sources: SourceRepository, rng: Random) -> None:
         self.column = column
@@ -53,15 +38,14 @@ class ColumnGenerator(ABC):
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        """Names of the columns this one reads from the same row."""
         return ()
 
     @abstractmethod
     def generate(self, row: Row, row_index: int) -> str:
-        """Return this column's value for one row."""
+        pass
 
     def _validate(self) -> None:
-        """Check the config keys this type needs. Called once, at build time."""
+        pass
 
     def _require(self, *keys: str) -> None:
         missing = [key for key in keys if getattr(self.column, key) is None]
@@ -91,7 +75,6 @@ class ColumnGenerator(ABC):
 
 
 class SequenceColumn(ColumnGenerator):
-    """Incrementing integer, ``start + row_index * step``."""
 
     def generate(self, row: Row, row_index: int) -> str:
         start = self.column.start if self.column.start is not None else 1
@@ -100,7 +83,6 @@ class SequenceColumn(ColumnGenerator):
 
 
 class FixedColumn(ColumnGenerator):
-    """The same literal value in every row."""
 
     def _validate(self) -> None:
         self._require("value")
@@ -110,7 +92,6 @@ class FixedColumn(ColumnGenerator):
 
 
 class RandomIntColumn(ColumnGenerator):
-    """Random integer between ``min`` and ``max``, both inclusive."""
 
     def _validate(self) -> None:
         self._require("min", "max")
@@ -124,7 +105,6 @@ class RandomIntColumn(ColumnGenerator):
 
 
 class RandomDateColumn(ColumnGenerator):
-    """Random ISO date between ``date_start`` and ``date_end``, both inclusive."""
 
     def _validate(self) -> None:
         self._require("date_start", "date_end")
@@ -148,7 +128,6 @@ class RandomDateColumn(ColumnGenerator):
 
 
 class RandomFromFileColumn(ColumnGenerator):
-    """Random line from a ``.txt`` file."""
 
     def _validate(self) -> None:
         self._require("file")
@@ -158,12 +137,6 @@ class RandomFromFileColumn(ColumnGenerator):
 
 
 class RandomFromMappedFileColumn(ColumnGenerator):
-    """Random line from the file a mapping CSV lists for another column's value.
-
-    With several ``file_columns`` one value is drawn per mapped file and the results
-    are joined with ``separator`` — a first-name file plus a last-name file gives a
-    full name from a single country.
-    """
 
     def _validate(self) -> None:
         self._require("source_field", "mapping_file", "key_column")
@@ -202,7 +175,6 @@ class RandomFromMappedFileColumn(ColumnGenerator):
 
 
 class LookupFromCsvColumn(ColumnGenerator):
-    """Value looked up in a CSV, keyed by another column of the same row."""
 
     def _validate(self) -> None:
         self._require("source_field", "mapping_file", "key_column", "value_column")
@@ -221,7 +193,6 @@ class LookupFromCsvColumn(ColumnGenerator):
 
 
 class EmailFromNameColumn(ColumnGenerator):
-    """``first.last@domain`` built from the row's name columns."""
 
     NAME_FIELDS = ("first_name", "last_name")
     DEFAULT_DOMAIN = "example.com"
@@ -266,7 +237,6 @@ def build_column_generator(
     sources: SourceRepository,
     rng: Random,
 ) -> ColumnGenerator:
-    """Pick the generator class for a column and build it, validating as it goes."""
     if column.type == DERIVED_TYPE:
         if column.method is None:
             raise ConfigurationError(f"Derived column {column.name!r} needs a 'method'.")

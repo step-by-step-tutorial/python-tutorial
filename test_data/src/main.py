@@ -1,8 +1,3 @@
-"""Script entry point, so `python ./src/main.py --config ...` keeps working.
-
-The implementation lives in :mod:`cli`; installing the project also provides a
-``csv-data-generator`` command.
-"""
 
 
 import sys

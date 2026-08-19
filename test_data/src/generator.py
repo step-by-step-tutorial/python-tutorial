@@ -1,10 +1,3 @@
-"""Row generation.
-
-The generator resolves the order columns must be produced in once, at construction
-time, then reuses it for every row. A column may therefore be declared before the
-column it depends on: ``country`` can be the last column of the CSV while the name,
-phone, and address columns are all drawn from it.
-"""
 
 
 from collections.abc import Iterable, Iterator
@@ -22,14 +15,12 @@ from writer import write_rows
 
 @dataclass(frozen=True)
 class GenerationResult:
-    """What one generation run produced."""
 
     row_count: int
     output_path: Path
 
 
 class CsvDataGenerator:
-    """Turns a :class:`GeneratorConfig` into rows and a CSV file."""
 
     def __init__(
         self,
@@ -49,11 +40,9 @@ class CsvDataGenerator:
 
     @property
     def output_path(self) -> Path:
-        """Absolute path of the CSV this generator writes."""
         return self.project_root / self.config.output_file
 
     def iter_rows(self) -> Iterator[dict[str, str]]:
-        """Yield rows one at a time, in the column order of the config."""
         headers = self.config.headers
         for row_index in range(self.config.row_count):
             values: dict[str, str] = {}
@@ -62,26 +51,17 @@ class CsvDataGenerator:
             yield {name: values[name] for name in headers}
 
     def generate_rows(self) -> list[dict[str, str]]:
-        """Materialise every row. Prefer :meth:`iter_rows` for large datasets."""
         return list(self.iter_rows())
 
     def write_csv(self, rows: Iterable[Mapping[str, str]] | None = None) -> Path:
-        """Write ``rows`` — or freshly generated ones — to the configured output."""
         write_rows(self.output_path, self.config.headers, self.iter_rows() if rows is None else rows)
         return self.output_path
 
     def generate(self) -> GenerationResult:
-        """Generate and write the dataset, streaming rows straight to disk."""
         row_count = write_rows(self.output_path, self.config.headers, self.iter_rows())
         return GenerationResult(row_count=row_count, output_path=self.output_path)
 
     def _resolve_order(self) -> tuple[str, ...]:
-        """Depth-first order that puts every column after the ones it depends on.
-
-        Columns are visited in config order, so the sequence of random draws — and
-        therefore the output of a seeded run — does not depend on how the
-        dependencies happen to be laid out.
-        """
         order: list[str] = []
         resolved: set[str] = set()
 
@@ -112,7 +92,6 @@ class CsvDataGenerator:
 
 
 def generate_dataset(config_path: Path) -> GenerationResult:
-    """Load a config file and generate its dataset in one call."""
     path = Path(config_path).resolve()
     config = load_config(path)
     return CsvDataGenerator(config=config, project_root=path.parent).generate()

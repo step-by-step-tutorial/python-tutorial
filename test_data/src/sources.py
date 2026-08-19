@@ -1,10 +1,3 @@
-"""Cached, read-only access to the source files under ``data/``.
-
-All paths are relative to a project root — the folder holding the config file — so
-the same config behaves the same no matter which directory the process runs from.
-Each file is read at most once per run and then served from memory, because a
-5000-row dataset would otherwise re-read the same name list 5000 times.
-"""
 
 
 import csv
@@ -16,7 +9,6 @@ from exceptions import SourceDataError
 
 
 class SourceRepository:
-    """Loads and caches the ``.txt`` value lists and ``.csv`` mapping files."""
 
     def __init__(self, root: Path) -> None:
         self._root = Path(root)
@@ -25,22 +17,18 @@ class SourceRepository:
 
     @property
     def root(self) -> Path:
-        """Folder every relative path is resolved against."""
         return self._root
 
     def resolve(self, relative_path: str) -> Path:
-        """Turn a config-relative path into an absolute one."""
         return self._root / relative_path
 
     def values(self, relative_path: str) -> tuple[str, ...]:
-        """Non-blank, stripped lines of a ``.txt`` source file."""
         cached = self._values.get(relative_path)
         if cached is None:
             cached = self._values[relative_path] = self._read_values(relative_path)
         return cached
 
     def mapping(self, relative_path: str, key_column: str, value_column: str) -> Mapping[str, str]:
-        """Two columns of a CSV as a read-only ``key -> value`` mapping."""
         cache_key = (relative_path, key_column, value_column)
         cached = self._mappings.get(cache_key)
         if cached is None:
