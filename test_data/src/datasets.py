@@ -5,6 +5,7 @@ produces. The registry finds them, reports whether each has been generated, and
 reads rows back — the shared vocabulary the REST API is built on.
 """
 
+from __future__ import annotations
 
 import csv
 from dataclasses import dataclass
