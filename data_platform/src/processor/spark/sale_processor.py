@@ -18,7 +18,7 @@ from transformation.spark.spark_ops import (
 
 class SparkSaleProcessor(DataProcessor[DataFrame]):
     def clean(self, dataframe: DataFrame) -> DataFrame:
-        df = dataframe
+        df = dataframe.coalesce(1)
 
         df = remove_duplicates(df, schema.order_id)
         df = convert_numeric_column(df, schema.quantity, default_value=1.0)

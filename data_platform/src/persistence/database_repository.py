@@ -16,8 +16,11 @@ class DatabaseRepository:
         self._endpoint = endpoint
         self._connection_name = endpoint.connection_name
 
+    def run_sql_files(self, file_names: list[str]) -> None:
+        run_sql_files(self._connection_name, file_names)
+
     def truncate_stage_table(self) -> None:
-        run_sql_files(self._connection_name, list_of_values(self._endpoint.truncate_sql_files))
+        self.run_sql_files(list_of_values(self._endpoint.truncate_sql_files))
 
     def populate_stage_table_from_memory(self, dataframe: pandas.DataFrame) -> None:
         with get_connection(self._connection_name).begin() as connection:
@@ -28,6 +31,9 @@ class DatabaseRepository:
                 if_exists="append",
                 index=False,
             )
+
+    def populate_stage_from_memory(self, dataframe: pandas.DataFrame) -> None:
+        self.populate_stage_table_from_memory(dataframe)
 
     def populate_stage_table_from_spark(self, dataframe: pyspark.sql.DataFrame) -> None:
         connection_settings = main_settings.database[Key(self._connection_name)]
@@ -43,12 +49,15 @@ class DatabaseRepository:
             .save()
         )
 
+    def populate_stage_from_spark(self, dataframe: pyspark.sql.DataFrame) -> None:
+        self.populate_stage_table_from_spark(dataframe)
+
     def truncate_and_populate_from_memory(self, dataframe: pandas.DataFrame) -> None:
         self.truncate_stage_table()
-        self.populate_stage_table_from_memory(dataframe)
-        run_sql_files(self._connection_name, list_of_values(self._endpoint.write_sql_files))
+        self.populate_stage_from_memory(dataframe)
+        self.run_sql_files(list_of_values(self._endpoint.write_sql_files))
 
     def truncate_and_populate_from_spark(self, dataframe: pyspark.sql.DataFrame) -> None:
         self.truncate_stage_table()
-        self.populate_stage_table_from_spark(dataframe)
-        run_sql_files(self._connection_name, list_of_values(self._endpoint.write_sql_files))
+        self.populate_stage_from_spark(dataframe)
+        self.run_sql_files(list_of_values(self._endpoint.write_sql_files))

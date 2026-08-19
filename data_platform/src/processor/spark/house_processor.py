@@ -31,7 +31,7 @@ _RENAME = {
 
 class SparkHouseProcessor(DataProcessor[DataFrame]):
     def clean(self, dataframe: DataFrame) -> DataFrame:
-        df = dataframe
+        df = dataframe.coalesce(1)
 
         df = rename_columns(df, _RENAME)
         df = convert_numeric_column(df, schema.area)

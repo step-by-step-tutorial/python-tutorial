@@ -9,4 +9,7 @@ registry: dict[str, Dataset] = {
 
 
 def get_dataset(name: str) -> Dataset:
-    return registry[name.lower()]
+    key = name.lower()
+    if key not in registry:
+        raise ValueError(f"Unsupported dataset: {name}")
+    return registry[key]

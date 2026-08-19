@@ -1,6 +1,6 @@
 from collections.abc import Iterable, Mapping, Sequence
 
-from pyspark.sql import Column, DataFrame, functions as sf
+from pyspark.sql import Column, DataFrame, Window, functions as sf
 
 
 def remove_duplicates(df: DataFrame, *columns: str) -> DataFrame:
@@ -31,10 +31,11 @@ def fill_missing_by_group_average(df: DataFrame, group_column: str, column: str)
 
 
 def fill_missing_by_column_average(df: DataFrame, column: str) -> DataFrame:
-    average = df.select(sf.avg(column).alias("average")).first()["average"]
-    if average is None:
+    average_window = Window.rowsBetween(Window.unboundedPreceding, Window.unboundedFollowing)
+    average_column = sf.avg(sf.col(column)).over(average_window)
+    if df.filter(sf.col(column).isNotNull()).limit(1).count() == 0:
         raise ValueError(f"No valid values are available for '{column}'.")
-    return df.withColumn(column, sf.coalesce(sf.col(column), sf.lit(float(average))))
+    return df.withColumn(column, sf.coalesce(sf.col(column), average_column))
 
 
 def convert_datetime_column(df: DataFrame, column: str) -> DataFrame:

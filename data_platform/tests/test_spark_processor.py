@@ -19,13 +19,22 @@ pytestmark = pytest.mark.spark_service
 def spark_session() -> SparkSession:
     os.environ["PYSPARK_PYTHON"] = sys.executable
     os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+    os.environ["SPARK_LOCAL_HOSTNAME"] = "localhost"
+    os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
     session = (
         SparkSession.builder
         .master("local[1]")
         .appName("processor-tests")
         .config("spark.ui.enabled", "false")
+        .config("spark.driver.host", "127.0.0.1")
+        .config("spark.driver.bindAddress", "127.0.0.1")
+        .config("spark.local.ip", "127.0.0.1")
+        .config("spark.executorEnv.PYSPARK_PYTHON", sys.executable)
+        .config("spark.executorEnv.PYSPARK_DRIVER_PYTHON", sys.executable)
         .config("spark.pyspark.python", sys.executable)
         .config("spark.pyspark.driver.python", sys.executable)
+        .config("spark.sql.shuffle.partitions", "1")
+        .config("spark.default.parallelism", "1")
         .getOrCreate()
     )
     yield session

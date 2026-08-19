@@ -97,10 +97,9 @@ class SparkService:
         should_not_be_none_or_empty(path, "path")
         logger.info("Appending batch data to %s", path)
 
-        if dataframe.isEmpty():
-            return
-
         with persisted_dataframes() as persisted:
+            if dataframe.isEmpty():
+                return
             batch_dataframe = dataframe.persist()
             persisted.append(batch_dataframe)
             self.append_to_object_storage(dataframe=batch_dataframe, path=path)

@@ -31,6 +31,10 @@ class DataLakeRepository:
 
         object_key = f"{relative_path.strip('/')}/part-{uuid4()}.{file_extension}"
         client = get_connection(self.connection_name)
+        buckets = client.list_buckets()
+        bucket_names = {bucket["Name"] for bucket in buckets.get("Buckets", [])}
+        if self.bucket_name not in bucket_names:
+            client.create_bucket(Bucket=self.bucket_name)
         client.put_object(Bucket=self.bucket_name, Key=object_key, Body=parquet_buffer)
 
         logger.info("Upload a %s file in bucket %s with path %s", file_extension, self.bucket_name, object_key)

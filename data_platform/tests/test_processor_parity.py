@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import cast
 
 import pandas as pd
 import pytest
@@ -15,20 +16,27 @@ from processor.inmemory.sale_processor import InmemorySaleProcessor
 from processor.spark.house_processor import SparkHouseProcessor
 from processor.spark.sale_processor import SparkSaleProcessor
 
-pytestmark = pytest.mark.spark_service
-
 
 @pytest.fixture(scope="module")
-def spark_session() -> SparkSession:
+def spark_session():
     os.environ["PYSPARK_PYTHON"] = sys.executable
     os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+    os.environ["SPARK_LOCAL_HOSTNAME"] = "localhost"
+    os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
     session = (
         SparkSession.builder
         .master("local[1]")
         .appName("processor-parity-tests")
         .config("spark.ui.enabled", "false")
+        .config("spark.driver.host", "127.0.0.1")
+        .config("spark.driver.bindAddress", "127.0.0.1")
+        .config("spark.local.ip", "127.0.0.1")
+        .config("spark.executorEnv.PYSPARK_PYTHON", sys.executable)
+        .config("spark.executorEnv.PYSPARK_DRIVER_PYTHON", sys.executable)
         .config("spark.pyspark.python", sys.executable)
         .config("spark.pyspark.driver.python", sys.executable)
+        .config("spark.sql.shuffle.partitions", "1")
+        .config("spark.default.parallelism", "1")
         .getOrCreate()
     )
     yield session
@@ -42,7 +50,8 @@ def _normalize(frame: pd.DataFrame, sort_columns: list[str] | None = None) -> pd
         if column == SALE_ATTRIBUTE.order_id:
             normalized[column] = normalized[column].astype("string")
         if column == SALE_ATTRIBUTE.order_date:
-            normalized[column] = pd.to_datetime(normalized[column], errors="coerce").dt.strftime("%Y-%m-%d")
+            dates = cast(pd.Series, pd.to_datetime(normalized[column], errors="coerce"))
+            normalized[column] = dates.dt.strftime("%Y-%m-%d")
         else:
             normalized[column] = normalized[column]
 

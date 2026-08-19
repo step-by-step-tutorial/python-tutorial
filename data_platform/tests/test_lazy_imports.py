@@ -17,13 +17,18 @@ class TestLazyImports:
                 raise AssertionError(f"{name} should not be imported")
             return original_import(name, globals, locals, fromlist, level)
 
-        for module_name in list(sys.modules):
-            if module_name == "main" or module_name.startswith("pipeline") or module_name.startswith("service.spark"):
-                sys.modules.pop(module_name, None)
+        removed_modules = {
+            module_name: sys.modules.pop(module_name)
+            for module_name in list(sys.modules)
+            if module_name == "main" or module_name.startswith("pipeline") or module_name.startswith("service.spark")
+        }
 
         mocker.patch("builtins.__import__", side_effect=guarded_import)
 
-        module = importlib.import_module("main")
+        try:
+            module = importlib.import_module("main")
+        finally:
+            sys.modules.update(removed_modules)
 
         assert module.run_pipeline is not None
 
@@ -35,12 +40,17 @@ class TestLazyImports:
                 raise AssertionError("pyspark should not be imported")
             return original_import(name, globals, locals, fromlist, level)
 
-        for module_name in list(sys.modules):
-            if module_name.startswith("service.spark"):
-                sys.modules.pop(module_name, None)
+        removed_modules = {
+            module_name: sys.modules.pop(module_name)
+            for module_name in list(sys.modules)
+            if module_name.startswith("service.spark")
+        }
 
         mocker.patch("builtins.__import__", side_effect=guarded_import)
 
-        module = importlib.import_module("service.spark.runtime")
+        try:
+            module = importlib.import_module("service.spark.runtime")
+        finally:
+            sys.modules.update(removed_modules)
 
         assert module.persisted_dataframes is not None
