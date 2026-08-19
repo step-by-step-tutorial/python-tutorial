@@ -4,8 +4,6 @@ import pytest
 from dataset.definition import DataWarehouseEndpoint
 from persistence import datawarehouse_repository as system_under_test
 
-pytestmark = [pytest.mark.unit, pytest.mark.datawarehouse]
-
 
 class TestTruncateAndPopulateFromPandas:
 

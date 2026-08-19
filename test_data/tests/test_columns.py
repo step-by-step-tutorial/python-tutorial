@@ -1,6 +1,5 @@
 """Tests for the per-type column generators and their validation."""
 
-from __future__ import annotations
 
 from pathlib import Path
 from random import Random

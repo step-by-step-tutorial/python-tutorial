@@ -1,9 +1,5 @@
-import pytest
-
 from exposer.event_publisher import EventPublisher
 from transformation.conversion.event_mapper import MappedEvent
-
-pytestmark = pytest.mark.unit
 
 
 class TestEventPublisher:

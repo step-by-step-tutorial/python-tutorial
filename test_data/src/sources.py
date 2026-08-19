@@ -6,7 +6,6 @@ Each file is read at most once per run and then served from memory, because a
 5000-row dataset would otherwise re-read the same name list 5000 times.
 """
 
-from __future__ import annotations
 
 import csv
 from pathlib import Path

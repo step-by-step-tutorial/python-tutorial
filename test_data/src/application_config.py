@@ -3,10 +3,9 @@
 The dataclasses here mirror the JSON config files one-to-one. They validate shape
 only — that keys are known and of the right kind. Per-type rules such as
 "``random_int`` needs ``min`` and ``max``" live with the column generators in
-:mod:`test_data_generator.columns`, next to the code that uses them.
+:mod:`test_data.columns`, next to the code that uses them.
 """
 
-from __future__ import annotations
 
 import json
 from collections.abc import Sequence
@@ -44,7 +43,7 @@ class ColumnConfig:
     separator: str | None = None
 
     @classmethod
-    def from_dict(cls, raw: dict[str, Any]) -> ColumnConfig:
+    def from_dict(cls, raw: dict[str, Any]) -> "ColumnConfig":
         """Build a column from one entry of the config's ``columns`` list."""
         label = raw.get("name", "<unnamed>")
         unknown = sorted(set(raw) - {field.name for field in fields(cls)})
@@ -84,7 +83,7 @@ class GeneratorConfig:
         return tuple(column.name for column in self.columns)
 
     @classmethod
-    def from_dict(cls, raw: dict[str, Any]) -> GeneratorConfig:
+    def from_dict(cls, raw: dict[str, Any]) -> "GeneratorConfig":
         """Build a config from parsed JSON, validating the top-level keys."""
         for required in ("row_count", "output_file", "columns"):
             if required not in raw:

@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import logging
 
@@ -7,7 +6,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType
 
 from dataset.definition import DataLakeEndpoint, MessagingEndpoint
-from service.runtime import persisted_dataframes
+from util.spark_utils import persisted_dataframes
 from util.string_utils import should_not_be_none, should_not_be_none_or_empty
 
 logger = logging.getLogger(__name__)

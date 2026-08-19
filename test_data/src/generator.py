@@ -6,7 +6,6 @@ column it depends on: ``country`` can be the last column of the CSV while the na
 phone, and address columns are all drawn from it.
 """
 
-from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass

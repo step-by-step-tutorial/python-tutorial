@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import logging
 
@@ -7,8 +6,9 @@ import pyspark
 
 from connector.registry import get_connection
 from dataset.definition import DataWarehouseEndpoint
+from util.collection_utils import batch_of_list
 from util.file_utils import read_text_file
-from util.spark_utils import batch_of_list, dataframe_to_list
+from util.spark_utils import dataframe_to_list
 
 logger = logging.getLogger(__name__)
 

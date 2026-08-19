@@ -9,7 +9,6 @@ Validation runs when the generator is built, so a config with a bad column fails
 before the first row is produced rather than midway through a 5000-row run.
 """
 
-from __future__ import annotations
 
 import re
 import unicodedata

@@ -1,8 +1,5 @@
-import pytest
-
-from util.spark_utils import batch_of_list, dataframe_to_list
-
-pytestmark = pytest.mark.unit
+from util.collection_utils import batch_of_list
+from util.spark_utils import dataframe_to_list
 
 
 class TestCollectRows:

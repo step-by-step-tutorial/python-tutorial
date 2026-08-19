@@ -5,9 +5,6 @@ from pyspark.sql.types import StructType
 from dataset.definition import DataLakeEndpoint, MessagingEndpoint
 from service import spark_service as system_under_test
 
-pytestmark = pytest.mark.unit
-
-
 class TestReadSaleData:
 
     def test_should_read_and_validate_sale_data(self, mocker) -> None:

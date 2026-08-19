@@ -1,5 +1,6 @@
-from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Any
 
 import pyspark
@@ -21,5 +22,12 @@ def dataframe_to_list(dataframe: pyspark.sql.DataFrame) -> list[tuple[Any, ...]]
     return rows
 
 
-def batch_of_list(rows: list[tuple[Any, ...]], batch_size: int = 1000) -> list[list[tuple[Any, ...]]]:
-    return [rows[index : index + batch_size] for index in range(0, len(rows), batch_size)]
+@contextmanager
+def persisted_dataframes() -> Iterator[list[Any]]:
+    dataframes: list[Any] = []
+
+    try:
+        yield dataframes
+    finally:
+        for dataframe in reversed(dataframes):
+            dataframe.unpersist()

@@ -4,8 +4,6 @@ from transformation.conversion.event_mapper import get_event_mapper
 from dataset.sale.attribute import SALE_ATTRIBUTE
 from dataset.house.attribute import HOUSE_ATTRIBUTE
 
-pytestmark = pytest.mark.unit
-
 
 class TestEventMapper:
 

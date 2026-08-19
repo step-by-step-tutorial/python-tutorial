@@ -53,7 +53,7 @@ No third-party runtime dependencies — the generator uses only the Python stand
 ## Project Structure
 
 ```text
-test_data_generator/
+test_data/
   config_sale.json                  dataset config: minimal order sample
   config_online_shopping.json       dataset config: online shopping orders
   config_hr.json                    dataset config: HR employee records
@@ -88,7 +88,7 @@ One config file per dataset, named `config_<dataset>.json`:
 ## Prepare Environment
 
 ```shell
-cd ./test_data_generator
+cd ./test_data
 python --version
 python -m venv .venv
 ```
@@ -120,7 +120,7 @@ nothing installed.
 ## Run the Tests
 
 ```shell
-cd ./test_data_generator
+cd ./test_data
 pytest
 ```
 
@@ -130,10 +130,10 @@ dependency resolution across column order, and rejection of circular dependencie
 
 ## Run the Application
 
-`--config` is required — it selects the dataset. Run from the `test_data_generator` folder:
+`--config` is required — it selects the dataset. Run from the `test_data` folder:
 
 ```shell
-cd ./test_data_generator
+cd ./test_data
 python ./src/main.py --config ./config_sale.json
 python ./src/main.py --config ./config_online_shopping.json
 python ./src/main.py --config ./config_hr.json
@@ -141,7 +141,7 @@ python ./src/main.py --help
 ```
 
 ```shell
-cd ./test_data_generator
+cd ./test_data
 python ./src/api.py 
 ```
 

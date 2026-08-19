@@ -1,12 +1,8 @@
-import pytest
-
 from pyspark.sql import DataFrame, SparkSession
 
 from dataset.definition import DataLakeEndpoint, MessagingEndpoint
 from dataset.sale.config import SALE_DATASET
 from service import spark_service as system_under_test
-
-pytestmark = pytest.mark.unit
 
 
 class TestReadStream:

@@ -1,6 +1,5 @@
 """Shared fixtures: a throwaway project folder with data files and configs."""
 
-from __future__ import annotations
 
 import json
 from pathlib import Path

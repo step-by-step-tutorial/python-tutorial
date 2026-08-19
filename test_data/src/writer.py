@@ -4,7 +4,6 @@ Kept apart from row generation so rows can be streamed straight to disk: the wri
 consumes any iterable, so nothing forces a whole dataset into memory.
 """
 
-from __future__ import annotations
 
 import csv
 from collections.abc import Iterable, Sequence

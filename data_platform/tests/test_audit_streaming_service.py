@@ -1,11 +1,7 @@
-import pytest
-
 from audit.audit_event_factory import AuditEventFactory
 from audit.audit_event_factory import PipelineStartedAuditRequest
 from audit.audit_messaging_service import AuditMessagingService
 from dataset.definition import AuditEndpoint
-
-pytestmark = pytest.mark.unit
 
 
 class TestAuditMessagingService:

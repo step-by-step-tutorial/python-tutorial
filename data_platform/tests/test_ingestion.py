@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 
 from pyspark.sql import SparkSession
 
@@ -19,7 +18,6 @@ from ingestion.kafka_ingestor import KafkaIngestor
 from ingestion.rest_api_ingestor import RestApiIngestor
 from ingestion.spark_kafka_ingestor import SparkKafkaIngestor
 from ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
-pytestmark = pytest.mark.unit
 
 
 class TestCsvFileIngestor:

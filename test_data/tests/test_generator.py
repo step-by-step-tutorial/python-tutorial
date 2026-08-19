@@ -1,6 +1,5 @@
 """Tests for row generation, dependency resolution, and CSV export."""
 
-from __future__ import annotations
 
 import csv
 from pathlib import Path

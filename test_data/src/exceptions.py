@@ -5,7 +5,6 @@ so callers — the CLI and the REST API — can map failures to exit codes or HT
 statuses without catching bare ``Exception``.
 """
 
-from __future__ import annotations
 
 
 class CsvGeneratorError(Exception):

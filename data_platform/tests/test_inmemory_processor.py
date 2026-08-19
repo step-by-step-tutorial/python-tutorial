@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pandas as pd
 import pytest
 
@@ -7,8 +5,6 @@ from dataset.house.attribute import HOUSE_ATTRIBUTE
 from dataset.sale.attribute import SALE_ATTRIBUTE
 from processor.inmemory.house_processor import InmemoryHouseProcessor
 from processor.inmemory.sale_processor import InmemorySaleProcessor
-
-pytestmark = pytest.mark.unit
 
 
 class TestInmemorySaleProcessor:

@@ -8,7 +8,6 @@ Needs the optional ``api`` extra:
 Interactive docs are served at ``/docs``, the OpenAPI schema at ``/openapi.json``.
 """
 
-from __future__ import annotations
 
 import os
 from pathlib import Path

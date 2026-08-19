@@ -1,7 +1,7 @@
-from __future__ import annotations
 
 import os
 import sys
+from typing import Any, Generator
 
 import pandas as pd
 import pytest
@@ -12,11 +12,9 @@ from dataset.sale.attribute import SALE_ATTRIBUTE
 from processor.spark.house_processor import SparkHouseProcessor
 from processor.spark.sale_processor import SparkSaleProcessor
 
-pytestmark = pytest.mark.spark_service
-
 
 @pytest.fixture(scope="module")
-def spark_session() -> SparkSession:
+def spark_session() -> Generator[SparkSession, Any, None]:
     os.environ["PYSPARK_PYTHON"] = sys.executable
     os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
     os.environ["SPARK_LOCAL_HOSTNAME"] = "localhost"

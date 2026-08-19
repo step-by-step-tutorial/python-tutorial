@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from dataset.definition import DatabaseEndpoint
 from util.database_utils import execute_sql

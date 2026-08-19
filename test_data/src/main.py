@@ -4,7 +4,6 @@ The implementation lives in :mod:`cli`; installing the project also provides a
 ``csv-data-generator`` command.
 """
 
-from __future__ import annotations
 
 import sys
 from pathlib import Path

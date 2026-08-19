@@ -1,5 +1,3 @@
-import pytest
-
 from dataset.definition import (
     AuditEndpoint,
     DataLakeEndpoint,
@@ -11,8 +9,6 @@ from dataset.definition import (
     MessagingEndpoint,
 )
 from pipeline.spark_based_pipeline import SparkPipeline
-
-pytestmark = pytest.mark.unit
 
 
 def build_dataset() -> Dataset:

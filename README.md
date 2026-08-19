@@ -15,8 +15,8 @@ java --version
 python -m pip install --upgrade pip
 pip install -r ./data_platform/requirements.txt
 pip install -e ./data_platform
-pip install -r ./test_data_generator/requirements.txt
-pip install -e ./test_data_generator
+pip install -r ./test_data/requirements.txt
+pip install -e ./test_data
 ```
 
 ```shell
@@ -27,7 +27,7 @@ docker --version
 
 ```shell
 pytest ./data_platform 
-pytest ./test_data_generator
+pytest ./test_data
 ```
 
 ```shell
@@ -94,8 +94,8 @@ rm ./data_platform/output/*
 rm -rf ./data_platform/report
 rm -rf ./data_platform/src/data_platform.egg-info
 rm ./data_platform/.coverage
-rm ./test_data_generator/output/*
-rm -rf ./test_data_generator/report
-rm -rf ./test_data_generator/src/test_data_generator.egg-info
-rm ./test_data_generator/.coverage
+rm ./test_data/output/*
+rm -rf ./test_data/report
+rm -rf ./test_data/src/test_data.egg-info
+rm ./test_data/.coverage
 ```

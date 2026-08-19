@@ -7,7 +7,6 @@ import pandas as pd
 import pytest
 
 from config.settings import settings
-from service import runtime as spark_runtime
 from util.kafka_utils import handle_kafka_response
 from transformation.conversion.type_converter import (
     convert_to_integer,
@@ -16,7 +15,7 @@ from transformation.conversion.type_converter import (
 )
 from transformation.validation.schema_validator import require_columns, requires_column
 from util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
-    time_utils, path_utils as datalake_path_utils
+    time_utils, path_utils as datalake_path_utils, spark_utils
 
 
 class TestStringUtils:
@@ -122,7 +121,7 @@ class TestDatalakeUtils:
         given_second = mocker.Mock()
 
         # When
-        with spark_runtime.persisted_dataframes() as actual:
+        with spark_utils.persisted_dataframes() as actual:
             actual.extend([given_first, given_second])
 
         # Then

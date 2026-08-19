@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from confluent_kafka import Consumer, Producer
 
