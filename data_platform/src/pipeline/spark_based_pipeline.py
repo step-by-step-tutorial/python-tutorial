@@ -8,6 +8,7 @@ from connector.spark_session_factory import create_session
 from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, Dataset, DataWarehouseEndpoint, FileEndpoint, \
     MessagingEndpoint
 from ingestion.registry import get_ingestor
+from keys import Key
 from persistence.database_repository import DatabaseRepository
 from persistence.datawarehouse_repository import DataWarehouseRepository
 from pipeline.batch_pipeline import BatchPipeline
@@ -23,18 +24,18 @@ class SparkPipeline(BatchPipeline):
     def __init__(self, ds: Dataset) -> None:
         super().__init__(ds, audit_service=AuditService(ds.audit))
         self.pipeline_name = "spark_pipeline"
-        file_endpoint = self.dataset.get_endpoint("sale.file.csv", FileEndpoint)
-        database_endpoint = self.dataset.get_endpoint("sale.database", DatabaseEndpoint)
-        datawarehouse_endpoint = self.dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint)
-        datalake_endpoint = self.dataset.get_endpoint("sale.datalake", DataLakeEndpoint)
-        messaging_endpoint = self.dataset.get_endpoint("sale.kafka.listener", MessagingEndpoint)
+        file_endpoint = self.dataset.get_endpoint(Key.SALE_FILE_CSV, FileEndpoint)
+        database_endpoint = self.dataset.get_endpoint(Key.SALE_DATABASE, DatabaseEndpoint)
+        datawarehouse_endpoint = self.dataset.get_endpoint(Key.SALE_DATAWAREHOUSE, DataWarehouseEndpoint)
+        datalake_endpoint = self.dataset.get_endpoint(Key.SALE_DATALAKE, DataLakeEndpoint)
+        messaging_endpoint = self.dataset.get_endpoint(Key.SALE_KAFKA_LISTENER, MessagingEndpoint)
         spark_session = create_session()
 
         self.spark_service = SparkService(spark_session, datalake_endpoint, messaging_endpoint)
         self.database_repository = DatabaseRepository(database_endpoint)
         self.datawarehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
         self.file_path = Path(file_endpoint.file_path)
-        self.raw_data_ingestor = get_ingestor("sale.spark.csv")
+        self.raw_data_ingestor = get_ingestor(Key.SALE_SPARK_CSV)
 
     def ingest_raw_data(self) -> DataFrame:
         return self.raw_data_ingestor.ingest(self.file_path, self.dataset.dataframe.schema)

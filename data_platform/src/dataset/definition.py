@@ -4,6 +4,7 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol, TypeVar
 
+from keys import Key
 from processor.base import DataProcessor
 
 
@@ -109,9 +110,9 @@ class Dataset:
     processors: Mapping[str, DataProcessor] = field(default_factory=dict)
     endpoints: Mapping[str, Endpoint] = field(default_factory=dict)
     audit: AuditEndpoint = AuditEndpoint(
-        database_connection_name="audit.database",
-        messaging_connection_name="audit.kafka.producer",
-        datalake_connection_name="audit.datalake",
+        database_connection_name=Key.AUDIT_DATABASE,
+        messaging_connection_name=Key.AUDIT_KAFKA_PRODUCER,
+        datalake_connection_name=Key.AUDIT_DATALAKE,
         schema="audit",
         create_sql_files={"create": "database/audit/create_tables.sql"},
         write_sql_files={"write": "database/audit/insert_event.sql"},

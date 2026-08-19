@@ -8,6 +8,7 @@ from typing import Any
 from confluent_kafka import Producer
 
 from connector.registry import get_connection
+from keys import Key
 from streaming.delivery import topic_on_delivery
 from transformation.conversion.event_mapper import MappedEvent
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class EventPublisher:
-    def __init__(self, producer: Producer | None = None, connection_name: str = "sale.kafka.producer") -> None:
+    def __init__(self, producer: Producer | None = None, connection_name: str = Key.SALE_KAFKA_PRODUCER) -> None:
         self._producer = producer or get_connection(connection_name)
 
     def publish(self, topic: str, message: MappedEvent) -> None:

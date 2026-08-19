@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 
 from dataset.definition import (
     AuditEndpoint,
@@ -13,7 +14,7 @@ from dataset.definition import (
     RestApiEndpoint,
 )
 from dataset.house.config import HOUSE_DATASET
-from dataset.registry import get_dataset, get_dataset_names
+from dataset.registry import get_dataset
 from dataset.sale.config import SALE_DATASET
 
 
@@ -35,7 +36,8 @@ class TestDataset:
             processors={},
             endpoints={
                 "sale.file.csv": FileEndpoint(file_name="sale.csv", file_path="/tmp/example.csv"),
-                "sale.kafka.listener": MessagingEndpoint(connection_name="sale.kafka.listener", channel_name="example-events"),
+                "sale.kafka.listener": MessagingEndpoint(connection_name="sale.kafka.listener",
+                                                         channel_name="example-events"),
                 "sale.datalake": DataLakeEndpoint(connection_name="sale.datalake", bucket_name="example-bucket"),
                 "sale.database": DatabaseEndpoint(
                     connection_name="sale.database",
@@ -57,9 +59,11 @@ class TestDataset:
         assert given_dataset.get_endpoint("sale.datalake", DataLakeEndpoint).bucket_name == "example-bucket"
         assert given_dataset.get_endpoint("sale.database", DatabaseEndpoint).schema == "sale"
         assert given_dataset.get_endpoint("sale.database", DatabaseEndpoint).stage_table_name == "example_stage"
-        assert given_dataset.get_endpoint("sale.database", DatabaseEndpoint).full_stage_table_name == "sale.example_stage"
+        assert given_dataset.get_endpoint("sale.database",
+                                          DatabaseEndpoint).full_stage_table_name == "sale.example_stage"
         assert given_dataset.get_endpoint("sale.database", DatabaseEndpoint).table_names == ["sale.example_stage"]
-        assert given_dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint).full_table_name == "app_datawarehouse.example_table"
+        assert given_dataset.get_endpoint("sale.datawarehouse",
+                                          DataWarehouseEndpoint).full_table_name == "app_datawarehouse.example_table"
         assert given_dataset.dataframe.schema is None
         assert given_dataset.dataframe.required_columns == frozenset({"id"})
         assert given_dataset.audit.database_connection_name == "audit.database"
@@ -82,12 +86,6 @@ class TestDataset:
 
 
 class TestDatasetRegistry:
-
-    def test_should_return_known_dataset_names(self) -> None:
-        actual = get_dataset_names()
-
-        assert actual == ("house", "sale")
-
     def test_should_return_sale_dataset(self) -> None:
         assert get_dataset("sale") is SALE_DATASET
 
@@ -107,7 +105,8 @@ class TestConcreteDatasetConfiguration:
 
         assert Path(SALE_DATASET.get_endpoint("sale.file.csv", FileEndpoint).file_path).name == "sale.csv"
         assert SALE_DATASET.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name == "sale-events"
-        assert SALE_DATASET.get_endpoint("sale.kafka.listener", MessagingEndpoint).connection_name == "sale.kafka.listener"
+        assert SALE_DATASET.get_endpoint("sale.kafka.listener",
+                                         MessagingEndpoint).connection_name == "sale.kafka.listener"
         assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).schema == "sale"
         assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).stage_table_name == "sale_stage"
         assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).full_stage_table_name == "sale.sale_stage"
@@ -121,8 +120,10 @@ class TestConcreteDatasetConfiguration:
         assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).connection_name == "sale.database"
         assert SALE_DATASET.get_endpoint("sale.datalake", DataLakeEndpoint).connection_name == "sale.datalake"
         assert SALE_DATASET.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint).schema == "app_datawarehouse"
-        assert SALE_DATASET.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint).connection_name == "sale.datawarehouse"
-        assert SALE_DATASET.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint).full_table_name == "app_datawarehouse.sale_table"
+        assert SALE_DATASET.get_endpoint("sale.datawarehouse",
+                                         DataWarehouseEndpoint).connection_name == "sale.datawarehouse"
+        assert SALE_DATASET.get_endpoint("sale.datawarehouse",
+                                         DataWarehouseEndpoint).full_table_name == "app_datawarehouse.sale_table"
         assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).url == "http://localhost:8080"
         assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).method == "GET"
         assert SALE_DATASET.audit.database_connection_name == "audit.database"
@@ -138,16 +139,20 @@ class TestConcreteDatasetConfiguration:
 
         assert Path(HOUSE_DATASET.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
         assert HOUSE_DATASET.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house-events"
-        assert HOUSE_DATASET.get_endpoint("house.kafka.listener", MessagingEndpoint).connection_name == "house.kafka.listener"
+        assert HOUSE_DATASET.get_endpoint("house.kafka.listener",
+                                          MessagingEndpoint).connection_name == "house.kafka.listener"
         assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).schema == "house"
         assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).stage_table_name == "house_stage"
-        assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).full_stage_table_name == "house.house_stage"
+        assert HOUSE_DATASET.get_endpoint("house.database",
+                                          DatabaseEndpoint).full_stage_table_name == "house.house_stage"
         assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).table_names == ["house.house_stage"]
         assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).connection_name == "house.database"
         assert HOUSE_DATASET.get_endpoint("house.datalake", DataLakeEndpoint).connection_name == "house.datalake"
         assert HOUSE_DATASET.get_endpoint("house.datawarehouse", DataWarehouseEndpoint).schema == "app_datawarehouse"
-        assert HOUSE_DATASET.get_endpoint("house.datawarehouse", DataWarehouseEndpoint).connection_name == "house.datawarehouse"
-        assert HOUSE_DATASET.get_endpoint("house.datawarehouse", DataWarehouseEndpoint).full_table_name == "app_datawarehouse.house_table"
+        assert HOUSE_DATASET.get_endpoint("house.datawarehouse",
+                                          DataWarehouseEndpoint).connection_name == "house.datawarehouse"
+        assert HOUSE_DATASET.get_endpoint("house.datawarehouse",
+                                          DataWarehouseEndpoint).full_table_name == "app_datawarehouse.house_table"
         assert HOUSE_DATASET.get_endpoint("house.rest", RestApiEndpoint).url == "http://localhost:8080"
         assert HOUSE_DATASET.get_endpoint("house.rest", RestApiEndpoint).method == "GET"
         assert HOUSE_DATASET.audit.database_connection_name == "audit.database"

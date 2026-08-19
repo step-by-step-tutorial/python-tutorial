@@ -9,6 +9,7 @@ from config.settings import settings as main_settings
 from connector.spark_session_factory import create_session
 from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, DataWarehouseEndpoint, Dataset, MessagingEndpoint
 from ingestion.registry import get_ingestor
+from keys import Key
 from persistence.database_repository import DatabaseRepository
 from persistence.datawarehouse_repository import DataWarehouseRepository
 from pipeline.batch_pipeline import BatchPipeline
@@ -23,15 +24,15 @@ class SparkStreamingPipeline(BatchPipeline):
     def __init__(self, ds: Dataset) -> None:
         super().__init__(ds, audit_service=AuditService(ds.audit))
         self.pipeline_name = "spark_streaming_pipeline"
-        database_endpoint = self.dataset.get_endpoint("sale.database", DatabaseEndpoint)
-        datawarehouse_endpoint = self.dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint)
-        datalake_endpoint = self.dataset.get_endpoint("sale.datalake", DataLakeEndpoint)
-        messaging_endpoint = self.dataset.get_endpoint("sale.kafka.listener", MessagingEndpoint)
+        database_endpoint = self.dataset.get_endpoint(Key.SALE_DATABASE, DatabaseEndpoint)
+        datawarehouse_endpoint = self.dataset.get_endpoint(Key.SALE_DATAWAREHOUSE, DataWarehouseEndpoint)
+        datalake_endpoint = self.dataset.get_endpoint(Key.SALE_DATALAKE, DataLakeEndpoint)
+        messaging_endpoint = self.dataset.get_endpoint(Key.SALE_KAFKA_LISTENER, MessagingEndpoint)
         spark_session = create_session()
         self.spark = SparkService(spark_session, datalake_endpoint, messaging_endpoint)
         self.database_repository = DatabaseRepository(database_endpoint)
         self.datawarehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
-        self.raw_topic_ingestor = get_ingestor("sale.spark.kafka")
+        self.raw_topic_ingestor = get_ingestor(Key.SALE_SPARK_KAFKA)
 
     def ingest_raw_data(self) -> DataFrame:
         return self.raw_topic_ingestor.ingest()
@@ -43,7 +44,7 @@ class SparkStreamingPipeline(BatchPipeline):
         self.spark.append_stream_to_object_storage(
             dataframe=raw_data,
             path=relative_path,
-            checkpoint_path=main_settings.datalake["app.datalake"].checkpoint_path,
+            checkpoint_path=main_settings.datalake[Key.APP_DATALAKE].checkpoint_path,
         )
 
         return relative_path

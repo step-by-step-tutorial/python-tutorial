@@ -6,6 +6,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
+from keys import Key
+
 
 @dataclass(frozen=True)
 class AppSettings:
@@ -104,7 +106,7 @@ app = AppSettings(
 
 database = MappingProxyType(
     {
-        "app.database": DatabaseSettings(
+        Key.APP_DATABASE: DatabaseSettings(
             host=os.getenv("APP_DATABASE_HOST", "localhost"),
             port=int(os.getenv("APP_DATABASE_PORT", "5432")),
             database_name=os.getenv("APP_DATABASE_NAME", "app_database"),
@@ -128,7 +130,7 @@ database = MappingProxyType(
                 f"{os.getenv('APP_DATABASE_NAME', 'app_database')}",
             ),
         ),
-        "sale.database": DatabaseSettings(
+        Key.SALE_DATABASE: DatabaseSettings(
             host=os.getenv("APP_SALE_DATABASE_HOST", "localhost"),
             port=int(os.getenv("APP_SALE_DATABASE_PORT", "5432")),
             database_name=os.getenv("APP_SALE_DATABASE_NAME", "app_database"),
@@ -152,7 +154,7 @@ database = MappingProxyType(
                 f"{os.getenv('APP_SALE_DATABASE_NAME', 'app_database')}",
             ),
         ),
-        "house.database": DatabaseSettings(
+        Key.HOUSE_DATABASE: DatabaseSettings(
             host=os.getenv("APP_HOUSE_DATABASE_HOST", "localhost"),
             port=int(os.getenv("APP_HOUSE_DATABASE_PORT", "5432")),
             database_name=os.getenv("APP_HOUSE_DATABASE_NAME", "app_database"),
@@ -176,7 +178,7 @@ database = MappingProxyType(
                 f"{os.getenv('APP_HOUSE_DATABASE_NAME', 'app_database')}",
             ),
         ),
-        "audit.database": DatabaseSettings(
+        Key.AUDIT_DATABASE: DatabaseSettings(
             host=os.getenv("APP_AUDIT_DATABASE_HOST", "localhost"),
             port=int(os.getenv("APP_AUDIT_DATABASE_PORT", "5432")),
             database_name=os.getenv("APP_AUDIT_DATABASE_NAME", "app_database"),
@@ -205,7 +207,7 @@ database = MappingProxyType(
 
 datalake = MappingProxyType(
     {
-        "app.datalake": DataLakeSettings(
+        Key.APP_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("APP_DATALAKE_ENDPOINT", "http://localhost:9000"),
             access_key=os.getenv("APP_DATALAKE_ACCESS_KEY", "admin"),
             secret_key=os.getenv("APP_DATALAKE_SECRET_KEY", "administrator"),
@@ -215,7 +217,7 @@ datalake = MappingProxyType(
             environment=os.getenv("APP_DATALAKE_ENVIRONMENT", "dev"),
             checkpoint_path=os.getenv("APP_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/sale-events"),
         ),
-        "sale.datalake": DataLakeSettings(
+        Key.SALE_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("APP_SALE_DATALAKE_ENDPOINT", "http://localhost:9000"),
             access_key=os.getenv("APP_SALE_DATALAKE_ACCESS_KEY", "admin"),
             secret_key=os.getenv("APP_SALE_DATALAKE_SECRET_KEY", "administrator"),
@@ -225,7 +227,7 @@ datalake = MappingProxyType(
             environment=os.getenv("APP_SALE_DATALAKE_ENVIRONMENT", "dev"),
             checkpoint_path=os.getenv("APP_SALE_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/sale-events"),
         ),
-        "house.datalake": DataLakeSettings(
+        Key.HOUSE_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("APP_HOUSE_DATALAKE_ENDPOINT", "http://localhost:9000"),
             access_key=os.getenv("APP_HOUSE_DATALAKE_ACCESS_KEY", "admin"),
             secret_key=os.getenv("APP_HOUSE_DATALAKE_SECRET_KEY", "administrator"),
@@ -235,7 +237,7 @@ datalake = MappingProxyType(
             environment=os.getenv("APP_HOUSE_DATALAKE_ENVIRONMENT", "dev"),
             checkpoint_path=os.getenv("APP_HOUSE_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/house-events"),
         ),
-        "audit.datalake": DataLakeSettings(
+        Key.AUDIT_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("APP_AUDIT_DATALAKE_ENDPOINT", "http://localhost:9000"),
             access_key=os.getenv("APP_AUDIT_DATALAKE_ACCESS_KEY", "admin"),
             secret_key=os.getenv("APP_AUDIT_DATALAKE_SECRET_KEY", "administrator"),
@@ -250,7 +252,7 @@ datalake = MappingProxyType(
 
 datawarehouse = MappingProxyType(
     {
-        "app.datawarehouse": DataWarehouseSettings(
+        Key.APP_DATAWAREHOUSE: DataWarehouseSettings(
             host=os.getenv("APP_DATAWAREHOUSE_HOST", "localhost"),
             port=int(os.getenv("APP_DATAWAREHOUSE_PORT", "8123")),
             database_name=os.getenv("APP_DATAWAREHOUSE_NAME", "app_datawarehouse"),
@@ -264,7 +266,7 @@ datawarehouse = MappingProxyType(
                 f"{os.getenv('APP_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
-        "sale.datawarehouse": DataWarehouseSettings(
+        Key.SALE_DATAWAREHOUSE: DataWarehouseSettings(
             host=os.getenv("APP_SALE_DATAWAREHOUSE_HOST", "localhost"),
             port=int(os.getenv("APP_SALE_DATAWAREHOUSE_PORT", "8123")),
             database_name=os.getenv("APP_SALE_DATAWAREHOUSE_NAME", "app_datawarehouse"),
@@ -278,7 +280,7 @@ datawarehouse = MappingProxyType(
                 f"{os.getenv('APP_SALE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
-        "house.datawarehouse": DataWarehouseSettings(
+        Key.HOUSE_DATAWAREHOUSE: DataWarehouseSettings(
             host=os.getenv("APP_HOUSE_DATAWAREHOUSE_HOST", "localhost"),
             port=int(os.getenv("APP_HOUSE_DATAWAREHOUSE_PORT", "8123")),
             database_name=os.getenv("APP_HOUSE_DATAWAREHOUSE_NAME", "app_datawarehouse"),
@@ -292,7 +294,7 @@ datawarehouse = MappingProxyType(
                 f"{os.getenv('APP_HOUSE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
-        "audit.datawarehouse": DataWarehouseSettings(
+        Key.AUDIT_DATAWAREHOUSE: DataWarehouseSettings(
             host=os.getenv("APP_AUDIT_DATAWAREHOUSE_HOST", "localhost"),
             port=int(os.getenv("APP_AUDIT_DATAWAREHOUSE_PORT", "8123")),
             database_name=os.getenv("APP_AUDIT_DATAWAREHOUSE_NAME", "app_datawarehouse"),
@@ -311,25 +313,25 @@ datawarehouse = MappingProxyType(
 
 messaging = MappingProxyType(
     {
-        "sale.kafka.listener": MessagingSettings(
+        Key.SALE_KAFKA_LISTENER: MessagingSettings(
             bootstrap_servers=os.getenv("APP_SALE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("APP_SALE_CHANNEL_NAME", "sale-events"),
             audit_channel_name=os.getenv("APP_SALE_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
             starting_offsets=os.getenv("APP_SALE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
-        "house.kafka.listener": MessagingSettings(
+        Key.HOUSE_KAFKA_LISTENER: MessagingSettings(
             bootstrap_servers=os.getenv("APP_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("APP_HOUSE_CHANNEL_NAME", "house-events"),
             audit_channel_name=os.getenv("APP_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.event.v1"),
             starting_offsets=os.getenv("APP_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
-        "audit.kafka.producer": MessagingSettings(
+        Key.AUDIT_KAFKA_PRODUCER: MessagingSettings(
             bootstrap_servers=os.getenv("APP_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("APP_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
             audit_channel_name=os.getenv("APP_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
             starting_offsets=os.getenv("APP_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
-        "audit.kafka.listener": MessagingSettings(
+        Key.AUDIT_KAFKA_LISTENER: MessagingSettings(
             bootstrap_servers=os.getenv("APP_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("APP_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
             audit_channel_name=os.getenv("APP_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
@@ -340,11 +342,11 @@ messaging = MappingProxyType(
 
 rest = MappingProxyType(
     {
-        "sale.rest": RestSettings(
+        Key.SALE_REST: RestSettings(
             url=os.getenv("APP_SALE_REST_URL", "http://localhost:8080"),
             method=os.getenv("APP_SALE_REST_METHOD", "GET"),
         ),
-        "house.rest": RestSettings(
+        Key.HOUSE_REST: RestSettings(
             url=os.getenv("APP_HOUSE_REST_URL", "http://localhost:8080"),
             method=os.getenv("APP_HOUSE_REST_METHOD", "GET"),
         ),

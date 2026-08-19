@@ -7,6 +7,7 @@ import pyspark
 
 from config.settings import settings as main_settings
 from dataset.definition import DatabaseEndpoint
+from keys import Key
 
 from connector.registry import get_connection
 from util.database_utils import execute_sql
@@ -14,9 +15,9 @@ from util.file_utils import read_text_file
 
 
 DATABASE_SETTINGS = {
-    "sale.database": main_settings.database["sale.database"],
-    "house.database": main_settings.database["house.database"],
-    "audit.database": main_settings.database["audit.database"],
+    Key.SALE_DATABASE: main_settings.database[Key.SALE_DATABASE],
+    Key.HOUSE_DATABASE: main_settings.database[Key.HOUSE_DATABASE],
+    Key.AUDIT_DATABASE: main_settings.database[Key.AUDIT_DATABASE],
 }
 
 

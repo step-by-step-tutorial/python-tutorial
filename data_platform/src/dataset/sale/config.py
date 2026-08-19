@@ -1,4 +1,5 @@
 from config.settings import settings as main_settings
+from keys import Key
 from dataset.definition import (
     AuditEndpoint,
     DataLakeEndpoint,
@@ -33,42 +34,42 @@ SALE_DATASET = Dataset(
         ),
     ),
     audit=AuditEndpoint(
-        database_connection_name="audit.database",
-        messaging_connection_name="audit.kafka.producer",
-        datalake_connection_name="audit.datalake",
+        database_connection_name=Key.AUDIT_DATABASE,
+        messaging_connection_name=Key.AUDIT_KAFKA_PRODUCER,
+        datalake_connection_name=Key.AUDIT_DATALAKE,
         schema="audit",
         create_sql_files={"create": "database/audit/create_tables.sql"},
-        channel_name=main_settings.messaging["audit.kafka.producer"].audit_channel_name,
-        bucket_name=main_settings.datalake["audit.datalake"].audit_bucket_name,
+        channel_name=main_settings.messaging[Key.AUDIT_KAFKA_PRODUCER].audit_channel_name,
+        bucket_name=main_settings.datalake[Key.AUDIT_DATALAKE].audit_bucket_name,
         write_sql_files={"write": "database/audit/insert_event.sql"},
     ),
     endpoints={
-        "sale.file.csv": FileEndpoint(
-            name="sale.file.csv",
+        Key.SALE_FILE_CSV: FileEndpoint(
+            name=Key.SALE_FILE_CSV,
             file_name="sale.csv",
             file_path=str(main_settings.app.root / main_settings.app.resources_dir / "sale.csv"),
         ),
-        "sale.rest": RestApiEndpoint(
-            name="sale.rest",
-            url=main_settings.rest["sale.rest"].url,
-            method=main_settings.rest["sale.rest"].method,
+        Key.SALE_REST: RestApiEndpoint(
+            name=Key.SALE_REST,
+            url=main_settings.rest[Key.SALE_REST].url,
+            method=main_settings.rest[Key.SALE_REST].method,
         ),
-        "sale.kafka.listener": MessagingEndpoint(
-            name="sale.kafka.listener",
-            connection_name="sale.kafka.listener",
-            channel_name=main_settings.messaging["sale.kafka.listener"].channel_name,
-            bootstrap_servers=main_settings.messaging["sale.kafka.listener"].bootstrap_servers,
-            starting_offsets=main_settings.messaging["sale.kafka.listener"].starting_offsets,
+        Key.SALE_KAFKA_LISTENER: MessagingEndpoint(
+            name=Key.SALE_KAFKA_LISTENER,
+            connection_name=Key.SALE_KAFKA_LISTENER,
+            channel_name=main_settings.messaging[Key.SALE_KAFKA_LISTENER].channel_name,
+            bootstrap_servers=main_settings.messaging[Key.SALE_KAFKA_LISTENER].bootstrap_servers,
+            starting_offsets=main_settings.messaging[Key.SALE_KAFKA_LISTENER].starting_offsets,
         ),
-        "sale.datalake": DataLakeEndpoint(
-            name="sale.datalake",
-            connection_name="sale.datalake",
-            bucket_name=main_settings.datalake["sale.datalake"].bucket_name,
-            scheme=main_settings.datalake["sale.datalake"].scheme,
+        Key.SALE_DATALAKE: DataLakeEndpoint(
+            name=Key.SALE_DATALAKE,
+            connection_name=Key.SALE_DATALAKE,
+            bucket_name=main_settings.datalake[Key.SALE_DATALAKE].bucket_name,
+            scheme=main_settings.datalake[Key.SALE_DATALAKE].scheme,
         ),
-        "sale.database": DatabaseEndpoint(
-            name="sale.database",
-            connection_name="sale.database",
+        Key.SALE_DATABASE: DatabaseEndpoint(
+            name=Key.SALE_DATABASE,
+            connection_name=Key.SALE_DATABASE,
             schema="sale",
             stage_table_name="sale_stage",
             full_stage_table_name="sale.sale_stage",
@@ -89,12 +90,12 @@ SALE_DATASET = Dataset(
             },
             query_sql_files={"select_all": "database/select_all.sql"},
         ),
-        "sale.datawarehouse": DataWarehouseEndpoint(
-            name="sale.datawarehouse",
-            connection_name="sale.datawarehouse",
-            schema=main_settings.datawarehouse["sale.datawarehouse"].database_name,
+        Key.SALE_DATAWAREHOUSE: DataWarehouseEndpoint(
+            name=Key.SALE_DATAWAREHOUSE,
+            connection_name=Key.SALE_DATAWAREHOUSE,
+            schema=main_settings.datawarehouse[Key.SALE_DATAWAREHOUSE].database_name,
             table_name="sale_table",
-            full_table_name=f"{main_settings.datawarehouse['sale.datawarehouse'].database_name}.sale_table",
+            full_table_name=f"{main_settings.datawarehouse[Key.SALE_DATAWAREHOUSE].database_name}.sale_table",
             create_sql_files={
                 "create_database": "datawarehouse/sale/create_database.sql",
                 "create_table": "datawarehouse/sale/create_table.sql",

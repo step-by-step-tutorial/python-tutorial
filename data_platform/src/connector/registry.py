@@ -8,23 +8,25 @@ import connector.datalake_connections
 import connector.datawarehouse_connections
 import connector.kafka_connections
 
+from keys import Key
+
 registry: dict[str, Any] = {}
 factories: dict[str, Callable[[], Any]] = {
-    "sale.database": connector.database_connections.create_sale_connection,
-    "house.database": connector.database_connections.create_house_connection,
-    "audit.database": connector.database_connections.create_audit_connection,
-    "sale.datalake": connector.datalake_connections.create_sale_connection,
-    "house.datalake": connector.datalake_connections.create_house_connection,
-    "audit.datalake": connector.datalake_connections.create_audit_connection,
-    "sale.datawarehouse": connector.datawarehouse_connections.create_sale_connection,
-    "house.datawarehouse": connector.datawarehouse_connections.create_house_connection,
-    "audit.datawarehouse": connector.datawarehouse_connections.create_audit_connection,
-    "sale.kafka.producer": connector.kafka_connections.create_sale_publisher_connection,
-    "house.kafka.producer": connector.kafka_connections.create_house_publisher_connection,
-    "audit.kafka.producer": connector.kafka_connections.create_audit_publisher_connection,
-    "sale.kafka.listener": connector.kafka_connections.create_sale_listener_connection,
-    "house.kafka.listener": connector.kafka_connections.create_house_listener_connection,
-    "audit.kafka.listener": connector.kafka_connections.create_audit_listener_connection,
+    Key.SALE_DATABASE: connector.database_connections.create_sale_connection,
+    Key.HOUSE_DATABASE: connector.database_connections.create_house_connection,
+    Key.AUDIT_DATABASE: connector.database_connections.create_audit_connection,
+    Key.SALE_DATALAKE: connector.datalake_connections.create_sale_connection,
+    Key.HOUSE_DATALAKE: connector.datalake_connections.create_house_connection,
+    Key.AUDIT_DATALAKE: connector.datalake_connections.create_audit_connection,
+    Key.SALE_DATAWAREHOUSE: connector.datawarehouse_connections.create_sale_connection,
+    Key.HOUSE_DATAWAREHOUSE: connector.datawarehouse_connections.create_house_connection,
+    Key.AUDIT_DATAWAREHOUSE: connector.datawarehouse_connections.create_audit_connection,
+    Key.SALE_KAFKA_PRODUCER: connector.kafka_connections.create_sale_publisher_connection,
+    Key.HOUSE_KAFKA_PRODUCER: connector.kafka_connections.create_house_publisher_connection,
+    Key.AUDIT_KAFKA_PRODUCER: connector.kafka_connections.create_audit_publisher_connection,
+    Key.SALE_KAFKA_LISTENER: connector.kafka_connections.create_sale_listener_connection,
+    Key.HOUSE_KAFKA_LISTENER: connector.kafka_connections.create_house_listener_connection,
+    Key.AUDIT_KAFKA_LISTENER: connector.kafka_connections.create_audit_listener_connection,
 }
 
 

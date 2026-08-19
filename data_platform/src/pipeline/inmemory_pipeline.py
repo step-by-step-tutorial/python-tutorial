@@ -5,6 +5,7 @@ import pandas as pd
 from audit.audit_service import AuditService
 from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, Dataset, DataWarehouseEndpoint
 from ingestion.registry import get_ingestor
+from keys import Key
 from persistence.database_repository import DatabaseRepository
 from persistence.datalake_repository import DataLakeRepository
 from persistence.datawarehouse_repository import DataWarehouseRepository
@@ -22,10 +23,10 @@ class InmemoryPipeline(BatchPipeline):
     def __init__(self, ds: Dataset) -> None:
         super().__init__(ds, audit_service=AuditService(ds.audit))
         self.pipeline_name = "inmemory_pipeline"
-        self.database_repository = DatabaseRepository(self.dataset.get_endpoint("sale.database", DatabaseEndpoint))
-        self.datalake_repository = DataLakeRepository(self.dataset.get_endpoint("sale.datalake", DataLakeEndpoint))
-        self.datawarehouse_repository = DataWarehouseRepository(self.dataset.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint))
-        self.raw_data_ingestor = get_ingestor("sale.file.csv")
+        self.database_repository = DatabaseRepository(self.dataset.get_endpoint(Key.SALE_DATABASE, DatabaseEndpoint))
+        self.datalake_repository = DataLakeRepository(self.dataset.get_endpoint(Key.SALE_DATALAKE, DataLakeEndpoint))
+        self.datawarehouse_repository = DataWarehouseRepository(self.dataset.get_endpoint(Key.SALE_DATAWAREHOUSE, DataWarehouseEndpoint))
+        self.raw_data_ingestor = get_ingestor(Key.SALE_FILE_CSV)
 
     def ingest_raw_data(self) -> pd.DataFrame:
         return self.raw_data_ingestor.ingest()
