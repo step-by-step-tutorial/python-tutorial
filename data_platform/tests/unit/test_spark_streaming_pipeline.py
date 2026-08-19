@@ -8,7 +8,7 @@ from dataset.definition import (
     FileEndpoint,
     MessagingEndpoint,
 )
-from pipeline.spark_based_streaming_pipeline import SparkStreamingPipeline
+from pipeline.spark_streaming_pipeline import SparkStreamingPipeline
 
 
 def build_dataset() -> Dataset:

@@ -5,7 +5,7 @@ from airflow.sdk import DAG
 
 from config.app import settings as app_settings
 from dataset.registry import get_dataset
-from pipeline.spark_based_pipeline import SparkPipeline
+from pipeline.spark_pipeline import SparkPipeline
 
 DAG_ID = "spark_etl_dag"
 
