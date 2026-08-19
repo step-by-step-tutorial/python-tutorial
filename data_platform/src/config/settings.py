@@ -311,19 +311,25 @@ datawarehouse = MappingProxyType(
 
 messaging = MappingProxyType(
     {
-        "sale": MessagingSettings(
+        "sale.kafka.listener": MessagingSettings(
             bootstrap_servers=os.getenv("APP_SALE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("APP_SALE_CHANNEL_NAME", "sale-events"),
             audit_channel_name=os.getenv("APP_SALE_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
             starting_offsets=os.getenv("APP_SALE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
-        "house": MessagingSettings(
+        "house.kafka.listener": MessagingSettings(
             bootstrap_servers=os.getenv("APP_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("APP_HOUSE_CHANNEL_NAME", "house-events"),
             audit_channel_name=os.getenv("APP_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.event.v1"),
             starting_offsets=os.getenv("APP_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
-        "audit": MessagingSettings(
+        "audit.kafka.producer": MessagingSettings(
+            bootstrap_servers=os.getenv("APP_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
+            channel_name=os.getenv("APP_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
+            audit_channel_name=os.getenv("APP_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
+            starting_offsets=os.getenv("APP_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
+        ),
+        "audit.kafka.listener": MessagingSettings(
             bootstrap_servers=os.getenv("APP_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("APP_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
             audit_channel_name=os.getenv("APP_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
@@ -334,11 +340,11 @@ messaging = MappingProxyType(
 
 rest = MappingProxyType(
     {
-        "sale": RestSettings(
+        "sale.rest": RestSettings(
             url=os.getenv("APP_SALE_REST_URL", "http://localhost:8080"),
             method=os.getenv("APP_SALE_REST_METHOD", "GET"),
         ),
-        "house": RestSettings(
+        "house.rest": RestSettings(
             url=os.getenv("APP_HOUSE_REST_URL", "http://localhost:8080"),
             method=os.getenv("APP_HOUSE_REST_METHOD", "GET"),
         ),

@@ -10,6 +10,7 @@ from dataset.definition import (
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
+    RestApiEndpoint,
 )
 from dataset.house.config import HOUSE_DATASET
 from dataset.registry import get_dataset, get_dataset_names
@@ -122,6 +123,8 @@ class TestConcreteDatasetConfiguration:
         assert SALE_DATASET.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint).schema == "app_datawarehouse"
         assert SALE_DATASET.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint).connection_name == "sale.datawarehouse"
         assert SALE_DATASET.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint).full_table_name == "app_datawarehouse.sale_table"
+        assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).url == "http://localhost:8080"
+        assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).method == "GET"
         assert SALE_DATASET.audit.database_connection_name == "audit.database"
         assert SALE_DATASET.audit.messaging_connection_name == "audit.kafka.producer"
         assert SALE_DATASET.audit.datalake_connection_name == "audit.datalake"
@@ -145,6 +148,8 @@ class TestConcreteDatasetConfiguration:
         assert HOUSE_DATASET.get_endpoint("house.datawarehouse", DataWarehouseEndpoint).schema == "app_datawarehouse"
         assert HOUSE_DATASET.get_endpoint("house.datawarehouse", DataWarehouseEndpoint).connection_name == "house.datawarehouse"
         assert HOUSE_DATASET.get_endpoint("house.datawarehouse", DataWarehouseEndpoint).full_table_name == "app_datawarehouse.house_table"
+        assert HOUSE_DATASET.get_endpoint("house.rest", RestApiEndpoint).url == "http://localhost:8080"
+        assert HOUSE_DATASET.get_endpoint("house.rest", RestApiEndpoint).method == "GET"
         assert HOUSE_DATASET.audit.database_connection_name == "audit.database"
         assert HOUSE_DATASET.audit.messaging_connection_name == "audit.kafka.producer"
         assert HOUSE_DATASET.audit.datalake_connection_name == "audit.datalake"
