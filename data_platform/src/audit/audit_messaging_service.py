@@ -5,7 +5,7 @@ from audit.abstract_audit_service import AbstractAuditService
 from connector.registry import get_connection
 from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
-from streaming.delivery import topic_on_delivery
+from util.kafka_utils import handle_kafka_response
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class AuditMessagingService(AbstractAuditService):
                     "event_type": event.event_type.value,
                     "event_version": str(event.event_version)
                 },
-                on_delivery=partial(topic_on_delivery, event_id=str(event.event_id))
+                on_delivery=partial(handle_kafka_response, event_id=str(event.event_id))
             )
             self._producer.poll(0)
         except Exception as error:

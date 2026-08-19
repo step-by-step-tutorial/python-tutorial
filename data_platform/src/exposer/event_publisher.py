@@ -3,13 +3,12 @@ from __future__ import annotations
 import json
 import logging
 from functools import partial
-from typing import Any
 
 from confluent_kafka import Producer
 
 from connector.registry import get_connection
 from keys import Key
-from streaming.delivery import topic_on_delivery
+from util.kafka_utils import handle_kafka_response
 from transformation.conversion.event_mapper import MappedEvent
 
 logger = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ class EventPublisher:
             topic=topic,
             key=key,
             value=value,
-            on_delivery=partial(topic_on_delivery, event_id=str(message.key)),
+            on_delivery=partial(handle_kafka_response, event_id=str(message.key)),
         )
 
     def publish_many(self, topic: str, messages: list[MappedEvent] | tuple[MappedEvent, ...]) -> int:

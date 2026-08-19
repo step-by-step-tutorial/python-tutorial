@@ -3,7 +3,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def topic_on_delivery(error, message, event_id: str) -> None:
+def handle_kafka_response(error, message, event_id: str) -> None:
     if error is not None:
         logger.error(f"Failed to deliver event {event_id} to topic={message.topic()}: {error}")
     else:

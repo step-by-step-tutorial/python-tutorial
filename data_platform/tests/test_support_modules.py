@@ -8,7 +8,7 @@ import pytest
 
 from config.settings import settings
 from service import runtime as spark_runtime
-from streaming.delivery import topic_on_delivery
+from util.kafka_utils import handle_kafka_response
 from transformation.conversion.type_converter import (
     convert_to_integer,
     convert_to_optional_float,
@@ -280,12 +280,12 @@ class TestLoggingAndStreaming:
         # Given
         given_message = mocker.Mock()
         given_message.topic.return_value = "sale-events"
-        mock_logger_info = mocker.patch.object(topic_on_delivery.__globals__["logger"], "info")
-        mock_logger_error = mocker.patch.object(topic_on_delivery.__globals__["logger"], "error")
+        mock_logger_info = mocker.patch.object(handle_kafka_response.__globals__["logger"], "info")
+        mock_logger_error = mocker.patch.object(handle_kafka_response.__globals__["logger"], "error")
 
         # When
-        topic_on_delivery(None, given_message, "event-001")
-        topic_on_delivery(RuntimeError("boom"), given_message, "event-002")
+        handle_kafka_response(None, given_message, "event-001")
+        handle_kafka_response(RuntimeError("boom"), given_message, "event-002")
 
         # Then
         assert mock_logger_info.call_count == 1

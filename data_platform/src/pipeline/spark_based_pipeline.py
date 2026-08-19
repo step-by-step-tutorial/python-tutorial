@@ -76,13 +76,6 @@ class SparkPipeline(BatchPipeline):
         logger.info("Populating data warehouse with enriched data")
         self.datawarehouse_repository.truncate_and_populate_from_spark(enriched_dataframe)
 
-    def analyzing_via_datawarehouse(self) -> None:
-        query_names = [name for name in self.datawarehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
-        results = self.datawarehouse_repository.select_by_queries(query_names)
-        logger.info("Analyzing enriched data via data warehouse")
-        for dataframe in results.values():
-            show(dataframe)
-
     def analyze_via_dataframe(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Analyzing enriched data via Spark")
@@ -90,6 +83,13 @@ class SparkPipeline(BatchPipeline):
         for name, dataframe in results.items():
             logger.info("Displaying analysis result %s", name)
             dataframe.show()
+
+    def analyzing_via_datawarehouse(self) -> None:
+        query_names = [name for name in self.datawarehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
+        results = self.datawarehouse_repository.select_by_queries(query_names)
+        logger.info("Analyzing enriched data via data warehouse")
+        for dataframe in results.values():
+            show(dataframe)
 
     def show_dataframe(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
