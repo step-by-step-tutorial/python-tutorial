@@ -26,6 +26,34 @@ registry: dict[str, Any] = {
     Key.SALE_REST: RestApiIngestor(SALE_DATASET.endpoints[Key.SALE_REST]),
 }
 
+SPARK_INGESTORS = {
+    Key.SALE_SPARK_CSV,
+    Key.SALE_SPARK_DATALAKE,
+    Key.SALE_SPARK_KAFKA,
+}
+
+
+def _is_session_active(session: Any) -> bool:
+    try:
+        spark_context = session.sparkContext
+        jsc = getattr(spark_context, "_jsc", None)
+        return jsc is not None and not jsc.sc().isStopped()
+    except Exception:
+        return False
+
 
 def get_ingestor(name: str) -> Any:
-    return registry[name]
+    ingestor = registry[name]
+
+    if name in SPARK_INGESTORS:
+        session = getattr(ingestor, "session", None)
+        if session is None or not _is_session_active(session):
+            if name == Key.SALE_SPARK_CSV:
+                ingestor = SparkCsvFileIngestor(create_session())
+            elif name == Key.SALE_SPARK_DATALAKE:
+                ingestor = SparkDataLakeIngestor(SALE_DATASET.endpoints[Key.SALE_DATALAKE], create_session())
+            elif name == Key.SALE_SPARK_KAFKA:
+                ingestor = SparkKafkaIngestor(SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER], create_session())
+            registry[name] = ingestor
+
+    return ingestor

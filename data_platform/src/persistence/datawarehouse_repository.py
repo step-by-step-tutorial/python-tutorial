@@ -52,6 +52,7 @@ class DataWarehouseRepository:
         result: dict[str, pandas.DataFrame] = {}
         for query_name in query_names:
             query_file = self.datawarehouse.query_sql_files[query_name]
-            result[query_name] = self.connection.query_df(read_text_file(query_file))
+            query = read_text_file(query_file).strip().rstrip(";")
+            result[query_name] = self.connection.query_df(query)
 
         return result

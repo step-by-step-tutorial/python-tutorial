@@ -18,6 +18,7 @@ class TestAuditArchiveService:
         )
         given_event.event_time = datetime(2026, 8, 15, 12, 0, tzinfo=UTC)
         given_connection = mocker.Mock()
+        given_connection.list_buckets.return_value = {"Buckets": []}
         mock_create_connection = mocker.patch(
             "audit.audit_archive_service.get_connection",
             return_value=given_connection,
@@ -39,11 +40,14 @@ class TestAuditArchiveService:
         assert actual is None
         assert mock_create_connection.call_count == 1
         assert mock_create_connection.call_args.args[0] == "audit.datalake"
+        assert given_connection.list_buckets.call_count == 1
+        assert given_connection.create_bucket.call_count == 1
         assert given_connection.put_object.call_count == 1
 
     def test_should_save_manifest_to_object_storage(self, mocker) -> None:
         # Given
         given_connection = mocker.Mock()
+        given_connection.list_buckets.return_value = {"Buckets": []}
         mock_create_connection = mocker.patch(
             "audit.audit_archive_service.get_connection",
             return_value=given_connection,
@@ -70,4 +74,6 @@ class TestAuditArchiveService:
         assert actual.startswith("s3a://app-datalake-audit/manifests/event_date=2026-08-15")
         assert mock_create_connection.call_count == 1
         assert mock_create_connection.call_args.args[0] == "audit.datalake"
+        assert given_connection.list_buckets.call_count == 1
+        assert given_connection.create_bucket.call_count == 1
         assert given_connection.put_object.call_count == 1

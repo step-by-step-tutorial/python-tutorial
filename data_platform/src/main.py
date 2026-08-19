@@ -20,6 +20,17 @@ DATASETS = {
     "house": "house",
 }
 
+DATASET_OPTIONS = [
+    ("1", "sale"),
+    ("2", "house"),
+]
+
+PIPELINE_OPTIONS = [
+    ("1", "inmemory"),
+    ("2", "spark"),
+    ("3", "spark_streaming"),
+]
+
 
 def run_pipeline(pipeline_type: str, dataset_name: str) -> None:
     if pipeline_type not in PIPELINES:
@@ -42,8 +53,8 @@ def main() -> None:
     while True:
         print()
         print("Available datasets:")
-        print("1. sale")
-        print("2. house")
+        for command, dataset_name in DATASET_OPTIONS:
+            print(f"{command}. {dataset_name}")
         print("0. exit")
 
         dataset_command = input("> ").strip()
@@ -51,10 +62,7 @@ def main() -> None:
         if dataset_command in {"0", "exit", "quit"}:
             return
 
-        dataset_name = {
-            "1": "sale",
-            "2": "house",
-        }.get(dataset_command, dataset_command)
+        dataset_name = dict(DATASET_OPTIONS).get(dataset_command, dataset_command)
 
         if dataset_name not in DATASETS:
             logger.error("Unsupported dataset: %s", dataset_name)
@@ -62,9 +70,8 @@ def main() -> None:
 
         print()
         print("Available pipelines:")
-        print("1. inmemory")
-        print("2. spark")
-        print("3. spark_streaming")
+        for command, pipeline_name in PIPELINE_OPTIONS:
+            print(f"{command}. {pipeline_name}")
         print("0. back")
 
         pipeline_command = input("> ").strip()
@@ -75,11 +82,7 @@ def main() -> None:
         if pipeline_command in {"exit", "quit"}:
             return
 
-        pipeline_type = {
-            "1": "inmemory",
-            "2": "spark",
-            "3": "spark_streaming",
-        }.get(pipeline_command, pipeline_command)
+        pipeline_type = dict(PIPELINE_OPTIONS).get(pipeline_command, pipeline_command)
 
         try:
             run_pipeline(pipeline_type, dataset_name)

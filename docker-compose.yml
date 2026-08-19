@@ -132,10 +132,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-  test-data-database:
+  testdata-database:
     image: ${DATABASE_IMAGE}
-    hostname: test-data-database
-    container_name: ${TEST_DATA_DATABASE_CONTAINER_NAME:-test-data-database}
+    hostname: testdata-database
+    container_name: testdata-database
     environment:
       POSTGRES_DB: ${TEST_DATA_DATABASE_NAME:-test_data}
       POSTGRES_USER: ${TEST_DATA_DATABASE_USER:-test_data}
@@ -143,7 +143,7 @@ services:
     ports:
       - "${TEST_DATA_DATABASE_PORT:-5434}:5432"
     volumes:
-      - ${TEST_DATA_DATABASE_VOLUME:-test_data_database_data}:/var/lib/postgresql/data
+      - ${TEST_DATA_DATABASE_VOLUME:-testdata_database_data}:/var/lib/postgresql/data
     healthcheck:
       test:
         [
@@ -394,6 +394,30 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
+  kafka-init:
+    image: apache/kafka:latest
+    container_name: kafka-init
+    hostname: kafka-init
+    depends_on:
+      kafka:
+        condition: service_started
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        until /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9094 --list >/dev/null 2>&1; do
+          sleep 2
+        done
+
+        for topic in sale-events house-events audit-events sale.audit.event.v1 house.audit.event.v1; do
+          /opt/kafka/bin/kafka-topics.sh \
+            --bootstrap-server kafka:9094 \
+            --create \
+            --if-not-exists \
+            --topic "$$topic" \
+            --partitions 3 \
+            --replication-factor 1
+        done
   kafdrop:
     image: obsidiandynamics/kafdrop:latest
     container_name: kafdrop
@@ -415,7 +439,7 @@ services:
     tty: true
     environment:
       <<: *data_platform_env
-      TEST_DATA_DATABASE_URL: postgresql+psycopg2://${TEST_DATA_DATABASE_USER:-test_data}:${TEST_DATA_DATABASE_PASSWORD:-test_data}@test-data-database:5432/${TEST_DATA_DATABASE_NAME:-test_data}
+      TEST_DATA_DATABASE_URL: postgresql+psycopg2://${TEST_DATA_DATABASE_USER:-test_data}:${TEST_DATA_DATABASE_PASSWORD:-test_data}@testdata-database:5432/${TEST_DATA_DATABASE_NAME:-test_data}
     volumes:
       - ./data_platform/resources:/app/resources
       - ./data_platform/output:/app/output
@@ -424,7 +448,7 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      test-data-database:
+      testdata-database:
         condition: service_healthy
       datalake:
         condition: service_healthy
@@ -436,6 +460,8 @@ services:
         condition: service_started
       kafka:
         condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
     command: >
       sh -c "python -m main"
 
@@ -444,8 +470,8 @@ volumes:
     name: ${AIRFLOW_DATABASE_VOLUME}
   database_data:
     name: ${DATABASE_VOLUME}
-  test_data_database_data:
-    name: ${TEST_DATA_DATABASE_VOLUME:-test_data_database_data}
+  testdata_database_data:
+    name: ${TEST_DATA_DATABASE_VOLUME:-testdata_database_data}
   datalake_data:
     name: ${DATALAKE_VOLUME}
   datawarehouse_data:

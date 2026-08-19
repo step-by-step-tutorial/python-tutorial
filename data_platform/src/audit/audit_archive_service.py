@@ -16,6 +16,7 @@ class AuditArchiveService(AbstractAuditService):
         self._bucket_name = audit_endpoint.bucket_name
 
     def write(self, event: AuditEvent) -> None:
+        self._ensure_bucket_exists()
         object_key = (
             f"events/event_date={event.event_time.date().isoformat()}"
             f"/pipeline_name={event.pipeline_name}"
@@ -51,6 +52,7 @@ class AuditArchiveService(AbstractAuditService):
             f"/pipeline_manifest.json"
         )
         content = json.dumps(manifest, indent=2, default=str).encode("utf-8")
+        self._ensure_bucket_exists()
         self._client.put_object(
             Bucket=self._bucket_name,
             Key=object_key,
@@ -59,3 +61,9 @@ class AuditArchiveService(AbstractAuditService):
             ContentType="application/json",
         )
         return generate_full_path(bucket_name=self._bucket_name, relative_path=object_key)
+
+    def _ensure_bucket_exists(self) -> None:
+        buckets = self._client.list_buckets()
+        bucket_names = {bucket["Name"] for bucket in buckets.get("Buckets", [])}
+        if self._bucket_name not in bucket_names:
+            self._client.create_bucket(Bucket=self._bucket_name)

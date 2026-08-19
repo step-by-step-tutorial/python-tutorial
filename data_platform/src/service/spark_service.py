@@ -6,6 +6,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType
 
 from dataset.definition import DataLakeEndpoint, MessagingEndpoint
+from util.kafka_admin import ensure_topic_exists
 from util.spark_utils import persisted_dataframes
 from util.string_utils import should_not_be_none, should_not_be_none_or_empty
 
@@ -36,6 +37,7 @@ class SparkService:
         )
 
     def read_from_kafka(self) -> DataFrame:
+        ensure_topic_exists(self.messaging_endpoint.bootstrap_servers, self.messaging_endpoint.channel_name)
         logger.info(f"Reading data from Kafka topic {self.messaging_endpoint.channel_name}")
         return (
             self.session

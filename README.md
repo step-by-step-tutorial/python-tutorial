@@ -39,8 +39,8 @@ python -m http.server 8000 --directory ./data_platform/report
 ## LocalHost
 
 ```shell
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test down -v
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test up --build -d
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
 ```
 
 ```shell
@@ -49,7 +49,7 @@ python ./data_platform/src/main.py
 ```
 
 ```shell
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test down -v
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
 ```
 
 ## Dockerization

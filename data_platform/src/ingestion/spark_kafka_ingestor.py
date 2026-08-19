@@ -4,6 +4,7 @@ import logging
 from pyspark.sql import DataFrame, SparkSession
 
 from dataset.definition import MessagingEndpoint
+from util.kafka_admin import ensure_topic_exists
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ class SparkKafkaIngestor:
         self.session = session
 
     def ingest(self) -> DataFrame:
+        ensure_topic_exists(self.endpoint.bootstrap_servers, self.endpoint.channel_name)
         logger.info("Reading data from Kafka topic %s", self.endpoint.channel_name)
         return (
             self.session

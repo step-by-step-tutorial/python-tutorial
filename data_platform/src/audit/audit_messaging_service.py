@@ -3,8 +3,10 @@ from functools import partial
 
 from audit.abstract_audit_service import AbstractAuditService
 from connector.registry import get_connection
+from config.settings import settings as main_settings
 from dataset.definition import AuditEndpoint
 from model.audit_event import AuditEvent
+from util.kafka_admin import ensure_topic_exists
 from util.kafka_utils import handle_kafka_response
 
 logger = logging.getLogger(__name__)
@@ -18,6 +20,10 @@ class AuditMessagingService(AbstractAuditService):
         self._producer = get_connection(self.connection_name)
 
     def write(self, event: AuditEvent) -> None:
+        ensure_topic_exists(
+            main_settings.messaging[self.connection_name].bootstrap_servers,
+            self.channel_name,
+        )
         logger.info("Publishing audit event %s to messaging channel %s", event.event_id, self.channel_name)
 
         try:

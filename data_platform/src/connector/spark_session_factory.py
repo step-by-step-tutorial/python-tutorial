@@ -14,7 +14,23 @@ SPARK_JARS = [
 ]
 
 
+def _is_session_active(session: SparkSession) -> bool:
+    try:
+        spark_context = session.sparkContext
+        jsc = getattr(spark_context, "_jsc", None)
+        return jsc is not None and not jsc.sc().isStopped()
+    except Exception:
+        return False
+
+
 def create_session() -> SparkSession:
+    active_session = SparkSession.getActiveSession()
+    if active_session is not None and _is_session_active(active_session):
+        return active_session
+
+    SparkSession._instantiatedSession = None
+    SparkSession._activeSession = None
+
     session = (
         SparkSession.builder
         .appName(main_settings.spark.application_name)
