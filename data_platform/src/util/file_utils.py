@@ -27,6 +27,10 @@ def read_text_file(file_name: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def read_text_files(file_names: list[str]) -> list[str]:
+    return [read_text_file(file_name) for file_name in file_names]
+
+
 def read_csv_file(path_str: str, consumer: Callable[[dict[str, Any]], None]) -> int:
     should_not_be_none(path_str, "CSV file path")
     should_not_be_none(consumer, "CSV row processor")
