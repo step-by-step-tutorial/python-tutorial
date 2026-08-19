@@ -17,7 +17,7 @@ from processor.spark.sale_processor import SparkSaleProcessor
 
 
 @pytest.fixture(scope="module")
-def spark_session():
+def spark_session() -> SparkSession:
     os.environ["PYSPARK_PYTHON"] = sys.executable
     os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
     os.environ["SPARK_LOCAL_HOSTNAME"] = "localhost"
