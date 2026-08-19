@@ -192,3 +192,31 @@ def test_generate_dataset_loads_the_config_and_writes_the_file(project_root: Pat
 
     assert result.row_count == 5
     assert result.output_path.is_file()
+
+
+def test_generate_dataset_writes_json_when_requested(tmp_path: Path) -> None:
+    (tmp_path / "config_sample.json").write_text(
+        """
+        {
+          "row_count": 2,
+          "output_file": "output/sample.csv",
+          "destinations": ["csv", "json"],
+          "columns": [
+            {"name": "id", "type": "sequence", "start": 1, "step": 1},
+            {"name": "country", "type": "fixed", "value": "USA"}
+          ]
+        }
+        """.strip(),
+        encoding="utf-8",
+    )
+
+    result = generate_dataset(tmp_path / "config_sample.json")
+
+    assert result.row_count == 2
+    assert result.output_path.read_text(encoding="utf-8").splitlines() == [
+        "id,country",
+        "1,USA",
+        "2,USA",
+    ]
+    assert (tmp_path / "output" / "sample.json").is_file()
+    assert result.output_path.parent == tmp_path / "output"

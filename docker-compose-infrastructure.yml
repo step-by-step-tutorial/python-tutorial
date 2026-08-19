@@ -24,6 +24,27 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+  test-data-database:
+    image: ${DATABASE_IMAGE}
+    hostname: test-data-database
+    container_name: ${TEST_DATA_DATABASE_CONTAINER_NAME:-test-data-database}
+    environment:
+      POSTGRES_DB: ${TEST_DATA_DATABASE_NAME:-test_data}
+      POSTGRES_USER: ${TEST_DATA_DATABASE_USER:-test_data}
+      POSTGRES_PASSWORD: ${TEST_DATA_DATABASE_PASSWORD:-test_data}
+    ports:
+      - "${TEST_DATA_DATABASE_PORT:-5434}:5432"
+    volumes:
+      - ${TEST_DATA_DATABASE_VOLUME:-test_data_database_data}:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready --username ${TEST_DATA_DATABASE_USER:-test_data} --dbname ${TEST_DATA_DATABASE_NAME:-test_data}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
   database-ui:
     image: ${ADMINER_IMAGE}
     hostname: ${ADMINER_HOST}
@@ -144,6 +165,8 @@ services:
 volumes:
   database_data:
     name: ${DATABASE_VOLUME}
+  test_data_database_data:
+    name: ${TEST_DATA_DATABASE_VOLUME:-test_data_database_data}
   datalake_data:
     name: ${DATALAKE_VOLUME}
   datawarehouse_data:

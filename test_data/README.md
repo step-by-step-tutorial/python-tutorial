@@ -43,6 +43,7 @@ German phone number, a German address, and `EUR`.
 * Automatic dependency resolution between columns, independent of column order
 * Reproducible output through an optional seed
 * JSON-based configuration, one file per dataset
+* Configurable destinations per dataset: CSV, JSON, database, or Kafka
 * CSV export with quoting handled by the standard library
 
 ## Prerequisites
@@ -65,10 +66,12 @@ test_data/
     api.py                          FastAPI service entry point
     cli.py                          installed CLI command
     columns.py                      column generators and derived-value helpers
+    database_repository.py          writes generated rows into the test-data database
     application_config.py                       config models and JSON loading
     datasets.py                     dataset registry and output metadata
     exceptions.py                   package-specific error types
     generator.py                    row generation orchestration
+    json_writer.py                  JSON output writer
     schemas.py                      API request and response schemas
     sources.py                      source file and mapping loaders
     writer.py                       CSV writing
@@ -133,6 +136,11 @@ dependency resolution across column order, and rejection of circular dependencie
 `--config` is required — it selects the dataset. Run from the `test_data` folder:
 
 ```shell
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test down -v
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test up --build -d
+```
+
+```shell
 cd ./test_data
 python ./src/main.py --config ./config_sale.json
 python ./src/main.py --config ./config_online_shopping.json
@@ -160,7 +168,8 @@ A config file is a JSON object with three required keys plus the column list.
 | --- | --- | --- |
 | `row_count` | yes | Number of data rows to generate |
 | `output_file` | yes | Destination CSV, relative to the config file's folder |
-| `attribute.py` | yes | Ordered list of column definitions |
+| `columns` | yes | Ordered list of column definitions |
+| `destinations` | no | Output targets to write: `csv`, `json`, `database`, or `kafka` |
 | `seed` | no | Integer seed; omit for different data on every run |
 
 ### Column Types

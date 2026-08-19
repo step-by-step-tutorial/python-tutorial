@@ -6,9 +6,11 @@ from pathlib import Path
 from random import Random
 from typing import Mapping
 
-from columns import ColumnGenerator, build_column_generator
 from application_config import GeneratorConfig, load_config
-from exceptions import DependencyError
+from columns import ColumnGenerator, build_column_generator
+from database_repository import DatabaseRepository
+from exceptions import ConfigurationError, DependencyError
+from json_writer import write_json_rows
 from sources import SourceRepository
 from writer import write_rows
 
@@ -94,4 +96,23 @@ class CsvDataGenerator:
 def generate_dataset(config_path: Path) -> GenerationResult:
     path = Path(config_path).resolve()
     config = load_config(path)
-    return CsvDataGenerator(config=config, project_root=path.parent).generate()
+    if "kafka" in config.destinations:
+        raise ConfigurationError("Kafka destination is not wired yet.")
+    generator = CsvDataGenerator(config=config, project_root=path.parent)
+    rows = generator.generate_rows()
+
+    if "csv" in config.destinations:
+        write_rows(generator.output_path, config.headers, rows)
+
+    if "json" in config.destinations:
+        json_path = generator.project_root / "output" / f"{generator.output_path.stem}.json"
+        write_json_rows(json_path, rows)
+
+    if "database" in config.destinations:
+        DatabaseRepository().write_rows(
+            table_name=generator.output_path.stem,
+            headers=config.headers,
+            rows=rows,
+        )
+
+    return GenerationResult(row_count=len(rows), output_path=generator.output_path)

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from application_config import GeneratorConfig, load_config
 from exceptions import DatasetNotFoundError, OutputNotFoundError
-from generator import CsvDataGenerator, GenerationResult
+from generator import GenerationResult, generate_dataset
 
 CONFIG_PREFIX = "config_"
 CONFIG_SUFFIX = ".json"
@@ -44,6 +44,10 @@ class Dataset:
     @property
     def configured_row_count(self) -> int:
         return self.config.row_count
+
+    @property
+    def destinations(self) -> tuple[str, ...]:
+        return self.config.destinations
 
 
 class DatasetRegistry:
@@ -88,11 +92,7 @@ class DatasetRegistry:
 
     def generate(self, name: str) -> GenerationResult:
         dataset = self.get(name)
-        generator = CsvDataGenerator(
-            config=dataset.config,
-            project_root=dataset.config_path.parent,
-        )
-        return generator.generate()
+        return generate_dataset(dataset.config_path)
 
     def read_rows(self, name: str, offset: int = 0, limit: int = 100) -> list[dict[str, str]]:
         path = self.output_file(name)

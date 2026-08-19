@@ -16,6 +16,7 @@ def test_load_config_reads_columns_and_seed(project_root: Path) -> None:
     assert config.seed == 42
     assert config.output_file == "output/demo.csv"
     assert config.headers == ("order_id", "customer_name", "product_name", "category", "country")
+    assert config.destinations == ("csv",)
 
 
 def test_column_config_converts_file_columns_to_tuple() -> None:
@@ -52,6 +53,19 @@ def test_generator_config_rejects_duplicate_column_names() -> None:
                 ],
             }
         )
+
+
+def test_generator_config_reads_destinations() -> None:
+    config = GeneratorConfig.from_dict(
+        {
+            "row_count": 1,
+            "output_file": "output/x.csv",
+            "destinations": ["csv", "json", "database"],
+            "columns": [{"name": "country", "type": "fixed", "value": "USA"}],
+        }
+    )
+
+    assert config.destinations == ("csv", "json", "database")
 
 
 @pytest.mark.parametrize(

@@ -5,9 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "test_data"
 version = "1.1.0"
-description = "Generate CSV test data from plain text sources and JSON configs."
+description = "Generate CSV, JSON, database, or Kafka test data from plain text sources and JSON configs."
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "sqlalchemy>=2.0",
+    "psycopg2-binary>=2.9",
+]
 
 [project.optional-dependencies]
 api = [
@@ -25,7 +28,7 @@ csv-data-generator-api = "api:run"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-py-modules = ["api", "cli", "columns", "config", "datasets", "exceptions", "generator", "schemas", "sources", "writer"]
+py-modules = ["api", "application_config", "cli", "columns", "database_repository", "datasets", "exceptions", "generator", "json_writer", "schemas", "sources", "writer"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

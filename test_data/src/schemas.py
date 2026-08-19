@@ -28,6 +28,7 @@ class DatasetSummary(BaseModel):
     config_file: str
     configured_row_count: int
     column_count: int
+    destinations: list[str]
     output: OutputInfo
 
 

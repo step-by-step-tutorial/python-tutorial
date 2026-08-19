@@ -1,6 +1,7 @@
 {
   "row_count": 5000,
   "output_file": "output/online_shopping_orders.csv",
+  "destinations": ["csv", "json", "database"],
   "seed": 2026,
   "columns": [
     { "name": "order_id", "type": "sequence", "start": 100001, "step": 1 },

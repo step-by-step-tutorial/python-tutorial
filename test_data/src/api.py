@@ -73,6 +73,7 @@ def create_app(project_root: Path | None = None) -> FastAPI:
             config_file=_relative(dataset.config_path),
             configured_row_count=dataset.configured_row_count,
             column_count=len(dataset.columns),
+            destinations=list(dataset.destinations),
             output=_output_info(dataset),
         )
 
