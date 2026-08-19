@@ -1,1 +1,1 @@
-TRUNCATE TABLE app_datawarehouse.sale_table
+TRUNCATE TABLE app_datawarehouse.sale_table;

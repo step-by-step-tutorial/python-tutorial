@@ -1,1 +1,2 @@
-select * from {table_name}
+SELECT *
+FROM {table_name};

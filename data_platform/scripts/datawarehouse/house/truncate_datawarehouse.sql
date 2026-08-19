@@ -1,1 +1,1 @@
-TRUNCATE TABLE app_datawarehouse.house_table
+TRUNCATE TABLE app_datawarehouse.house_table;
