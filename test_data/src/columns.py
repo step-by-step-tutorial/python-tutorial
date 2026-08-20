@@ -8,13 +8,16 @@ from data_converter import convert_to__email, random_date
 from sources import SourceRepository
 from validation_utils import (
     check_min_max,
-    days_between,
+    check_negative_days,
+    is_none,
+    is_empty_collection,
+    is_empty_text,
     require_empty,
     require_not_none,
     require_or_default,
     require_or_raise,
     require_iso_date,
-    require_xor,
+    require_xor, is_none_or_empty,
 )
 
 Row = Mapping[str, str]
@@ -99,9 +102,9 @@ class RandomDateColumn(ColumnGenerator):
         self.require("date_start", "date_end")
         self.start = require_iso_date(self.column.date_start)
         self.end = require_iso_date(self.column.date_end)
-        days_between(
-            self.start,
-            self.end,
+        check_negative_days(
+            require_not_none(self.start),
+            require_not_none(self.end),
             error_message=f"date_start must be earlier than or equal to date_end: {self.column.name}",
         )
 
@@ -127,15 +130,16 @@ class RandomFromMappedFileColumn(ColumnGenerator):
 
     def validate(self) -> None:
         self.require("source_field", "mapping_file", "key_column")
+        if is_none(self.column.file_column) and is_none_or_empty(self.column.file_columns):
+            raise Exception(
+                f"Column {self.column.name} of type {self.column.type} requires: file_column or file_columns."
+            )
         require_xor(
             obj1=self.column.file_column,
             obj2=self.column.file_columns,
-            error_message=f"Use either file_column or file_columns, not both: {self.column.name}"
+            error_message=f"Column {self.column.name} of type {self.column.type} requires: not both file_column and file_columns."
         )
-        if self.column.file_column is None and self.column.file_columns is None:
-            raise Exception(
-                f"Column {self.column.name!r} of type {self.column.type!r} requires: file_column or file_columns."
-            )
+
         self.file_columns = require_or_default(obj=self.column.file_columns, default=(self.column.file_column,))
         self.separator = require_or_default(obj=self.column.separator, default=" ")
 
@@ -222,10 +226,10 @@ class DeliveryDateFromOrderDateColumn(ColumnGenerator):
         self._min_days = self.column.start if self.column.start is not None else 1
         self._max_days = self.column.step if self.column.step is not None else 7
         if self._min_days < 0 or self._max_days < 0:
-            raise Exception(f"Column {self.column.name!r} needs non-negative day offsets.")
+            raise Exception(f"Column {self.column.name} needs non-negative day offsets.")
         if self._min_days > self._max_days:
             raise Exception(
-                f"Column {self.column.name!r}: 'start' must not be greater than 'step'."
+                f"Column {self.column.name}: 'start' must not be greater than 'step'."
             )
 
     @property
@@ -251,14 +255,14 @@ class EmailFromNameColumn(ColumnGenerator):
         last_name = row.get("last_name")
         if not first_name or not last_name:
             raise Exception(
-                f"Column {self.column.name!r} depends on first_name and last_name."
+                f"Column {self.column.name} depends on first_name and last_name."
             )
 
         domain = self.column.domain or self.DEFAULT_DOMAIN
         try:
             local_part = f"{convert_to__email(first_name)}.{convert_to__email(last_name)}"
         except ValueError as error:
-            raise Exception(f"Column {self.column.name!r}: {error}") from error
+            raise Exception(f"Column {self.column.name}: {error}") from error
         return f"{local_part}@{domain}"
 
 
@@ -288,7 +292,7 @@ def build_column_generator(
 ) -> ColumnGenerator:
     if column.type == DERIVED_TYPE:
         if column.method is None:
-            raise Exception(f"Derived column {column.name!r} needs a 'method'.")
+            raise Exception(f"Derived column {column.name} needs a 'method'.")
         generator_type = DERIVED_METHODS.get(column.method)
         if generator_type is None:
             raise Exception(f"Unsupported derived method: {column.method}")
