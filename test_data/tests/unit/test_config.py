@@ -1,20 +1,22 @@
 
 
 import json
+import importlib
 from pathlib import Path
 
 import pytest
+import env_config
 
 from application_config import ColumnConfig, load_config, GeneratorConfig
 from exceptions import ConfigurationError
 
 
 def test_load_config_reads_columns_and_seed(project_root: Path) -> None:
-    config = load_config(project_root / "config_demo.json")
+    config = load_config("demo.json")
 
     assert config.row_count == 5
     assert config.seed == 42
-    assert config.output_file == "output/demo.csv"
+    assert config.output_file == "demo.csv"
     assert config.headers == ("order_id", "customer_name", "product_name", "category", "country")
     assert config.destinations == ("csv",)
 
@@ -46,7 +48,7 @@ def test_generator_config_rejects_duplicate_column_names() -> None:
         GeneratorConfig.from_dict(
             {
                 "row_count": 1,
-                "output_file": "output/x.csv",
+                "output_file": "x.csv",
                 "columns": [
                     {"name": "country", "type": "fixed", "value": "Germany"},
                     {"name": "country", "type": "fixed", "value": "USA"},
@@ -59,7 +61,7 @@ def test_generator_config_reads_destinations() -> None:
     config = GeneratorConfig.from_dict(
         {
             "row_count": 1,
-            "output_file": "output/x.csv",
+            "output_file": "x.csv",
             "destinations": ["csv", "json", "database"],
             "columns": [{"name": "country", "type": "fixed", "value": "USA"}],
         }
@@ -83,30 +85,45 @@ def test_generator_config_rejects_bad_top_level_keys(raw: dict, message: str) ->
         GeneratorConfig.from_dict(raw)
 
 
-def test_load_config_reports_missing_file(tmp_path: Path) -> None:
+def test_load_config_reports_missing_file(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
+    importlib.reload(env_config)
+
     with pytest.raises(ConfigurationError, match="Config file not found"):
-        load_config(tmp_path / "config_absent.json")
+        load_config("config_absent.json")
+
+    monkeypatch.delenv("CONFIG_DIR", raising=False)
+    importlib.reload(env_config)
 
 
-def test_load_config_reports_invalid_json(tmp_path: Path) -> None:
+def test_load_config_reports_invalid_json(tmp_path: Path, monkeypatch) -> None:
     path = tmp_path / "config_broken.json"
     path.write_text("{not json", encoding="utf-8")
+    monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
+    importlib.reload(env_config)
 
     with pytest.raises(ConfigurationError, match="not valid JSON"):
-        load_config(path)
+        load_config("config_broken.json")
+
+    monkeypatch.delenv("CONFIG_DIR", raising=False)
+    importlib.reload(env_config)
 
 
-def test_load_config_reports_non_object_json(tmp_path: Path) -> None:
+def test_load_config_reports_non_object_json(tmp_path: Path, monkeypatch) -> None:
     path = tmp_path / "config_list.json"
     path.write_text(json.dumps([1, 2, 3]), encoding="utf-8")
+    monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
+    importlib.reload(env_config)
 
     with pytest.raises(ConfigurationError, match="must hold a JSON object"):
-        load_config(path)
+        load_config("config_list.json")
+
+    monkeypatch.delenv("CONFIG_DIR", raising=False)
+    importlib.reload(env_config)
 
 
 def test_online_shopping_config_includes_extended_fields() -> None:
-    project_root = Path(__file__).resolve().parents[2]
-    config = load_config(project_root / "config_online_shopping.json")
+    config = load_config("online_shopping.json")
 
     assert config.destinations == ("csv", "json", "database")
     assert "subtotal" in config.headers

@@ -10,6 +10,7 @@ from application_config import GeneratorConfig, load_config
 from columns import ColumnGenerator, build_column_generator
 from database_repository import DatabaseRepository
 from exceptions import ConfigurationError, DependencyError
+import env_config
 from json_writer import write_json_rows
 from sources import SourceRepository
 from writer import write_rows
@@ -42,7 +43,7 @@ class CsvDataGenerator:
 
     @property
     def output_path(self) -> Path:
-        return self.project_root / self.config.output_file
+        return env_config.OUTPUT_DIR / self.config.output_file
 
     def iter_rows(self) -> Iterator[dict[str, str]]:
         headers = self.config.headers
@@ -95,17 +96,17 @@ class CsvDataGenerator:
 
 def generate_dataset(config_path: Path) -> GenerationResult:
     path = Path(config_path).resolve()
-    config = load_config(path)
+    config = load_config(path.name)
     if "kafka" in config.destinations:
         raise ConfigurationError("Kafka destination is not wired yet.")
-    generator = CsvDataGenerator(config=config, project_root=path.parent)
+    generator = CsvDataGenerator(config=config, project_root=path.parent.parent)
     rows = generator.generate_rows()
 
     if "csv" in config.destinations:
         write_rows(generator.output_path, config.headers, rows)
 
     if "json" in config.destinations:
-        json_path = generator.project_root / "output" / f"{generator.output_path.stem}.json"
+        json_path = env_config.OUTPUT_DIR / f"{generator.output_path.stem}.json"
         write_json_rows(json_path, rows)
 
     if "database" in config.destinations:

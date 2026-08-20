@@ -1,7 +1,7 @@
 {
   "row_count": 750,
-  "output_file": "output/hr_employees.csv",
-  "destinations": ["csv", "json", "database"],
+  "output_file": "hr_employees.csv",
+  "destinations": ["csv", "json"],
   "seed": 7,
   "columns": [
     { "name": "employee_id", "type": "sequence", "start": 5001, "step": 1 },

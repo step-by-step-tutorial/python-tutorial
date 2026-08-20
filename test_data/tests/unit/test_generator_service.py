@@ -21,7 +21,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="output/test.csv",
+        output_file="test.csv",
         seed=1,
         columns=[
             ColumnConfig(name="first_name", type="random_from_file", file="data/first_names.txt"),
@@ -45,7 +45,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
 def test_write_csv_writes_headers_and_rows(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
-        output_file="output/test.csv",
+        output_file="test.csv",
         columns=[ColumnConfig(name="country", type="fixed", value="Germany")],
     )
     generator = CsvDataGenerator(config=config, project_root=tmp_path)
@@ -69,7 +69,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="output/test.csv",
+        output_file="test.csv",
         seed=7,
         columns=[
             ColumnConfig(name="order_id", type="sequence", start=1, step=1),
@@ -126,7 +126,7 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="output/test.csv",
+        output_file="test.csv",
         seed=1,
         columns=[
             ColumnConfig(name="country", type="fixed", value="Germany"),
@@ -161,7 +161,7 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="output/test.csv",
+        output_file="test.csv",
         seed=1,
         columns=[
             ColumnConfig(name="country", type="fixed", value="Germany"),
@@ -196,7 +196,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="output/test.csv",
+        output_file="test.csv",
         seed=1,
         columns=[
             ColumnConfig(
@@ -221,7 +221,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
 def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
-        output_file="output/test.csv",
+        output_file="test.csv",
         columns=[
             ColumnConfig(
                 name="left",

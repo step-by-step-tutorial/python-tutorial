@@ -1,47 +1,33 @@
-
-
 import os
-from pathlib import Path
 
-from fastapi import FastAPI, Path as PathParam, Query, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, Path as PathParam, Query
+from fastapi.responses import FileResponse
 
-from datasets import Dataset, DatasetRegistry
-from exceptions import (
-    ConfigurationError,
-    CsvGeneratorError,
-    DatasetNotFoundError,
-    OutputNotFoundError,
-    SourceDataError,
-)
+import env_config
+from datasets import DatasetRegistry
+from file_utils import list_of_file_names
+from mapper import DatasetMapper
+from error_handlers import register_error_handlers
+from env_config import PROJECT_ROOT
 from schemas import (
     DatasetDetail,
     DatasetSummary,
     ErrorResponse,
     GenerationResponse,
     HealthResponse,
-    OutputInfo,
     RowsPage,
 )
 
 __version__ = "1.1.0"
 
-PROJECT_ROOT_ENV = "CSV_GENERATOR_ROOT"
-
-NAME_PARAM = PathParam(description="Dataset name, as in config_<name>.json", examples=["sale"])
+NAME_PARAM = PathParam(description="Config file name, for example sale.json", examples=["sale.json"])
 NOT_FOUND = {404: {"model": ErrorResponse, "description": "Unknown dataset, or not generated yet"}}
 BAD_CONFIG = {400: {"model": ErrorResponse, "description": "Config or source data is not usable"}}
 
 
-def default_project_root() -> Path:
-    override = os.environ.get(PROJECT_ROOT_ENV)
-    if override:
-        return Path(override).resolve()
-    return Path(__file__).resolve().parents[1]
-
-
-def create_app(project_root: Path | None = None) -> FastAPI:
-    registry = DatasetRegistry(project_root or default_project_root())
+def create_app() -> FastAPI:
+    registry = DatasetRegistry()
+    mapper = DatasetMapper(registry)
 
     app = FastAPI(
         title="CSV Data Generator API",
@@ -50,96 +36,46 @@ def create_app(project_root: Path | None = None) -> FastAPI:
         description=__doc__,
     )
     app.state.registry = registry
-
-    def _relative(path: Path) -> str:
-        try:
-            return path.relative_to(registry.project_root).as_posix()
-        except ValueError:
-            return path.as_posix()
-
-    def _output_info(dataset: Dataset) -> OutputInfo:
-        status = registry.status(dataset)
-        return OutputInfo(
-            exists=status.exists,
-            file=_relative(status.path),
-            size_bytes=status.size_bytes,
-            modified_at=status.modified_at,
-            row_count=status.row_count,
-        )
-
-    def _summary(dataset: Dataset) -> DatasetSummary:
-        return DatasetSummary(
-            name=dataset.name,
-            config_file=_relative(dataset.config_path),
-            configured_row_count=dataset.configured_row_count,
-            column_count=len(dataset.columns),
-            destinations=list(dataset.destinations),
-            output=_output_info(dataset),
-        )
-
-    @app.exception_handler(DatasetNotFoundError)
-    @app.exception_handler(OutputNotFoundError)
-    async def _not_found(request: Request, error: Exception) -> JSONResponse:
-        return JSONResponse(status_code=404, content={"detail": str(error)})
-
-    @app.exception_handler(ConfigurationError)
-    @app.exception_handler(SourceDataError)
-    @app.exception_handler(CsvGeneratorError)
-    async def _bad_request(request: Request, error: Exception) -> JSONResponse:
-        return JSONResponse(status_code=400, content={"detail": str(error)})
+    register_error_handlers(app)
 
     @app.get("/health", response_model=HealthResponse, tags=["meta"])
     async def health() -> HealthResponse:
         return HealthResponse(
             status="ok",
             version=__version__,
-            project_root=registry.project_root.as_posix(),
-            dataset_count=len(registry.names()),
+            project_root=PROJECT_ROOT.as_posix(),
+            dataset_count=len(list_of_file_names(env_config.CONFIG_DIR)),
         )
 
     @app.get("/datasets", response_model=list[DatasetSummary], tags=["datasets"])
     async def list_datasets() -> list[DatasetSummary]:
-        return [_summary(dataset) for dataset in registry.list()]
+        return [mapper.summary(dataset) for dataset in registry.list()]
 
-    @app.get(
-        "/datasets/{name}",
-        response_model=DatasetDetail,
-        tags=["datasets"],
-        responses={**NOT_FOUND, **BAD_CONFIG},
-    )
+    @app.get("/datasets/{name}", response_model=DatasetDetail, tags=["datasets"], responses={**NOT_FOUND, **BAD_CONFIG})
     async def get_dataset(name: str = NAME_PARAM) -> DatasetDetail:
         dataset = registry.get(name)
         return DatasetDetail(
-            **_summary(dataset).model_dump(),
+            **mapper.summary(dataset).model_dump(),
             columns=list(dataset.columns),
             seed=dataset.config.seed,
         )
 
-    @app.post(
-        "/datasets/{name}/generate",
-        response_model=GenerationResponse,
-        tags=["datasets"],
-        responses={**NOT_FOUND, **BAD_CONFIG},
-    )
+    @app.post("/datasets/{name}/generate", response_model=GenerationResponse, tags=["datasets"],
+              responses={**NOT_FOUND, **BAD_CONFIG})
     async def generate_dataset(name: str = NAME_PARAM) -> GenerationResponse:
         result = registry.generate(name)
         return GenerationResponse(
             name=name,
             row_count=result.row_count,
-            file=_relative(result.output_path),
+            file=mapper.relative(result.output_path),
             download_url=f"/datasets/{name}/download",
         )
 
-    @app.get(
-        "/datasets/{name}/rows",
-        response_model=RowsPage,
-        tags=["files"],
-        responses=NOT_FOUND,
-    )
+    @app.get("/datasets/{name}/rows", response_model=RowsPage, tags=["files"], responses=NOT_FOUND)
     async def read_rows(
-        name: str = NAME_PARAM,
-        offset: int = Query(0, ge=0, description="Rows to skip"),
-        limit: int = Query(100, ge=1, le=1000, description="Rows to return"),
+            name: str = NAME_PARAM,
+            offset: int = Query(0, ge=0, description="Rows to skip"),
+            limit: int = Query(100, ge=1, le=1000, description="Rows to return"),
     ) -> RowsPage:
         rows = registry.read_rows(name, offset=offset, limit=limit)
         status = registry.status(registry.get(name))
@@ -165,12 +101,10 @@ def create_app(project_root: Path | None = None) -> FastAPI:
     return app
 
 
-app = create_app()
-
-
 def run() -> None:
     import uvicorn
 
+    app = create_app()
     uvicorn.run(
         app,
         host=os.environ.get("HOST", "127.0.0.1"),

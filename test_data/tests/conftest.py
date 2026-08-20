@@ -1,9 +1,10 @@
 
-
 import json
+import importlib
 from pathlib import Path
 
 import pytest
+import env_config
 
 
 def write_lines(path: Path, *lines: str) -> Path:
@@ -25,7 +26,7 @@ def data_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def project_root(tmp_path: Path, data_dir: Path) -> Path:
+def project_root(tmp_path: Path, data_dir: Path, monkeypatch) -> Path:
     write_lines(data_dir / "countries.txt", "Germany", "USA")
     write_lines(data_dir / "first_names" / "germany.txt", "Hans")
     write_lines(data_dir / "first_names" / "usa.txt", "John")
@@ -47,7 +48,7 @@ def project_root(tmp_path: Path, data_dir: Path) -> Path:
 
     config = {
         "row_count": 5,
-        "output_file": "output/demo.csv",
+        "output_file": "demo.csv",
         "seed": 42,
         "columns": [
             {"name": "order_id", "type": "sequence", "start": 1, "step": 1},
@@ -73,5 +74,18 @@ def project_root(tmp_path: Path, data_dir: Path) -> Path:
             {"name": "country", "type": "random_from_file", "file": "data/countries.txt"},
         ],
     }
-    (tmp_path / "config_demo.json").write_text(json.dumps(config), encoding="utf-8")
-    return tmp_path
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    (config_dir / "demo.json").write_text(json.dumps(config), encoding="utf-8")
+
+    monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("CONFIG_DIR", str(config_dir))
+    monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
+    importlib.reload(env_config)
+
+    yield tmp_path
+
+    monkeypatch.delenv("PROJECT_ROOT", raising=False)
+    monkeypatch.delenv("CONFIG_DIR", raising=False)
+    monkeypatch.delenv("OUTPUT_DIR", raising=False)
+    importlib.reload(env_config)

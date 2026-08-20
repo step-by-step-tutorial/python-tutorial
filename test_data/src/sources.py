@@ -20,7 +20,7 @@ class SourceRepository:
         return self._root
 
     def resolve(self, relative_path: str) -> Path:
-        return self._root / relative_path
+        return (self._root / relative_path).resolve()
 
     def values(self, relative_path: str) -> tuple[str, ...]:
         cached = self._values.get(relative_path)

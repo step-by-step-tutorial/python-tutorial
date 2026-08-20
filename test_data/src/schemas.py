@@ -1,7 +1,5 @@
 
 
-from datetime import datetime
-
 from pydantic import BaseModel, Field
 
 
@@ -17,8 +15,6 @@ class OutputInfo(BaseModel):
 
     exists: bool
     file: str = Field(description="Path relative to the project root")
-    size_bytes: int | None = None
-    modified_at: datetime | None = None
     row_count: int | None = Field(default=None, description="Data rows in the file, header excluded")
 
 

@@ -17,7 +17,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--config",
         required=True,
-        help="Path to the JSON config file, for example config_sale.json",
+        help="Path to the JSON config file, for example config/sale.json",
     )
     return parser
 

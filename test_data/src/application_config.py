@@ -1,12 +1,12 @@
 
-
-import json
 from collections.abc import Sequence
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Any
 
+import env_config
 from exceptions import ConfigurationError
+from file_utils import read_json_file
 
 DERIVED_TYPE = "derived"
 DEFAULT_DESTINATIONS = ("csv",)
@@ -106,18 +106,9 @@ class GeneratorConfig:
         )
 
 
-def load_config(config_path: Path) -> GeneratorConfig:
-    path = Path(config_path)
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError as error:
-        raise ConfigurationError(f"Config file not found: {path}") from error
-    except json.JSONDecodeError as error:
-        raise ConfigurationError(f"Config file is not valid JSON ({path}): {error}") from error
-
-    if not isinstance(raw, dict):
-        raise ConfigurationError(f"Config file must hold a JSON object: {path}")
-
+def load_config(config_name: Path | str) -> GeneratorConfig:
+    path = env_config.CONFIG_DIR / Path(config_name).name
+    raw = read_json_file(path)
     return GeneratorConfig.from_dict(raw)
 
 

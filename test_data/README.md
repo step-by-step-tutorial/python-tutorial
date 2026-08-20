@@ -55,9 +55,10 @@ No third-party runtime dependencies — the generator uses only the Python stand
 
 ```text
 test_data/
-  config_sale.json                  dataset config: minimal order sample
-  config_online_shopping.json       dataset config: online shopping orders
-  config_hr.json                    dataset config: HR employee records
+  config/
+    sale.json                       dataset config: minimal order sample
+    online_shopping.json            dataset config: online shopping orders
+    hr.json                         dataset config: HR employee records
   pyproject.toml
   data/                             source values, organised by kind of data
   output/                           generated CSV files (git-ignored)
@@ -86,7 +87,7 @@ test_data/
 `first_names/germany.txt` is keyed by country, `job_titles/engineering.txt` by department. Any
 config may draw from any of these files, so a new dataset usually needs no new folders.
 
-One config file per dataset, named `config_<dataset>.json`:
+One config file per dataset, stored under `config/`, with any `.json` name:
 
 ## Prepare Environment
 
@@ -142,9 +143,9 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 
 ```shell
 cd ./test_data
-python ./src/main.py --config ./config_sale.json
-python ./src/main.py --config ./config_online_shopping.json
-python ./src/main.py --config ./config_hr.json
+python ./src/main.py --config ./config/sale.json
+python ./src/main.py --config ./config/online_shopping.json
+python ./src/main.py --config ./config/hr.json
 python ./src/main.py --help
 ```
 
@@ -167,7 +168,7 @@ A config file is a JSON object with three required keys plus the column list.
 | Key | Required | Description |
 | --- | --- | --- |
 | `row_count` | yes | Number of data rows to generate |
-| `output_file` | yes | Destination CSV, relative to the config file's folder |
+| `output_file` | yes | Destination CSV, relative to the project root |
 | `columns` | yes | Ordered list of column definitions |
 | `destinations` | no | Output targets to write: `csv`, `json`, `database`, or `kafka` |
 | `seed` | no | Integer seed; omit for different data on every run |
@@ -245,8 +246,8 @@ lists `NONE` 6 times out of 16 so that roughly 38% of orders carry no coupon.
 
 Every path inside a config — `output_file`, `file`, `mapping_file`, and the paths stored *inside* a
 file map — resolves relative to the folder holding the config file, not to the current working
-directory. Running `python ./src/main.py --config ./config_hr.json` from any directory therefore
-resolves `data/departments.txt` inside `/`.
+directory. Running `python ./src/main.py --config ./config/hr.json` from any directory therefore
+resolves `data/departments.txt` inside the project root.
 
 ### Reproducible Output
 
@@ -339,13 +340,13 @@ Counts are values available, not rows generated.
 
 ## Add a New Dataset
 
-1. Copy `config_sale.json` to `config_<dataset>.json` and set `row_count`, `output_file`, and `seed`.
+1. Copy `config/sale.json` to `config/<dataset>.json` and set `row_count`, `output_file`, and `seed`.
 2. Reuse the existing files under `data/` wherever possible — most datasets need no new data.
 3. For genuinely new values, add a file named after the *kind* of data, not the dataset:
    `data/<kind>.txt` for a flat list, or `data/<kind>/<key>.txt` plus a mapping CSV when the values
    depend on another column.
 4. Define the columns in the order you want them in the CSV; ignore dependency order.
-5. Generate it: `python ./src/main.py --config ./config_<dataset>.json`.
+5. Generate it: `python ./src/main.py --config ./config/<dataset>.json`.
 6. Add the config to the dataset table above and any new files to the data file table.
 
 ## Design Notes and Limits
@@ -355,7 +356,7 @@ Counts are values available, not rows generated.
 * `random_int` and `random_date` produce integers and ISO dates only; there is no decimal or
   timestamp type.
 * Dates are drawn independently, so a config cannot express "delivery date is 3 days after order
-  date". `config_online_shopping.json` uses a `delivery_days` integer for that reason.
+  date". `config/online_shopping.json` uses a `delivery_days` integer for that reason.
 * Values are drawn per row with replacement, so a column is not unique unless it is a `sequence`.
 * `row_count` rows are held in memory before being written, which is fine for the current datasets
   but not for tens of millions of rows.
