@@ -1,3 +1,4 @@
+import logging
 import sys
 from pathlib import Path
 
@@ -7,4 +8,5 @@ if __package__ in (None, ""):  # run as a script, not imported
 from cli import main
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
     raise SystemExit(main())

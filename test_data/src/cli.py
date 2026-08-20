@@ -5,7 +5,6 @@ from pathlib import Path
 
 from exceptions import CsvGeneratorError
 from application_config import load_config
-from file_utils import output_file_path
 from generator import generate_dataset
 
 EXIT_OK = 0
@@ -34,7 +33,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"error: {error}", file=sys.stderr)
         return EXIT_ERROR
 
-    print(f"Generated {config.row_count} rows at: {output_file_path(config.output_file)}")
+    print(f"Generated {config.row_count} rows")
     return EXIT_OK
 
 
