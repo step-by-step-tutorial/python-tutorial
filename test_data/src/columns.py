@@ -144,9 +144,11 @@ class RandomFromMappedFileColumn(ColumnGenerator):
         key = self.get_by_source(row)
         parts: list[str] = []
         for file_column in self.file_columns:
-            mapping_file = require_not_blank(self.column.mapping_file)
-            key_column = require_not_blank(self.column.key_column)
-            mapping = self.sources.mapping(mapping_file, key_column, file_column)
+            mapping = self.sources.mapping(
+                require_not_blank(self.column.mapping_file),
+                require_not_blank(self.column.key_column),
+                file_column
+            )
             source_file = self.get_by_key(mapping, key)
             parts.append(self.random.choice(self.sources.values(source_file)))
 
@@ -160,13 +162,13 @@ class LookupFromCsvColumn(ColumnGenerator):
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        return (self.column.source_field,)  # type: ignore[return-value]
+        return (require_not_blank(self.column.source_field),)
 
     def generate(self, row: Row, row_index: int) -> str:
         mapping = self.sources.mapping(
-            self.column.mapping_file,  # type: ignore[arg-type]
-            self.column.key_column,  # type: ignore[arg-type]
-            self.column.value_column,  # type: ignore[arg-type]
+            require_not_blank(self.column.mapping_file),
+            require_not_blank(self.column.key_column),
+            require_not_blank(self.column.value_column),
         )
         return self.get_by_key(mapping, self.get_by_source(row))
 
