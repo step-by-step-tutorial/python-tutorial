@@ -7,7 +7,7 @@ from database_repository import DatabaseRepository
 
 def test_write_rows_creates_table_and_inserts_rows(tmp_path: Path) -> None:
     database_path = tmp_path / "test_data.sqlite"
-    repository = DatabaseRepository(database_url=f"sqlite+pysqlite:///{database_path}")
+    repository = DatabaseRepository(url=f"sqlite+pysqlite:///{database_path}")
 
     repository.write_rows(
         table_name="sample_output",
@@ -32,7 +32,7 @@ def test_write_rows_creates_table_and_inserts_rows(tmp_path: Path) -> None:
 
 def test_write_rows_truncates_existing_rows_before_insert(tmp_path: Path) -> None:
     database_path = tmp_path / "test_data.sqlite"
-    repository = DatabaseRepository(database_url=f"sqlite+pysqlite:///{database_path}")
+    repository = DatabaseRepository(url=f"sqlite+pysqlite:///{database_path}")
 
     repository.write_rows(
         table_name="sample_output",
@@ -56,7 +56,7 @@ def test_write_rows_truncates_existing_rows_before_insert(tmp_path: Path) -> Non
 
 def test_write_rows_recreates_table_when_columns_change(tmp_path: Path) -> None:
     database_path = tmp_path / "test_data.sqlite"
-    repository = DatabaseRepository(database_url=f"sqlite+pysqlite:///{database_path}")
+    repository = DatabaseRepository(url=f"sqlite+pysqlite:///{database_path}")
 
     repository.write_rows(
         table_name="sample_output",

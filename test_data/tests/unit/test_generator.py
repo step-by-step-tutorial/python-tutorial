@@ -9,22 +9,23 @@ import env_config
 
 from application_config import ColumnConfig, load_config, GeneratorConfig
 from exceptions import DependencyError
-from generator import CsvDataGenerator, generate_dataset
+from generator import DataGenerator, generate_dataset
 
 
-def make_generator(columns: list[ColumnConfig], root: Path, row_count: int = 1) -> CsvDataGenerator:
+def make_generator(columns: list[ColumnConfig], root: Path, row_count: int = 1) -> DataGenerator:
     config = GeneratorConfig(
         row_count=row_count,
         output_file="test.csv",
         columns=columns,
+        destinations=("csv",),
         seed=1,
     )
-    return CsvDataGenerator(config=config, project_root=root)
+    return DataGenerator(config=config, project_root=root)
 
 
 def test_generate_rows_follows_config_column_order(project_root: Path) -> None:
     config = load_config(project_root / "config" / "demo.json")
-    rows = CsvDataGenerator(config=config, project_root=project_root).generate_rows()
+    rows = DataGenerator(config=config, project_root=project_root).generate_rows()
 
     assert len(rows) == 5
     assert list(rows[0]) == list(config.headers)
@@ -32,7 +33,7 @@ def test_generate_rows_follows_config_column_order(project_root: Path) -> None:
 
 def test_country_dependent_columns_stay_consistent(project_root: Path) -> None:
     config = load_config(project_root / "config" / "demo.json")
-    rows = CsvDataGenerator(config=config, project_root=project_root).generate_rows()
+    rows = DataGenerator(config=config, project_root=project_root).generate_rows()
 
     expected = {"Germany": {"Hans Bauer"}, "USA": {"John Smith"}}
     for row in rows:
@@ -173,18 +174,19 @@ def test_write_csv_writes_header_and_rows(tmp_path: Path, monkeypatch) -> None:
 
 def test_generate_streams_rows_and_reports_the_count(project_root: Path) -> None:
     config = load_config(project_root / "config" / "demo.json")
-    result = CsvDataGenerator(config=config, project_root=project_root).generate()
+    generator = DataGenerator(config=config, project_root=project_root)
+    generator.generate()
 
-    assert result.row_count == 5
-    assert result.output_path == project_root / "output" / "demo.csv"
-    with result.output_path.open(encoding="utf-8", newline="") as file:
+    output_path = project_root / "output" / "demo.csv"
+    assert output_path.is_file()
+    with output_path.open(encoding="utf-8", newline="") as file:
         assert len(list(csv.DictReader(file))) == 5
 
 
 def test_seeded_runs_are_reproducible(project_root: Path) -> None:
     config = load_config(project_root / "config" / "demo.json")
-    first = CsvDataGenerator(config=config, project_root=project_root).generate_rows()
-    second = CsvDataGenerator(config=config, project_root=project_root).generate_rows()
+    first = DataGenerator(config=config, project_root=project_root).generate_rows()
+    second = DataGenerator(config=config, project_root=project_root).generate_rows()
 
     assert first == second
 
@@ -193,17 +195,15 @@ def test_zero_rows_writes_header_only(project_root: Path) -> None:
     generator = make_generator(
         [ColumnConfig(name="country", type="fixed", value="Germany")], project_root, row_count=0
     )
-    result = generator.generate()
+    generator.generate()
 
-    assert result.row_count == 0
-    assert result.output_path.read_text(encoding="utf-8").splitlines() == ["country"]
+    assert generator.output_path.read_text(encoding="utf-8").splitlines() == ["country"]
 
 
 def test_generate_dataset_loads_the_config_and_writes_the_file(project_root: Path) -> None:
-    result = generate_dataset(project_root / "config" / "demo.json")
+    generate_dataset(project_root / "config" / "demo.json")
 
-    assert result.row_count == 5
-    assert result.output_path.is_file()
+    assert (project_root / "output" / "demo.csv").is_file()
 
 
 def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch) -> None:
@@ -229,16 +229,16 @@ def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch
     monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
     importlib.reload(env_config)
 
-    result = generate_dataset(config_dir / "sample.json")
+    generate_dataset(config_dir / "sample.json")
 
-    assert result.row_count == 2
-    assert result.output_path.read_text(encoding="utf-8").splitlines() == [
+    output_path = tmp_path / "output" / "sample.csv"
+    assert output_path.read_text(encoding="utf-8").splitlines() == [
         "id,country",
         "1,USA",
         "2,USA",
     ]
     assert (tmp_path / "output" / "sample.json").is_file()
-    assert result.output_path.parent == tmp_path / "output"
+    assert output_path.parent == tmp_path / "output"
 
     monkeypatch.delenv("PROJECT_ROOT", raising=False)
     monkeypatch.delenv("CONFIG_DIR", raising=False)
@@ -294,7 +294,7 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
     importlib.reload(env_config)
 
-    database_repository = mocker.patch("generator.DatabaseRepository")
+    database_repository = mocker.patch("writer_registry.DatabaseRepository")
     generate_dataset(config_dir / "online.json")
 
     output_path = tmp_path / "output" / "online.csv"
@@ -309,3 +309,6 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     monkeypatch.delenv("CONFIG_DIR", raising=False)
     monkeypatch.delenv("OUTPUT_DIR", raising=False)
     importlib.reload(env_config)
+
+
+

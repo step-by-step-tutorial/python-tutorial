@@ -28,7 +28,7 @@ csv-data-generator-api = "api:run"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-py-modules = ["api", "application_config", "cli", "columns", "csv_utils", "database_repository", "datasets", "error_handlers", "exceptions", "file_utils", "generator", "json_writer", "mapper", "path_utils", "schemas", "sources", "writer"]
+py-modules = ["api", "application_config", "cli", "columns", "csv_utils", "database_repository", "datasets", "destination_registry", "error_handlers", "exceptions", "file_utils", "generator", "json_utils", "mapper", "path_utils", "schemas", "sources", "writer"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

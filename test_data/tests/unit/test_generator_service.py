@@ -5,7 +5,7 @@ import pytest
 from application_config import GeneratorConfig, ColumnConfig
 from columns import normalize_for_email
 from exceptions import DependencyError
-from generator import CsvDataGenerator
+from generator import DataGenerator
 
 
 def test_normalize_for_email_removes_special_characters() -> None:
@@ -22,6 +22,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
         output_file="test.csv",
+        destinations=("csv",),
         seed=1,
         columns=[
             ColumnConfig(name="first_name", type="random_from_file", file="data/first_names.txt"),
@@ -30,7 +31,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
         ],
     )
 
-    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    generator = DataGenerator(config=config, project_root=tmp_path)
     rows = generator.generate_rows()
 
     assert rows == [
@@ -46,9 +47,10 @@ def test_write_csv_writes_headers_and_rows(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
         output_file="test.csv",
+        destinations=("csv",),
         columns=[ColumnConfig(name="country", type="fixed", value="Germany")],
     )
-    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    generator = DataGenerator(config=config, project_root=tmp_path)
     output_path = generator.write_csv([{"country": "Germany"}])
 
     assert output_path.exists()
@@ -70,6 +72,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
     config = GeneratorConfig(
         row_count=1,
         output_file="test.csv",
+        destinations=("csv",),
         seed=7,
         columns=[
             ColumnConfig(name="order_id", type="sequence", start=1, step=1),
@@ -102,7 +105,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
         ],
     )
 
-    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    generator = DataGenerator(config=config, project_root=tmp_path)
     rows = generator.generate_rows()
 
     assert rows[0]["order_id"] == "1"
@@ -127,6 +130,7 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
         output_file="test.csv",
+        destinations=("csv",),
         seed=1,
         columns=[
             ColumnConfig(name="country", type="fixed", value="Germany"),
@@ -141,7 +145,7 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
         ],
     )
 
-    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    generator = DataGenerator(config=config, project_root=tmp_path)
     rows = generator.generate_rows()
 
     assert rows == [{"country": "Germany", "customer_name": "Hans"}]
@@ -162,6 +166,7 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
     config = GeneratorConfig(
         row_count=1,
         output_file="test.csv",
+        destinations=("csv",),
         seed=1,
         columns=[
             ColumnConfig(name="country", type="fixed", value="Germany"),
@@ -177,7 +182,7 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
         ],
     )
 
-    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    generator = DataGenerator(config=config, project_root=tmp_path)
     rows = generator.generate_rows()
 
     assert rows == [{"country": "Germany", "customer_name": "Hans Bauer"}]
@@ -197,6 +202,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
     config = GeneratorConfig(
         row_count=1,
         output_file="test.csv",
+        destinations=("csv",),
         seed=1,
         columns=[
             ColumnConfig(
@@ -211,7 +217,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
         ],
     )
 
-    generator = CsvDataGenerator(config=config, project_root=tmp_path)
+    generator = DataGenerator(config=config, project_root=tmp_path)
     rows = generator.generate_rows()
 
     assert list(rows[0]) == ["customer_name", "country"]
@@ -222,6 +228,7 @@ def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
         output_file="test.csv",
+        destinations=("csv",),
         columns=[
             ColumnConfig(
                 name="left",
@@ -245,4 +252,7 @@ def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
     )
 
     with pytest.raises(DependencyError, match="Circular column dependency"):
-        CsvDataGenerator(config=config, project_root=tmp_path)
+        DataGenerator(config=config, project_root=tmp_path)
+
+
+

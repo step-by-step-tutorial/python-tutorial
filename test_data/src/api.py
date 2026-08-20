@@ -1,21 +1,20 @@
 import os
 
-from fastapi import FastAPI, Path as PathParam, Query
+from fastapi import FastAPI, Path as PathParam
 from fastapi.responses import FileResponse
 
 import env_config
 from datasets import DatasetRegistry
-from file_utils import list_of_file_names
-from mapper import DatasetMapper
-from error_handlers import register_error_handlers
 from env_config import PROJECT_ROOT
+from error_handlers import register_error_handlers
+from file_utils import list_of_file_names, output_file_path
+from exceptions import OutputNotFoundError
+from generator import generate_dataset as run_generation
 from schemas import (
     DatasetDetail,
     DatasetSummary,
     ErrorResponse,
-    GenerationResponse,
     HealthResponse,
-    RowsPage,
 )
 
 __version__ = "1.1.0"
@@ -27,7 +26,6 @@ BAD_CONFIG = {400: {"model": ErrorResponse, "description": "Config or source dat
 
 def create_app() -> FastAPI:
     registry = DatasetRegistry()
-    mapper = DatasetMapper(registry)
 
     app = FastAPI(
         title="CSV Data Generator API",
@@ -49,44 +47,22 @@ def create_app() -> FastAPI:
 
     @app.get("/datasets", response_model=list[DatasetSummary], tags=["datasets"])
     async def list_datasets() -> list[DatasetSummary]:
-        return [mapper.summary(dataset) for dataset in registry.list()]
+        return [dataset.to_summary() for dataset in registry.list()]
 
     @app.get("/datasets/{name}", response_model=DatasetDetail, tags=["datasets"], responses={**NOT_FOUND, **BAD_CONFIG})
     async def get_dataset(name: str = NAME_PARAM) -> DatasetDetail:
         dataset = registry.get(name)
         return DatasetDetail(
-            **mapper.summary(dataset).model_dump(),
+            **dataset.to_summary().model_dump(),
             columns=list(dataset.columns),
             seed=dataset.config.seed,
         )
 
-    @app.post("/datasets/{name}/generate", response_model=GenerationResponse, tags=["datasets"],
+    @app.post("/datasets/{name}/generate", response_model=DatasetSummary, tags=["datasets"],
               responses={**NOT_FOUND, **BAD_CONFIG})
-    async def generate_dataset(name: str = NAME_PARAM) -> GenerationResponse:
-        result = registry.generate(name)
-        return GenerationResponse(
-            name=name,
-            row_count=result.row_count,
-            file=mapper.relative(result.output_path),
-            download_url=f"/datasets/{name}/download",
-        )
-
-    @app.get("/datasets/{name}/rows", response_model=RowsPage, tags=["files"], responses=NOT_FOUND)
-    async def read_rows(
-            name: str = NAME_PARAM,
-            offset: int = Query(0, ge=0, description="Rows to skip"),
-            limit: int = Query(100, ge=1, le=1000, description="Rows to return"),
-    ) -> RowsPage:
-        rows = registry.read_rows(name, offset=offset, limit=limit)
-        status = registry.status(registry.get(name))
-        return RowsPage(
-            name=name,
-            offset=offset,
-            limit=limit,
-            returned=len(rows),
-            total=status.row_count or 0,
-            rows=rows,
-        )
+    async def generate_dataset(name: str = NAME_PARAM) -> DatasetSummary:
+        run_generation(env_config.CONFIG_DIR / name)
+        return registry.get(name).to_summary()
 
     @app.get(
         "/datasets/{name}/download",
@@ -95,7 +71,13 @@ def create_app() -> FastAPI:
         responses={**NOT_FOUND, 200: {"content": {"text/csv": {}}, "description": "The CSV file"}},
     )
     async def download(name: str = NAME_PARAM) -> FileResponse:
-        path = registry.output_file(name)
+        dataset = registry.get(name)
+        path = output_file_path(dataset.config.output_file)
+        if not path.is_file():
+            raise OutputNotFoundError(
+                f"Dataset {name!r} has not been generated yet. "
+                f"POST /datasets/{name}/generate first."
+            )
         return FileResponse(path, media_type="text/csv", filename=path.name)
 
     return app

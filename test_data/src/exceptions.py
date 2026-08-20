@@ -1,6 +1,3 @@
-
-
-
 class CsvGeneratorError(Exception):
     pass
 

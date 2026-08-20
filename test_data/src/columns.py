@@ -1,11 +1,10 @@
-
-
 import re
-import unicodedata
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
 from random import Random
 from typing import Mapping
+
+import unicodedata
 
 from application_config import DERIVED_TYPE, ColumnConfig
 from exceptions import ConfigurationError, SourceDataError
@@ -257,7 +256,6 @@ class DeliveryDateFromOrderDateColumn(ColumnGenerator):
 
 
 class EmailFromNameColumn(ColumnGenerator):
-
     NAME_FIELDS = ("first_name", "last_name")
     DEFAULT_DOMAIN = "example.com"
 
@@ -301,9 +299,9 @@ DERIVED_METHODS: dict[str, type[ColumnGenerator]] = {
 
 
 def build_column_generator(
-    column: ColumnConfig,
-    sources: SourceRepository,
-    rng: Random,
+        column: ColumnConfig,
+        sources: SourceRepository,
+        rng: Random,
 ) -> ColumnGenerator:
     if column.type == DERIVED_TYPE:
         if column.method is None:

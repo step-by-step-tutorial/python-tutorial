@@ -1,35 +1,24 @@
-
-
 from collections.abc import Iterable, Iterator
-from dataclasses import dataclass
 from pathlib import Path
 from random import Random
 from typing import Mapping
 
+import env_config
 from application_config import GeneratorConfig, load_config
 from columns import ColumnGenerator, build_column_generator
-from database_repository import DatabaseRepository
-from exceptions import ConfigurationError, DependencyError
-import env_config
-from json_writer import write_json_rows
+from writer_registry import WRITER_REGISTRY
+from exceptions import DependencyError
 from sources import SourceRepository
-from writer import write_rows
+from csv_utils import write_csv
 
 
-@dataclass(frozen=True)
-class GenerationResult:
-
-    row_count: int
-    output_path: Path
-
-
-class CsvDataGenerator:
+class DataGenerator:
 
     def __init__(
-        self,
-        config: GeneratorConfig,
-        project_root: Path,
-        sources: SourceRepository | None = None,
+            self,
+            config: GeneratorConfig,
+            project_root: Path,
+            sources: SourceRepository | None = None,
     ) -> None:
         self.config = config
         self.project_root = Path(project_root)
@@ -57,12 +46,12 @@ class CsvDataGenerator:
         return list(self.iter_rows())
 
     def write_csv(self, rows: Iterable[Mapping[str, str]] | None = None) -> Path:
-        write_rows(self.output_path, self.config.headers, self.iter_rows() if rows is None else rows)
+        write_csv(self.output_path, self.config.headers, self.iter_rows() if rows is None else rows)
         return self.output_path
 
-    def generate(self) -> GenerationResult:
-        row_count = write_rows(self.output_path, self.config.headers, self.iter_rows())
-        return GenerationResult(row_count=row_count, output_path=self.output_path)
+    def generate(self) -> None:
+        rows = self.generate_rows()
+        write_csv(self.output_path, self.config.headers, rows)
 
     def _resolve_order(self) -> tuple[str, ...]:
         order: list[str] = []
@@ -94,26 +83,9 @@ class CsvDataGenerator:
         return tuple(order)
 
 
-def generate_dataset(config_path: Path) -> GenerationResult:
+def generate_dataset(config_path: Path) -> None:
     path = Path(config_path).resolve()
     config = load_config(path.name)
-    if "kafka" in config.destinations:
-        raise ConfigurationError("Kafka destination is not wired yet.")
-    generator = CsvDataGenerator(config=config, project_root=path.parent.parent)
+    generator = DataGenerator(config=config, project_root=path.parent.parent)
     rows = generator.generate_rows()
-
-    if "csv" in config.destinations:
-        write_rows(generator.output_path, config.headers, rows)
-
-    if "json" in config.destinations:
-        json_path = env_config.OUTPUT_DIR / f"{generator.output_path.stem}.json"
-        write_json_rows(json_path, rows)
-
-    if "database" in config.destinations:
-        DatabaseRepository().write_rows(
-            table_name=generator.output_path.stem,
-            headers=config.headers,
-            rows=rows,
-        )
-
-    return GenerationResult(row_count=len(rows), output_path=generator.output_path)
+    WRITER_REGISTRY.write_all(rows, config)

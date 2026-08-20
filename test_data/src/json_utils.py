@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 
-def write_json_rows(output_path: Path, rows: Iterable[Mapping[str, str]]) -> Path:
+def write_json(output_path: Path, rows: Iterable[Mapping[str, str]]) -> Path:
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as file:

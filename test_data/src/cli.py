@@ -1,11 +1,11 @@
-
-
 import argparse
 import sys
 from collections.abc import Sequence
 from pathlib import Path
 
 from exceptions import CsvGeneratorError
+from application_config import load_config
+from file_utils import output_file_path
 from generator import generate_dataset
 
 EXIT_OK = 0
@@ -27,12 +27,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        result = generate_dataset(Path(args.config))
+        config_path = Path(args.config)
+        config = load_config(config_path.name)
+        generate_dataset(config_path)
     except CsvGeneratorError as error:
         print(f"error: {error}", file=sys.stderr)
         return EXIT_ERROR
 
-    print(f"Generated {result.row_count} rows at: {result.output_path}")
+    print(f"Generated {config.row_count} rows at: {output_file_path(config.output_file)}")
     return EXIT_OK
 
 

@@ -137,8 +137,9 @@ dependency resolution across column order, and rejection of circular dependencie
 `--config` is required — it selects the dataset. Run from the `test_data` folder:
 
 ```shell
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test down -v
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test up --build -d
+cd ./test_data
+docker compose --file docker-compose.yml --project-name test --env-file ./.env.test down -v
+docker compose --file docker-compose.yml --project-name test --env-file ./.env.test up --build -d
 ```
 
 ```shell
@@ -155,6 +156,10 @@ Set-Location C:\Users\saman\IdeaProjects\python-tutorial\test_data
 python ./src/api.py 
 ```
 
+```shell
+cd ./test_data
+docker compose --file docker-compose.yml --project-name test --env-file ./.env.test down -v
+```
 
 The output file is overwritten on every run, and `output/` is created if missing. Generated CSVs are
 git-ignored, so the repository keeps the inputs, not the results.

@@ -1,5 +1,3 @@
-
-
 import csv
 from pathlib import Path
 from types import MappingProxyType
@@ -50,10 +48,10 @@ class SourceRepository:
         return values
 
     def _read_mapping(
-        self,
-        relative_path: str,
-        key_column: str,
-        value_column: str,
+            self,
+            relative_path: str,
+            key_column: str,
+            value_column: str,
     ) -> Mapping[str, str]:
         path = self.resolve(relative_path)
         try:
@@ -72,10 +70,10 @@ class SourceRepository:
 
     @staticmethod
     def _checked_rows(
-        reader: csv.DictReader,
-        path: Path,
-        key_column: str,
-        value_column: str,
+            reader: csv.DictReader,
+            path: Path,
+            key_column: str,
+            value_column: str,
     ):
         for row in reader:
             if row.get(key_column) is None or row.get(value_column) is None:

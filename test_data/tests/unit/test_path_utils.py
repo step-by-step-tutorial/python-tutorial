@@ -59,3 +59,22 @@ def test_output_dir_uses_env_override(monkeypatch, tmp_path) -> None:
     assert module.OUTPUT_DIR == override.resolve()
     monkeypatch.delenv("OUTPUT_DIR", raising=False)
     importlib.reload(env_config)
+
+
+def test_database_url_defaults_to_local_postgres(monkeypatch) -> None:
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+
+    module = importlib.reload(env_config)
+
+    assert module.DATABASE_URL == "postgresql+psycopg2://admin:admin@localhost:5432/app_database"
+
+
+def test_database_url_uses_env_override(monkeypatch) -> None:
+    override = "sqlite+pysqlite:///tmp/test.db"
+    monkeypatch.setenv("DATABASE_URL", override)
+
+    module = importlib.reload(env_config)
+
+    assert module.DATABASE_URL == override
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    importlib.reload(env_config)

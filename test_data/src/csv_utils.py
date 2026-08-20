@@ -1,9 +1,17 @@
 from __future__ import annotations
 
 import csv
+from collections.abc import Iterable, Sequence
 from pathlib import Path
+from typing import Mapping
 
 
-def count_rows(path: Path) -> int:
-    with Path(path).open("r", encoding="utf-8", newline="") as file:
-        return max(sum(1 for _ in csv.reader(file)) - 1, 0)
+def write_csv(output_path: Path, headers: Sequence[str], rows: Iterable[Mapping[str, str]]) -> Path:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(file, fieldnames=list(headers))
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    return path

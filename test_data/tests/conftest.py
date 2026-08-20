@@ -49,6 +49,7 @@ def project_root(tmp_path: Path, data_dir: Path, monkeypatch) -> Path:
     config = {
         "row_count": 5,
         "output_file": "demo.csv",
+        "destinations": ["csv"],
         "seed": 42,
         "columns": [
             {"name": "order_id", "type": "sequence", "start": 1, "step": 1},

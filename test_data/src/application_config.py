@@ -1,4 +1,3 @@
-
 from collections.abc import Sequence
 from dataclasses import dataclass, fields
 from pathlib import Path
@@ -9,13 +8,10 @@ from exceptions import ConfigurationError
 from file_utils import read_json_file
 
 DERIVED_TYPE = "derived"
-DEFAULT_DESTINATIONS = ("csv",)
-ALLOWED_DESTINATIONS = ("csv", "json", "database", "kafka")
 
 
 @dataclass(frozen=True)
 class ColumnConfig:
-
     name: str
     type: str
     file: str | None = None
@@ -63,12 +59,11 @@ class ColumnConfig:
 
 @dataclass(frozen=True)
 class GeneratorConfig:
-
     row_count: int
     output_file: str
     columns: Sequence[ColumnConfig]
+    destinations: tuple[str, ...]
     seed: int | None = None
-    destinations: tuple[str, ...] = DEFAULT_DESTINATIONS
 
     @property
     def headers(self) -> tuple[str, ...]:
@@ -95,7 +90,13 @@ class GeneratorConfig:
         if duplicates:
             raise ConfigurationError(f"Duplicate column names: {', '.join(duplicates)}.")
 
-        destinations = _parse_destinations(raw.get("destinations", raw.get("destination")))
+        destinations = raw.get("destinations")
+        if destinations is None:
+            raise ConfigurationError("Config is missing the 'destinations' key.")
+        elif isinstance(destinations, str):
+            destinations = (destinations,)
+        else:
+            destinations = tuple(destinations)
 
         return cls(
             row_count=row_count,
@@ -108,34 +109,8 @@ class GeneratorConfig:
 
 def load_config(config_name: Path | str) -> GeneratorConfig:
     path = env_config.CONFIG_DIR / Path(config_name).name
-    raw = read_json_file(path)
-    return GeneratorConfig.from_dict(raw)
-
-
-def _parse_destinations(raw: Any) -> tuple[str, ...]:
-    if raw is None:
-        return DEFAULT_DESTINATIONS
-
-    if isinstance(raw, str):
-        items = [raw]
-    elif isinstance(raw, Sequence):
-        items = list(raw)
-    else:
-        raise ConfigurationError(f"'destinations' must be a string or a list of strings, got {raw!r}.")
-
-    normalized: list[str] = []
-    seen: set[str] = set()
-    for item in items:
-        if not isinstance(item, str):
-            raise ConfigurationError(f"'destinations' must contain strings only, got {item!r}.")
-        name = item.strip().lower()
-        if not name:
-            raise ConfigurationError("'destinations' cannot contain empty values.")
-        if name not in ALLOWED_DESTINATIONS:
-            allowed = ", ".join(ALLOWED_DESTINATIONS)
-            raise ConfigurationError(f"Unsupported destination {name!r}. Available: {allowed}.")
-        if name not in seen:
-            seen.add(name)
-            normalized.append(name)
-
-    return tuple(normalized) if normalized else DEFAULT_DESTINATIONS
+    try:
+        raw = read_json_file(path)
+        return GeneratorConfig.from_dict(raw)
+    except Exception as error:
+        raise ConfigurationError(f"Reading JSON file ({path}) failed due to: {error}") from error
