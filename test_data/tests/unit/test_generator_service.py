@@ -7,7 +7,7 @@ import pytest
 import env_config
 
 from config_manager import GeneratorConfig, ColumnConfig
-from data_converter import convert_to__email
+from data_converter import convert_to_email
 from generator import DataGenerator
 
 
@@ -29,8 +29,8 @@ def write_config_file(tmp_path: Path, name: str, config: GeneratorConfig) -> str
 
 
 def test_normalize_for_email_removes_special_characters() -> None:
-    assert convert_to__email("Emily Johnson") == "emily.johnson"
-    assert convert_to__email("Alyssa") == "alyssa"
+    assert convert_to_email("Emily Johnson") == "emily.johnson"
+    assert convert_to_email("Alyssa") == "alyssa"
 
 
 def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
@@ -47,7 +47,13 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
         columns=[
             ColumnConfig(name="first_name", type="random_from_file", file="data/first_names.txt"),
             ColumnConfig(name="last_name", type="random_from_file", file="data/last_names.txt"),
-            ColumnConfig(name="email", type="derived", method="email_from_name", domain="example.com"),
+            ColumnConfig(
+                name="email",
+                type="derived",
+                method="email_from_source_fields",
+                source_fields=("first_name", "last_name"),
+                domain="example.com",
+            ),
         ],
     )
 
@@ -119,8 +125,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
     assert rows[0]["order_date"].startswith("2026-01-")
 
 
-@pytest.mark.parametrize("method", ["product_of_source_fields", "subtotal_from_quantity_and_unit_price"])
-def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path, method: str) -> None:
+def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
         output_file="generated.csv",
@@ -131,7 +136,7 @@ def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path, method: 
             ColumnConfig(
                 name="line_total",
                 type="derived",
-                method=method,
+                method="product_of_source_fields",
                 source_fields=("qty", "price"),
             ),
         ],
@@ -143,7 +148,7 @@ def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path, method: 
     assert rows == [{"qty": "2", "price": "10", "line_total": "20.0"}]
 
 
-def test_product_of_source_field_and_rate_can_use_custom_source_field(tmp_path: Path) -> None:
+def test_product_of_source_fields_can_use_a_constant_factor(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
         output_file="generated.csv",
@@ -166,7 +171,7 @@ def test_product_of_source_field_and_rate_can_use_custom_source_field(tmp_path: 
     assert rows == [{"net_total": "25", "vat_amount": "5.0"}]
 
 
-def test_product_of_source_field_and_rate_supports_zero_rate(tmp_path: Path) -> None:
+def test_product_of_source_fields_supports_a_zero_constant_factor(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
         output_file="generated.csv",

@@ -190,23 +190,27 @@ Every column needs a `name` and a `type`. The remaining keys depend on the type.
 | `fixed` | `value` | The same literal in every row |
 | `sequence` | `start`, `step` | Incrementing integer; both default to `1` |
 | `random_int` | `min`, `max` | Random integer, both bounds inclusive |
-| `random_date` | `date_start`, `date_end` | Random ISO date, both bounds inclusive |
+| `random_date_between` | `date_start`, `date_end` | Random ISO date, both bounds inclusive |
 
 `derived` supports two methods:
 
 | Method | Keys | Description |
 | --- | --- | --- |
-| `email_from_name` | `domain` (defaults to `example.com`) | Builds `first.last@domain` from the row's `first_name` and `last_name` columns, stripping accents and punctuation (`Jalalé` becomes `jalale`) |
+| `email_from_source_fields` | `source_fields`, `domain` (defaults to `example.com`) | Builds an email local part from configured fields, stripping accents and punctuation (`Jalalé` becomes `jalale`) |
 | `product_of_source_fields` | `source_fields`, optional `value` | Multiplies the numeric fields listed in `source_fields` and, if present, an optional constant `value` |
+| `formula` | `source_fields`, `formula` | Evaluates arithmetic using the numeric source values |
 | `lookup_from_csv` | `source_field`, `mapping_file`, `key_column`, `value_column` | Looks another column's value up in a CSV and returns one of its fields |
 
-`email_from_name` reads the columns literally named `first_name` and `last_name`, so a config using
-it must define both — the derived column itself can be named anything, such as `work_email`.
+`email_from_source_fields` joins configured source fields with `.`, so the source columns can have
+any names and the derived column can be named anything, such as `work_email`.
 
 `product_of_source_fields` takes one or more `source_fields`. The output column can be named
 anything, such as `subtotal`, `line_total`, or `gross_amount`. If you also provide `value`, it is
-multiplied in as a constant factor. The old method names `product_of_source_field_and_rate` and
-`tax_from_subtotal` still work as aliases.
+multiplied in as a constant factor.
+
+`formula` receives source values as an ordered `values` list. For example,
+`values[0] - values[0] * values[1] / 100 + values[2] + values[3]` uses four configured
+source fields without requiring particular field names.
 
 `random_from_mapped_file` takes either a single `file_column` or a list of `file_columns`. With a
 list, one random value is picked per mapped file and the values are joined with `separator`
@@ -364,7 +368,7 @@ Counts are values available, not rows generated.
 
 * Every value is written as text, but derived methods can still express simple arithmetic such as
   a `subtotal` equal to `quantity × unit_price`.
-* `random_int` and `random_date` produce integers and ISO dates only; there is no decimal or
+* `random_int` and `random_date_between` produce integers and ISO dates only; there is no decimal or
   timestamp type.
 * Dates are drawn independently, so a config cannot express "delivery date is 3 days after order
   date". `config/online_shopping.json` uses a `delivery_days` integer for that reason.
@@ -389,5 +393,4 @@ Counts are values available, not rows generated.
 | `Columns of type random_int require min and max` | `min` or `max` is missing |
 | `date_start must be earlier than or equal to date_end` | The date range is inverted |
 | `Unsupported column type: X` / `Unsupported derived method: X` | A typo in `type` or `method` |
-| `Column 'X' depends on unknown column 'first_name'` | `email_from_name` was used without a `first_name` and `last_name` column in the config |
-| `Column 'X' depends on first_name and last_name` | Both name columns exist but one produced an empty value, for example a `fixed` column set to `""` |
+| `Column 'X' depends on unknown column 'Y'` | An `email_from_source_fields` source field does not exist in the config |

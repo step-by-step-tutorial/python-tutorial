@@ -15,6 +15,7 @@ class ColumnConfig:
     type: str
     file: str | None = None
     method: str | None = None
+    formula: str | None = None
     domain: str | None = None
     value: str | None = None
     start: int | None = None

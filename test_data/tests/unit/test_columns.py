@@ -7,7 +7,7 @@ import pytest
 
 from config_manager import ColumnConfig
 from columns import build_column_generator
-from data_converter import convert_to__email, convert_to_floats
+from data_converter import convert_to_email, convert_to_floats
 from sources import SourceRepository
 
 
@@ -20,12 +20,12 @@ def build(column: ColumnConfig, root: Path):
     [("Emily Johnson", "emily.johnson"), ("Alyssa", "alyssa"), ("  O'Neill  ", "o.neill")],
 )
 def test_normalize_for_email(raw: str, expected: str) -> None:
-    assert convert_to__email(raw) == expected
+    assert convert_to_email(raw) == expected
 
 
 def test_normalize_for_email_rejects_empty_result() -> None:
     with pytest.raises(ValueError, match="empty normalized value"):
-        convert_to__email("###")
+        convert_to_email("###")
 
 
 def test_convert_to_floats() -> None:
@@ -201,37 +201,79 @@ def test_product_column_uses_float_conversion_for_source_fields(project_root: Pa
     assert generator.generate({"quantity": "2", "unit_price": "10.5"}, 0) == "21.0"
 
 
-def test_email_declares_its_dependencies(tmp_path: Path) -> None:
+def test_formula_column_uses_source_fields(project_root: Path) -> None:
     generator = build(
-        ColumnConfig(name="email", type="derived", method="email_from_name"), tmp_path
+        ColumnConfig(
+            name="total_amount",
+            type="derived",
+            method="formula",
+            source_fields=("base", "rate", "fee", "extra"),
+            formula="values[0] - values[0] * values[1] / 100 + values[2] + values[3]",
+        ),
+        project_root,
     )
 
-    assert generator.dependencies == ("first_name", "last_name")
-    assert generator.generate({"first_name": "Lea", "last_name": "Bauer"}, 0) == (
-        "lea.bauer@example.com"
+    assert (
+        generator.generate(
+            {
+                "base": "20",
+                "rate": "10",
+                "fee": "5",
+                "extra": "2",
+            },
+            0,
+        )
+        == "25.0"
+    )
+
+
+def test_email_declares_its_dependencies(tmp_path: Path) -> None:
+    generator = build(
+        ColumnConfig(
+            name="email",
+            type="derived",
+            method="email_from_source_fields",
+            source_fields=("given", "family", "region"),
+        ),
+        tmp_path,
+    )
+
+    assert generator.dependencies == ("given", "family", "region")
+    assert generator.generate({"given": "Lea", "family": "Bauer", "region": "EU"}, 0) == (
+        "lea.bauer.eu@example.com"
     )
 
 
 def test_email_uses_configured_domain(tmp_path: Path) -> None:
     generator = build(
         ColumnConfig(
-            name="work_email", type="derived", method="email_from_name", domain="example-corp.com"
+            name="work_email",
+            type="derived",
+            method="email_from_source_fields",
+            source_fields=("given", "family"),
+            domain="example-corp.com",
         ),
         tmp_path,
     )
 
-    assert generator.generate({"first_name": "Lea", "last_name": "Bauer"}, 0) == (
+    assert generator.generate({"given": "Lea", "family": "Bauer"}, 0) == (
         "lea.bauer@example-corp.com"
     )
 
 
 def test_email_reports_empty_name(tmp_path: Path) -> None:
     generator = build(
-        ColumnConfig(name="email", type="derived", method="email_from_name"), tmp_path
+        ColumnConfig(
+            name="email",
+            type="derived",
+            method="email_from_source_fields",
+            source_fields=("given", "family"),
+        ),
+        tmp_path,
     )
 
-    with pytest.raises(Exception, match="depends on first_name and last_name"):
-        generator.generate({"first_name": "", "last_name": "Bauer"}, 0)
+    with pytest.raises(Exception, match="depends on source field given"):
+        generator.generate({"given": "", "family": "Bauer"}, 0)
 
 
 @pytest.mark.parametrize(

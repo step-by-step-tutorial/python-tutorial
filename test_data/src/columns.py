@@ -1,11 +1,12 @@
+import ast
 from abc import ABC, abstractmethod
-from datetime import date, timedelta
+from datetime import date
 from math import prod
 from random import Random
 from typing import Mapping
 
 from config_manager import DERIVED_TYPE, ColumnConfig
-from data_converter import convert_to__email, random_date
+from data_converter import convert_to_email, random_date_between, random_date_from
 from sources import SourceRepository
 from validation_utils import (
     check_min_max,
@@ -15,7 +16,7 @@ from validation_utils import (
     require_or_default,
     require_or_raise,
     require_iso_date,
-    require_xor,
+    require_xor, should_not_be_negative,
 )
 
 Row = Mapping[str, str]
@@ -103,7 +104,7 @@ class RandomDateColumn(ColumnGenerator):
         )
 
     def generate(self, row: Row, row_index: int) -> str:
-        return random_date(self.start, self.end, self.random)
+        return random_date_between(self.start, self.end, self.random)
 
 
 class RandomFromFileColumn(ColumnGenerator):
@@ -191,33 +192,43 @@ class ProductColumn(ColumnGenerator):
         return str(prod(values))
 
 
-class TotalAmountColumn(ColumnGenerator):
+class FormulaColumn(ColumnGenerator):
+
+    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
+        self._source_fields: tuple[str, ...] = ()
+        self._formula = ""
+        super().__init__(column, sources, random)
+
+    def validate(self) -> None:
+        self.require("source_fields", "formula")
+        self._source_fields = require_not_blank(self.column.source_fields)
+        self._formula = require_not_blank(self.column.formula)
+        self._validate_formula()
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        return ("subtotal", "discount_percent", "shipping_cost", "tax_amount")
+        return self._source_fields
 
     def generate(self, row: Row, row_index: int) -> str:
-        subtotal = float(row["subtotal"])
-        discount_percent = float(row["discount_percent"])
-        shipping_cost = float(row["shipping_cost"])
-        tax_amount = float(row["tax_amount"])
-        discount_amount = subtotal * discount_percent / 100.0
-        return str(subtotal - discount_amount + shipping_cost + tax_amount)
+        values = [float(row[field]) for field in self._source_fields]
+        return str(eval(self._formula, {"__builtins__": {}}, {"values": values}))
+
+    def _validate_formula(self) -> None:
+        try:
+            ast.parse(self._formula, mode="eval")
+        except SyntaxError as error:
+            raise Exception(f"Column {self.column.name} has an invalid formula.") from error
 
 
-class DeliveryDateFromOrderDateColumn(ColumnGenerator):
+class DateWithRandomDayOffsetColumn(ColumnGenerator):
 
     def validate(self) -> None:
         self.require("source_field")
-        self._min_days = self.column.start if self.column.start is not None else 1
-        self._max_days = self.column.step if self.column.step is not None else 7
-        if self._min_days < 0 or self._max_days < 0:
-            raise Exception(f"Column {self.column.name} needs non-negative day offsets.")
-        if self._min_days > self._max_days:
-            raise Exception(
-                f"Column {self.column.name}: 'start' must not be greater than 'step'."
-            )
+        self._min_days = require_or_default(self.column.start, 1)
+        self._max_days = require_or_default(self.column.step, 7)
+        should_not_be_negative(int(self._min_days), int(self._max_days),
+                               error_message=f"Column {self.column.name} needs non-negative day offsets.")
+        check_min_max(self._min_days, self._max_days)
 
     @property
     def dependencies(self) -> tuple[str, ...]:
@@ -225,29 +236,33 @@ class DeliveryDateFromOrderDateColumn(ColumnGenerator):
 
     def generate(self, row: Row, row_index: int) -> str:
         base_date = date.fromisoformat(self.get_by_source(row))
-        offset = self.random.randint(self._min_days, self._max_days)
-        return (base_date + timedelta(days=offset)).isoformat()
+        return random_date_from(base_date, self._min_days, self._max_days, self.random)
 
 
-class EmailFromNameColumn(ColumnGenerator):
-    NAME_FIELDS = ("first_name", "last_name")
+class EmailFromSourceFieldsColumn(ColumnGenerator):
     DEFAULT_DOMAIN = "example.com"
+
+    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
+        self._source_fields: tuple[str, ...] = ()
+        super().__init__(column, sources, random)
+
+    def validate(self) -> None:
+        self.require("source_fields")
+        self._source_fields = require_not_blank(self.column.source_fields)
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        return self.NAME_FIELDS
+        return self._source_fields
 
     def generate(self, row: Row, row_index: int) -> str:
-        first_name = row.get("first_name")
-        last_name = row.get("last_name")
-        if not first_name or not last_name:
-            raise Exception(
-                f"Column {self.column.name} depends on first_name and last_name."
-            )
-
         domain = self.column.domain or self.DEFAULT_DOMAIN
         try:
-            local_part = f"{convert_to__email(first_name)}.{convert_to__email(last_name)}"
+            local_part = ".".join(
+                convert_to_email(
+                    require_not_blank(row.get(field), f"Column {self.column.name} depends on source field {field}.")
+                )
+                for field in self._source_fields
+            )
         except ValueError as error:
             raise Exception(f"Column {self.column.name}: {error}") from error
         return f"{local_part}@{domain}"
@@ -263,15 +278,11 @@ COLUMN_TYPES: dict[str, type[ColumnGenerator]] = {
 }
 
 DERIVED_METHODS: dict[str, type[ColumnGenerator]] = {
-    "email_from_name": EmailFromNameColumn,
+    "email_from_source_fields": EmailFromSourceFieldsColumn,
     "lookup_from_csv": LookupFromCsvColumn,
     "product_of_source_fields": ProductColumn,
-    "product_of_source_field_and_rate": ProductColumn,
-    "product_of_source_field_and_value": ProductColumn,
-    "subtotal_from_quantity_and_unit_price": ProductColumn,
-    "tax_from_subtotal": ProductColumn,
-    "total_amount": TotalAmountColumn,
-    "delivery_date_from_order_date": DeliveryDateFromOrderDateColumn,
+    "formula": FormulaColumn,
+    "date_with_random_day_offset": DateWithRandomDayOffsetColumn,
 }
 
 

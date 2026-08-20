@@ -8,7 +8,7 @@ NUMBER_LETTER_PATTERN = re.compile(r"[^a-z0-9]+")
 REPEATED_DOTS_PATTERN = re.compile(r"\.+")
 
 
-def convert_to__email(value: str) -> str:
+def convert_to_email(value: str) -> str:
     ascii_value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
 
     cleaned = NUMBER_LETTER_PATTERN.sub(".", ascii_value.lower().strip())
@@ -24,10 +24,15 @@ def calculate_days(start: date, end: date, error_message: str = "start must be e
     return (end - start).days
 
 
-def random_date(start: date, end: date, random: Random) -> str:
+def random_date_between(start: date, end: date, random: Random) -> str:
     days = calculate_days(start, end)
     offset = random.randint(0, days)
     return (start + timedelta(days=offset)).isoformat()
+
+
+def random_date_from(base_date: date, min_days:int, max_days:int, random: Random) -> str:
+    offset = random.randint(min_days, max_days)
+    return (base_date + timedelta(days=offset)).isoformat()
 
 
 def convert_to_floats(values: list[str]) -> list[float]:

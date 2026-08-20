@@ -24,7 +24,8 @@
     {
       "name": "work_email",
       "type": "derived",
-      "method": "email_from_name",
+      "method": "email_from_source_fields",
+      "source_fields": ["first_name", "last_name"],
       "domain": "example-corp.com"
     },
     {

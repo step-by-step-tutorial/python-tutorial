@@ -65,3 +65,9 @@ def require_iso_date(value, error_message: str = "Column needs ISO dates (YYYY-M
 def require_xor(obj1: Any, obj2: Any, error_message: str = "Exactly one of the objects must be not None"):
     if (is_blank(obj1) and is_blank(obj2)) or (not is_blank(obj1) and not is_blank(obj2)):
         raise Exception(error_message)
+
+
+def should_not_be_negative(*numbers: int, error_message: str = "Value must not be negative"):
+    for number in numbers:
+        if number < 0:
+            raise Exception(error_message)

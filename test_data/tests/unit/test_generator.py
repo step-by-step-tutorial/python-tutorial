@@ -109,7 +109,11 @@ def test_derived_email_uses_generated_names(project_root: Path) -> None:
                 file_column="last_name_file",
             ),
             ColumnConfig(
-                name="email", type="derived", method="email_from_name", domain="example-shop.com"
+                name="email",
+                type="derived",
+                method="email_from_source_fields",
+                source_fields=("first_name", "last_name"),
+                domain="example-shop.com",
             ),
             ColumnConfig(name="country", type="fixed", value="USA"),
         ],
@@ -259,13 +263,19 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
                 "source_fields": ["subtotal"],
                 "value": 0.1
             },
-            {"name": "total_amount", "type": "derived", "method": "total_amount"},
+            {
+                "name": "total_amount",
+                "type": "derived",
+                "method": "formula",
+                "source_fields": ["subtotal", "discount_percent", "shipping_cost", "tax_amount"],
+                "formula": "values[0] - values[0] * values[1] / 100 + values[2] + values[3]"
+            },
             {"name": "payment_status", "type": "random_from_file", "file": "data/payment_statuses.txt"},
             {"name": "fulfillment_status", "type": "random_from_file", "file": "data/fulfillment_statuses.txt"},
             {
               "name": "estimated_delivery_date",
               "type": "derived",
-              "method": "delivery_date_from_order_date",
+              "method": "date_with_random_day_offset",
               "source_field": "order_date",
               "start": 2,
               "step": 2
