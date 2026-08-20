@@ -279,9 +279,9 @@ def test_email_reports_empty_name(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("column", "message"),
     [
-        (ColumnConfig(name="x", type="magic"), "Unsupported column type: magic"),
-        (ColumnConfig(name="x", type="derived", method="magic"), "Unsupported derived method"),
-        (ColumnConfig(name="x", type="derived"), "needs a 'method'"),
+        (ColumnConfig(name="x", type="magic"), "Unsupported column generator: magic"),
+        (ColumnConfig(name="x", type="derived", method="magic"), "Unsupported column generator: magic"),
+        (ColumnConfig(name="x", type="derived"), "Unsupported column generator: derived"),
     ],
 )
 def test_unknown_types_are_rejected(column: ColumnConfig, message: str, tmp_path: Path) -> None:

@@ -5,7 +5,7 @@ from math import prod
 from random import Random
 from typing import Mapping
 
-from config_manager import DERIVED_TYPE, ColumnConfig
+from config_manager import ColumnConfig
 from data_converter import convert_to_email, random_date_between, random_date_from
 from sources import SourceRepository
 from validation_utils import (
@@ -16,7 +16,7 @@ from validation_utils import (
     require_or_default,
     require_or_raise,
     require_iso_date,
-    require_xor, should_not_be_negative,
+    require_xor, should_not_be_negative, is_none,
 )
 
 Row = Mapping[str, str]
@@ -268,16 +268,13 @@ class EmailFromSourceFieldsColumn(ColumnGenerator):
         return f"{local_part}@{domain}"
 
 
-COLUMN_TYPES: dict[str, type[ColumnGenerator]] = {
+GENERATOR_TYPES: dict[str, type[ColumnGenerator]] = {
     "sequence": SequenceColumn,
     "fixed": FixedColumn,
     "random_int": RandomIntColumn,
     "random_date": RandomDateColumn,
     "random_from_file": RandomFromFileColumn,
     "random_from_mapped_file": RandomFromMappedFileColumn,
-}
-
-DERIVED_METHODS: dict[str, type[ColumnGenerator]] = {
     "email_from_source_fields": EmailFromSourceFieldsColumn,
     "lookup_from_csv": LookupFromCsvColumn,
     "product_of_source_fields": ProductColumn,
@@ -286,20 +283,9 @@ DERIVED_METHODS: dict[str, type[ColumnGenerator]] = {
 }
 
 
-def build_column_generator(
-        column: ColumnConfig,
-        sources: SourceRepository,
-        rng: Random,
-) -> ColumnGenerator:
-    if column.type == DERIVED_TYPE:
-        if column.method is None:
-            raise Exception(f"Derived column {column.name} needs a 'method'.")
-        generator_type = DERIVED_METHODS.get(column.method)
-        if generator_type is None:
-            raise Exception(f"Unsupported derived method: {column.method}")
-    else:
-        generator_type = COLUMN_TYPES.get(column.type)
-        if generator_type is None:
-            raise Exception(f"Unsupported column type: {column.type}")
+def build_column_generator(column: ColumnConfig, sources: SourceRepository, rng: Random) -> ColumnGenerator:
+    generator_name = column.method or column.type
+    generator_type = GENERATOR_TYPES.get(generator_name)
+    require_not_blank(generator_type, f"Unsupported column generator: {generator_name}")
 
     return generator_type(column, sources, rng)
