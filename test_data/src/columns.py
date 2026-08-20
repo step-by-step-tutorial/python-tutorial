@@ -1,36 +1,33 @@
-import re
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
 from random import Random
 from typing import Mapping
 
-import unicodedata
-
 from config_manager import DERIVED_TYPE, ColumnConfig
+from data_converter import convert_to__email, random_date
 from sources import SourceRepository
+from validation_utils import (
+    check_min_max,
+    require_not_none,
+    require_or_default,
+    require_or_raise,
+    require_iso_date,
+    require_xor,
+)
 
 Row = Mapping[str, str]
 
-_EMAIL_SEPARATOR = re.compile(r"[^a-z0-9]+")
-_REPEATED_DOTS = re.compile(r"\.+")
-
 
 def normalize_for_email(value: str) -> str:
-    ascii_value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
-
-    cleaned = _EMAIL_SEPARATOR.sub(".", ascii_value.lower().strip())
-    cleaned = _REPEATED_DOTS.sub(".", cleaned).strip(".")
-    if not cleaned:
-        raise ValueError("Cannot build email from empty normalized value.")
-    return cleaned
+    return convert_to__email(value)
 
 
 class ColumnGenerator(ABC):
 
-    def __init__(self, column: ColumnConfig, sources: SourceRepository, rng: Random) -> None:
+    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
         self.column = column
-        self._sources = sources
-        self._rng = rng
+        self.sources = sources
+        self.random = random
         self.validate()
 
     @property
@@ -46,36 +43,23 @@ class ColumnGenerator(ABC):
 
     def require(self, *keys: str) -> None:
         missing = [key for key in keys if getattr(self.column, key) is None]
-        if missing:
-            raise Exception(
-                f"Column {self.column.name!r} of type {self.column.type!r} requires: {', '.join(missing)}."
-            )
+        require_not_none(
+            obj=missing,
+            error_message=f"Column {self.column.name} of type {self.column.type} requires: {', '.join(missing)}."
+        )
 
-    def source_value(self, row: Row) -> str:
-        source_field = self.column.source_field
-        assert source_field is not None
-        try:
-            return row[source_field]
-        except KeyError:
-            raise Exception(
-                f"Column {self.column.name!r} depends on source field {source_field!r}."
-            )
+    def get_by_source(self, row: Row) -> str:
+        source_field = require_not_none(self.column.source_field)
+        return require_not_none(source_field, f"Column {self.column.name} depends on source field {source_field}.")
 
-    def mapped_value(self, mapping: Mapping[str, str], key: str) -> str:
-        try:
-            return mapping[key]
-        except KeyError:
-            raise Exception(
-                f"Value {key!r} not found in mapping for column {self.column.name!r}."
-            )
+    def get_by_key(self, mapping: Mapping[str, str], key: str) -> str:
+        return require_or_raise(mapping, key, f"Value {key} not found in mapping for column {self.column.name}.", )
 
 
 class SequenceColumn(ColumnGenerator):
 
     def generate(self, row: Row, row_index: int) -> str:
-        start = self.column.start if self.column.start is not None else 1
-        step = self.column.step if self.column.step is not None else 1
-        return str(start + row_index * step)
+        return str(require_or_default(self.column.start, 1) + row_index * require_or_default(self.column.step, 1))
 
 
 class FixedColumn(ColumnGenerator):
@@ -84,43 +68,37 @@ class FixedColumn(ColumnGenerator):
         self.require("value")
 
     def generate(self, row: Row, row_index: int) -> str:
-        if self.column.value is not None:
-            return str(self.column.value)
-        return ""
+        return str(require_not_none(self.column.value))
 
 
 class RandomIntColumn(ColumnGenerator):
 
     def validate(self) -> None:
         self.require("min", "max")
-        if self.column.min > self.column.max:  # type: ignore[operator]
-            raise Exception( f"Column {self.column.name!r}: 'min' must not be greater than 'max'.")
+        check_min_max(
+            minimum=self.column.min,
+            maximum=self.column.max,
+            error_message=f"Column {self.column.name}: 'min' must not be greater than 'max'."
+        )
 
     def generate(self, row: Row, row_index: int) -> str:
-        return str(self._rng.randint(self.column.min, self.column.max))  # type: ignore[arg-type]
+        return str(self.random.randint(self.column.min, self.column.max))  # type: ignore[arg-type]
 
 
 class RandomDateColumn(ColumnGenerator):
 
+    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random):
+        super().__init__(column, sources, random)
+        self.start = None
+        self.end = None
+
     def validate(self) -> None:
         self.require("date_start", "date_end")
-        try:
-            self._start = date.fromisoformat(self.column.date_start)  # type: ignore[arg-type]
-            self._end = date.fromisoformat(self.column.date_end)  # type: ignore[arg-type]
-        except ValueError as error:
-            raise Exception(
-                f"Column {self.column.name!r} needs ISO dates (YYYY-MM-DD): {error}"
-            ) from error
-
-        if self._start > self._end:
-            raise Exception(
-                f"date_start must be earlier than or equal to date_end: {self.column.name}"
-            )
-        self._span_days = (self._end - self._start).days
+        self.start = require_iso_date(self.column.date_start)
+        self.end = require_iso_date(self.column.date_end)
 
     def generate(self, row: Row, row_index: int) -> str:
-        offset = self._rng.randint(0, self._span_days)
-        return (self._start + timedelta(days=offset)).isoformat()
+        return random_date(self.start, self.end, self.random)
 
 
 class RandomFromFileColumn(ColumnGenerator):
@@ -129,45 +107,42 @@ class RandomFromFileColumn(ColumnGenerator):
         self.require("file")
 
     def generate(self, row: Row, row_index: int) -> str:
-        return self._rng.choice(self._sources.values(self.column.file))  # type: ignore[arg-type]
+        return self.random.choice(self.sources.values(self.column.file))  # type: ignore[arg-type]
 
 
 class RandomFromMappedFileColumn(ColumnGenerator):
 
+    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random):
+        super().__init__(column, sources, random)
+        self.file_columns = None
+        self.separator = None
+
     def validate(self) -> None:
         self.require("source_field", "mapping_file", "key_column")
-        if self.column.file_column and self.column.file_columns:
-            raise Exception(
-                f"Use either file_column or file_columns, not both: {self.column.name}"
-            )
-
-        self._file_columns = self.column.file_columns or (
-            (self.column.file_column,) if self.column.file_column else ()
+        require_xor(
+            obj1=self.column.file_column,
+            obj2=self.column.file_columns,
+            error_message=f"Use either file_column or file_columns, not both: {self.column.name}"
         )
-        if not self._file_columns:
-            raise Exception(
-                f"Column {self.column.name!r} of type {self.column.type!r} "
-                f"requires: file_column or file_columns."
-            )
-        self._separator = self.column.separator if self.column.separator is not None else " "
+
+        self.file_columns = require_or_default(obj=self.column.file_columns, default=())
+        self.separator = require_or_default(obj=self.column.separator, default=" ")
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        return (self.column.source_field,)  # type: ignore[return-value]
+        return (require_not_none(self.column.source_field),)
 
     def generate(self, row: Row, row_index: int) -> str:
-        key = self.source_value(row)
+        key = self.get_by_source(row)
         parts: list[str] = []
-        for file_column in self._file_columns:
-            mapping = self._sources.mapping(
-                self.column.mapping_file,  # type: ignore[arg-type]
-                self.column.key_column,  # type: ignore[arg-type]
-                file_column,
-            )
-            source_file = self.mapped_value(mapping, key)
-            parts.append(self._rng.choice(self._sources.values(source_file)))
+        for file_column in self.file_columns:
+            mapping_file = require_not_none(self.column.mapping_file)
+            key_column = require_not_none(self.column.key_column)
+            mapping = self.sources.mapping(mapping_file, key_column, file_column)
+            source_file = self.get_by_key(mapping, key)
+            parts.append(self.random.choice(self.sources.values(source_file)))
 
-        return self._separator.join(parts)
+        return self.separator.join(parts)
 
 
 class LookupFromCsvColumn(ColumnGenerator):
@@ -180,12 +155,12 @@ class LookupFromCsvColumn(ColumnGenerator):
         return (self.column.source_field,)  # type: ignore[return-value]
 
     def generate(self, row: Row, row_index: int) -> str:
-        mapping = self._sources.mapping(
+        mapping = self.sources.mapping(
             self.column.mapping_file,  # type: ignore[arg-type]
             self.column.key_column,  # type: ignore[arg-type]
             self.column.value_column,  # type: ignore[arg-type]
         )
-        return self.mapped_value(mapping, self.source_value(row))
+        return self.get_by_key(mapping, self.get_by_source(row))
 
 
 class SubtotalFromQuantityAndUnitPriceColumn(ColumnGenerator):
@@ -247,8 +222,8 @@ class DeliveryDateFromOrderDateColumn(ColumnGenerator):
         return (self.column.source_field,)  # type: ignore[return-value]
 
     def generate(self, row: Row, row_index: int) -> str:
-        base_date = date.fromisoformat(self.source_value(row))
-        offset = self._rng.randint(self._min_days, self._max_days)
+        base_date = date.fromisoformat(self.get_by_source(row))
+        offset = self.random.randint(self._min_days, self._max_days)
         return (base_date + timedelta(days=offset)).isoformat()
 
 
@@ -270,7 +245,7 @@ class EmailFromNameColumn(ColumnGenerator):
 
         domain = self.column.domain or self.DEFAULT_DOMAIN
         try:
-            local_part = f"{normalize_for_email(first_name)}.{normalize_for_email(last_name)}"
+            local_part = f"{convert_to__email(first_name)}.{convert_to__email(last_name)}"
         except ValueError as error:
             raise Exception(f"Column {self.column.name!r}: {error}") from error
         return f"{local_part}@{domain}"
