@@ -8,6 +8,8 @@ from data_converter import convert_to__email, random_date
 from sources import SourceRepository
 from validation_utils import (
     check_min_max,
+    days_between,
+    require_empty,
     require_not_none,
     require_or_default,
     require_or_raise,
@@ -43,17 +45,18 @@ class ColumnGenerator(ABC):
 
     def require(self, *keys: str) -> None:
         missing = [key for key in keys if getattr(self.column, key) is None]
-        require_not_none(
-            obj=missing,
-            error_message=f"Column {self.column.name} of type {self.column.type} requires: {', '.join(missing)}."
+        require_empty(
+            missing,
+            error_message=f"Column {self.column.name} of type {self.column.type} requires: {', '.join(missing)}.",
         )
 
     def get_by_source(self, row: Row) -> str:
         source_field = require_not_none(self.column.source_field)
-        return require_not_none(source_field, f"Column {self.column.name} depends on source field {source_field}.")
+        return require_not_none(row.get(source_field),
+                                f"Column {self.column.name} depends on source field {source_field}.")
 
     def get_by_key(self, mapping: Mapping[str, str], key: str) -> str:
-        return require_or_raise(mapping, key, f"Value {key} not found in mapping for column {self.column.name}.", )
+        return require_or_raise(mapping, key, f"'{key}' not found in mapping for column {self.column.name}.")
 
 
 class SequenceColumn(ColumnGenerator):
@@ -88,14 +91,19 @@ class RandomIntColumn(ColumnGenerator):
 class RandomDateColumn(ColumnGenerator):
 
     def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random):
-        super().__init__(column, sources, random)
         self.start = None
         self.end = None
+        super().__init__(column, sources, random)
 
     def validate(self) -> None:
         self.require("date_start", "date_end")
         self.start = require_iso_date(self.column.date_start)
         self.end = require_iso_date(self.column.date_end)
+        days_between(
+            self.start,
+            self.end,
+            error_message=f"date_start must be earlier than or equal to date_end: {self.column.name}",
+        )
 
     def generate(self, row: Row, row_index: int) -> str:
         return random_date(self.start, self.end, self.random)
@@ -113,9 +121,9 @@ class RandomFromFileColumn(ColumnGenerator):
 class RandomFromMappedFileColumn(ColumnGenerator):
 
     def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random):
-        super().__init__(column, sources, random)
         self.file_columns = None
         self.separator = None
+        super().__init__(column, sources, random)
 
     def validate(self) -> None:
         self.require("source_field", "mapping_file", "key_column")
@@ -124,8 +132,11 @@ class RandomFromMappedFileColumn(ColumnGenerator):
             obj2=self.column.file_columns,
             error_message=f"Use either file_column or file_columns, not both: {self.column.name}"
         )
-
-        self.file_columns = require_or_default(obj=self.column.file_columns, default=())
+        if self.column.file_column is None and self.column.file_columns is None:
+            raise Exception(
+                f"Column {self.column.name!r} of type {self.column.type!r} requires: file_column or file_columns."
+            )
+        self.file_columns = require_or_default(obj=self.column.file_columns, default=(self.column.file_column,))
         self.separator = require_or_default(obj=self.column.separator, default=" ")
 
     @property
