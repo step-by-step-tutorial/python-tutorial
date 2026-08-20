@@ -24,6 +24,7 @@ class ColumnConfig:
     date_start: str | None = None
     date_end: str | None = None
     source_field: str | None = None
+    source_fields: tuple[str, ...] | None = None
     mapping_file: str | None = None
     key_column: str | None = None
     value_column: str | None = None
@@ -34,6 +35,8 @@ class ColumnConfig:
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "ColumnConfig":
         data = dict(raw)
+        if data.get("source_fields") is not None:
+            data["source_fields"] = tuple(data["source_fields"])
         if data.get("file_columns") is not None:
             data["file_columns"] = tuple(data["file_columns"])
 

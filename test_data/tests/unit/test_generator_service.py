@@ -7,7 +7,7 @@ import pytest
 import env_config
 
 from config_manager import GeneratorConfig, ColumnConfig
-from columns import normalize_for_email
+from data_converter import convert_to__email
 from generator import DataGenerator
 
 
@@ -29,8 +29,8 @@ def write_config_file(tmp_path: Path, name: str, config: GeneratorConfig) -> str
 
 
 def test_normalize_for_email_removes_special_characters() -> None:
-    assert normalize_for_email("Emily Johnson") == "emily.johnson"
-    assert normalize_for_email("Alyssa") == "alyssa"
+    assert convert_to__email("Emily Johnson") == "emily.johnson"
+    assert convert_to__email("Alyssa") == "alyssa"
 
 
 def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
@@ -117,6 +117,30 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
     assert rows[0]["unit_price"] == "1200"
     assert 1 <= int(rows[0]["quantity"]) <= 5
     assert rows[0]["order_date"].startswith("2026-01-")
+
+
+@pytest.mark.parametrize("method", ["product_of_source_fields", "subtotal_from_quantity_and_unit_price"])
+def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path, method: str) -> None:
+    config = GeneratorConfig(
+        row_count=1,
+        output_file="generated.csv",
+        destinations=("csv",),
+        columns=[
+            ColumnConfig(name="qty", type="fixed", value="2"),
+            ColumnConfig(name="price", type="fixed", value="10"),
+            ColumnConfig(
+                name="line_total",
+                type="derived",
+                method=method,
+                source_fields=("qty", "price"),
+            ),
+        ],
+    )
+
+    generator = DataGenerator(write_config_file(tmp_path, "generated.json", config))
+    rows = list(generator.iter_rows())
+
+    assert rows == [{"qty": "2", "price": "10", "line_total": "20.0"}]
 
 
 def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:

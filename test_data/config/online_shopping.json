@@ -92,7 +92,7 @@
     {
       "name": "subtotal",
       "type": "derived",
-      "method": "subtotal_from_quantity_and_unit_price"
+      "method": "product_of_source_fields"
     },
     { "name": "discount_percent", "type": "random_int", "min": 0, "max": 30 },
     { "name": "shipping_cost", "type": "random_int", "min": 5, "max": 25 },

@@ -197,10 +197,14 @@ Every column needs a `name` and a `type`. The remaining keys depend on the type.
 | Method | Keys | Description |
 | --- | --- | --- |
 | `email_from_name` | `domain` (defaults to `example.com`) | Builds `first.last@domain` from the row's `first_name` and `last_name` columns, stripping accents and punctuation (`Jalalé` becomes `jalale`) |
+| `product_of_source_fields` | `source_fields` | Multiplies two numeric source fields and writes the product |
 | `lookup_from_csv` | `source_field`, `mapping_file`, `key_column`, `value_column` | Looks another column's value up in a CSV and returns one of its fields |
 
 `email_from_name` reads the columns literally named `first_name` and `last_name`, so a config using
 it must define both — the derived column itself can be named anything, such as `work_email`.
+
+`product_of_source_fields` takes exactly two `source_fields`. The output column can be named
+anything, such as `subtotal`, `line_total`, or `gross_amount`.
 
 `random_from_mapped_file` takes either a single `file_column` or a list of `file_columns`. With a
 list, one random value is picked per mapped file and the values are joined with `separator`
@@ -356,8 +360,8 @@ Counts are values available, not rows generated.
 
 ## Design Notes and Limits
 
-* Every value is written as text. There is no arithmetic between columns, so a `total_price`
-  of `quantity × unit_price` cannot be expressed — compute it downstream, or add a derived method.
+* Every value is written as text, but derived methods can still express simple arithmetic such as
+  a `subtotal` equal to `quantity × unit_price`.
 * `random_int` and `random_date` produce integers and ISO dates only; there is no decimal or
   timestamp type.
 * Dates are drawn independently, so a config cannot express "delivery date is 3 days after order

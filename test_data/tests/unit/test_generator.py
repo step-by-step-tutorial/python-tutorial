@@ -244,7 +244,12 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
             {"name": "product_name", "type": "fixed", "value": "Laptop"},
             {"name": "quantity", "type": "fixed", "value": "2"},
             {"name": "unit_price", "type": "fixed", "value": "10"},
-            {"name": "subtotal", "type": "derived", "method": "subtotal_from_quantity_and_unit_price"},
+            {
+                "name": "subtotal",
+                "type": "derived",
+                "method": "product_of_source_fields",
+                "source_fields": ["quantity", "unit_price"]
+            },
             {"name": "discount_percent", "type": "fixed", "value": "10"},
             {"name": "shipping_cost", "type": "fixed", "value": "5"},
             {"name": "tax_amount", "type": "derived", "method": "tax_from_subtotal", "value": 0.1},

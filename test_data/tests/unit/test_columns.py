@@ -6,7 +6,8 @@ from random import Random
 import pytest
 
 from config_manager import ColumnConfig
-from columns import build_column_generator, normalize_for_email
+from columns import build_column_generator
+from data_converter import convert_to__email
 from sources import SourceRepository
 
 
@@ -19,12 +20,12 @@ def build(column: ColumnConfig, root: Path):
     [("Emily Johnson", "emily.johnson"), ("Alyssa", "alyssa"), ("  O'Neill  ", "o.neill")],
 )
 def test_normalize_for_email(raw: str, expected: str) -> None:
-    assert normalize_for_email(raw) == expected
+    assert convert_to__email(raw) == expected
 
 
 def test_normalize_for_email_rejects_empty_result() -> None:
     with pytest.raises(ValueError, match="empty normalized value"):
-        normalize_for_email("###")
+        convert_to__email("###")
 
 
 def test_sequence_uses_start_and_step(tmp_path: Path) -> None:

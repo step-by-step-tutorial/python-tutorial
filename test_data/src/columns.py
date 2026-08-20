@@ -20,10 +20,6 @@ from validation_utils import (
 Row = Mapping[str, str]
 
 
-def normalize_for_email(value: str) -> str:
-    return convert_to__email(value)
-
-
 class ColumnGenerator(ABC):
 
     def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
@@ -173,16 +169,30 @@ class LookupFromCsvColumn(ColumnGenerator):
         return self.get_by_key(mapping, self.get_by_source(row))
 
 
-class SubtotalFromQuantityAndUnitPriceColumn(ColumnGenerator):
+class ProductOfSourceFieldsColumn(ColumnGenerator):
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        return ("quantity", "unit_price")
+        return require_not_blank(self.column.source_fields, f"Column {self.column.name} of type {self.column.type} requires source_fields.")
+
+    def validate(self) -> None:
+        source_fields = require_not_blank(
+            self.column.source_fields,
+            f"Column {self.column.name} of type {self.column.type} requires source_fields.",
+        )
+        if len(source_fields) != 2:
+            raise Exception(
+                f"Column {self.column.name} of type {self.column.type} requires exactly two source_fields."
+            )
 
     def generate(self, row: Row, row_index: int) -> str:
-        quantity = float(row["quantity"])
-        unit_price = float(row["unit_price"])
-        return str(quantity * unit_price)
+        left_field, right_field = require_not_blank(
+            self.column.source_fields,
+            f"Column {self.column.name} of type {self.column.type} requires source_fields.",
+        )
+        left_value = float(row[left_field])
+        right_value = float(row[right_field])
+        return str(left_value * right_value)
 
 
 class TaxFromSubtotalColumn(ColumnGenerator):
@@ -273,7 +283,8 @@ COLUMN_TYPES: dict[str, type[ColumnGenerator]] = {
 DERIVED_METHODS: dict[str, type[ColumnGenerator]] = {
     "email_from_name": EmailFromNameColumn,
     "lookup_from_csv": LookupFromCsvColumn,
-    "subtotal_from_quantity_and_unit_price": SubtotalFromQuantityAndUnitPriceColumn,
+    "product_of_source_fields": ProductOfSourceFieldsColumn,
+    "subtotal_from_quantity_and_unit_price": ProductOfSourceFieldsColumn,
     "tax_from_subtotal": TaxFromSubtotalColumn,
     "total_amount": TotalAmountColumn,
     "delivery_date_from_order_date": DeliveryDateFromOrderDateColumn,
