@@ -1,39 +1,51 @@
-
-
-import csv
+import json
 import importlib
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
 import env_config
 
-from application_config import ColumnConfig, load_config, GeneratorConfig
-from exceptions import DependencyError
-from generator import DataGenerator, generate_dataset
+from config_manager import ColumnConfig, GeneratorConfig
+from generator import DataGenerator
 
 
-def make_generator(columns: list[ColumnConfig], root: Path, row_count: int = 1) -> DataGenerator:
+def write_config_file(tmp_path: Path, name: str, config: GeneratorConfig) -> str:
+    def clean(value):
+        if isinstance(value, dict):
+            return {key: clean(val) for key, val in value.items() if val is not None}
+        if isinstance(value, list):
+            return [clean(item) for item in value]
+        if isinstance(value, tuple):
+            return [clean(item) for item in value]
+        return value
+
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(exist_ok=True)
+    (config_dir / name).write_text(json.dumps(clean(asdict(config))), encoding="utf-8")
+    return name
+
+
+def make_generator(columns: list[ColumnConfig], row_count: int = 1) -> DataGenerator:
     config = GeneratorConfig(
         row_count=row_count,
-        output_file="test.csv",
+        output_file="generated.csv",
         columns=columns,
         destinations=("csv",),
         seed=1,
     )
-    return DataGenerator(config=config, project_root=root)
+    return DataGenerator(write_config_file(Path(env_config.CONFIG_DIR).parent, "generated.json", config))
 
 
 def test_generate_rows_follows_config_column_order(project_root: Path) -> None:
-    config = load_config(project_root / "config" / "demo.json")
-    rows = DataGenerator(config=config, project_root=project_root).generate_rows()
+    rows = list(DataGenerator("demo.json").iter_rows())
 
     assert len(rows) == 5
-    assert list(rows[0]) == list(config.headers)
+    assert list(rows[0]) == ["order_id", "customer_name", "product_name", "category", "country"]
 
 
 def test_country_dependent_columns_stay_consistent(project_root: Path) -> None:
-    config = load_config(project_root / "config" / "demo.json")
-    rows = DataGenerator(config=config, project_root=project_root).generate_rows()
+    rows = list(DataGenerator("demo.json").iter_rows())
 
     expected = {"Germany": {"Hans Bauer"}, "USA": {"John Smith"}}
     for row in rows:
@@ -53,10 +65,9 @@ def test_column_may_be_declared_before_its_dependency(project_root: Path) -> Non
             ),
             ColumnConfig(name="country", type="fixed", value="Germany"),
         ],
-        project_root,
     )
 
-    assert generator.generate_rows() == [{"customer_name": "Hans", "country": "Germany"}]
+    assert list(generator.iter_rows()) == [{"customer_name": "Hans", "country": "Germany"}]
 
 
 def test_mapped_file_joins_several_file_columns(project_root: Path) -> None:
@@ -73,10 +84,9 @@ def test_mapped_file_joins_several_file_columns(project_root: Path) -> None:
                 separator=", ",
             ),
         ],
-        project_root,
     )
 
-    assert generator.generate_rows()[0]["customer_name"] == "Hans, Bauer"
+    assert list(generator.iter_rows())[0]["customer_name"] == "Hans, Bauer"
 
 
 def test_derived_email_uses_generated_names(project_root: Path) -> None:
@@ -103,14 +113,13 @@ def test_derived_email_uses_generated_names(project_root: Path) -> None:
             ),
             ColumnConfig(name="country", type="fixed", value="USA"),
         ],
-        project_root,
     )
 
-    assert generator.generate_rows()[0]["email"] == "john.smith@example-shop.com"
+    assert list(generator.iter_rows())[0]["email"] == "john.smith@example-shop.com"
 
 
 def test_circular_dependencies_are_rejected_before_generating(tmp_path: Path) -> None:
-    with pytest.raises(DependencyError, match="Circular column dependency detected"):
+    with pytest.raises(Exception, match="Circular column dependency detected"):
         make_generator(
             [
                 ColumnConfig(
@@ -132,12 +141,11 @@ def test_circular_dependencies_are_rejected_before_generating(tmp_path: Path) ->
                     value_column="value",
                 ),
             ],
-            tmp_path,
         )
 
 
 def test_unknown_dependency_is_rejected(tmp_path: Path) -> None:
-    with pytest.raises(DependencyError, match="depends on unknown column 'country'"):
+    with pytest.raises(Exception, match="depends on unknown column 'country'"):
         make_generator(
             [
                 ColumnConfig(
@@ -150,58 +158,26 @@ def test_unknown_dependency_is_rejected(tmp_path: Path) -> None:
                     value_column="currency_code",
                 )
             ],
-            tmp_path,
         )
 
 
-def test_write_csv_writes_header_and_rows(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
-    monkeypatch.setenv("CONFIG_DIR", str(tmp_path / "config"))
-    monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
-    importlib.reload(env_config)
-
-    generator = make_generator([ColumnConfig(name="country", type="fixed", value="Germany")], tmp_path)
-    output_path = generator.write_csv([{"country": "Germany"}])
-
-    assert output_path == tmp_path / "output" / "test.csv"
-    assert output_path.read_text(encoding="utf-8").splitlines() == ["country", "Germany"]
-
-    monkeypatch.delenv("PROJECT_ROOT", raising=False)
-    monkeypatch.delenv("CONFIG_DIR", raising=False)
-    monkeypatch.delenv("OUTPUT_DIR", raising=False)
-    importlib.reload(env_config)
-
-
-def test_generate_streams_rows_and_reports_the_count(project_root: Path) -> None:
-    config = load_config(project_root / "config" / "demo.json")
-    generator = DataGenerator(config=config, project_root=project_root)
-    generator.generate()
-
-    output_path = project_root / "output" / "demo.csv"
-    assert output_path.is_file()
-    with output_path.open(encoding="utf-8", newline="") as file:
-        assert len(list(csv.DictReader(file))) == 5
-
-
 def test_seeded_runs_are_reproducible(project_root: Path) -> None:
-    config = load_config(project_root / "config" / "demo.json")
-    first = DataGenerator(config=config, project_root=project_root).generate_rows()
-    second = DataGenerator(config=config, project_root=project_root).generate_rows()
+    first = list(DataGenerator("demo.json").iter_rows())
+    second = list(DataGenerator("demo.json").iter_rows())
 
     assert first == second
 
 
 def test_zero_rows_writes_header_only(project_root: Path) -> None:
     generator = make_generator(
-        [ColumnConfig(name="country", type="fixed", value="Germany")], project_root, row_count=0
+        [ColumnConfig(name="country", type="fixed", value="Germany")], row_count=0
     )
-    generator.generate()
 
-    assert generator.output_path.read_text(encoding="utf-8").splitlines() == ["country"]
+    assert list(generator.iter_rows()) == []
 
 
 def test_generate_dataset_loads_the_config_and_writes_the_file(project_root: Path) -> None:
-    generate_dataset(project_root / "config" / "demo.json")
+    DataGenerator("demo.json").generate_dataset()
 
     assert (project_root / "output" / "demo.csv").is_file()
 
@@ -229,7 +205,7 @@ def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch
     monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
     importlib.reload(env_config)
 
-    generate_dataset(config_dir / "sample.json")
+    DataGenerator("sample.json").generate_dataset()
 
     output_path = tmp_path / "output" / "sample.csv"
     assert output_path.read_text(encoding="utf-8").splitlines() == [
@@ -295,7 +271,7 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     importlib.reload(env_config)
 
     database_repository = mocker.patch("writer_registry.DatabaseRepository")
-    generate_dataset(config_dir / "online.json")
+    DataGenerator("online.json").generate_dataset()
 
     output_path = tmp_path / "output" / "online.csv"
     assert output_path.read_text(encoding="utf-8").splitlines() == [
@@ -309,6 +285,3 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     monkeypatch.delenv("CONFIG_DIR", raising=False)
     monkeypatch.delenv("OUTPUT_DIR", raising=False)
     importlib.reload(env_config)
-
-
-

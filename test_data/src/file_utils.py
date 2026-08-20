@@ -2,8 +2,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-import env_config
-
 
 def list_of_file_names(directory: Path) -> list[str]:
     paths = sorted(Path(directory).glob("*"))
@@ -19,13 +17,6 @@ def read_json_file(path: Path) -> dict[str, Any]:
 
     return raw
 
-
-def output_file_path(output_file: str) -> Path:
-    return env_config.OUTPUT_DIR / output_file
-
-
-def relative_to_project_root(path: Path) -> str:
-    try:
-        return path.relative_to(env_config.PROJECT_ROOT).as_posix()
-    except ValueError:
-        return path.as_posix()
+def check_file_exists(path: Path):
+    if not path.is_file():
+        raise Exception(f"File {path.name} does not exist.")

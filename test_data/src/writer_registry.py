@@ -64,4 +64,4 @@ class WriterRegistry:
             self._writers[name].write(row_list, config)
 
 
-WRITER_REGISTRY = WriterRegistry()
+writer_registry = WriterRegistry()

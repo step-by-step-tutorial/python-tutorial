@@ -5,9 +5,8 @@ from random import Random
 
 import pytest
 
-from application_config import ColumnConfig
+from config_manager import ColumnConfig
 from columns import build_column_generator, normalize_for_email
-from exceptions import ConfigurationError, SourceDataError
 from sources import SourceRepository
 
 
@@ -41,17 +40,17 @@ def test_sequence_defaults_to_one(tmp_path: Path) -> None:
 
 
 def test_fixed_requires_value(tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match="requires: value"):
+    with pytest.raises(Exception, match="requires: value"):
         build(ColumnConfig(name="country", type="fixed"), tmp_path)
 
 
 def test_random_int_requires_min_and_max(tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match="requires: min, max"):
+    with pytest.raises(Exception, match="requires: min, max"):
         build(ColumnConfig(name="quantity", type="random_int"), tmp_path)
 
 
 def test_random_int_rejects_inverted_range(tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match="'min' must not be greater than 'max'"):
+    with pytest.raises(Exception, match="'min' must not be greater than 'max'"):
         build(ColumnConfig(name="quantity", type="random_int", min=5, max=1), tmp_path)
 
 
@@ -62,7 +61,7 @@ def test_random_int_stays_within_bounds(tmp_path: Path) -> None:
 
 
 def test_random_date_rejects_inverted_range(tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match="date_start must be earlier"):
+    with pytest.raises(Exception, match="date_start must be earlier"):
         build(
             ColumnConfig(
                 name="order_date",
@@ -75,7 +74,7 @@ def test_random_date_rejects_inverted_range(tmp_path: Path) -> None:
 
 
 def test_random_date_rejects_unparsable_date(tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match="needs ISO dates"):
+    with pytest.raises(Exception, match="needs ISO dates"):
         build(
             ColumnConfig(
                 name="order_date", type="random_date", date_start="01/05/2026", date_end="2026-01-31"
@@ -105,7 +104,7 @@ def test_random_from_file_reports_empty_source(tmp_path: Path, write_lines) -> N
         ColumnConfig(name="country", type="random_from_file", file="data/empty.txt"), tmp_path
     )
 
-    with pytest.raises(SourceDataError, match="Source file is empty"):
+    with pytest.raises(Exception, match="Source file is empty"):
         generator.generate({}, 0)
 
 
@@ -114,12 +113,12 @@ def test_random_from_file_reports_missing_source(tmp_path: Path) -> None:
         ColumnConfig(name="country", type="random_from_file", file="data/absent.txt"), tmp_path
     )
 
-    with pytest.raises(SourceDataError, match="Source file not found"):
+    with pytest.raises(Exception, match="Source file not found"):
         generator.generate({}, 0)
 
 
 def test_mapped_file_rejects_both_file_keys(tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match="not both"):
+    with pytest.raises(Exception, match="not both"):
         build(
             ColumnConfig(
                 name="name",
@@ -135,7 +134,7 @@ def test_mapped_file_rejects_both_file_keys(tmp_path: Path) -> None:
 
 
 def test_mapped_file_requires_a_file_key(tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match="file_column or file_columns"):
+    with pytest.raises(Exception, match="file_column or file_columns"):
         build(
             ColumnConfig(
                 name="name",
@@ -161,7 +160,7 @@ def test_mapped_file_reports_unmapped_source_value(project_root: Path) -> None:
         project_root,
     )
 
-    with pytest.raises(SourceDataError, match="'Japan' not found in mapping"):
+    with pytest.raises(Exception, match="'Japan' not found in mapping"):
         generator.generate({"country": "Japan"}, 0)
 
 
@@ -179,7 +178,7 @@ def test_lookup_reports_mapping_without_the_requested_column(project_root: Path)
         project_root,
     )
 
-    with pytest.raises(SourceDataError, match="must contain columns"):
+    with pytest.raises(Exception, match="must contain columns"):
         generator.generate({"product_name": "Laptop"}, 0)
 
 
@@ -212,7 +211,7 @@ def test_email_reports_empty_name(tmp_path: Path) -> None:
         ColumnConfig(name="email", type="derived", method="email_from_name"), tmp_path
     )
 
-    with pytest.raises(ConfigurationError, match="depends on first_name and last_name"):
+    with pytest.raises(Exception, match="depends on first_name and last_name"):
         generator.generate({"first_name": "", "last_name": "Bauer"}, 0)
 
 
@@ -225,5 +224,5 @@ def test_email_reports_empty_name(tmp_path: Path) -> None:
     ],
 )
 def test_unknown_types_are_rejected(column: ColumnConfig, message: str, tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match=message):
+    with pytest.raises(Exception, match=message):
         build(column, tmp_path)

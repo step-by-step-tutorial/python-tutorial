@@ -3,9 +3,6 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
-from exceptions import SourceDataError
-
-
 class SourceRepository:
 
     def __init__(self, root: Path) -> None:
@@ -40,11 +37,11 @@ class SourceRepository:
         try:
             text = path.read_text(encoding="utf-8")
         except FileNotFoundError as error:
-            raise SourceDataError(f"Source file not found: {path}") from error
+            raise Exception(f"Source file not found: {path}") from error
 
         values = tuple(line.strip() for line in text.splitlines() if line.strip())
         if not values:
-            raise SourceDataError(f"Source file is empty: {path}")
+            raise Exception(f"Source file is empty: {path}")
         return values
 
     def _read_mapping(
@@ -62,10 +59,10 @@ class SourceRepository:
                     for row in self._checked_rows(reader, path, key_column, value_column)
                 }
         except FileNotFoundError as error:
-            raise SourceDataError(f"Mapping file not found: {path}") from error
+            raise Exception(f"Mapping file not found: {path}") from error
 
         if not mapping:
-            raise SourceDataError(f"Mapping file is empty: {path}")
+            raise Exception(f"Mapping file is empty: {path}")
         return MappingProxyType(mapping)
 
     @staticmethod
@@ -77,7 +74,7 @@ class SourceRepository:
     ):
         for row in reader:
             if row.get(key_column) is None or row.get(value_column) is None:
-                raise SourceDataError(
+                raise Exception(
                     f"Mapping file '{path}' must contain columns "
                     f"'{key_column}' and '{value_column}'."
                 )

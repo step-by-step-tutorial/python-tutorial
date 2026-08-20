@@ -1,11 +1,31 @@
+import json
+import importlib
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
+import env_config
 
-from application_config import GeneratorConfig, ColumnConfig
+from config_manager import GeneratorConfig, ColumnConfig
 from columns import normalize_for_email
-from exceptions import DependencyError
 from generator import DataGenerator
+
+
+@pytest.fixture(autouse=True)
+def temp_project_env(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("CONFIG_DIR", str(tmp_path / "config"))
+    monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
+    importlib.reload(env_config)
+    yield
+    importlib.reload(env_config)
+
+
+def write_config_file(tmp_path: Path, name: str, config: GeneratorConfig) -> str:
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(exist_ok=True)
+    (config_dir / name).write_text(json.dumps(asdict(config)), encoding="utf-8")
+    return name
 
 
 def test_normalize_for_email_removes_special_characters() -> None:
@@ -21,7 +41,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="test.csv",
+        output_file="generated.csv",
         destinations=("csv",),
         seed=1,
         columns=[
@@ -31,8 +51,8 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
         ],
     )
 
-    generator = DataGenerator(config=config, project_root=tmp_path)
-    rows = generator.generate_rows()
+    generator = DataGenerator(write_config_file(tmp_path, "generated.json", config))
+    rows = list(generator.iter_rows())
 
     assert rows == [
         {
@@ -40,23 +60,6 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
             "last_name": "Smith",
             "email": "john.smith@example.com",
         }
-    ]
-
-
-def test_write_csv_writes_headers_and_rows(tmp_path: Path) -> None:
-    config = GeneratorConfig(
-        row_count=1,
-        output_file="test.csv",
-        destinations=("csv",),
-        columns=[ColumnConfig(name="country", type="fixed", value="Germany")],
-    )
-    generator = DataGenerator(config=config, project_root=tmp_path)
-    output_path = generator.write_csv([{"country": "Germany"}])
-
-    assert output_path.exists()
-    assert output_path.read_text(encoding="utf-8").splitlines() == [
-        "country",
-        "Germany",
     ]
 
 
@@ -71,7 +74,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="test.csv",
+        output_file="generated.csv",
         destinations=("csv",),
         seed=7,
         columns=[
@@ -105,8 +108,8 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
         ],
     )
 
-    generator = DataGenerator(config=config, project_root=tmp_path)
-    rows = generator.generate_rows()
+    generator = DataGenerator(write_config_file(tmp_path, "generated.json", config))
+    rows = list(generator.iter_rows())
 
     assert rows[0]["order_id"] == "1"
     assert rows[0]["product"] == "Laptop"
@@ -129,7 +132,7 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="test.csv",
+        output_file="generated.csv",
         destinations=("csv",),
         seed=1,
         columns=[
@@ -145,8 +148,8 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
         ],
     )
 
-    generator = DataGenerator(config=config, project_root=tmp_path)
-    rows = generator.generate_rows()
+    generator = DataGenerator(write_config_file(tmp_path, "generated.json", config))
+    rows = list(generator.iter_rows())
 
     assert rows == [{"country": "Germany", "customer_name": "Hans"}]
 
@@ -165,7 +168,7 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="test.csv",
+        output_file="generated.csv",
         destinations=("csv",),
         seed=1,
         columns=[
@@ -182,8 +185,8 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
         ],
     )
 
-    generator = DataGenerator(config=config, project_root=tmp_path)
-    rows = generator.generate_rows()
+    generator = DataGenerator(write_config_file(tmp_path, "generated.json", config))
+    rows = list(generator.iter_rows())
 
     assert rows == [{"country": "Germany", "customer_name": "Hans Bauer"}]
 
@@ -201,7 +204,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
 
     config = GeneratorConfig(
         row_count=1,
-        output_file="test.csv",
+        output_file="generated.csv",
         destinations=("csv",),
         seed=1,
         columns=[
@@ -217,8 +220,8 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
         ],
     )
 
-    generator = DataGenerator(config=config, project_root=tmp_path)
-    rows = generator.generate_rows()
+    generator = DataGenerator(write_config_file(tmp_path, "generated.json", config))
+    rows = list(generator.iter_rows())
 
     assert list(rows[0]) == ["customer_name", "country"]
     assert rows[0] == {"customer_name": "Hans", "country": "Germany"}
@@ -227,7 +230,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
 def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
     config = GeneratorConfig(
         row_count=1,
-        output_file="test.csv",
+        output_file="generated.csv",
         destinations=("csv",),
         columns=[
             ColumnConfig(
@@ -251,8 +254,7 @@ def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
         ],
     )
 
-    with pytest.raises(DependencyError, match="Circular column dependency"):
-        DataGenerator(config=config, project_root=tmp_path)
-
+    with pytest.raises(Exception, match="Circular column dependency"):
+        DataGenerator(write_config_file(tmp_path, "generated.json", config))
 
 

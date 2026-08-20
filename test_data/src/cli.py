@@ -3,16 +3,14 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from exceptions import CsvGeneratorError
-from application_config import load_config
-from generator import generate_dataset
+from generator import DataGenerator
 
 EXIT_OK = 0
 EXIT_ERROR = 1
 
 
 def build_argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Generate CSV test data from text files.")
+    parser = argparse.ArgumentParser(description="Generate test data from text files.")
     parser.add_argument(
         "--config",
         required=True,
@@ -27,13 +25,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         config_path = Path(args.config)
-        config = load_config(config_path.name)
-        generate_dataset(config_path)
-    except CsvGeneratorError as error:
+        dataset = DataGenerator(config_path.name).generate_dataset()
+    except Exception as error:
         print(f"error: {error}", file=sys.stderr)
         return EXIT_ERROR
 
-    print(f"Generated {config.row_count} rows")
+    print(f"Generated {dataset.config.row_count} rows by {config_path}")
     return EXIT_OK
 
 
