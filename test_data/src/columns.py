@@ -173,26 +173,23 @@ class ProductOfSourceFieldsColumn(ColumnGenerator):
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        return require_not_blank(self.column.source_fields, f"Column {self.column.name} of type {self.column.type} requires source_fields.")
+        return require_not_blank(
+            obj=self.column.source_fields,
+            error_message=f"Column {self.column.name} of type {self.column.type} requires source_fields."
+        )
 
     def validate(self) -> None:
-        source_fields = require_not_blank(
-            self.column.source_fields,
-            f"Column {self.column.name} of type {self.column.type} requires source_fields.",
+        require_not_blank(
+            obj=self.column.source_fields,
+            error_message=f"Column {self.column.name} of type {self.column.type} requires source_fields.",
         )
-        if len(source_fields) != 2:
-            raise Exception(
-                f"Column {self.column.name} of type {self.column.type} requires exactly two source_fields."
-            )
 
     def generate(self, row: Row, row_index: int) -> str:
-        left_field, right_field = require_not_blank(
-            self.column.source_fields,
-            f"Column {self.column.name} of type {self.column.type} requires source_fields.",
+        number_one, number_two = require_not_blank(
+            obj=self.column.source_fields,
+            error_message=f"Column {self.column.name} of type {self.column.type} requires source_fields.",
         )
-        left_value = float(row[left_field])
-        right_value = float(row[right_field])
-        return str(left_value * right_value)
+        return str(float(row[number_one]) * float(row[number_two]))
 
 
 class TaxFromSubtotalColumn(ColumnGenerator):
