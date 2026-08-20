@@ -9,15 +9,12 @@ from sources import SourceRepository
 from validation_utils import (
     check_min_max,
     check_negative_days,
-    is_none,
-    is_empty_collection,
-    is_empty_text,
-    require_empty,
-    require_not_none,
+    require_blank,
+    require_not_blank,
     require_or_default,
     require_or_raise,
     require_iso_date,
-    require_xor, is_none_or_empty,
+    require_xor,
 )
 
 Row = Mapping[str, str]
@@ -48,15 +45,15 @@ class ColumnGenerator(ABC):
 
     def require(self, *keys: str) -> None:
         missing = [key for key in keys if getattr(self.column, key) is None]
-        require_empty(
+        require_blank(
             missing,
             error_message=f"Column {self.column.name} of type {self.column.type} requires: {', '.join(missing)}.",
         )
 
     def get_by_source(self, row: Row) -> str:
-        source_field = require_not_none(self.column.source_field)
-        return require_not_none(row.get(source_field),
-                                f"Column {self.column.name} depends on source field {source_field}.")
+        source_field = require_not_blank(self.column.source_field)
+        return require_not_blank(row.get(source_field),
+                                 f"Column {self.column.name} depends on source field {source_field}.")
 
     def get_by_key(self, mapping: Mapping[str, str], key: str) -> str:
         return require_or_raise(mapping, key, f"'{key}' not found in mapping for column {self.column.name}.")
@@ -74,7 +71,7 @@ class FixedColumn(ColumnGenerator):
         self.require("value")
 
     def generate(self, row: Row, row_index: int) -> str:
-        return str(require_not_none(self.column.value))
+        return str(require_not_blank(self.column.value))
 
 
 class RandomIntColumn(ColumnGenerator):
@@ -103,8 +100,8 @@ class RandomDateColumn(ColumnGenerator):
         self.start = require_iso_date(self.column.date_start)
         self.end = require_iso_date(self.column.date_end)
         check_negative_days(
-            require_not_none(self.start),
-            require_not_none(self.end),
+            require_not_blank(self.start),
+            require_not_blank(self.end),
             error_message=f"date_start must be earlier than or equal to date_end: {self.column.name}",
         )
 
@@ -130,14 +127,10 @@ class RandomFromMappedFileColumn(ColumnGenerator):
 
     def validate(self) -> None:
         self.require("source_field", "mapping_file", "key_column")
-        if is_none(self.column.file_column) and is_none_or_empty(self.column.file_columns):
-            raise Exception(
-                f"Column {self.column.name} of type {self.column.type} requires: file_column or file_columns."
-            )
         require_xor(
             obj1=self.column.file_column,
             obj2=self.column.file_columns,
-            error_message=f"Column {self.column.name} of type {self.column.type} requires: not both file_column and file_columns."
+            error_message=f"Column {self.column.name} of type {self.column.type} requires: XOR of file_column and file_columns."
         )
 
         self.file_columns = require_or_default(obj=self.column.file_columns, default=(self.column.file_column,))
@@ -145,14 +138,14 @@ class RandomFromMappedFileColumn(ColumnGenerator):
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        return (require_not_none(self.column.source_field),)
+        return (require_not_blank(self.column.source_field),)
 
     def generate(self, row: Row, row_index: int) -> str:
         key = self.get_by_source(row)
         parts: list[str] = []
         for file_column in self.file_columns:
-            mapping_file = require_not_none(self.column.mapping_file)
-            key_column = require_not_none(self.column.key_column)
+            mapping_file = require_not_blank(self.column.mapping_file)
+            key_column = require_not_blank(self.column.key_column)
             mapping = self.sources.mapping(mapping_file, key_column, file_column)
             source_file = self.get_by_key(mapping, key)
             parts.append(self.random.choice(self.sources.values(source_file)))
