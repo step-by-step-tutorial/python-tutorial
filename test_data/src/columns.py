@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
+from math import prod
 from random import Random
 from typing import Mapping
 
@@ -169,41 +170,25 @@ class LookupFromCsvColumn(ColumnGenerator):
         return self.get_by_key(mapping, self.get_by_source(row))
 
 
-class ProductOfSourceFieldsColumn(ColumnGenerator):
+class ProductColumn(ColumnGenerator):
+
+    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
+        self._source_fields: tuple[str, ...] = ()
+        super().__init__(column, sources, random)
+
+    def validate(self) -> None:
+        self.require("source_fields")
+        self._source_fields = require_not_blank(self.column.source_fields)
 
     @property
     def dependencies(self) -> tuple[str, ...]:
-        return require_not_blank(
-            obj=self.column.source_fields,
-            error_message=f"Column {self.column.name} of type {self.column.type} requires source_fields."
-        )
-
-    def validate(self) -> None:
-        require_not_blank(
-            obj=self.column.source_fields,
-            error_message=f"Column {self.column.name} of type {self.column.type} requires source_fields.",
-        )
+        return self._source_fields
 
     def generate(self, row: Row, row_index: int) -> str:
-        number_one, number_two = require_not_blank(
-            obj=self.column.source_fields,
-            error_message=f"Column {self.column.name} of type {self.column.type} requires source_fields.",
-        )
-        return str(float(row[number_one]) * float(row[number_two]))
-
-
-class TaxFromSubtotalColumn(ColumnGenerator):
-
-    def validate(self) -> None:
-        self.rate = float(self.column.value) if self.column.value is not None else 0.0
-
-    @property
-    def dependencies(self) -> tuple[str, ...]:
-        return ("subtotal",)
-
-    def generate(self, row: Row, row_index: int) -> str:
-        subtotal = float(row["subtotal"])
-        return str(subtotal * self.rate)
+        values = [float(row[field]) for field in self._source_fields]
+        if self.column.value is not None:
+            values.append(float(self.column.value))
+        return str(prod(values))
 
 
 class TotalAmountColumn(ColumnGenerator):
@@ -280,9 +265,11 @@ COLUMN_TYPES: dict[str, type[ColumnGenerator]] = {
 DERIVED_METHODS: dict[str, type[ColumnGenerator]] = {
     "email_from_name": EmailFromNameColumn,
     "lookup_from_csv": LookupFromCsvColumn,
-    "product_of_source_fields": ProductOfSourceFieldsColumn,
-    "subtotal_from_quantity_and_unit_price": ProductOfSourceFieldsColumn,
-    "tax_from_subtotal": TaxFromSubtotalColumn,
+    "product_of_source_fields": ProductColumn,
+    "product_of_source_field_and_rate": ProductColumn,
+    "product_of_source_field_and_value": ProductColumn,
+    "subtotal_from_quantity_and_unit_price": ProductColumn,
+    "tax_from_subtotal": ProductColumn,
     "total_amount": TotalAmountColumn,
     "delivery_date_from_order_date": DeliveryDateFromOrderDateColumn,
 }

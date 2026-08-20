@@ -252,7 +252,13 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
             },
             {"name": "discount_percent", "type": "fixed", "value": "10"},
             {"name": "shipping_cost", "type": "fixed", "value": "5"},
-            {"name": "tax_amount", "type": "derived", "method": "tax_from_subtotal", "value": 0.1},
+            {
+                "name": "tax_amount",
+                "type": "derived",
+                "method": "product_of_source_fields",
+                "source_fields": ["subtotal"],
+                "value": 0.1
+            },
             {"name": "total_amount", "type": "derived", "method": "total_amount"},
             {"name": "payment_status", "type": "random_from_file", "file": "data/payment_statuses.txt"},
             {"name": "fulfillment_status", "type": "random_from_file", "file": "data/fulfillment_statuses.txt"},

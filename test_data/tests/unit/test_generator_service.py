@@ -143,6 +143,52 @@ def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path, method: 
     assert rows == [{"qty": "2", "price": "10", "line_total": "20.0"}]
 
 
+def test_product_of_source_field_and_rate_can_use_custom_source_field(tmp_path: Path) -> None:
+    config = GeneratorConfig(
+        row_count=1,
+        output_file="generated.csv",
+        destinations=("csv",),
+        columns=[
+            ColumnConfig(name="net_total", type="fixed", value="25"),
+            ColumnConfig(
+                name="vat_amount",
+                type="derived",
+                method="product_of_source_fields",
+                source_fields=("net_total",),
+                value=0.2,
+            ),
+        ],
+    )
+
+    generator = DataGenerator(write_config_file(tmp_path, "generated.json", config))
+    rows = list(generator.iter_rows())
+
+    assert rows == [{"net_total": "25", "vat_amount": "5.0"}]
+
+
+def test_product_of_source_field_and_rate_supports_zero_rate(tmp_path: Path) -> None:
+    config = GeneratorConfig(
+        row_count=1,
+        output_file="generated.csv",
+        destinations=("csv",),
+        columns=[
+            ColumnConfig(name="net_total", type="fixed", value="25"),
+            ColumnConfig(
+                name="vat_amount",
+                type="derived",
+                method="product_of_source_fields",
+                source_fields=("net_total",),
+                value=0.0,
+            ),
+        ],
+    )
+
+    generator = DataGenerator(write_config_file(tmp_path, "generated.json", config))
+    rows = list(generator.iter_rows())
+
+    assert rows == [{"net_total": "25", "vat_amount": "0.0"}]
+
+
 def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
     data_dir = tmp_path / "data"
     names_dir = data_dir / "names"

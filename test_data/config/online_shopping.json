@@ -92,14 +92,16 @@
     {
       "name": "subtotal",
       "type": "derived",
-      "method": "product_of_source_fields"
+      "method": "product_of_source_fields",
+      "source_fields": ["quantity", "unit_price"]
     },
     { "name": "discount_percent", "type": "random_int", "min": 0, "max": 30 },
     { "name": "shipping_cost", "type": "random_int", "min": 5, "max": 25 },
     {
       "name": "tax_amount",
       "type": "derived",
-      "method": "tax_from_subtotal",
+      "method": "product_of_source_fields",
+      "source_fields": ["subtotal"],
       "value": 0.1
     },
     {

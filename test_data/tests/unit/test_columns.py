@@ -7,7 +7,7 @@ import pytest
 
 from config_manager import ColumnConfig
 from columns import build_column_generator
-from data_converter import convert_to__email
+from data_converter import convert_to__email, convert_to_floats
 from sources import SourceRepository
 
 
@@ -26,6 +26,10 @@ def test_normalize_for_email(raw: str, expected: str) -> None:
 def test_normalize_for_email_rejects_empty_result() -> None:
     with pytest.raises(ValueError, match="empty normalized value"):
         convert_to__email("###")
+
+
+def test_convert_to_floats() -> None:
+    assert convert_to_floats(["2", "3.5", "0"]) == [2.0, 3.5, 0.0]
 
 
 def test_sequence_uses_start_and_step(tmp_path: Path) -> None:
@@ -181,6 +185,20 @@ def test_lookup_reports_mapping_without_the_requested_column(project_root: Path)
 
     with pytest.raises(Exception, match="must contain columns"):
         generator.generate({"product_name": "Laptop"}, 0)
+
+
+def test_product_column_uses_float_conversion_for_source_fields(project_root: Path) -> None:
+    generator = build(
+        ColumnConfig(
+            name="subtotal",
+            type="derived",
+            method="product_of_source_fields",
+            source_fields=("quantity", "unit_price"),
+        ),
+        project_root,
+    )
+
+    assert generator.generate({"quantity": "2", "unit_price": "10.5"}, 0) == "21.0"
 
 
 def test_email_declares_its_dependencies(tmp_path: Path) -> None:

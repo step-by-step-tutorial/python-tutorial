@@ -28,3 +28,7 @@ def random_date(start: date, end: date, random: Random) -> str:
     days = calculate_days(start, end)
     offset = random.randint(0, days)
     return (start + timedelta(days=offset)).isoformat()
+
+
+def convert_to_floats(values: list[str]) -> list[float]:
+    return [float(value) for value in values]
