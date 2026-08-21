@@ -3,13 +3,13 @@
 from pathlib import Path
 import pytest
 
-from columns import get_column_generator
+from column_generator_registry import ColumnGeneratorRegistry
 from data_converter import convert_to_email, convert_to_floats
 from schemas import ColumnModel
 
 
 def build(column: ColumnModel):
-    return get_column_generator(column)
+    return ColumnGeneratorRegistry.get(column)
 
 
 @pytest.mark.parametrize(

@@ -174,7 +174,7 @@ A config file is a JSON object with three required keys plus the column list.
 | --- | --- | --- |
 | `row_count` | yes | Number of data rows to generate |
 | `output_file` | yes | Destination CSV, relative to the project root |
-| `columns` | yes | Ordered list of column definitions |
+| `column_generator.py` | yes | Ordered list of column definitions |
 | `destinations` | no | Output targets to write: `csv`, `json`, `database`, or `kafka` |
 
 ### Column Types

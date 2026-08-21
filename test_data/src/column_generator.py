@@ -263,26 +263,3 @@ class EmailFromSourceFieldsColumn(ColumnGenerator):
         except ValueError as error:
             raise Exception(f"Column {self.model.name}: {error}") from error
         return f"{local_part}@{domain}"
-
-
-generator_registry: dict[str, type[ColumnGenerator]] = {
-    "sequence": SequenceColumn,
-    "fixed": FixedColumn,
-    "random_int": RandomIntColumn,
-    "random_date": RandomDateColumn,
-    "random_from_file": RandomFromFileColumn,
-    "random_from_mapped_file": RandomFromMappedFileColumn,
-    "email_from_source_fields": EmailFromSourceFieldsColumn,
-    "lookup_from_csv": LookupFromCsvColumn,
-    "product_of_source_fields": ProductColumn,
-    "formula": FormulaColumn,
-    "date_with_random_day_offset": DateWithRandomDayOffsetColumn,
-}
-
-
-def get_column_generator(column: ColumnModel) -> ColumnGenerator:
-    generator_name = column.method or column.type
-    generator_type = generator_registry.get(generator_name)
-    require_not_blank(generator_type, f"Unsupported column generator: {generator_name}")
-
-    return generator_type(column)

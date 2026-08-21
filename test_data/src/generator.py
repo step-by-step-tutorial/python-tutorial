@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 
-from columns import ColumnGenerator, get_column_generator
+from column_generator_registry import ColumnGeneratorRegistry
 from config_utils import read_config
 from datasets import Dataset
 from writer_registry import writer_registry
@@ -11,9 +11,7 @@ class DataGenerator:
     def __init__(self, config_name: str) -> None:
         self.config_name = config_name
         self.config = read_config(config_name)
-        self._generators: dict[str, ColumnGenerator] = {
-            column.name: get_column_generator(column) for column in self.config.columns
-        }
+        self._generators = ColumnGeneratorRegistry.get_all(self.config.columns)
         self._order = self._resolve_order()
 
     def iter_rows(self) -> Iterator[dict[str, str]]:
