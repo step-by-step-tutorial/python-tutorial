@@ -64,19 +64,18 @@ test_data/
   data/                             source values, organised by kind of data
   output/                           generated CSV files (git-ignored)
   src/
-    main.py                         script entry point for `python ./src/main.py`
-    api.py                          FastAPI service entry point
-    cli.py                          installed CLI command
-    columns.py                      column generators and derived-value helpers
-    database_repository.py          writes generated rows into the test-data database
-    application_config.py                       config models and JSON loading
-    datasets.py                     dataset registry and output metadata
-    exceptions.py                   package-specific error types
-    generator.py                    row generation orchestration
-    json_writer.py                  JSON output writer
-    schemas.py                      API request and response schemas
-    sources.py                      source file and mapping loaders
-    writer.py                       CSV writing
+    test_data/
+      api/                          FastAPI application
+      config/                       settings and configuration loading
+      connector/                    Kafka and database clients
+      converter/                    data conversion helpers
+      generator/                    row and column generation
+      model/                        configuration and dataset models
+      repository/                   source and database repositories
+      util/                         file, serialization, and validation helpers
+      writer/                       output destinations
+      cli.py                        command-line entry point
+      __main__.py                   `python -m test_data` entry point
   tests/
     test_generator.py
     test_config.py
@@ -118,9 +117,8 @@ pip install pytest
 pip install -e .
 ```
 
-Both installs are optional: `pytest` is needed only to run the tests, and `pip install -e .` only
-makes the modules under `src/` importable from outside `pytest`. Running the generator itself needs
-nothing installed.
+`pytest` is needed only to run the tests. Install the project with `pip install -e .` before using
+the command-line or API entry points.
 
 ## Run the Tests
 
@@ -145,16 +143,15 @@ docker compose --file docker-compose.yml --project-name test --env-file ./.env.t
 
 ```shell
 cd ./test_data
-python ./src/main.py --config ./config/sale.json
-python ./src/main.py --config ./config/online_shopping.json
-python ./src/main.py --config ./config/hr.json
-python ./src/main.py --help
+python -m test_data --config ./config/sale.json
+python -m test_data --config ./config/online_shopping.json
+python -m test_data --config ./config/hr.json
+python -m test_data --help
 ```
 
 ```shell
 cd ./test_data
-Set-Location C:\Users\saman\IdeaProjects\python-tutorial\test_data
-python ./src/dataset_api.py 
+csv-data-generator-api
 ```
 
 URL: [localhost:8080](http://localhost:8080)
@@ -171,7 +168,7 @@ git-ignored, so the repository keeps the inputs, not the results.
 
 ## Configuration Guide
 
-A config file is a JSON object with three required keys plus the column list.
+A config file is a JSON object with required dataset metadata and a column list.
 
 ### Top-Level Keys
 
@@ -280,6 +277,9 @@ that file's lines.
 {
   "row_count": 10,
   "output_name": "sales",
+  "kafka_topic": "sale-events",
+  "kafka_key_column": "order_id",
+  "destinations": ["csv", "kafka"],
   "columns": [
     { "name": "order_id", "type": "sequence", "start": 1, "step": 1 },
     {

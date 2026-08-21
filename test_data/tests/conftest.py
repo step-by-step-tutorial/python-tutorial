@@ -4,7 +4,7 @@ import importlib
 from pathlib import Path
 
 import pytest
-import env_config
+from test_data.config import settings as env_config
 
 TEST_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "test_output"
 

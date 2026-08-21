@@ -24,15 +24,12 @@ test = [
 ]
 
 [project.scripts]
-csv-data-generator = "cli:main"
-csv-data-generator-api = "api:run"
-
-[tool.setuptools]
-package-dir = { "" = "src" }
-py-modules = ["api", "application_config", "cli", "columns", "csv_utils", "database_repository", "datasets", "destination_registry", "error_handlers", "exceptions", "file_utils", "generator", "json_utils", "kafka_connector", "kafka_utils", "mapper", "path_utils", "schemas", "sources", "writer"]
+csv-data-generator = "test_data.cli:main"
+csv-data-generator-api = "test_data.api.dataset_api:run"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+include = ["test_data*"]
 
 [tool.pytest.ini_options]
 pythonpath = [
