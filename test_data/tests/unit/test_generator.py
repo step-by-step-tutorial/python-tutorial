@@ -41,14 +41,14 @@ def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DatasetGen
 
 
 def test_generate_rows_follows_config_column_order(project_root: Path) -> None:
-    rows = list(DatasetGenerator("demo.json").generate_rows())
+    rows = list(DatasetGenerator("demo.json").row_generator.generate_rows())
 
     assert len(rows) == 5
     assert list(rows[0]) == ["order_id", "customer_name", "product_name", "category", "country"]
 
 
 def test_country_dependent_columns_stay_consistent(project_root: Path) -> None:
-    rows = list(DatasetGenerator("demo.json").generate_rows())
+    rows = list(DatasetGenerator("demo.json").row_generator.generate_rows())
 
     expected = {"Germany": {"Hans Bauer"}, "USA": {"John Smith"}}
     for row in rows:
@@ -70,7 +70,7 @@ def test_column_may_be_declared_before_its_dependency(project_root: Path) -> Non
         ],
     )
 
-    assert list(generator.generate_rows()) == [{"customer_name": "Hans", "country": "Germany"}]
+    assert list(generator.row_generator.generate_rows()) == [{"customer_name": "Hans", "country": "Germany"}]
 
 
 def test_mapped_file_joins_several_file_columns(project_root: Path) -> None:
@@ -89,7 +89,7 @@ def test_mapped_file_joins_several_file_columns(project_root: Path) -> None:
         ],
     )
 
-    assert list(generator.generate_rows())[0]["customer_name"] == "Hans, Bauer"
+    assert list(generator.row_generator.generate_rows())[0]["customer_name"] == "Hans, Bauer"
 
 
 def test_derived_email_uses_generated_names(project_root: Path) -> None:
@@ -122,7 +122,7 @@ def test_derived_email_uses_generated_names(project_root: Path) -> None:
         ],
     )
 
-    assert list(generator.generate_rows())[0]["email"] == "john.smith@example-shop.com"
+    assert list(generator.row_generator.generate_rows())[0]["email"] == "john.smith@example-shop.com"
 
 
 def test_circular_dependencies_are_rejected_before_generating(tmp_path: Path) -> None:
@@ -169,8 +169,8 @@ def test_unknown_dependency_is_rejected(tmp_path: Path) -> None:
 
 
 def test_seeded_runs_are_reproducible(project_root: Path) -> None:
-    first = list(DatasetGenerator("demo.json").generate_rows())
-    second = list(DatasetGenerator("demo.json").generate_rows())
+    first = list(DatasetGenerator("demo.json").row_generator.generate_rows())
+    second = list(DatasetGenerator("demo.json").row_generator.generate_rows())
 
     assert first == second
 
@@ -180,7 +180,7 @@ def test_zero_rows_writes_header_only(project_root: Path) -> None:
         [ColumnModel(name="country", type="fixed", value="Germany")], row_count=0
     )
 
-    assert list(generator.generate_rows()) == []
+    assert list(generator.row_generator.generate_rows()) == []
 
 
 def test_generate_dataset_loads_the_config_and_writes_the_file(project_root: Path) -> None:

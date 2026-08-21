@@ -61,7 +61,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
     )
 
     generator = DatasetGenerator(write_config_file(tmp_path, "generated.json", config))
-    rows = list(generator.generate_rows())
+    rows = list(generator.row_generator.generate_rows())
 
     assert rows == [
         {
@@ -117,7 +117,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
     )
 
     generator = DatasetGenerator(write_config_file(tmp_path, "generated.json", config))
-    rows = list(generator.generate_rows())
+    rows = list(generator.row_generator.generate_rows())
 
     assert rows[0]["order_id"] == "1"
     assert rows[0]["product"] == "Laptop"
@@ -145,7 +145,7 @@ def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path) -> None:
     )
 
     generator = DatasetGenerator(write_config_file(tmp_path, "generated.json", config))
-    rows = list(generator.generate_rows())
+    rows = list(generator.row_generator.generate_rows())
 
     assert rows == [{"qty": "2", "price": "10", "line_total": "20.0"}]
 
@@ -168,7 +168,7 @@ def test_product_of_source_fields_can_use_a_constant_factor(tmp_path: Path) -> N
     )
 
     generator = DatasetGenerator(write_config_file(tmp_path, "generated.json", config))
-    rows = list(generator.generate_rows())
+    rows = list(generator.row_generator.generate_rows())
 
     assert rows == [{"net_total": "25", "vat_amount": "5.0"}]
 
@@ -191,7 +191,7 @@ def test_product_of_source_fields_supports_a_zero_constant_factor(tmp_path: Path
     )
 
     generator = DatasetGenerator(write_config_file(tmp_path, "generated.json", config))
-    rows = list(generator.generate_rows())
+    rows = list(generator.row_generator.generate_rows())
 
     assert rows == [{"net_total": "25", "vat_amount": "0.0"}]
 
@@ -225,7 +225,7 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
     )
 
     generator = DatasetGenerator(write_config_file(tmp_path, "generated.json", config))
-    rows = list(generator.generate_rows())
+    rows = list(generator.row_generator.generate_rows())
 
     assert rows == [{"country": "Germany", "customer_name": "Hans"}]
 
@@ -261,7 +261,7 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
     )
 
     generator = DatasetGenerator(write_config_file(tmp_path, "generated.json", config))
-    rows = list(generator.generate_rows())
+    rows = list(generator.row_generator.generate_rows())
 
     assert rows == [{"country": "Germany", "customer_name": "Hans Bauer"}]
 
@@ -295,7 +295,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
     )
 
     generator = DatasetGenerator(write_config_file(tmp_path, "generated.json", config))
-    rows = list(generator.generate_rows())
+    rows = list(generator.row_generator.generate_rows())
 
     assert list(rows[0]) == ["customer_name", "country"]
     assert rows[0] == {"customer_name": "Hans", "country": "Germany"}
