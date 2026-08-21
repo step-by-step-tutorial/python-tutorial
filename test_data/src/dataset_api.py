@@ -1,12 +1,13 @@
 import os
 
 import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse, RedirectResponse
 
 from dataset_registry import DatasetRegistry
 from file_utils import check_file_exists
 from dataset_generator import DatasetGenerator
+from output_format_utils import media_type_for
 from schemas import DatasetMetadata
 
 __version__ = "1.1.0"
@@ -16,32 +17,66 @@ def create_api() -> FastAPI:
     app = FastAPI(
         title="Test Data Generator API",
         version=__version__,
-        summary="Generate CSV test datasets and read them back.",
+        summary="Generate test datasets and download configured output formats.",
+        description="Generate datasets from JSON configurations and download their CSV, JSON, or XML output.",
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json",
+        openapi_tags=[
+            {"name": "Health", "description": "Service health and version information."},
+            {"name": "Datasets", "description": "Discover, generate, and download datasets."},
+        ],
     )
 
     registry = DatasetRegistry()
 
-    @app.get("/health")
+    @app.get("/", include_in_schema=False)
+    async def redirect_to_health() -> RedirectResponse:
+        return RedirectResponse(url="/health")
+
+    @app.get("/health", tags=["Health"], summary="Get service health")
     async def get_health_status() -> dict[str, str]:
         return {"status": "ok", "version": __version__}
 
-    @app.get("/datasets")
+    @app.get("/datasets", tags=["Datasets"], summary="List datasets")
     async def get_list() -> list[DatasetMetadata]:
         return registry.get_all_metadata()
 
-    @app.get("/datasets/{name}")
+    @app.get("/datasets/{name}", tags=["Datasets"], summary="Get dataset metadata")
     async def get_one(name: str) -> DatasetMetadata:
         return registry.get_one(name).get_metadata()
 
-    @app.post("/datasets/{name}/generate")
+    @app.post("/datasets/{name}/generate", tags=["Datasets"], summary="Generate dataset output")
     async def generate(name: str) -> DatasetMetadata:
         return DatasetGenerator(config_name=name).write().get_metadata()
 
-    @app.get("/datasets/{name}/download")
-    async def download(name: str) -> FileResponse:
-        path = registry.get_one(name).output_file
+    @app.get(
+        "/datasets/{name}/download",
+        tags=["Datasets"],
+        summary="Download generated output",
+        response_description="The generated dataset file in the requested format.",
+        responses={404: {"description": "Dataset, format, or generated output file was not found."}},
+    )
+    async def download(
+            name: str,
+            format_name: str = Query(
+                "csv",
+                alias="format",
+                description="Configured output format to download, such as csv, json, or xml.",
+            ),
+    ) -> FileResponse:
+        dataset = registry.get_one(name)
+        if format_name not in dataset.destinations:
+            raise HTTPException(status_code=404, detail=f"Format '{format_name}' is not available for {name}.")
+
+        try:
+            path = dataset.output_file_for(format_name)
+            media_type = media_type_for(format_name)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail=f"Unsupported format: {format_name}.") from error
+
         check_file_exists(path)
-        return FileResponse(path, media_type="text/csv", filename=path.name)
+        return FileResponse(path, media_type=media_type, filename=path.name)
 
     return app
 

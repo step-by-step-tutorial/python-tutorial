@@ -156,6 +156,10 @@ Set-Location C:\Users\saman\IdeaProjects\python-tutorial\test_data
 python ./src/dataset_api.py 
 ```
 
+URL: [localhost:8080](http://localhost:8080)
+API Documentation: [localhost:8080/docs](http://localhost:8080/docs)
+API Documentation: [localhost:8080/redoc](http://localhost:8080/redoc)
+
 ```shell
 cd ./test_data
 docker compose --file docker-compose.yml --project-name test --env-file ./.env.test down -v

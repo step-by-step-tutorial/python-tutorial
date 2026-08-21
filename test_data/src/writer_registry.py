@@ -10,6 +10,8 @@ import env_config
 from csv_utils import write_csv
 from database_repository import DatabaseRepository
 from json_utils import write_json
+from output_format_utils import output_file_name
+from xml_utils import write_xml
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,9 @@ class CsvWriter(Writer):
     name = "csv"
 
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
-        output_path = write_csv(env_config.OUTPUT_DIR / config.output_file, config.column_names, rows)
+        output_path = write_csv(
+            env_config.OUTPUT_DIR / output_file_name(config.output_file, self.name), config.column_names, rows
+        )
         logger.info("CSV output written to %s", output_path)
 
 
@@ -34,8 +38,18 @@ class JsonWriter(Writer):
     name = "json"
 
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
-        output_path = write_json(env_config.OUTPUT_DIR / f"{Path(config.output_file).stem}.json", rows)
+        output_path = write_json(env_config.OUTPUT_DIR / output_file_name(config.output_file, self.name), rows)
         logger.info("JSON output written to %s", output_path)
+
+
+class XmlWriter(Writer):
+    name = "xml"
+
+    def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
+        output_path = write_xml(
+            env_config.OUTPUT_DIR / output_file_name(config.output_file, self.name), config.column_names, rows
+        )
+        logger.info("XML output written to %s", output_path)
 
 
 class DatabaseWriter(Writer):
@@ -53,6 +67,7 @@ class WriterRegistry:
         writers = [
             CsvWriter(),
             JsonWriter(),
+            XmlWriter(),
             DatabaseWriter(),
         ]
         self._writers = {writer.name: writer for writer in writers}

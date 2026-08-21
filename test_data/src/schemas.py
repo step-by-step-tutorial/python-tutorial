@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import env_config
+from output_format_utils import output_file_name
 from pydantic import BaseModel, Field
 
 
@@ -56,7 +57,10 @@ class Dataset:
 
     @property
     def output_file(self) -> Path:
-        return env_config.OUTPUT_DIR / self.config.output_file
+        return self.output_file_for("csv")
+
+    def output_file_for(self, format_name: str) -> Path:
+        return env_config.OUTPUT_DIR / output_file_name(self.config.output_file, format_name)
 
     def get_metadata(self) -> "DatasetMetadata":
         return DatasetMetadata(
