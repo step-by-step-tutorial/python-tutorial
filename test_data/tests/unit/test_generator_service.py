@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 import env_config
 
-from config_manager import ConfigModel, ColumnModel
 from data_converter import convert_to_email
 from generator import DataGenerator
+from schemas import ColumnModel, ConfigModel
 
 
 @pytest.fixture(autouse=True)

@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import env_config
-from config_manager import ConfigModel, load_config
+from config_utils import read_config
 from file_utils import list_of_file_names
+from schemas import ConfigModel
 from schemas import DatasetMetadata
 
 @dataclass(frozen=True)
@@ -41,7 +42,7 @@ class Dataset:
 class DatasetRegistry:
     def __init__(self) -> None:
         self._datasets = {
-            name: Dataset(name=name, config=load_config(name)) for name in list_of_file_names(env_config.CONFIG_DIR)
+            name: Dataset(name=name, config=read_config(name)) for name in list_of_file_names(env_config.CONFIG_DIR)
         }
 
     def get_all_datasets(self) -> get_all_datasets[Dataset]:

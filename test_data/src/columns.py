@@ -5,8 +5,8 @@ from math import prod
 from random import Random
 from typing import Mapping
 
-from config_manager import ColumnModel
 from data_converter import convert_to_email, random_date_between, random_date_from
+from schemas import ColumnModel
 from sources_repository import SourceRepository
 from validation_utils import (
     check_min_max,

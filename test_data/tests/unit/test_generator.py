@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 import env_config
 
-from config_manager import ColumnModel, ConfigModel
 from generator import DataGenerator
+from schemas import ColumnModel, ConfigModel
 
 
 def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:

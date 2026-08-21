@@ -7,17 +7,17 @@ from pathlib import Path
 import pytest
 import env_config
 
-from config_manager import (
-    ColumnModel,
-    convert_to_column_model,
-    convert_to_column_model_list,
-    convert_to_config_model,
-    load_config,
+from config_utils import (
+    convert_to_column,
+    convert_to_columns,
+    convert_to_config,
+    read_config,
 )
+from schemas import ColumnModel
 
 
 def test_load_config_reads_columns_and_seed(project_root: Path) -> None:
-    config = load_config("demo.json")
+    config = read_config("demo.json")
 
     assert config.row_count == 5
     assert config.seed == 42
@@ -27,7 +27,7 @@ def test_load_config_reads_columns_and_seed(project_root: Path) -> None:
 
 
 def test_column_config_converts_file_columns_to_tuple() -> None:
-    column = convert_to_column_model(
+    column = convert_to_column(
         {
             "name": "customer_name",
             "type": "random_from_mapped_file",
@@ -39,7 +39,7 @@ def test_column_config_converts_file_columns_to_tuple() -> None:
 
 
 def test_column_model_list_converter_returns_models() -> None:
-    columns = convert_to_column_model_list(
+    columns = convert_to_columns(
         [{"name": "country", "type": "fixed", "value": "USA"}]
     )
 
@@ -47,7 +47,7 @@ def test_column_model_list_converter_returns_models() -> None:
 
 
 def test_generator_config_reads_destinations() -> None:
-    config = convert_to_config_model(
+    config = convert_to_config(
         {
             "row_count": 1,
             "output_file": "x.csv",
@@ -64,7 +64,7 @@ def test_load_config_reports_missing_file(tmp_path: Path, monkeypatch) -> None:
     importlib.reload(env_config)
     try:
         with pytest.raises(Exception):
-            load_config("config_absent.json")
+            read_config("config_absent.json")
     finally:
         monkeypatch.delenv("CONFIG_DIR", raising=False)
         importlib.reload(env_config)
@@ -77,7 +77,7 @@ def test_load_config_reports_invalid_json(tmp_path: Path, monkeypatch) -> None:
     importlib.reload(env_config)
     try:
         with pytest.raises(Exception):
-            load_config("config_broken.json")
+            read_config("config_broken.json")
     finally:
         monkeypatch.delenv("CONFIG_DIR", raising=False)
         importlib.reload(env_config)
@@ -90,14 +90,14 @@ def test_load_config_reports_non_object_json(tmp_path: Path, monkeypatch) -> Non
     importlib.reload(env_config)
     try:
         with pytest.raises(TypeError):
-            load_config("config_list.json")
+            read_config("config_list.json")
     finally:
         monkeypatch.delenv("CONFIG_DIR", raising=False)
         importlib.reload(env_config)
 
 
 def test_online_shopping_config_includes_extended_fields() -> None:
-    config = load_config("online_shopping.json")
+    config = read_config("online_shopping.json")
 
     assert config.destinations == ("csv", "json", "database")
     assert "subtotal" in config.headers

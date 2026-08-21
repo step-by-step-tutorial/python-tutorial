@@ -5,9 +5,9 @@ from random import Random
 
 import pytest
 
-from config_manager import ColumnModel
 from columns import get_column_generator
 from data_converter import convert_to_email, convert_to_floats
+from schemas import ColumnModel
 from sources_repository import SourceRepository
 
 

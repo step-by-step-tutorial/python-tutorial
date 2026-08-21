@@ -2,7 +2,7 @@ from collections.abc import Iterator
 from random import Random
 
 from columns import ColumnGenerator, get_column_generator
-from config_manager import load_config
+from config_utils import read_config
 from datasets import Dataset
 from sources_repository import SourceRepository
 from writer_registry import writer_registry
@@ -16,7 +16,7 @@ class DataGenerator:
             sources: SourceRepository | None = None,
     ) -> None:
         self.config_name = config_name
-        self.config = load_config(config_name)
+        self.config = read_config(config_name)
         self._sources = sources if sources is not None else SourceRepository()
         self._rng = Random(self.config.seed)
         self._generators: dict[str, ColumnGenerator] = {
