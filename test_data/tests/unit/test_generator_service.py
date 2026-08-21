@@ -28,6 +28,10 @@ def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
     return name
 
 
+def config_with_headers(**kwargs) -> ConfigModel:
+    return ConfigModel(headers=tuple(column.name for column in kwargs["columns"]), **kwargs)
+
+
 def test_normalize_for_email_removes_special_characters() -> None:
     assert convert_to_email("Emily Johnson") == "emily.johnson"
     assert convert_to_email("Alyssa") == "alyssa"
@@ -39,7 +43,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
     (data_dir / "first_names.txt").write_text("John\n", encoding="utf-8")
     (data_dir / "last_names.txt").write_text("Smith\n", encoding="utf-8")
 
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
@@ -78,7 +82,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
@@ -126,7 +130,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
 
 
 def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path) -> None:
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
@@ -149,7 +153,7 @@ def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path) -> None:
 
 
 def test_product_of_source_fields_can_use_a_constant_factor(tmp_path: Path) -> None:
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
@@ -172,7 +176,7 @@ def test_product_of_source_fields_can_use_a_constant_factor(tmp_path: Path) -> N
 
 
 def test_product_of_source_fields_supports_a_zero_constant_factor(tmp_path: Path) -> None:
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
@@ -205,7 +209,7 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
@@ -241,7 +245,7 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
         encoding="utf-8",
     )
 
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
@@ -277,7 +281,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
         encoding="utf-8",
     )
 
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
@@ -303,7 +307,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
 
 
 def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),

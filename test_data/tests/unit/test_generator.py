@@ -26,8 +26,12 @@ def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
     return name
 
 
+def config_with_headers(**kwargs) -> ConfigModel:
+    return ConfigModel(headers=tuple(column.name for column in kwargs["columns"]), **kwargs)
+
+
 def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DataGenerator:
-    config = ConfigModel(
+    config = config_with_headers(
         row_count=row_count,
         output_file="generated.csv",
         columns=columns,

@@ -39,12 +39,8 @@ class ConfigModel:
     output_file: str
     columns: Sequence[ColumnModel]
     destinations: tuple[str, ...]
+    headers: tuple[str, ...]
     seed: int | None = None
-
-    @property
-    def headers(self) -> tuple[str, ...]:
-        return tuple(column.name for column in self.columns)
-
 
 def convert_to_column_model(raw: dict[str, Any]) -> ColumnModel:
     data = dict(raw)
@@ -61,12 +57,14 @@ def convert_to_column_model_list(raw_columns: Sequence[dict[str, Any]]) -> tuple
 
 
 def convert_to_config_model(raw: dict[str, Any]) -> ConfigModel:
+    columns = convert_to_column_model_list(raw["columns"])
     return ConfigModel(
         row_count=raw["row_count"],
         output_file=str(raw["output_file"]),
-        columns=convert_to_column_model_list(raw["columns"]),
+        columns=columns,
         seed=raw.get("seed"),
         destinations=tuple(raw["destinations"]),
+        headers=tuple(column.name for column in columns),
     )
 
 
