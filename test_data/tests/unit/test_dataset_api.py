@@ -1,4 +1,5 @@
 import json
+import importlib
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -54,3 +55,26 @@ def test_root_redirects_to_health(project_root: Path) -> None:
 
     assert response.status_code == 307
     assert response.headers["location"] == "/health"
+
+
+def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -> None:
+    config_path = env_config.CONFIG_DIR / "demo.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    config["destinations"] = ["database"]
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    database_path = project_root / "test_data.sqlite"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite+pysqlite:///{database_path}")
+    importlib.reload(env_config)
+    try:
+        DatasetGenerator("demo.json").write()
+
+        response = TestClient(create_api()).get("/datasets/demo.json/rows?page=2&page_size=2")
+
+        assert response.status_code == 200
+        assert response.json()["page"] == 2
+        assert response.json()["page_size"] == 2
+        assert response.json()["total"] == 5
+        assert len(response.json()["items"]) == 2
+    finally:
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        importlib.reload(env_config)

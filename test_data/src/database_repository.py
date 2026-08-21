@@ -1,6 +1,6 @@
 from collections.abc import Iterable, Mapping, Sequence
 
-from sqlalchemy import Column, MetaData, String, Table, create_engine
+from sqlalchemy import Column, MetaData, String, Table, create_engine, func, select
 
 
 class DatabaseRepository:
@@ -22,3 +22,15 @@ class DatabaseRepository:
         with engine.begin() as connection:
             if row_list:
                 connection.execute(table.insert(), row_list)
+
+    def read_page(  self,  table_name: str,   page: int, page_size: int) -> tuple[list[dict[str, str | None]], int]:
+        engine = create_engine(self._url)
+        table = Table(table_name, MetaData(), autoload_with=engine)
+
+        with engine.connect() as connection:
+            total = connection.scalar(select(func.count()).select_from(table))
+            rows = connection.execute(
+                select(table).limit(page_size).offset((page - 1) * page_size)
+            ).mappings().all()
+
+        return [dict(row) for row in rows], total or 0

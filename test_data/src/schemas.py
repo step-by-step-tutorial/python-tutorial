@@ -84,3 +84,10 @@ class DatasetMetadata(BaseModel):
     destinations: list[str]
     file: str = Field(description="Path relative to the project root")
     download_url: str
+
+
+class DatabasePage(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    items: list[dict[str, str | None]]

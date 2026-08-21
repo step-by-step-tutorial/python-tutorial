@@ -1,14 +1,18 @@
 import os
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, RedirectResponse
+from sqlalchemy.exc import NoSuchTableError
 
+import env_config
+from database_repository import DatabaseRepository
 from dataset_registry import DatasetRegistry
 from file_utils import check_file_exists
 from dataset_generator import DatasetGenerator
 from output_format_utils import media_type_for
-from schemas import DatasetMetadata
+from schemas import DatabasePage, DatasetMetadata
 
 __version__ = "1.1.0"
 
@@ -49,6 +53,33 @@ def create_api() -> FastAPI:
     @app.post("/datasets/{name}/generate", tags=["Datasets"], summary="Generate dataset output")
     async def generate(name: str) -> DatasetMetadata:
         return DatasetGenerator(config_name=name).write().get_metadata()
+
+    @app.get(
+        "/datasets/{name}/rows",
+        tags=["Datasets"],
+        summary="Read paginated database rows",
+        response_description="One page of rows from the generated dataset table.",
+        responses={404: {"description": "Dataset is not database-backed or its table was not found."}},
+    )
+    async def get_rows(
+            name: str,
+            page: int = Query(1, ge=1, description="One-based page number."),
+            page_size: int = Query(100, ge=1, le=1_000, description="Maximum number of rows to return."),
+    ) -> DatabasePage:
+        dataset = registry.get_one(name)
+        if "database" not in dataset.destinations:
+            raise HTTPException(status_code=404, detail=f"Dataset {name} has no database destination.")
+
+        try:
+            items, total = DatabaseRepository(env_config.DATABASE_URL).read_page(
+                table_name=Path(dataset.config.output_file).stem,
+                page=page,
+                page_size=page_size,
+            )
+        except NoSuchTableError as error:
+            raise HTTPException(status_code=404, detail=f"Database table for {name} was not found.") from error
+
+        return DatabasePage(page=page, page_size=page_size, total=total, items=items)
 
     @app.get(
         "/datasets/{name}/download",
