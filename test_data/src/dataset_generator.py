@@ -1,15 +1,15 @@
-from collections.abc import Iterator, Callable
+from collections.abc import Iterator
 
 from collection_utils import order_dependencies
 from column_generator_registry import ColumnGeneratorRegistry
 from config_utils import read_config
-from datasets import Dataset
+from schemas import Dataset
 from validation_utils import require_or_raise_map, \
     require_absent
 from writer_registry import WriterRegistry
 
 
-class DataGenerator:
+class DatasetGenerator:
 
     def __init__(self, config_name: str) -> None:
         self.config_name = config_name
@@ -34,13 +34,7 @@ class DataGenerator:
         self.writers.write_all(list[dict[str, str]](self.generate_rows()), self.config)
         return Dataset(name=self.config_name, config=self.config)
 
-    def resolve_dependencies(
-            self,
-            name: str,
-            pended: tuple[str, ...],
-            resolved: list[str],
-            ordered: list[str],
-    ) -> None:
+    def resolve_dependencies(self, name: str, pended: tuple[str, ...], resolved: list[str], ordered: list[str]) -> None:
         if name in resolved:
             return
 

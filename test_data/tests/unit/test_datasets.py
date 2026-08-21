@@ -2,7 +2,7 @@ import importlib
 from pathlib import Path
 
 import env_config
-from datasets import DatasetRegistry
+from dataset_registry import DatasetRegistry
 from file_utils import list_of_file_names
 
 

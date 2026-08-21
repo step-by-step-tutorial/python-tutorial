@@ -3,7 +3,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from generator import DataGenerator
+from dataset_generator import DatasetGenerator
 
 EXIT_OK = 0
 EXIT_ERROR = 1
@@ -21,7 +21,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         config_path = Path(args.config)
-        dataset = DataGenerator(config_path.name).write()
+        dataset = DatasetGenerator(config_path.name).write()
     except Exception as error:
         print(f"error: {error}", file=sys.stderr)
         return EXIT_ERROR

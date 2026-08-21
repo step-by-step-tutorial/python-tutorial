@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 
+import env_config
 from pydantic import BaseModel, Field
 
 
@@ -36,6 +38,36 @@ class ConfigModel:
     columns: Sequence[ColumnModel]
     destinations: tuple[str, ...]
     column_names: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class Dataset:
+    name: str
+    config: ConfigModel
+
+    @property
+    def columns(self) -> tuple[str, ...]:
+        return self.config.column_names
+
+    @property
+    def destinations(self) -> tuple[str, ...]:
+        return self.config.destinations
+
+    @property
+    def output_file(self) -> Path:
+        return env_config.OUTPUT_DIR / self.config.output_file
+
+    def get_metadata(self) -> "DatasetMetadata":
+        return DatasetMetadata(
+            name=self.name,
+            config_file=f"{env_config.CONFIG_DIR.name}/{self.name}",
+            row_count=self.config.row_count,
+            column_count=len(self.columns),
+            columns=list(self.columns),
+            destinations=list(self.destinations),
+            file=f"{env_config.OUTPUT_DIR.name}/{self.config.output_file}",
+            download_url=f"/datasets/{self.name}/download",
+        )
 
 
 class DatasetMetadata(BaseModel):

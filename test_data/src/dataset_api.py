@@ -4,9 +4,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from datasets import DatasetRegistry
+from dataset_registry import DatasetRegistry
 from file_utils import check_file_exists
-from generator import DataGenerator
+from dataset_generator import DatasetGenerator
 from schemas import DatasetMetadata
 
 __version__ = "1.1.0"
@@ -35,7 +35,7 @@ def create_api() -> FastAPI:
 
     @app.post("/datasets/{name}/generate")
     async def generate(name: str) -> DatasetMetadata:
-        return DataGenerator(config_name=name).write().get_metadata()
+        return DatasetGenerator(config_name=name).write().get_metadata()
 
     @app.get("/datasets/{name}/download")
     async def download(name: str) -> FileResponse:

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import env_config
 
-from generator import DataGenerator
+from dataset_generator import DatasetGenerator
 from schemas import ColumnModel, ConfigModel
 
 
@@ -30,25 +30,25 @@ def config_with_headers(**kwargs) -> ConfigModel:
     return ConfigModel(column_names=tuple(column.name for column in kwargs["columns"]), **kwargs)
 
 
-def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DataGenerator:
+def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DatasetGenerator:
     config = config_with_headers(
         row_count=row_count,
         output_file="generated.csv",
         columns=columns,
         destinations=("csv",),
     )
-    return DataGenerator(write_config_file(Path(env_config.CONFIG_DIR).parent, "generated.json", config))
+    return DatasetGenerator(write_config_file(Path(env_config.CONFIG_DIR).parent, "generated.json", config))
 
 
 def test_generate_rows_follows_config_column_order(project_root: Path) -> None:
-    rows = list(DataGenerator("demo.json").generate_rows())
+    rows = list(DatasetGenerator("demo.json").generate_rows())
 
     assert len(rows) == 5
     assert list(rows[0]) == ["order_id", "customer_name", "product_name", "category", "country"]
 
 
 def test_country_dependent_columns_stay_consistent(project_root: Path) -> None:
-    rows = list(DataGenerator("demo.json").generate_rows())
+    rows = list(DatasetGenerator("demo.json").generate_rows())
 
     expected = {"Germany": {"Hans Bauer"}, "USA": {"John Smith"}}
     for row in rows:
@@ -169,8 +169,8 @@ def test_unknown_dependency_is_rejected(tmp_path: Path) -> None:
 
 
 def test_seeded_runs_are_reproducible(project_root: Path) -> None:
-    first = list(DataGenerator("demo.json").generate_rows())
-    second = list(DataGenerator("demo.json").generate_rows())
+    first = list(DatasetGenerator("demo.json").generate_rows())
+    second = list(DatasetGenerator("demo.json").generate_rows())
 
     assert first == second
 
@@ -184,7 +184,7 @@ def test_zero_rows_writes_header_only(project_root: Path) -> None:
 
 
 def test_generate_dataset_loads_the_config_and_writes_the_file(project_root: Path) -> None:
-    DataGenerator("demo.json").write()
+    DatasetGenerator("demo.json").write()
 
     assert (project_root / "output" / "demo.csv").is_file()
 
@@ -212,7 +212,7 @@ def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch
     monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
     importlib.reload(env_config)
 
-    DataGenerator("sample.json").write()
+    DatasetGenerator("sample.json").write()
 
     output_path = tmp_path / "output" / "sample.csv"
     assert output_path.read_text(encoding="utf-8").splitlines() == [
@@ -294,7 +294,7 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     importlib.reload(env_config)
 
     database_repository = mocker.patch("writer_registry.DatabaseRepository")
-    DataGenerator("online.json").write()
+    DatasetGenerator("online.json").write()
 
     output_path = tmp_path / "output" / "online.csv"
     assert output_path.read_text(encoding="utf-8").splitlines() == [
