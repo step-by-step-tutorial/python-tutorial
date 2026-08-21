@@ -151,7 +151,8 @@ python -m test_data --help
 
 ```shell
 cd ./test_data
-csv-data-generator-api
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\test_data
+python ./src/test_data/api/dataset_api.py 
 ```
 
 URL: [localhost:8080](http://localhost:8080)
