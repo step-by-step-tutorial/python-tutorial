@@ -3,19 +3,17 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
+import env_config
+
+
 class SourceRepository:
 
-    def __init__(self, root: Path) -> None:
-        self._root = Path(root)
+    def __init__(self) -> None:
         self._values: dict[str, tuple[str, ...]] = {}
         self._mappings: dict[tuple[str, str, str], Mapping[str, str]] = {}
 
-    @property
-    def root(self) -> Path:
-        return self._root
-
     def resolve(self, relative_path: str) -> Path:
-        return (self._root / relative_path).resolve()
+        return (env_config.PROJECT_ROOT / relative_path).resolve()
 
     def values(self, relative_path: str) -> tuple[str, ...]:
         cached = self._values.get(relative_path)

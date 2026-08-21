@@ -1,7 +1,6 @@
 from collections.abc import Iterator
 from random import Random
 
-import env_config
 from columns import ColumnGenerator, get_column_generator
 from config_manager import load_config
 from datasets import Dataset
@@ -18,7 +17,7 @@ class DataGenerator:
     ) -> None:
         self.config_name = config_name
         self.config = load_config(config_name)
-        self._sources = sources if sources is not None else SourceRepository(env_config.PROJECT_ROOT)
+        self._sources = sources if sources is not None else SourceRepository()
         self._rng = Random(self.config.seed)
         self._generators: dict[str, ColumnGenerator] = {
             column.name: get_column_generator(column, self._sources, self._rng)
