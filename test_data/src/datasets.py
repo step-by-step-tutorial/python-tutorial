@@ -17,7 +17,7 @@ class Dataset:
 
     @property
     def columns(self) -> tuple[str, ...]:
-        return self.config.headers
+        return self.config.column_names
 
     @property
     def destinations(self) -> tuple[str, ...]:

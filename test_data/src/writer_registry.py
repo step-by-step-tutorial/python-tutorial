@@ -26,7 +26,7 @@ class CsvWriter(Writer):
     name = "csv"
 
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
-        output_path = write_csv(env_config.OUTPUT_DIR / config.output_file, config.headers, rows)
+        output_path = write_csv(env_config.OUTPUT_DIR / config.output_file, config.column_names, rows)
         logger.info("CSV output written to %s", output_path)
 
 
@@ -44,7 +44,7 @@ class DatabaseWriter(Writer):
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
         repository = DatabaseRepository(env_config.DATABASE_URL)
         table_name = Path(config.output_file).stem
-        repository.write_rows(table_name=table_name, headers=config.headers, rows=rows)
+        repository.write_rows(table_name=table_name, headers=config.column_names, rows=rows)
         logger.info("Database output written to table %s", table_name)
 
 

@@ -21,7 +21,7 @@ def test_load_config_reads_columns(project_root: Path) -> None:
 
     assert config.row_count == 5
     assert config.output_file == "demo.csv"
-    assert config.headers == ("order_id", "customer_name", "product_name", "category", "country")
+    assert config.column_names == ("order_id", "customer_name", "product_name", "category", "country")
     assert config.destinations == ("csv",)
 
 
@@ -99,11 +99,11 @@ def test_online_shopping_config_includes_extended_fields() -> None:
     config = read_config("online_shopping.json")
 
     assert config.destinations == ("csv", "json", "database")
-    assert "subtotal" in config.headers
-    assert "discount_percent" in config.headers
-    assert "shipping_cost" in config.headers
-    assert "tax_amount" in config.headers
-    assert "total_amount" in config.headers
-    assert "payment_status" in config.headers
-    assert "fulfillment_status" in config.headers
-    assert "estimated_delivery_date" in config.headers
+    assert "subtotal" in config.column_names
+    assert "discount_percent" in config.column_names
+    assert "shipping_cost" in config.column_names
+    assert "tax_amount" in config.column_names
+    assert "total_amount" in config.column_names
+    assert "payment_status" in config.column_names
+    assert "fulfillment_status" in config.column_names
+    assert "estimated_delivery_date" in config.column_names

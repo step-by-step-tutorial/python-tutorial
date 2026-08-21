@@ -1,9 +1,10 @@
-from collections.abc import Iterator
+from collections.abc import Iterator, Callable
 
+from collection_utils import order_dependencies
 from column_generator_registry import ColumnGeneratorRegistry
 from config_utils import read_config
 from datasets import Dataset
-from validation_utils import require_not_blank, require_or_raise_tuple, require_or_raise_map, \
+from validation_utils import require_or_raise_map, \
     require_absent
 from writer_registry import WriterRegistry
 
@@ -15,43 +16,44 @@ class DataGenerator:
         self.config = read_config(config_name)
         self.column_generators = ColumnGeneratorRegistry.get_all(self.config.columns)
         self.writers = WriterRegistry()
-        self._order = self._resolve_order()
+        self.ordered_column = order_dependencies(
+            self.config.column_names,
+            lambda name, pending, resolved, ordered: self.resolve_dependencies(name, pending, resolved, ordered)
+        )
 
     def generate_rows(self) -> Iterator[dict[str, str]]:
-        headers = self.config.headers
-        for row_index in range(self.config.row_count):
+        column_names = self.config.column_names
+        row_count = self.config.row_count
+        for row_index in range(row_count):
             values: dict[str, str] = {}
-            for name in self._order:
-                values[name] = self.column_generators[name].generate(values, row_index)
-            yield {name: values[name] for name in headers}
+            for column_name in self.ordered_column:
+                values[column_name] = self.column_generators[column_name].generate(values, row_index)
+            yield {name: values[name] for name in column_names}
 
     def write(self) -> Dataset:
         self.writers.write_all(list[dict[str, str]](self.generate_rows()), self.config)
         return Dataset(name=self.config_name, config=self.config)
 
-    def _resolve_order(self) -> tuple[str, ...]:
-        order: list[str] = []
-        resolved: set[str] = set()
-
-        for column in self.config.columns:
-            pending = ()
-            self._visit_order(column.name, pending, resolved, order)
-
-        return tuple(order)
-
-    def _visit_order(self, name: str, pending: tuple[str, ...], resolved: set[str], order: list[str]) -> None:
+    def resolve_dependencies(
+            self,
+            name: str,
+            pended: tuple[str, ...],
+            resolved: list[str],
+            ordered: list[str],
+    ) -> None:
         if name in resolved:
             return
 
-        require_absent(pending, name)
-        dependencies = require_or_raise_map(
+        require_absent(pended, name)
+        column_generator = require_or_raise_map(
             mapping=self.column_generators,
             key=name,
-            error_message=f"Column {pending[-1] if pending else name} depends on unknown column {name}."
-        ).dependencies
+            error_message=f"Column {pended[-1] if pended else name} depends on unknown column {name}."
+        )
+        dependencies = column_generator.dependencies
 
         for dependency in dependencies:
-            self._visit_order(dependency, (*pending, name), resolved, order)
+            self.resolve_dependencies(dependency, (*pended, name), resolved, ordered)
 
-        resolved.add(name)
-        order.append(name)
+        resolved.append(name)
+        ordered.append(name)

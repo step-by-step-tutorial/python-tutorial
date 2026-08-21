@@ -35,7 +35,7 @@ class ConfigModel:
     output_file: str
     columns: Sequence[ColumnModel]
     destinations: tuple[str, ...]
-    headers: tuple[str, ...]
+    column_names: tuple[str, ...]
 
 
 class DatasetMetadata(BaseModel):
