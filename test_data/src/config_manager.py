@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import env_config
-from file_utils import read_json_file
+from json_utils import read_json_file
 
 DERIVED_TYPE = "derived"
 

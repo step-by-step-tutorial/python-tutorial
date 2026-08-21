@@ -3,7 +3,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
-import env_config
+from file_utils import absolute_project_path
 
 
 class SourceRepository:
@@ -11,9 +11,6 @@ class SourceRepository:
     def __init__(self) -> None:
         self._values: dict[str, tuple[str, ...]] = {}
         self._mappings: dict[tuple[str, str, str], Mapping[str, str]] = {}
-
-    def resolve(self, relative_path: str) -> Path:
-        return (env_config.PROJECT_ROOT / relative_path).resolve()
 
     def values(self, relative_path: str) -> tuple[str, ...]:
         cached = self._values.get(relative_path)
@@ -31,7 +28,7 @@ class SourceRepository:
         return cached
 
     def _read_values(self, relative_path: str) -> tuple[str, ...]:
-        path = self.resolve(relative_path)
+        path = absolute_project_path(relative_path)
         try:
             text = path.read_text(encoding="utf-8")
         except FileNotFoundError as error:
@@ -48,7 +45,7 @@ class SourceRepository:
             key_column: str,
             value_column: str,
     ) -> Mapping[str, str]:
-        path = self.resolve(relative_path)
+        path = absolute_project_path(relative_path)
         try:
             with path.open("r", encoding="utf-8", newline="") as file:
                 reader = csv.DictReader(file)
