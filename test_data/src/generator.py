@@ -3,7 +3,9 @@ from collections.abc import Iterator
 from column_generator_registry import ColumnGeneratorRegistry
 from config_utils import read_config
 from datasets import Dataset
-from writer_registry import writer_registry
+from validation_utils import require_not_blank, require_or_raise_tuple, require_or_raise_map, \
+    require_absent
+from writer_registry import WriterRegistry
 
 
 class DataGenerator:
@@ -11,20 +13,20 @@ class DataGenerator:
     def __init__(self, config_name: str) -> None:
         self.config_name = config_name
         self.config = read_config(config_name)
-        self._generators = ColumnGeneratorRegistry.get_all(self.config.columns)
+        self.column_generators = ColumnGeneratorRegistry.get_all(self.config.columns)
+        self.writers = WriterRegistry()
         self._order = self._resolve_order()
 
-    def iter_rows(self) -> Iterator[dict[str, str]]:
+    def generate_rows(self) -> Iterator[dict[str, str]]:
         headers = self.config.headers
         for row_index in range(self.config.row_count):
             values: dict[str, str] = {}
             for name in self._order:
-                values[name] = self._generators[name].generate(values, row_index)
+                values[name] = self.column_generators[name].generate(values, row_index)
             yield {name: values[name] for name in headers}
 
-    def generate_dataset(self) -> Dataset:
-        rows = list(self.iter_rows())
-        writer_registry.write_all(rows, self.config)
+    def write(self) -> Dataset:
+        self.writers.write_all(list[dict[str, str]](self.generate_rows()), self.config)
         return Dataset(name=self.config_name, config=self.config)
 
     def _resolve_order(self) -> tuple[str, ...]:
@@ -32,29 +34,23 @@ class DataGenerator:
         resolved: set[str] = set()
 
         for column in self.config.columns:
-            self._visit_order(column.name, (), resolved, order)
+            pending = ()
+            self._visit_order(column.name, pending, resolved, order)
 
         return tuple(order)
 
-    def _visit_order(
-            self,
-            name: str,
-            pending: tuple[str, ...],
-            resolved: set[str],
-            order: list[str],
-    ) -> None:
+    def _visit_order(self, name: str, pending: tuple[str, ...], resolved: set[str], order: list[str]) -> None:
         if name in resolved:
             return
-        if name in pending:
-            cycle = " -> ".join([*pending, name])
-            raise Exception(f"Circular column dependency detected: {cycle}")
 
-        generator = self._generators.get(name)
-        if generator is None:
-            dependent = pending[-1] if pending else name
-            raise Exception(f"Column {dependent!r} depends on unknown column {name!r}.")
+        require_absent(pending, name)
+        dependencies = require_or_raise_map(
+            mapping=self.column_generators,
+            key=name,
+            error_message=f"Column {pending[-1] if pending else name} depends on unknown column {name}."
+        ).dependencies
 
-        for dependency in generator.dependencies:
+        for dependency in dependencies:
             self._visit_order(dependency, (*pending, name), resolved, order)
 
         resolved.add(name)

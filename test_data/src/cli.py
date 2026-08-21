@@ -21,7 +21,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         config_path = Path(args.config)
-        dataset = DataGenerator(config_path.name).generate_dataset()
+        dataset = DataGenerator(config_path.name).write()
     except Exception as error:
         print(f"error: {error}", file=sys.stderr)
         return EXIT_ERROR

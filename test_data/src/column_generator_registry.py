@@ -34,7 +34,7 @@ class ColumnGeneratorRegistry:
     }
 
     @classmethod
-    def get(cls, column: ColumnModel) -> ColumnGenerator:
+    def get_one(cls, column: ColumnModel) -> ColumnGenerator:
         generator_name = column.method or column.type
         generator_type = cls.generator_types.get(generator_name)
         require_not_blank(generator_type, f"Unsupported column generator: {generator_name}")
@@ -43,4 +43,4 @@ class ColumnGeneratorRegistry:
 
     @classmethod
     def get_all(cls, columns: Sequence[ColumnModel]) -> dict[str, ColumnGenerator]:
-        return {column.name: cls.get(column) for column in columns}
+        return {column.name: cls.get_one(column) for column in columns}

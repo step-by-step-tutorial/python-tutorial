@@ -15,7 +15,7 @@ from validation_utils import (
     require_blank,
     require_not_blank,
     require_or_default,
-    require_or_raise,
+    require_or_raise_map,
     require_iso_date,
     require_xor, should_not_be_negative, )
 
@@ -43,7 +43,8 @@ class ColumnGenerator(ABC):
 
     def require(self, *keys: str) -> None:
         missing = [key for key in keys if getattr(self.model, key) is None]
-        require_blank(missing, error_message=f"Column {self.model.name} of type {self.model.type} requires: {', '.join(missing)}.")
+        require_blank(missing,
+                      error_message=f"Column {self.model.name} of type {self.model.type} requires: {', '.join(missing)}.")
 
     def get_by_source(self, row: Row) -> str:
         source_field = require_not_blank(self.model.source_field)
@@ -51,7 +52,7 @@ class ColumnGenerator(ABC):
                                  f"Column {self.model.name} depends on source field {source_field}.")
 
     def get_by_key(self, mapping: Mapping[str, str], key: str) -> str:
-        return require_or_raise(mapping, key, f"'{key}' not found in mapping for column {self.model.name}.")
+        return require_or_raise_map(mapping, key, f"'{key}' not found in mapping for column {self.model.name}.")
 
 
 class SequenceColumn(ColumnGenerator):

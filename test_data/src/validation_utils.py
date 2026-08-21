@@ -36,10 +36,20 @@ def require_or_default(obj: Any, default: Any) -> Any:
     return obj
 
 
-def require_or_raise(mapping: Mapping[str, str], key: str, error_message: str = "Key not found.") -> str:
+def require_or_raise_map(mapping: Mapping[str, Any], key: str, error_message: str = "Key not found.") -> Any:
     if key not in mapping:
         raise Exception(error_message)
     return mapping[key]
+
+
+def require_or_raise_tuple(collection: tuple[str, ...], key: str, error_message: str = "Key not found.") -> str:
+    if key not in collection:
+        raise Exception(error_message)
+    return collection[collection.index(key)]
+
+def require_absent(collection: tuple[str, ...], key: str, error_message: str = "Key not found."):
+    if key in collection:
+        raise Exception(error_message)
 
 
 def check_min_max(minimum: int | None, maximum: int | None, error_message: str = "min must be less than max"):

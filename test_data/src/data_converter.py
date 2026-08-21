@@ -30,7 +30,7 @@ def random_date_between(start: date, end: date, random: Random) -> str:
     return (start + timedelta(days=offset)).isoformat()
 
 
-def random_date_from(base_date: date, min_days:int, max_days:int, random: Random) -> str:
+def random_date_from(base_date: date, min_days: int, max_days: int, random: Random) -> str:
     offset = random.randint(min_days, max_days)
     return (base_date + timedelta(days=offset)).isoformat()
 

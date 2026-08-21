@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
-import logging
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +10,6 @@ import env_config
 from csv_utils import write_csv
 from database_repository import DatabaseRepository
 from json_utils import write_json
-
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +61,3 @@ class WriterRegistry:
         row_list = [dict(row) for row in rows]
         for name in config.destinations:
             self._writers[name].write(row_list, config)
-
-
-writer_registry = WriterRegistry()

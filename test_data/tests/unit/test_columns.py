@@ -9,7 +9,7 @@ from schemas import ColumnModel
 
 
 def build(column: ColumnModel):
-    return ColumnGeneratorRegistry.get(column)
+    return ColumnGeneratorRegistry.get_one(column)
 
 
 @pytest.mark.parametrize(

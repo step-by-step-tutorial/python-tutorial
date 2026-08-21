@@ -35,7 +35,7 @@ def create_api() -> FastAPI:
 
     @app.post("/datasets/{name}/generate")
     async def generate(name: str) -> DatasetMetadata:
-        return DataGenerator(config_name=name).generate_dataset().get_metadata()
+        return DataGenerator(config_name=name).write().get_metadata()
 
     @app.get("/datasets/{name}/download")
     async def download(name: str) -> FileResponse:
