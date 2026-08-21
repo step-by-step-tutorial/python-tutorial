@@ -72,17 +72,16 @@ class KafkaWriter(Writer):
         topic_name = config.kafka_topic
         producer = create_producer()
         for row in rows:
-            key = str(row[config.kafka_key_column])
             producer.produce(
                 topic=topic_name,
-                key=key,
+                key=str(row[config.kafka_key_column]),
                 value=json.dumps(dict(row), ensure_ascii=False).encode("utf-8"),
                 on_delivery=handle_delivery,
             )
             producer.poll(0)
 
         producer.flush()
-        logger.info("Kafka output written to topic %s", topic_name)
+        logger.info(f"Kafka output written {len(rows)} to topic {topic_name}")
 
 
 class WriterRegistry:
