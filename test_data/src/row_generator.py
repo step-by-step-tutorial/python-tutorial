@@ -1,16 +1,15 @@
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 
-from collection_utils import order_dependencies
-from column_generator import ColumnGenerator
-from schemas import ConfigModel
-from validation_utils import require_absent, require_or_raise_map
+from collection_utils import topological_sort
+from column_generator_registry import ColumnGeneratorRegistry
+from schemas import ColumnModel, ConfigModel
 
 
 class RowGenerator:
-    def __init__(self, config: ConfigModel, column_generators: dict[str, ColumnGenerator]) -> None:
+    def __init__(self, config: ConfigModel, columns: Sequence[ColumnModel]) -> None:
         self.config = config
-        self.column_generators = column_generators
-        self.ordered_columns = order_dependencies(config.column_names, self.resolve_dependencies)
+        self.column_generators = ColumnGeneratorRegistry.get_all(columns)
+        self.ordered_columns = topological_sort(ColumnGeneratorRegistry.get_dependencies(columns))
 
     def generate_rows(self) -> Iterator[dict[str, str]]:
         for row_index in range(self.config.row_count):
@@ -18,26 +17,3 @@ class RowGenerator:
             for column_name in self.ordered_columns:
                 values[column_name] = self.column_generators[column_name].generate(values, row_index)
             yield {name: values[name] for name in self.config.column_names}
-
-    def resolve_dependencies(
-            self,
-            name: str,
-            pending: tuple[str, ...],
-            resolved: list[str],
-            ordered: list[str],
-    ) -> None:
-        if name in resolved:
-            return
-
-        require_absent(pending, name)
-        column_generator = require_or_raise_map(
-            mapping=self.column_generators,
-            key=name,
-            error_message=f"Column {pending[-1] if pending else name} depends on unknown column {name}.",
-        )
-
-        for dependency in column_generator.dependencies:
-            self.resolve_dependencies(dependency, (*pending, name), resolved, ordered)
-
-        resolved.append(name)
-        ordered.append(name)

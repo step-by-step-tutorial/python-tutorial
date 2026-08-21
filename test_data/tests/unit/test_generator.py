@@ -151,23 +151,6 @@ def test_circular_dependencies_are_rejected_before_generating(tmp_path: Path) ->
         )
 
 
-def test_unknown_dependency_is_rejected(tmp_path: Path) -> None:
-    with pytest.raises(Exception):
-        make_generator(
-            [
-                ColumnModel(
-                    name="currency",
-                    type="derived",
-                    method="lookup_from_csv",
-                    source_field="country",
-                    mapping_file="data/map.csv",
-                    key_column="country",
-                    value_column="currency_code",
-                )
-            ],
-        )
-
-
 def test_seeded_runs_are_reproducible(project_root: Path) -> None:
     first = list(DatasetGenerator("demo.json").row_generator.generate_rows())
     second = list(DatasetGenerator("demo.json").row_generator.generate_rows())

@@ -1,15 +1,9 @@
-from collections.abc import Callable
+from collections.abc import Hashable, Iterable, Mapping
+from graphlib import TopologicalSorter
+from typing import TypeVar
+
+Node = TypeVar("Node", bound=Hashable)
 
 
-def order_dependencies(
-        original: tuple[str, ...],
-        consumer: Callable[[str, tuple[str, ...], list[str], list[str]], None]
-) -> tuple[str, ...]:
-    ordered: list[str] = []
-    resolved: list[str] = []
-
-    for name in original:
-        pending = ()
-        consumer(name, pending, resolved, ordered)
-
-    return tuple(ordered)
+def topological_sort(graph: Mapping[Node, Iterable[Node]]) -> tuple[Node, ...]:
+    return tuple(TopologicalSorter(graph).static_order())

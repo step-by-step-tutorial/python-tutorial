@@ -44,3 +44,10 @@ class ColumnGeneratorRegistry:
     @classmethod
     def get_all(cls, columns: Sequence[ColumnModel]) -> dict[str, ColumnGenerator]:
         return {column.name: cls.get_one(column) for column in columns}
+
+    @classmethod
+    def get_dependencies(cls, columns: Sequence[ColumnModel]) -> dict[str, tuple[str, ...]]:
+        return {
+            column.name: cls.get_one(column).dependencies
+            for column in columns
+        }
