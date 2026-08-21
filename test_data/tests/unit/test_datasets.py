@@ -17,6 +17,7 @@ def test_dataset_registry_discovers_dataset_names_without_prefix(tmp_path: Path,
         '{"row_count": 1, "output_file": "beta.csv", "destinations": ["csv"], "columns": [{"name": "id", "type": "sequence", "start": 1, "step": 1}]}',
         encoding="utf-8",
     )
+    (config_dir / "test_output").mkdir()
 
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
     importlib.reload(env_config)

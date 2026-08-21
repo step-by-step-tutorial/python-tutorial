@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 import env_config
 
+TEST_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "test_output"
+
 
 def write_lines(path: Path, *lines: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -80,7 +82,8 @@ def project_root(tmp_path: Path, data_dir: Path, monkeypatch) -> Path:
 
     monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
-    monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
+    TEST_OUTPUT_DIR.mkdir(exist_ok=True)
+    monkeypatch.setenv("OUTPUT_DIR", str(TEST_OUTPUT_DIR))
     importlib.reload(env_config)
 
     yield tmp_path

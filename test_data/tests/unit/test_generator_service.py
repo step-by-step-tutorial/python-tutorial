@@ -22,10 +22,11 @@ def temp_project_env(tmp_path: Path, monkeypatch) -> None:
 
 
 def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
-    config_dir = tmp_path / "config"
-    config_dir.mkdir(exist_ok=True)
-    (config_dir / name).write_text(json.dumps(asdict(config)), encoding="utf-8")
-    return name
+    config_name = f"test_output/{name}"
+    config_path = tmp_path / "config" / config_name
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(json.dumps(asdict(config)), encoding="utf-8")
+    return config_name
 
 
 def config_with_headers(**kwargs) -> ConfigModel:

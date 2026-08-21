@@ -9,7 +9,7 @@ def absolute_project_path(relative_path: str | Path) -> Path:
 
 def list_of_file_names(directory: Path) -> list[str]:
     paths = sorted(Path(directory).glob("*"))
-    return [path.name for path in paths]
+    return [path.name for path in paths if path.is_file()]
 
 
 def check_file_exists(path: Path):

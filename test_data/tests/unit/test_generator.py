@@ -20,10 +20,11 @@ def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
             return [clean(item) for item in value]
         return value
 
-    config_dir = tmp_path / "config"
-    config_dir.mkdir(exist_ok=True)
-    (config_dir / name).write_text(json.dumps(clean(asdict(config))), encoding="utf-8")
-    return name
+    config_name = f"test_output/{name}"
+    config_path = tmp_path / "config" / config_name
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(json.dumps(clean(asdict(config))), encoding="utf-8")
+    return config_name
 
 
 def config_with_headers(**kwargs) -> ConfigModel:
@@ -173,7 +174,7 @@ def test_zero_rows_writes_header_only(project_root: Path) -> None:
 def test_generate_dataset_loads_the_config_and_writes_the_file(project_root: Path) -> None:
     DatasetGenerator("demo.json").write()
 
-    assert (project_root / "output" / "demo.csv").is_file()
+    assert (env_config.OUTPUT_DIR / "demo.csv").is_file()
 
 
 def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch) -> None:

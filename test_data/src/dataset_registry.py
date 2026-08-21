@@ -15,6 +15,9 @@ class DatasetRegistry:
     def get_all_datasets(self) -> list[Dataset]:
         return list(self._datasets.values())
 
+    def get_all_names(self) -> list[str]:
+        return list(self._datasets)
+
     def get_one(self, name: str) -> Dataset:
         dataset = self._datasets.get(name)
         if dataset is None:

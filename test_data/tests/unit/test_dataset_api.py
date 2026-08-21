@@ -2,25 +2,37 @@ import json
 import importlib
 from pathlib import Path
 
-from fastapi.testclient import TestClient
+import httpx
+import pytest
 
 import env_config
 from dataset_api import create_api
 from dataset_generator import DatasetGenerator
 
+pytestmark = pytest.mark.anyio
 
-def test_download_serves_requested_output_format(project_root: Path) -> None:
+
+@pytest.fixture
+def anyio_backend() -> str:
+    return "asyncio"
+
+
+async def get(path: str, **kwargs) -> httpx.Response:
+    transport = httpx.ASGITransport(app=create_api())
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        return await client.get(path, **kwargs)
+
+
+async def test_download_serves_requested_output_format(project_root: Path) -> None:
     config_path = env_config.CONFIG_DIR / "demo.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     config["destinations"] = ["csv", "json", "xml"]
     config_path.write_text(json.dumps(config), encoding="utf-8")
     DatasetGenerator("demo.json").write()
 
-    client = TestClient(create_api())
-
-    csv_response = client.get("/datasets/demo.json/download?format=csv")
-    json_response = client.get("/datasets/demo.json/download?format=json")
-    xml_response = client.get("/datasets/demo.json/download?format=xml")
+    csv_response = await get("/datasets/demo.json/download?format=csv")
+    json_response = await get("/datasets/demo.json/download?format=json")
+    xml_response = await get("/datasets/demo.json/download?format=xml")
 
     assert csv_response.status_code == 200
     assert csv_response.headers["content-type"] == "text/csv; charset=utf-8"
@@ -33,31 +45,37 @@ def test_download_serves_requested_output_format(project_root: Path) -> None:
     assert b"<order_id>1</order_id>" in xml_response.content
 
 
-def test_download_rejects_unconfigured_format(project_root: Path) -> None:
-    response = TestClient(create_api()).get("/datasets/demo.json/download?format=json")
+async def test_download_rejects_unconfigured_format(project_root: Path) -> None:
+    response = await get("/datasets/demo.json/download?format=json")
 
     assert response.status_code == 404
 
 
-def test_openapi_documentation_describes_dataset_routes(project_root: Path) -> None:
-    client = TestClient(create_api())
-    schema = client.get("/openapi.json").json()
+async def test_get_names_lists_dataset_names(project_root: Path) -> None:
+    response = await get("/datasets/names")
 
-    assert client.get("/docs").status_code == 200
-    assert client.get("/redoc").status_code == 200
+    assert response.status_code == 200
+    assert response.json() == ["demo.json"]
+
+
+async def test_openapi_documentation_describes_dataset_routes(project_root: Path) -> None:
+    schema = (await get("/openapi.json")).json()
+
+    assert (await get("/docs")).status_code == 200
+    assert (await get("/redoc")).status_code == 200
     assert schema["info"]["title"] == "Test Data Generator API"
     assert "/datasets/{name}/download" in schema["paths"]
     assert schema["paths"]["/datasets/{name}/download"]["get"]["tags"] == ["Datasets"]
 
 
-def test_root_redirects_to_health(project_root: Path) -> None:
-    response = TestClient(create_api()).get("/", follow_redirects=False)
+async def test_root_redirects_to_health(project_root: Path) -> None:
+    response = await get("/", follow_redirects=False)
 
     assert response.status_code == 307
     assert response.headers["location"] == "/health"
 
 
-def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -> None:
+async def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -> None:
     config_path = env_config.CONFIG_DIR / "demo.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     config["destinations"] = ["database"]
@@ -68,7 +86,7 @@ def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -> None
     try:
         DatasetGenerator("demo.json").write()
 
-        response = TestClient(create_api()).get("/datasets/demo.json/rows?page=2&page_size=2")
+        response = await get("/datasets/demo.json/rows?page=2&page_size=2")
 
         assert response.status_code == 200
         assert response.json()["page"] == 2

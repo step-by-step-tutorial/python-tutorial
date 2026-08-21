@@ -46,6 +46,10 @@ def create_api() -> FastAPI:
     async def get_list() -> list[DatasetMetadata]:
         return registry.get_all_metadata()
 
+    @app.get("/datasets/names", tags=["Datasets"], summary="List dataset names")
+    async def get_names() -> list[str]:
+        return registry.get_all_names()
+
     @app.get("/datasets/{name}", tags=["Datasets"], summary="Get dataset metadata")
     async def get_one(name: str) -> DatasetMetadata:
         return registry.get_one(name).get_metadata()
