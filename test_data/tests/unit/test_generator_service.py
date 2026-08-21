@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import env_config
 
-from config_manager import GeneratorConfig, ColumnConfig
+from config_manager import ConfigModel, ColumnModel
 from data_converter import convert_to_email
 from generator import DataGenerator
 
@@ -21,7 +21,7 @@ def temp_project_env(tmp_path: Path, monkeypatch) -> None:
     importlib.reload(env_config)
 
 
-def write_config_file(tmp_path: Path, name: str, config: GeneratorConfig) -> str:
+def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
     config_dir = tmp_path / "config"
     config_dir.mkdir(exist_ok=True)
     (config_dir / name).write_text(json.dumps(asdict(config)), encoding="utf-8")
@@ -39,15 +39,15 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
     (data_dir / "first_names.txt").write_text("John\n", encoding="utf-8")
     (data_dir / "last_names.txt").write_text("Smith\n", encoding="utf-8")
 
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         seed=1,
         columns=[
-            ColumnConfig(name="first_name", type="random_from_file", file="data/first_names.txt"),
-            ColumnConfig(name="last_name", type="random_from_file", file="data/last_names.txt"),
-            ColumnConfig(
+            ColumnModel(name="first_name", type="random_from_file", file="data/first_names.txt"),
+            ColumnModel(name="last_name", type="random_from_file", file="data/last_names.txt"),
+            ColumnModel(
                 name="email",
                 type="derived",
                 method="email_from_source_fields",
@@ -78,15 +78,15 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         seed=7,
         columns=[
-            ColumnConfig(name="order_id", type="sequence", start=1, step=1),
-            ColumnConfig(name="product", type="random_from_file", file="data/products.txt"),
-            ColumnConfig(
+            ColumnModel(name="order_id", type="sequence", start=1, step=1),
+            ColumnModel(name="product", type="random_from_file", file="data/products.txt"),
+            ColumnModel(
                 name="category",
                 type="derived",
                 method="lookup_from_csv",
@@ -95,7 +95,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
                 key_column="product",
                 value_column="category",
             ),
-            ColumnConfig(
+            ColumnModel(
                 name="unit_price",
                 type="derived",
                 method="lookup_from_csv",
@@ -104,8 +104,8 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
                 key_column="product",
                 value_column="unit_price",
             ),
-            ColumnConfig(name="quantity", type="random_int", min=1, max=5),
-            ColumnConfig(
+            ColumnModel(name="quantity", type="random_int", min=1, max=5),
+            ColumnModel(
                 name="order_date",
                 type="random_date",
                 date_start="2026-01-01",
@@ -126,14 +126,14 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
 
 
 def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path) -> None:
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         columns=[
-            ColumnConfig(name="qty", type="fixed", value="2"),
-            ColumnConfig(name="price", type="fixed", value="10"),
-            ColumnConfig(
+            ColumnModel(name="qty", type="fixed", value="2"),
+            ColumnModel(name="price", type="fixed", value="10"),
+            ColumnModel(
                 name="line_total",
                 type="derived",
                 method="product_of_source_fields",
@@ -149,13 +149,13 @@ def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path) -> None:
 
 
 def test_product_of_source_fields_can_use_a_constant_factor(tmp_path: Path) -> None:
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         columns=[
-            ColumnConfig(name="net_total", type="fixed", value="25"),
-            ColumnConfig(
+            ColumnModel(name="net_total", type="fixed", value="25"),
+            ColumnModel(
                 name="vat_amount",
                 type="derived",
                 method="product_of_source_fields",
@@ -172,13 +172,13 @@ def test_product_of_source_fields_can_use_a_constant_factor(tmp_path: Path) -> N
 
 
 def test_product_of_source_fields_supports_a_zero_constant_factor(tmp_path: Path) -> None:
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         columns=[
-            ColumnConfig(name="net_total", type="fixed", value="25"),
-            ColumnConfig(
+            ColumnModel(name="net_total", type="fixed", value="25"),
+            ColumnModel(
                 name="vat_amount",
                 type="derived",
                 method="product_of_source_fields",
@@ -205,14 +205,14 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         seed=1,
         columns=[
-            ColumnConfig(name="country", type="fixed", value="Germany"),
-            ColumnConfig(
+            ColumnModel(name="country", type="fixed", value="Germany"),
+            ColumnModel(
                 name="customer_name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -241,14 +241,14 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
         encoding="utf-8",
     )
 
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         seed=1,
         columns=[
-            ColumnConfig(name="country", type="fixed", value="Germany"),
-            ColumnConfig(
+            ColumnModel(name="country", type="fixed", value="Germany"),
+            ColumnModel(
                 name="customer_name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -277,13 +277,13 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
         encoding="utf-8",
     )
 
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         seed=1,
         columns=[
-            ColumnConfig(
+            ColumnModel(
                 name="customer_name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -291,7 +291,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
                 key_column="country",
                 file_column="name_file",
             ),
-            ColumnConfig(name="country", type="random_from_file", file="data/countries.txt"),
+            ColumnModel(name="country", type="random_from_file", file="data/countries.txt"),
         ],
     )
 
@@ -303,12 +303,12 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
 
 
 def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
-    config = GeneratorConfig(
+    config = ConfigModel(
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
         columns=[
-            ColumnConfig(
+            ColumnModel(
                 name="left",
                 type="derived",
                 method="lookup_from_csv",
@@ -317,7 +317,7 @@ def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
                 key_column="key",
                 value_column="value",
             ),
-            ColumnConfig(
+            ColumnModel(
                 name="right",
                 type="derived",
                 method="lookup_from_csv",

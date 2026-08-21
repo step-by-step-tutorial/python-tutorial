@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import env_config
-from config_manager import GeneratorConfig, load_config
+from config_manager import ConfigModel, load_config
 from file_utils import list_of_file_names
 from schemas import DatasetMetadata
 
 @dataclass(frozen=True)
 class Dataset:
     name: str
-    config: GeneratorConfig
+    config: ConfigModel
 
     @property
     def columns(self) -> tuple[str, ...]:

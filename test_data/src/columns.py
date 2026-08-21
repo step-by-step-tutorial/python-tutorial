@@ -5,7 +5,7 @@ from math import prod
 from random import Random
 from typing import Mapping
 
-from config_manager import ColumnConfig
+from config_manager import ColumnModel
 from data_converter import convert_to_email, random_date_between, random_date_from
 from sources_repository import SourceRepository
 from validation_utils import (
@@ -23,7 +23,7 @@ Row = Mapping[str, str]
 
 class ColumnGenerator(ABC):
 
-    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
+    def __init__(self, column: ColumnModel, sources: SourceRepository, random: Random) -> None:
         self.column = column
         self.sources = sources
         self.random = random
@@ -87,7 +87,7 @@ class RandomIntColumn(ColumnGenerator):
 
 class RandomDateColumn(ColumnGenerator):
 
-    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random):
+    def __init__(self, column: ColumnModel, sources: SourceRepository, random: Random):
         self.start = None
         self.end = None
         super().__init__(column, sources, random)
@@ -117,7 +117,7 @@ class RandomFromFileColumn(ColumnGenerator):
 
 class RandomFromMappedFileColumn(ColumnGenerator):
 
-    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random):
+    def __init__(self, column: ColumnModel, sources: SourceRepository, random: Random):
         self.file_columns = None
         self.separator = None
         super().__init__(column, sources, random)
@@ -172,7 +172,7 @@ class LookupFromCsvColumn(ColumnGenerator):
 
 class ProductColumn(ColumnGenerator):
 
-    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
+    def __init__(self, column: ColumnModel, sources: SourceRepository, random: Random) -> None:
         self._source_fields: tuple[str, ...] = ()
         super().__init__(column, sources, random)
 
@@ -193,7 +193,7 @@ class ProductColumn(ColumnGenerator):
 
 class FormulaColumn(ColumnGenerator):
 
-    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
+    def __init__(self, column: ColumnModel, sources: SourceRepository, random: Random) -> None:
         self._source_fields: tuple[str, ...] = ()
         self._formula = ""
         super().__init__(column, sources, random)
@@ -241,7 +241,7 @@ class DateWithRandomDayOffsetColumn(ColumnGenerator):
 class EmailFromSourceFieldsColumn(ColumnGenerator):
     DEFAULT_DOMAIN = "example.com"
 
-    def __init__(self, column: ColumnConfig, sources: SourceRepository, random: Random) -> None:
+    def __init__(self, column: ColumnModel, sources: SourceRepository, random: Random) -> None:
         self._source_fields: tuple[str, ...] = ()
         super().__init__(column, sources, random)
 
@@ -282,7 +282,7 @@ generator_registry: dict[str, type[ColumnGenerator]] = {
 }
 
 
-def get_column_generator(column: ColumnConfig, sources: SourceRepository, random: Random) -> ColumnGenerator:
+def get_column_generator(column: ColumnModel, sources: SourceRepository, random: Random) -> ColumnGenerator:
     generator_name = column.method or column.type
     generator_type = generator_registry.get(generator_name)
     require_not_blank(generator_type, f"Unsupported column generator: {generator_name}")

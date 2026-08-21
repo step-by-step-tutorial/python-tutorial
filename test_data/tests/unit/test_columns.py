@@ -5,13 +5,13 @@ from random import Random
 
 import pytest
 
-from config_manager import ColumnConfig
+from config_manager import ColumnModel
 from columns import get_column_generator
 from data_converter import convert_to_email, convert_to_floats
 from sources_repository import SourceRepository
 
 
-def build(column: ColumnConfig):
+def build(column: ColumnModel):
     return get_column_generator(column, SourceRepository(), Random(1))
 
 
@@ -33,34 +33,34 @@ def test_convert_to_floats() -> None:
 
 
 def test_sequence_uses_start_and_step() -> None:
-    generator = build(ColumnConfig(name="id", type="sequence", start=10, step=5))
+    generator = build(ColumnModel(name="id", type="sequence", start=10, step=5))
 
     assert [generator.generate({}, index) for index in range(3)] == ["10", "15", "20"]
 
 
 def test_sequence_defaults_to_one() -> None:
-    generator = build(ColumnConfig(name="id", type="sequence"))
+    generator = build(ColumnModel(name="id", type="sequence"))
 
     assert generator.generate({}, 0) == "1"
 
 
 def test_fixed_requires_value() -> None:
     with pytest.raises(Exception):
-        build(ColumnConfig(name="country", type="fixed"))
+        build(ColumnModel(name="country", type="fixed"))
 
 
 def test_random_int_requires_min_and_max() -> None:
     with pytest.raises(Exception):
-        build(ColumnConfig(name="quantity", type="random_int"))
+        build(ColumnModel(name="quantity", type="random_int"))
 
 
 def test_random_int_rejects_inverted_range() -> None:
     with pytest.raises(Exception):
-        build(ColumnConfig(name="quantity", type="random_int", min=5, max=1))
+        build(ColumnModel(name="quantity", type="random_int", min=5, max=1))
 
 
 def test_random_int_stays_within_bounds() -> None:
-    generator = build(ColumnConfig(name="quantity", type="random_int", min=1, max=5))
+    generator = build(ColumnModel(name="quantity", type="random_int", min=1, max=5))
 
     assert all(1 <= int(generator.generate({}, index)) <= 5 for index in range(50))
 
@@ -68,7 +68,7 @@ def test_random_int_stays_within_bounds() -> None:
 def test_random_date_rejects_inverted_range() -> None:
     with pytest.raises(Exception):
         build(
-            ColumnConfig(
+            ColumnModel(
                 name="order_date",
                 type="random_date",
                 date_start="2026-02-01",
@@ -80,7 +80,7 @@ def test_random_date_rejects_inverted_range() -> None:
 def test_random_date_rejects_unparsable_date() -> None:
     with pytest.raises(Exception):
         build(
-            ColumnConfig(
+            ColumnModel(
                 name="order_date", type="random_date", date_start="01/05/2026", date_end="2026-01-31"
             ),
         )
@@ -88,7 +88,7 @@ def test_random_date_rejects_unparsable_date() -> None:
 
 def test_random_date_stays_within_range() -> None:
     generator = build(
-        ColumnConfig(
+        ColumnModel(
             name="order_date", type="random_date", date_start="2026-01-05", date_end="2026-01-07"
         ),
     )
@@ -103,7 +103,7 @@ def test_random_date_stays_within_range() -> None:
 def test_random_from_file_reports_empty_source(project_root: Path, write_lines) -> None:
     write_lines(project_root / "data" / "empty.txt", "", "   ")
     generator = build(
-        ColumnConfig(name="country", type="random_from_file", file="data/empty.txt")
+        ColumnModel(name="country", type="random_from_file", file="data/empty.txt")
     )
 
     with pytest.raises(Exception):
@@ -112,7 +112,7 @@ def test_random_from_file_reports_empty_source(project_root: Path, write_lines) 
 
 def test_random_from_file_reports_missing_source(project_root: Path) -> None:
     generator = build(
-        ColumnConfig(name="country", type="random_from_file", file="data/absent.txt")
+        ColumnModel(name="country", type="random_from_file", file="data/absent.txt")
     )
 
     with pytest.raises(Exception):
@@ -122,7 +122,7 @@ def test_random_from_file_reports_missing_source(project_root: Path) -> None:
 def test_mapped_file_rejects_both_file_keys() -> None:
     with pytest.raises(Exception):
         build(
-            ColumnConfig(
+            ColumnModel(
                 name="name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -137,7 +137,7 @@ def test_mapped_file_rejects_both_file_keys() -> None:
 def test_mapped_file_requires_a_file_key() -> None:
     with pytest.raises(Exception):
         build(
-            ColumnConfig(
+            ColumnModel(
                 name="name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -149,7 +149,7 @@ def test_mapped_file_requires_a_file_key() -> None:
 
 def test_mapped_file_reports_unmapped_source_value(project_root: Path) -> None:
     generator = build(
-        ColumnConfig(
+        ColumnModel(
             name="customer_name",
             type="random_from_mapped_file",
             source_field="country",
@@ -165,7 +165,7 @@ def test_mapped_file_reports_unmapped_source_value(project_root: Path) -> None:
 
 def test_lookup_reports_mapping_without_the_requested_column(project_root: Path) -> None:
     generator = build(
-        ColumnConfig(
+        ColumnModel(
             name="category",
             type="derived",
             method="lookup_from_csv",
@@ -182,7 +182,7 @@ def test_lookup_reports_mapping_without_the_requested_column(project_root: Path)
 
 def test_product_column_uses_float_conversion_for_source_fields(project_root: Path) -> None:
     generator = build(
-        ColumnConfig(
+        ColumnModel(
             name="subtotal",
             type="derived",
             method="product_of_source_fields",
@@ -195,7 +195,7 @@ def test_product_column_uses_float_conversion_for_source_fields(project_root: Pa
 
 def test_formula_column_uses_source_fields(project_root: Path) -> None:
     generator = build(
-        ColumnConfig(
+        ColumnModel(
             name="total_amount",
             type="derived",
             method="formula",
@@ -220,7 +220,7 @@ def test_formula_column_uses_source_fields(project_root: Path) -> None:
 
 def test_email_declares_its_dependencies() -> None:
     generator = build(
-        ColumnConfig(
+        ColumnModel(
             name="email",
             type="derived",
             method="email_from_source_fields",
@@ -236,7 +236,7 @@ def test_email_declares_its_dependencies() -> None:
 
 def test_email_uses_configured_domain() -> None:
     generator = build(
-        ColumnConfig(
+        ColumnModel(
             name="work_email",
             type="derived",
             method="email_from_source_fields",
@@ -252,7 +252,7 @@ def test_email_uses_configured_domain() -> None:
 
 def test_email_reports_empty_name() -> None:
     generator = build(
-        ColumnConfig(
+        ColumnModel(
             name="email",
             type="derived",
             method="email_from_source_fields",
@@ -267,11 +267,11 @@ def test_email_reports_empty_name() -> None:
 @pytest.mark.parametrize(
     "column",
     [
-        ColumnConfig(name="x", type="magic"),
-        ColumnConfig(name="x", type="derived", method="magic"),
-        ColumnConfig(name="x", type="derived"),
+        ColumnModel(name="x", type="magic"),
+        ColumnModel(name="x", type="derived", method="magic"),
+        ColumnModel(name="x", type="derived"),
     ],
 )
-def test_unknown_types_are_rejected(column: ColumnConfig) -> None:
+def test_unknown_types_are_rejected(column: ColumnModel) -> None:
     with pytest.raises(Exception):
         build(column)

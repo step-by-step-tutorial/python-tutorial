@@ -7,7 +7,13 @@ from pathlib import Path
 import pytest
 import env_config
 
-from config_manager import ColumnConfig, load_config, GeneratorConfig
+from config_manager import (
+    ColumnModel,
+    convert_to_column_model,
+    convert_to_column_model_list,
+    convert_to_config_model,
+    load_config,
+)
 
 
 def test_load_config_reads_columns_and_seed(project_root: Path) -> None:
@@ -21,7 +27,7 @@ def test_load_config_reads_columns_and_seed(project_root: Path) -> None:
 
 
 def test_column_config_converts_file_columns_to_tuple() -> None:
-    column = ColumnConfig.from_dict(
+    column = convert_to_column_model(
         {
             "name": "customer_name",
             "type": "random_from_mapped_file",
@@ -32,8 +38,16 @@ def test_column_config_converts_file_columns_to_tuple() -> None:
     assert column.file_columns == ("first_name_file", "last_name_file")
 
 
+def test_column_model_list_converter_returns_models() -> None:
+    columns = convert_to_column_model_list(
+        [{"name": "country", "type": "fixed", "value": "USA"}]
+    )
+
+    assert columns == (ColumnModel(name="country", type="fixed", value="USA"),)
+
+
 def test_generator_config_reads_destinations() -> None:
-    config = GeneratorConfig.from_dict(
+    config = convert_to_config_model(
         {
             "row_count": 1,
             "output_file": "x.csv",

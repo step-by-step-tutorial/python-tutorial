@@ -9,18 +9,14 @@ EXIT_OK = 0
 EXIT_ERROR = 1
 
 
-def build_argument_parser() -> argparse.ArgumentParser:
+def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate test data from text files.")
-    parser.add_argument(
-        "--config",
-        required=True,
-        help="Path to the JSON config file, for example config/sale.json",
-    )
+    parser.add_argument("--config", required=True, help="Path to the JSON config file, for example config/sale.json")
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = build_argument_parser()
+    parser = create_parser()
     args = parser.parse_args(argv)
 
     try:

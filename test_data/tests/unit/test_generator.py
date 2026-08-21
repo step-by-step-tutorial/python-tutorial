@@ -6,11 +6,11 @@ from pathlib import Path
 import pytest
 import env_config
 
-from config_manager import ColumnConfig, GeneratorConfig
+from config_manager import ColumnModel, ConfigModel
 from generator import DataGenerator
 
 
-def write_config_file(tmp_path: Path, name: str, config: GeneratorConfig) -> str:
+def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
     def clean(value):
         if isinstance(value, dict):
             return {key: clean(val) for key, val in value.items() if val is not None}
@@ -26,8 +26,8 @@ def write_config_file(tmp_path: Path, name: str, config: GeneratorConfig) -> str
     return name
 
 
-def make_generator(columns: list[ColumnConfig], row_count: int = 1) -> DataGenerator:
-    config = GeneratorConfig(
+def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DataGenerator:
+    config = ConfigModel(
         row_count=row_count,
         output_file="generated.csv",
         columns=columns,
@@ -55,7 +55,7 @@ def test_country_dependent_columns_stay_consistent(project_root: Path) -> None:
 def test_column_may_be_declared_before_its_dependency(project_root: Path) -> None:
     generator = make_generator(
         [
-            ColumnConfig(
+            ColumnModel(
                 name="customer_name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -63,7 +63,7 @@ def test_column_may_be_declared_before_its_dependency(project_root: Path) -> Non
                 key_column="country",
                 file_column="first_name_file",
             ),
-            ColumnConfig(name="country", type="fixed", value="Germany"),
+            ColumnModel(name="country", type="fixed", value="Germany"),
         ],
     )
 
@@ -73,8 +73,8 @@ def test_column_may_be_declared_before_its_dependency(project_root: Path) -> Non
 def test_mapped_file_joins_several_file_columns(project_root: Path) -> None:
     generator = make_generator(
         [
-            ColumnConfig(name="country", type="fixed", value="Germany"),
-            ColumnConfig(
+            ColumnModel(name="country", type="fixed", value="Germany"),
+            ColumnModel(
                 name="customer_name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -92,7 +92,7 @@ def test_mapped_file_joins_several_file_columns(project_root: Path) -> None:
 def test_derived_email_uses_generated_names(project_root: Path) -> None:
     generator = make_generator(
         [
-            ColumnConfig(
+            ColumnModel(
                 name="first_name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -100,7 +100,7 @@ def test_derived_email_uses_generated_names(project_root: Path) -> None:
                 key_column="country",
                 file_column="first_name_file",
             ),
-            ColumnConfig(
+            ColumnModel(
                 name="last_name",
                 type="random_from_mapped_file",
                 source_field="country",
@@ -108,14 +108,14 @@ def test_derived_email_uses_generated_names(project_root: Path) -> None:
                 key_column="country",
                 file_column="last_name_file",
             ),
-            ColumnConfig(
+            ColumnModel(
                 name="email",
                 type="derived",
                 method="email_from_source_fields",
                 source_fields=("first_name", "last_name"),
                 domain="example-shop.com",
             ),
-            ColumnConfig(name="country", type="fixed", value="USA"),
+            ColumnModel(name="country", type="fixed", value="USA"),
         ],
     )
 
@@ -126,7 +126,7 @@ def test_circular_dependencies_are_rejected_before_generating(tmp_path: Path) ->
     with pytest.raises(Exception):
         make_generator(
             [
-                ColumnConfig(
+                ColumnModel(
                     name="left",
                     type="derived",
                     method="lookup_from_csv",
@@ -135,7 +135,7 @@ def test_circular_dependencies_are_rejected_before_generating(tmp_path: Path) ->
                     key_column="key",
                     value_column="value",
                 ),
-                ColumnConfig(
+                ColumnModel(
                     name="right",
                     type="derived",
                     method="lookup_from_csv",
@@ -152,7 +152,7 @@ def test_unknown_dependency_is_rejected(tmp_path: Path) -> None:
     with pytest.raises(Exception):
         make_generator(
             [
-                ColumnConfig(
+                ColumnModel(
                     name="currency",
                     type="derived",
                     method="lookup_from_csv",
@@ -174,7 +174,7 @@ def test_seeded_runs_are_reproducible(project_root: Path) -> None:
 
 def test_zero_rows_writes_header_only(project_root: Path) -> None:
     generator = make_generator(
-        [ColumnConfig(name="country", type="fixed", value="Germany")], row_count=0
+        [ColumnModel(name="country", type="fixed", value="Germany")], row_count=0
     )
 
     assert list(generator.iter_rows()) == []
