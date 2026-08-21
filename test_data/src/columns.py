@@ -16,8 +16,7 @@ from validation_utils import (
     require_or_default,
     require_or_raise,
     require_iso_date,
-    require_xor, should_not_be_negative, is_none,
-)
+    require_xor, should_not_be_negative, )
 
 Row = Mapping[str, str]
 
@@ -268,7 +267,7 @@ class EmailFromSourceFieldsColumn(ColumnGenerator):
         return f"{local_part}@{domain}"
 
 
-GENERATOR_TYPES: dict[str, type[ColumnGenerator]] = {
+generator_registry: dict[str, type[ColumnGenerator]] = {
     "sequence": SequenceColumn,
     "fixed": FixedColumn,
     "random_int": RandomIntColumn,
@@ -283,9 +282,9 @@ GENERATOR_TYPES: dict[str, type[ColumnGenerator]] = {
 }
 
 
-def build_column_generator(column: ColumnConfig, sources: SourceRepository, rng: Random) -> ColumnGenerator:
+def get_column_generator(column: ColumnConfig, sources: SourceRepository, random: Random) -> ColumnGenerator:
     generator_name = column.method or column.type
-    generator_type = GENERATOR_TYPES.get(generator_name)
+    generator_type = generator_registry.get(generator_name)
     require_not_blank(generator_type, f"Unsupported column generator: {generator_name}")
 
-    return generator_type(column, sources, rng)
+    return generator_type(column, sources, random)

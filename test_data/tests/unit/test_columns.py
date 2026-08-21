@@ -6,13 +6,13 @@ from random import Random
 import pytest
 
 from config_manager import ColumnConfig
-from columns import build_column_generator
+from columns import get_column_generator
 from data_converter import convert_to_email, convert_to_floats
 from sources import SourceRepository
 
 
 def build(column: ColumnConfig, root: Path):
-    return build_column_generator(column, SourceRepository(root), Random(1))
+    return get_column_generator(column, SourceRepository(root), Random(1))
 
 
 @pytest.mark.parametrize(
