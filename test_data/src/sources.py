@@ -3,20 +3,20 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
-from file_utils import absolute_project_path
+from file_utils import absolute_project_path, read_content_of_file, file_to_tuple
 
 
 class SourceRepository:
 
     def __init__(self) -> None:
-        self._values: dict[str, tuple[str, ...]] = {}
+        self.map_of_values: dict[str, tuple[str, ...]] = {}
         self._mappings: dict[tuple[str, str, str], Mapping[str, str]] = {}
 
     def values(self, relative_path: str) -> tuple[str, ...]:
-        cached = self._values.get(relative_path)
-        if cached is None:
-            cached = self._values[relative_path] = self._read_values(relative_path)
-        return cached
+        if relative_path not in self.map_of_values:
+            self.map_of_values[relative_path] = file_to_tuple(relative_path)
+
+        return self.map_of_values[relative_path]
 
     def mapping(self, relative_path: str, key_column: str, value_column: str) -> Mapping[str, str]:
         cache_key = (relative_path, key_column, value_column)
@@ -26,18 +26,6 @@ class SourceRepository:
                 relative_path, key_column, value_column
             )
         return cached
-
-    def _read_values(self, relative_path: str) -> tuple[str, ...]:
-        path = absolute_project_path(relative_path)
-        try:
-            text = path.read_text(encoding="utf-8")
-        except FileNotFoundError as error:
-            raise Exception(f"Source file not found: {path}") from error
-
-        values = tuple(line.strip() for line in text.splitlines() if line.strip())
-        if not values:
-            raise Exception(f"Source file is empty: {path}")
-        return values
 
     def _read_mapping(
             self,
