@@ -4,7 +4,7 @@ from random import Random
 from columns import ColumnGenerator, get_column_generator
 from config_manager import load_config
 from datasets import Dataset
-from sources import SourceRepository
+from sources_repository import SourceRepository
 from writer_registry import writer_registry
 
 

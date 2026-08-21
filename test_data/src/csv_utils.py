@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Sequence, Callable
 from pathlib import Path
+from types import MappingProxyType
 from typing import Mapping
+
+from file_utils import absolute_project_path
+from validation_utils import require_or_raise, require_not_blank
 
 
 def write_csv(output_path: Path, headers: Sequence[str], rows: Iterable[Mapping[str, str]]) -> Path:
@@ -15,3 +19,24 @@ def write_csv(output_path: Path, headers: Sequence[str], rows: Iterable[Mapping[
         for row in rows:
             writer.writerow(row)
     return path
+
+
+def read_csv_file(path: str, consumer: Callable[[dict[str, str]], None]) -> int:
+    path = absolute_project_path(path)
+    try:
+        with path.open("r", encoding="utf-8", newline="") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                consumer(row)
+    except Exception:
+        raise Exception(f"Reading CSV file failed due to: {path}")
+
+
+def extract_map_from_csv(path: str, key_column: str, value_column: str) -> Mapping[str, str]:
+    absolute_path = absolute_project_path(path)
+    mapping: dict[str, str] = {}
+    read_csv_file(str(absolute_path), lambda csv_row: mapping.update(
+        {require_or_raise(csv_row, key_column): require_or_raise(csv_row, value_column)}
+    ))
+
+    return MappingProxyType(require_not_blank(mapping, f"Mapping file is empty: {path}"))

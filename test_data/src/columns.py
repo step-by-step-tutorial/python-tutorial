@@ -7,7 +7,7 @@ from typing import Mapping
 
 from config_manager import ColumnConfig
 from data_converter import convert_to_email, random_date_between, random_date_from
-from sources import SourceRepository
+from sources_repository import SourceRepository
 from validation_utils import (
     check_min_max,
     check_negative_days,
@@ -112,7 +112,7 @@ class RandomFromFileColumn(ColumnGenerator):
         self.require("file")
 
     def generate(self, row: Row, row_index: int) -> str:
-        return self.random.choice(self.sources.values(self.column.file))  # type: ignore[arg-type]
+        return self.random.choice(self.sources.get_file_content(self.column.file))  # type: ignore[arg-type]
 
 
 class RandomFromMappedFileColumn(ColumnGenerator):
@@ -140,14 +140,14 @@ class RandomFromMappedFileColumn(ColumnGenerator):
     def generate(self, row: Row, row_index: int) -> str:
         key = self.get_by_source(row)
         parts: list[str] = []
-        for file_column in self.file_columns:
+        for value_column in self.file_columns:
             mapping = self.sources.mapping(
                 require_not_blank(self.column.mapping_file),
                 require_not_blank(self.column.key_column),
-                file_column
+                value_column
             )
             source_file = self.get_by_key(mapping, key)
-            parts.append(self.random.choice(self.sources.values(source_file)))
+            parts.append(self.random.choice(self.sources.get_file_content(source_file)))
 
         return self.separator.join(parts)
 

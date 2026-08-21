@@ -185,7 +185,7 @@ Every column needs a `name` and a `type`. The remaining keys depend on the type.
 | Type | Keys | Description |
 | --- | --- | --- |
 | `random_from_file` | `file` | Random line from a `.txt` file |
-| `random_from_mapped_file` | `source_field`, `mapping_file`, `key_column`, `file_column` or `file_columns`, `separator` | Random line from the file that the mapping CSV lists for another column's value |
+| `random_from_mapped_file` | `source_field`, `mapping_file`, `key`, `file_column` or `file_columns`, `separator` | Random line from the file that the mapping CSV lists for another column's value |
 | `derived` | `method` plus the method's own keys | Value computed from other columns in the same row |
 | `fixed` | `value` | The same literal in every row |
 | `sequence` | `start`, `step` | Incrementing integer; both default to `1` |
@@ -199,7 +199,7 @@ Every column needs a `name` and a `type`. The remaining keys depend on the type.
 | `email_from_source_fields` | `source_fields`, `domain` (defaults to `example.com`) | Builds an email local part from configured fields, stripping accents and punctuation (`Jalalé` becomes `jalale`) |
 | `product_of_source_fields` | `source_fields`, optional `value` | Multiplies the numeric fields listed in `source_fields` and, if present, an optional constant `value` |
 | `formula` | `source_fields`, `formula` | Evaluates arithmetic using the numeric source values |
-| `lookup_from_csv` | `source_field`, `mapping_file`, `key_column`, `value_column` | Looks another column's value up in a CSV and returns one of its fields |
+| `lookup_from_csv` | `source_field`, `mapping_file`, `key`, `value` | Looks another column's value up in a CSV and returns one of its fields |
 
 `email_from_source_fields` joins configured source fields with `.`, so the source columns can have
 any names and the derived column can be named anything, such as `work_email`.
@@ -388,7 +388,7 @@ Counts are values available, not rows generated.
 | `Value 'X' not found in mapping for column 'Y'` | The source column produced a value with no row in the mapping CSV — for example pointing `country` at `countries_iso.txt` while the mapping only covers 4 countries |
 | `Column 'X' depends on unknown column 'Y'` | `source_field` names a column that no config entry defines |
 | `Circular column dependency detected: a -> b -> a` | Two columns reference each other through `source_field` |
-| `Mapping file '<path>' must contain columns 'k' and 'v'` | `key_column`, `value_column`, or `file_column` does not match the CSV header |
+| `Mapping file '<path>' must contain columns 'k' and 'v'` | `key`, `value`, or `file_column` does not match the CSV header |
 | `Use either file_column or file_columns, not both` | A `random_from_mapped_file` column sets both keys |
 | `Columns of type random_int require min and max` | `min` or `max` is missing |
 | `date_start must be earlier than or equal to date_end` | The date range is inverted |
