@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from test_data.config import settings as env_config
 
-TEST_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "test_output"
+TEST_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output_test"
 
 
 def write_lines(path: Path, *lines: str) -> Path:

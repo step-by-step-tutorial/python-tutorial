@@ -19,8 +19,8 @@ def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
             return [clean(item) for item in value]
         return value
 
-    config_name = f"../test_output/{name}"
-    config_path = tmp_path / "test_output" / name
+    config_name = f"../output_test/{name}"
+    config_path = tmp_path / "output_test" / name
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(json.dumps(clean(asdict(config))), encoding="utf-8")
     return config_name
