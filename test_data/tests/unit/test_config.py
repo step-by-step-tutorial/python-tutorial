@@ -21,7 +21,7 @@ def test_load_config_reads_columns(project_root: Path) -> None:
 
     assert config.name == "demo.json"
     assert config.row_count == 5
-    assert config.output_file == "demo.csv"
+    assert config.output_name == "demo"
     assert config.column_names == ("order_id", "customer_name", "product_name", "category", "country")
     assert config.destinations == ("csv",)
 
@@ -50,7 +50,9 @@ def test_generator_config_reads_destinations() -> None:
     config = convert_to_config(
         {
             "row_count": 1,
-            "output_file": "x.csv",
+            "output_name": "x",
+            "kafka_topic": "test-events",
+            "kafka_key_column": "country",
             "destinations": ["csv", "json", "database"],
             "columns": [{"name": "country", "type": "fixed", "value": "USA"}],
         }
@@ -59,6 +61,19 @@ def test_generator_config_reads_destinations() -> None:
     assert config.destinations == ("csv", "json", "database")
 
 
+def test_generator_config_reads_kafka_key_column() -> None:
+    config = convert_to_config(
+        {
+            "row_count": 1,
+            "output_name": "x",
+            "kafka_topic": "test-events",
+            "kafka_key_column": "record_id",
+            "destinations": ["kafka"],
+            "columns": [{"name": "record_id", "type": "sequence", "start": 1, "step": 1}],
+        }
+    )
+
+    assert config.kafka_key_column == "record_id"
 def test_load_config_reports_missing_file(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
     importlib.reload(env_config)
@@ -99,7 +114,7 @@ def test_load_config_reports_non_object_json(tmp_path: Path, monkeypatch) -> Non
 def test_online_shopping_config_includes_extended_fields() -> None:
     config = read_config("online_shopping.json")
 
-    assert config.destinations == ("csv", "json", "database")
+    assert config.destinations == ("csv", "json", "database", "kafka")
     assert "subtotal" in config.column_names
     assert "discount_percent" in config.column_names
     assert "shipping_cost" in config.column_names

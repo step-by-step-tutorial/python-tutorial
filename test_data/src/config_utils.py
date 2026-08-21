@@ -24,10 +24,12 @@ def convert_to_config(raw_config: dict[str, Any], name: str = "") -> ConfigModel
     return ConfigModel(
         name=name,
         row_count=raw_config["row_count"],
-        output_file=str(raw_config["output_file"]),
+        output_name=raw_config["output_name"],
         columns=columns,
         destinations=tuple(raw_config["destinations"]),
         column_names=tuple(column.name for column in columns),
+        kafka_topic=raw_config["kafka_topic"],
+        kafka_key_column=raw_config["kafka_key_column"],
     )
 
 

@@ -43,13 +43,14 @@ German phone number, a German address, and `EUR`.
 * Automatic dependency resolution between columns, independent of column order
 * Reproducible output through a project-wide random seed
 * JSON-based configuration, one file per dataset
-* Configurable destinations per dataset: CSV, JSON, database, or Kafka
+* Configurable destinations per dataset: CSV, JSON, XML, database, or Kafka
 * CSV export with quoting handled by the standard library
 
 ## Prerequisites
-* Python
+* Python 3.10+
+* `confluent-kafka` when publishing to Kafka (installed by `pip install -e .`)
 
-No third-party runtime dependencies — the generator uses only the Python standard library.
+The database and Kafka destinations have runtime dependencies declared in `pyproject.toml`.
 
 ## Project Structure
 
@@ -177,9 +178,11 @@ A config file is a JSON object with three required keys plus the column list.
 | Key | Required | Description |
 | --- | --- | --- |
 | `row_count` | yes | Number of data rows to generate |
-| `output_file` | yes | Destination CSV, relative to the project root |
+| `output_name` | yes | Format-neutral output name, written under `OUTPUT_DIR` |
 | `column_generator.py` | yes | Ordered list of column definitions |
-| `destinations` | no | Output targets to write: `csv`, `json`, `database`, or `kafka` |
+| `destinations` | no | Output targets to write: `csv`, `json`, `xml`, `database`, or `kafka` |
+| `kafka_topic` | yes | Kafka topic for the dataset. |
+| `kafka_key_column` | yes | Row column to encode as the Kafka message key. |
 
 ### Column Types
 
@@ -262,10 +265,8 @@ lists `NONE` 6 times out of 16 so that roughly 38% of orders carry no coupon.
 
 ### Path Resolution
 
-Every path inside a config — `output_file`, `file`, `mapping_file`, and the paths stored *inside* a
-file map — resolves relative to the folder holding the config file, not to the current working
-directory. Running `python ./src/main.py --config ./config/hr.json` from any directory therefore
-resolves `data/departments.txt` inside the project root.
+`output_name` is written under `OUTPUT_DIR`. Source paths such as `file`, `mapping_file`, and the
+paths stored *inside* a file map resolve from the project root, not the current working directory.
 
 ### Reproducible Output
 
@@ -278,7 +279,7 @@ that file's lines.
 ```json
 {
   "row_count": 10,
-  "output_file": "output/sales.csv",
+  "output_name": "sales",
   "columns": [
     { "name": "order_id", "type": "sequence", "start": 1, "step": 1 },
     {
@@ -357,7 +358,7 @@ Counts are values available, not rows generated.
 
 ## Add a New Dataset
 
-1. Copy `config/sale.json` to `config/<dataset>.json` and set `row_count` and `output_file`.
+1. Copy `config/sale.json` to `config/<dataset>.json` and set `row_count` and `output_name`.
 2. Reuse the existing files under `data/` wherever possible — most datasets need no new data.
 3. For genuinely new values, add a file named after the *kind* of data, not the dataset:
    `data/<kind>.txt` for a flat list, or `data/<kind>/<key>.txt` plus a mapping CSV when the values

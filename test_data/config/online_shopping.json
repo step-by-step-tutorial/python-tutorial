@@ -1,7 +1,9 @@
 {
   "row_count": 5000,
-  "output_file": "online_shopping.csv",
-  "destinations": ["csv", "json", "database"],
+  "output_name": "online_shopping",
+  "kafka_topic": "sale-events",
+  "kafka_key_column": "order_id",
+  "destinations": ["csv", "json", "database", "kafka"],
   "columns": [
     { "name": "order_id", "type": "sequence", "start": 100001, "step": 1 },
     {

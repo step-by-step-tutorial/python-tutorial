@@ -50,7 +50,9 @@ def project_root(tmp_path: Path, data_dir: Path, monkeypatch) -> Path:
 
     config = {
         "row_count": 5,
-        "output_file": "demo.csv",
+        "output_name": "demo",
+        "kafka_topic": "test-events",
+        "kafka_key_column": "order_id",
         "destinations": ["csv"],
         "columns": [
             {"name": "order_id", "type": "sequence", "start": 1, "step": 1},

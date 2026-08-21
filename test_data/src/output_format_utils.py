@@ -8,9 +8,9 @@ FORMAT_DETAILS: dict[str, tuple[str, str]] = {
 }
 
 
-def output_file_name(output_file: str, format_name: str) -> Path:
+def output_file_name(output_name: str, format_name: str) -> Path:
     extension, _ = FORMAT_DETAILS[format_name]
-    return Path(output_file).with_suffix(f".{extension}")
+    return Path(output_name).with_suffix(f".{extension}")
 
 
 def media_type_for(format_name: str) -> str:

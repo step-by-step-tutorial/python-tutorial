@@ -33,6 +33,8 @@ def config_with_headers(**kwargs) -> ConfigModel:
     return ConfigModel(
         name=kwargs.pop("name", "generated.json"),
         column_names=tuple(column.name for column in kwargs["columns"]),
+        kafka_topic=kwargs.pop("kafka_topic", "test-events"),
+        kafka_key_column=kwargs.pop("kafka_key_column", "id"),
         **kwargs,
     )
 
@@ -50,7 +52,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
 
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(name="first_name", type="random_from_file", file="data/first_names.txt"),
@@ -88,7 +90,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
 
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(name="order_id", type="sequence", start=1, step=1),
@@ -135,7 +137,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
 def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path) -> None:
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(name="qty", type="fixed", value="2"),
@@ -158,7 +160,7 @@ def test_product_of_fields_can_use_custom_source_fields(tmp_path: Path) -> None:
 def test_product_of_source_fields_can_use_a_constant_factor(tmp_path: Path) -> None:
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(name="net_total", type="fixed", value="25"),
@@ -181,7 +183,7 @@ def test_product_of_source_fields_can_use_a_constant_factor(tmp_path: Path) -> N
 def test_product_of_source_fields_supports_a_zero_constant_factor(tmp_path: Path) -> None:
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(name="net_total", type="fixed", value="25"),
@@ -214,7 +216,7 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
 
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(name="country", type="fixed", value="Germany"),
@@ -249,7 +251,7 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
 
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(name="country", type="fixed", value="Germany"),
@@ -284,7 +286,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
 
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(
@@ -309,7 +311,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
 def test_generate_rows_rejects_circular_dependencies(tmp_path: Path) -> None:
     config = config_with_headers(
         row_count=1,
-        output_file="generated.csv",
+        output_name="generated",
         destinations=("csv",),
         columns=[
             ColumnModel(

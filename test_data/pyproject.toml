@@ -10,6 +10,7 @@ requires-python = ">=3.10"
 dependencies = [
     "sqlalchemy>=2.0",
     "psycopg2-binary>=2.9",
+    "confluent-kafka>=2.5",
 ]
 
 [project.optional-dependencies]
@@ -28,7 +29,7 @@ csv-data-generator-api = "api:run"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
-py-modules = ["api", "application_config", "cli", "columns", "csv_utils", "database_repository", "datasets", "destination_registry", "error_handlers", "exceptions", "file_utils", "generator", "json_utils", "mapper", "path_utils", "schemas", "sources", "writer"]
+py-modules = ["api", "application_config", "cli", "columns", "csv_utils", "database_repository", "datasets", "destination_registry", "error_handlers", "exceptions", "file_utils", "generator", "json_utils", "kafka_connector", "kafka_utils", "mapper", "path_utils", "schemas", "sources", "writer"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

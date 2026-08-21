@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
@@ -10,6 +11,8 @@ import env_config
 from csv_utils import write_csv
 from database_repository import DatabaseRepository
 from json_utils import write_json
+from kafka_connector import create_producer
+from kafka_utils import handle_delivery
 from output_format_utils import output_file_name
 from xml_utils import write_xml
 
@@ -29,7 +32,7 @@ class CsvWriter(Writer):
 
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
         output_path = write_csv(
-            env_config.OUTPUT_DIR / output_file_name(config.output_file, self.name), config.column_names, rows
+            env_config.OUTPUT_DIR / output_file_name(config.output_name, self.name), config.column_names, rows
         )
         logger.info("CSV output written to %s", output_path)
 
@@ -38,7 +41,7 @@ class JsonWriter(Writer):
     name = "json"
 
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
-        output_path = write_json(env_config.OUTPUT_DIR / output_file_name(config.output_file, self.name), rows)
+        output_path = write_json(env_config.OUTPUT_DIR / output_file_name(config.output_name, self.name), rows)
         logger.info("JSON output written to %s", output_path)
 
 
@@ -47,7 +50,7 @@ class XmlWriter(Writer):
 
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
         output_path = write_xml(
-            env_config.OUTPUT_DIR / output_file_name(config.output_file, self.name), config.column_names, rows
+            env_config.OUTPUT_DIR / output_file_name(config.output_name, self.name), config.column_names, rows
         )
         logger.info("XML output written to %s", output_path)
 
@@ -57,9 +60,29 @@ class DatabaseWriter(Writer):
 
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
         repository = DatabaseRepository(env_config.DATABASE_URL)
-        table_name = Path(config.output_file).stem
+        table_name = Path(config.output_name).stem
         repository.write_rows(table_name=table_name, headers=config.column_names, rows=rows)
         logger.info("Database output written to table %s", table_name)
+
+
+class KafkaWriter(Writer):
+    name = "kafka"
+
+    def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
+        topic_name = config.kafka_topic
+        producer = create_producer()
+        for row in rows:
+            key = str(row[config.kafka_key_column])
+            producer.produce(
+                topic=topic_name,
+                key=key,
+                value=json.dumps(dict(row), ensure_ascii=False).encode("utf-8"),
+                on_delivery=handle_delivery,
+            )
+            producer.poll(0)
+
+        producer.flush()
+        logger.info("Kafka output written to topic %s", topic_name)
 
 
 class WriterRegistry:
@@ -69,6 +92,7 @@ class WriterRegistry:
             JsonWriter(),
             XmlWriter(),
             DatabaseWriter(),
+            KafkaWriter(),
         ]
         self._writers = {writer.name: writer for writer in writers}
 

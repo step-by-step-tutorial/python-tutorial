@@ -31,6 +31,8 @@ def config_with_headers(**kwargs) -> ConfigModel:
     return ConfigModel(
         name=kwargs.pop("name", "generated.json"),
         column_names=tuple(column.name for column in kwargs["columns"]),
+        kafka_topic=kwargs.pop("kafka_topic", "test-events"),
+        kafka_key_column=kwargs.pop("kafka_key_column", "id"),
         **kwargs,
     )
 
@@ -38,7 +40,7 @@ def config_with_headers(**kwargs) -> ConfigModel:
 def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DatasetGenerator:
     config = config_with_headers(
         row_count=row_count,
-        output_file="generated.csv",
+        output_name="generated",
         columns=columns,
         destinations=("csv",),
     )
@@ -184,7 +186,9 @@ def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch
         """
         {
           "row_count": 2,
-          "output_file": "sample.csv",
+          "output_name": "sample",
+          "kafka_topic": "test-events",
+          "kafka_key_column": "id",
           "destinations": ["csv", "json"],
           "columns": [
             {"name": "id", "type": "sequence", "start": 1, "step": 1},
@@ -217,6 +221,45 @@ def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch
     importlib.reload(env_config)
 
 
+def test_generate_dataset_publishes_json_rows_to_kafka(tmp_path: Path, mocker, monkeypatch) -> None:
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    (config_dir / "sample.json").write_text(
+        """
+        {
+          "row_count": 2,
+          "output_name": "sample",
+          "kafka_topic": "test-data-sample",
+          "kafka_key_column": "id",
+          "destinations": ["kafka"],
+          "columns": [
+            {"name": "id", "type": "sequence", "start": 1, "step": 1},
+            {"name": "country", "type": "fixed", "value": "USA"}
+          ]
+        }
+        """.strip(),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("CONFIG_DIR", str(config_dir))
+    importlib.reload(env_config)
+    producer = mocker.patch("writer_registry.create_producer").return_value
+    producer.flush.return_value = 0
+
+    DatasetGenerator("sample.json").write()
+
+    assert producer.produce.call_count == 2
+    assert producer.produce.call_args_list[0].kwargs["topic"] == "test-data-sample"
+    assert producer.produce.call_args_list[0].kwargs["key"] == "1"
+    assert producer.produce.call_args_list[0].kwargs["value"] == b'{"id": "1", "country": "USA"}'
+    producer.flush.assert_called_once_with()
+
+    monkeypatch.delenv("PROJECT_ROOT", raising=False)
+    monkeypatch.delenv("CONFIG_DIR", raising=False)
+    importlib.reload(env_config)
+
+
 def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path, mocker, monkeypatch) -> None:
     data_dir = tmp_path / "data"
     data_dir.mkdir()
@@ -230,7 +273,9 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
         """
         {
           "row_count": 1,
-          "output_file": "online.csv",
+          "output_name": "online",
+          "kafka_topic": "test-events",
+          "kafka_key_column": "order_id",
           "destinations": ["csv", "json", "database"],
           "columns": [
             {"name": "order_id", "type": "sequence", "start": 1, "step": 1},

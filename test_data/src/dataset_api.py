@@ -76,7 +76,7 @@ def create_api() -> FastAPI:
 
         try:
             items, total = DatabaseRepository(env_config.DATABASE_URL).read_page(
-                table_name=Path(dataset.config.output_file).stem,
+                table_name=Path(dataset.config.output_name).stem,
                 page=page,
                 page_size=page_size,
             )

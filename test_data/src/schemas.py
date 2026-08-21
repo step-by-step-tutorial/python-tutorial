@@ -36,10 +36,12 @@ class ColumnModel:
 class ConfigModel:
     name: str
     row_count: int
-    output_file: str
+    output_name: str
     columns: Sequence[ColumnModel]
     destinations: tuple[str, ...]
     column_names: tuple[str, ...]
+    kafka_topic: str
+    kafka_key_column: str
 
 
 @dataclass(frozen=True)
@@ -60,7 +62,7 @@ class Dataset:
         return self.output_file_for("csv")
 
     def output_file_for(self, format_name: str) -> Path:
-        return env_config.OUTPUT_DIR / output_file_name(self.config.output_file, format_name)
+        return env_config.OUTPUT_DIR / output_file_name(self.config.output_name, format_name)
 
     def get_metadata(self) -> "DatasetMetadata":
         return DatasetMetadata(
@@ -70,7 +72,7 @@ class Dataset:
             column_count=len(self.columns),
             columns=list(self.columns),
             destinations=list(self.destinations),
-            file=f"{env_config.OUTPUT_DIR.name}/{self.config.output_file}",
+            file=str(Path(env_config.OUTPUT_DIR.name) / output_file_name(self.config.output_name, "csv")),
             download_url=f"/datasets/{self.name}/download",
         )
 
