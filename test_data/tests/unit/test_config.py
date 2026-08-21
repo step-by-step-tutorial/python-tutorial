@@ -16,11 +16,10 @@ from config_utils import (
 from schemas import ColumnModel
 
 
-def test_load_config_reads_columns_and_seed(project_root: Path) -> None:
+def test_load_config_reads_columns(project_root: Path) -> None:
     config = read_config("demo.json")
 
     assert config.row_count == 5
-    assert config.seed == 42
     assert config.output_file == "demo.csv"
     assert config.headers == ("order_id", "customer_name", "product_name", "category", "country")
     assert config.destinations == ("csv",)

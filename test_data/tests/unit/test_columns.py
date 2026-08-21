@@ -1,18 +1,15 @@
 
 
 from pathlib import Path
-from random import Random
-
 import pytest
 
 from columns import get_column_generator
 from data_converter import convert_to_email, convert_to_floats
 from schemas import ColumnModel
-from sources_repository import SourceRepository
 
 
 def build(column: ColumnModel):
-    return get_column_generator(column, SourceRepository(), Random(1))
+    return get_column_generator(column)
 
 
 @pytest.mark.parametrize(

@@ -41,7 +41,7 @@ German phone number, a German address, and `EUR`.
 * Random integer generation
 * Random date generation
 * Automatic dependency resolution between columns, independent of column order
-* Reproducible output through an optional seed
+* Reproducible output through a project-wide random seed
 * JSON-based configuration, one file per dataset
 * Configurable destinations per dataset: CSV, JSON, database, or Kafka
 * CSV export with quoting handled by the standard library
@@ -176,7 +176,6 @@ A config file is a JSON object with three required keys plus the column list.
 | `output_file` | yes | Destination CSV, relative to the project root |
 | `columns` | yes | Ordered list of column definitions |
 | `destinations` | no | Output targets to write: `csv`, `json`, `database`, or `kafka` |
-| `seed` | no | Integer seed; omit for different data on every run |
 
 ### Column Types
 
@@ -266,9 +265,9 @@ resolves `data/departments.txt` inside the project root.
 
 ### Reproducible Output
 
-With `seed` set, a run is fully reproducible: same config plus same data files produce a
-byte-identical CSV. Editing a data file changes the output even when the seed is unchanged, because
-the random draws consume that file's lines. Remove `seed` for fresh data on every run.
+`env_config.RANDOM_SEED` makes every run reproducible: the same config plus the same data files
+produce a byte-identical CSV. Editing a data file changes the output because the random draws consume
+that file's lines.
 
 ### Example
 
@@ -276,7 +275,6 @@ the random draws consume that file's lines. Remove `seed` for fresh data on ever
 {
   "row_count": 10,
   "output_file": "output/sales.csv",
-  "seed": 42,
   "columns": [
     { "name": "order_id", "type": "sequence", "start": 1, "step": 1 },
     {
@@ -355,7 +353,7 @@ Counts are values available, not rows generated.
 
 ## Add a New Dataset
 
-1. Copy `config/sale.json` to `config/<dataset>.json` and set `row_count`, `output_file`, and `seed`.
+1. Copy `config/sale.json` to `config/<dataset>.json` and set `row_count` and `output_file`.
 2. Reuse the existing files under `data/` wherever possible — most datasets need no new data.
 3. For genuinely new values, add a file named after the *kind* of data, not the dataset:
    `data/<kind>.txt` for a flat list, or `data/<kind>/<key>.txt` plus a mapping CSV when the values

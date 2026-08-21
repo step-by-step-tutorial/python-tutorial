@@ -47,7 +47,6 @@ def test_generate_rows_creates_derived_email(tmp_path: Path) -> None:
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
-        seed=1,
         columns=[
             ColumnModel(name="first_name", type="random_from_file", file="data/first_names.txt"),
             ColumnModel(name="last_name", type="random_from_file", file="data/last_names.txt"),
@@ -86,7 +85,6 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path) -
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
-        seed=7,
         columns=[
             ColumnModel(name="order_id", type="sequence", start=1, step=1),
             ColumnModel(name="product", type="random_from_file", file="data/products.txt"),
@@ -213,7 +211,6 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path) -> None:
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
-        seed=1,
         columns=[
             ColumnModel(name="country", type="fixed", value="Germany"),
             ColumnModel(
@@ -249,7 +246,6 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path) -> 
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
-        seed=1,
         columns=[
             ColumnModel(name="country", type="fixed", value="Germany"),
             ColumnModel(
@@ -285,7 +281,6 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
         row_count=1,
         output_file="generated.csv",
         destinations=("csv",),
-        seed=1,
         columns=[
             ColumnModel(
                 name="customer_name",

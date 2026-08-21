@@ -36,7 +36,6 @@ def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DataGenera
         output_file="generated.csv",
         columns=columns,
         destinations=("csv",),
-        seed=1,
     )
     return DataGenerator(write_config_file(Path(env_config.CONFIG_DIR).parent, "generated.json", config))
 
@@ -245,7 +244,6 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
           "row_count": 1,
           "output_file": "online.csv",
           "destinations": ["csv", "json", "database"],
-          "seed": 1,
           "columns": [
             {"name": "order_id", "type": "sequence", "start": 1, "step": 1},
             {"name": "order_date", "type": "fixed", "value": "2026-01-10"},

@@ -1,27 +1,18 @@
 from collections.abc import Iterator
-from random import Random
 
 from columns import ColumnGenerator, get_column_generator
 from config_utils import read_config
 from datasets import Dataset
-from sources_repository import SourceRepository
 from writer_registry import writer_registry
 
 
 class DataGenerator:
 
-    def __init__(
-            self,
-            config_name: str,
-            sources: SourceRepository | None = None,
-    ) -> None:
+    def __init__(self, config_name: str) -> None:
         self.config_name = config_name
         self.config = read_config(config_name)
-        self._sources = sources if sources is not None else SourceRepository()
-        self._rng = Random(self.config.seed)
         self._generators: dict[str, ColumnGenerator] = {
-            column.name: get_column_generator(column, self._sources, self._rng)
-            for column in self.config.columns
+            column.name: get_column_generator(column) for column in self.config.columns
         }
         self._order = self._resolve_order()
 

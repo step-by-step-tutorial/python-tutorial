@@ -36,7 +36,6 @@ class ConfigModel:
     columns: Sequence[ColumnModel]
     destinations: tuple[str, ...]
     headers: tuple[str, ...]
-    seed: int | None = None
 
 
 class DatasetMetadata(BaseModel):

@@ -25,7 +25,6 @@ def convert_to_config(raw_config: dict[str, Any]) -> ConfigModel:
         row_count=raw_config["row_count"],
         output_file=str(raw_config["output_file"]),
         columns=columns,
-        seed=raw_config.get("seed"),
         destinations=tuple(raw_config["destinations"]),
         headers=tuple(column.name for column in columns),
     )
