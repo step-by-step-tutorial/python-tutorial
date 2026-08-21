@@ -29,7 +29,11 @@ def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
 
 
 def config_with_headers(**kwargs) -> ConfigModel:
-    return ConfigModel(column_names=tuple(column.name for column in kwargs["columns"]), **kwargs)
+    return ConfigModel(
+        name=kwargs.pop("name", "generated.json"),
+        column_names=tuple(column.name for column in kwargs["columns"]),
+        **kwargs,
+    )
 
 
 def test_normalize_for_email_removes_special_characters() -> None:

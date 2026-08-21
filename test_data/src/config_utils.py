@@ -19,9 +19,10 @@ def convert_to_columns(raw_columns: list[dict[str, Any]]) -> tuple[ColumnModel, 
     return tuple(convert_to_column(column) for column in raw_columns)
 
 
-def convert_to_config(raw_config: dict[str, Any]) -> ConfigModel:
+def convert_to_config(raw_config: dict[str, Any], name: str = "") -> ConfigModel:
     columns = convert_to_columns(raw_config["columns"])
     return ConfigModel(
+        name=name,
         row_count=raw_config["row_count"],
         output_file=str(raw_config["output_file"]),
         columns=columns,
@@ -31,4 +32,4 @@ def convert_to_config(raw_config: dict[str, Any]) -> ConfigModel:
 
 
 def read_config(file_name: str) -> ConfigModel:
-    return convert_to_config(read_json_file(env_config.CONFIG_DIR / file_name))
+    return convert_to_config(read_json_file(env_config.CONFIG_DIR / file_name), file_name)

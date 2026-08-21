@@ -19,6 +19,7 @@ from schemas import ColumnModel
 def test_load_config_reads_columns(project_root: Path) -> None:
     config = read_config("demo.json")
 
+    assert config.name == "demo.json"
     assert config.row_count == 5
     assert config.output_file == "demo.csv"
     assert config.column_names == ("order_id", "customer_name", "product_name", "category", "country")

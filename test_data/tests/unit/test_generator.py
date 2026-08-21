@@ -27,7 +27,11 @@ def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
 
 
 def config_with_headers(**kwargs) -> ConfigModel:
-    return ConfigModel(column_names=tuple(column.name for column in kwargs["columns"]), **kwargs)
+    return ConfigModel(
+        name=kwargs.pop("name", "generated.json"),
+        column_names=tuple(column.name for column in kwargs["columns"]),
+        **kwargs,
+    )
 
 
 def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DatasetGenerator:

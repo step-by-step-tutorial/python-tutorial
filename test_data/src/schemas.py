@@ -33,6 +33,7 @@ class ColumnModel:
 
 @dataclass(frozen=True)
 class ConfigModel:
+    name: str
     row_count: int
     output_file: str
     columns: Sequence[ColumnModel]
