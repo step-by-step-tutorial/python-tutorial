@@ -13,7 +13,7 @@ consistent: a German customer gets a German first name, a German phone number, a
 * [Prerequisites](#prerequisites)
 * [Project Structure](#project-structure)
 * [Prepare Environment](#prepare-environment)
-* [Run the Application](#run-the-application)
+* [Run Test Data](#run-test-data)
 * [Run the Tests](#run-the-tests)
 * [Configuration Guide](#configuration-guide)
     * [Top-Level Keys](#top-level-keys)
@@ -130,7 +130,7 @@ pytest
 email normalisation, CSV writing, every column type, joined mapped files, dependency resolution across column order, and
 rejection of circular dependencies.
 
-## Local
+## Run Test Data
 
 `--config` is required — it selects the dataset. Run from the `test_data` folder:
 
@@ -151,12 +151,12 @@ python -m test_data --help
 ```shell
 cd ./test_data
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\test_data
-python ./src/test_data/api/dataset_api.py 
+python -m test_data.api.dataset_api
 ```
 
-URL: [localhost:8080](http://localhost:8080)
-API Documentation: [localhost:8080/docs](http://localhost:8080/docs)
-API Documentation: [localhost:8080/redoc](http://localhost:8080/redoc)
+URL: [localhost:8084](http://localhost:8084)
+API Documentation: [localhost:8084/docs](http://localhost:8084/docs)
+ReDoc: [localhost:8084/redoc](http://localhost:8084/redoc)
 
 ```shell
 cd ./test_data
@@ -167,13 +167,13 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 
 ```shell
 cd ./test_data
-docker compose --file docker-compose.yml --project-name test --env-file ./.env.dev down -v
-docker compose --file docker-compose.yml --project-name test --env-file ./.env.dev up --build -d
+docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
+docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev up --build -d
 ```
 
 ```shell
 cd ./test_data
-docker compose --file docker-compose.yml --project-name test --env-file ./.env.dev down -v
+docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
 docker rmi samanalishiri/test-data:latest
 ```
 

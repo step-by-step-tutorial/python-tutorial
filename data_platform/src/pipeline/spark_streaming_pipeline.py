@@ -7,7 +7,7 @@ from audit.audit_service import AuditService
 from config.settings import settings as main_settings
 from connector.spark_session_factory import create_session
 from dataset.definition import DataLakeEndpoint, DatabaseEndpoint, DataWarehouseEndpoint, Dataset, FileEndpoint, MessagingEndpoint
-from exposer.csv_publisher import CsvPublisher
+from service.csv_publisher import CsvPublisher
 from ingestion.registry import get_ingestor
 from keys import Key
 from persistence.database_repository import DatabaseRepository
@@ -48,7 +48,7 @@ class SparkStreamingPipeline(BatchPipeline):
         self.spark.append_stream_to_object_storage(
             dataframe=raw_data,
             path=relative_path,
-            checkpoint_path=main_settings.datalake[Key.APP_DATALAKE].checkpoint_path,
+            checkpoint_path=main_settings.datalake[Key.DATA_PLATFORM_DATALAKE].checkpoint_path,
         )
 
         return relative_path

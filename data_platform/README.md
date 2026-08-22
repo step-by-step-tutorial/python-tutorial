@@ -1,4 +1,4 @@
-# Python Tutorial
+# Data Platform
 
 ## Prerequisite
 
@@ -13,10 +13,8 @@ python --version
 pip --version
 java --version
 python -m pip install --upgrade pip
-pip install -r ./data_platform/requirements.txt
-pip install -e ./data_platform
-pip install -r ./test_data/requirements.txt
-pip install -e ./test_data
+pip install -r ./requirements.txt
+pip install -e .
 ```
 
 ```shell
@@ -26,14 +24,13 @@ docker --version
 ## Test
 
 ```shell
-pytest ./data_platform 
-pytest ./test_data
+pytest
 ```
 
 ```shell
-pytest ./data_platform --html=./data_platform/report/test/test-report.html
-pytest ./data_platform --cov --cov-report=html:./data_platform/report/coverage
-python -m http.server 8000 --directory ./data_platform/report
+pytest --html=./report/test/test-report.html
+pytest --cov --cov-report=html:./report/coverage
+python -m http.server 8000 --directory ./report
 ```
 
 ## LocalHost
@@ -41,17 +38,6 @@ python -m http.server 8000 --directory ./data_platform/report
 ```shell
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
-```
-
-```shell
-python -m test_data --config ./test_data/config/sale.json
-python -m test_data --config ./test_data/config/online_shopping.json
-python -m test_data --config ./test_data/config/hr.json
-```
-
-```shell
-Set-Location C:\Users\saman\IdeaProjects\python-tutorial\test_data
-python -m test_data.api.dataset_api
 ```
 
 ```shell
@@ -73,7 +59,6 @@ docker compose --file docker-compose.yml --project-name dev --env-file ./.env.de
 ```shell
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
 docker rmi samanalishiri/data-platform:latest
-docker rmi samanalishiri/test-data:latest
 ```
 
 ## Services
@@ -81,8 +66,6 @@ docker rmi samanalishiri/test-data:latest
 * Airflow: [http://localhost:8082](http://localhost:8082)
     * user: admin
     * password: admin
-* Test Data API: [http://localhost:8084](http://localhost:8084)
-    * API documentation: [http://localhost:8084/docs](http://localhost:8084/docs)
 * Spark Master: http://localhost:8080
 * Spark Worker: http://localhost:8081
 * Datalake: http://localhost:9001
@@ -105,12 +88,8 @@ docker rmi samanalishiri/test-data:latest
 ## Clean Directory
 
 ```shell
-rm ./data_platform/output/*
-rm -rf ./data_platform/report
-rm -rf ./data_platform/src/data_platform.egg-info
-rm ./data_platform/.coverage
-rm ./test_data/output/*
-rm -rf ./test_data/report
-rm -rf ./test_data/src/test_data.egg-info
-rm ./test_data/.coverage
+rm ./output/*
+rm -rf ./report
+rm -rf ./src/data_platform.egg-info
+rm -rf ./.coverage
 ```

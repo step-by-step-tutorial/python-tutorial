@@ -63,7 +63,7 @@ class TestDatalakeUtils:
             SimpleNamespace(
                 app=SimpleNamespace(dataset_name="Sale"),
                 datalake={
-                    "app.datalake": SimpleNamespace(
+                    "data-platform.datalake": SimpleNamespace(
                         environment="dev",
                         scheme="s3a",
                         bucket_name="app-datalake",
@@ -80,8 +80,8 @@ class TestDatalakeUtils:
             "sale"
         )
         actual_full = datalake_path_utils.generate_full_path("bucket", "path/to/file")
-        actual_datalake_uri = datalake_path_utils.generate_full_path(settings.datalake["app.datalake"].bucket_name, "path/to/file")
-        actual_audit_uri = datalake_path_utils.generate_full_path(settings.datalake["app.datalake"].audit_bucket_name, "audit/file.json")
+        actual_datalake_uri = datalake_path_utils.generate_full_path(settings.datalake["data-platform.datalake"].bucket_name, "path/to/file")
+        actual_audit_uri = datalake_path_utils.generate_full_path(settings.datalake["data-platform.datalake"].audit_bucket_name, "audit/file.json")
 
         # Then
         assert actual_relative.startswith("dev/raw/sale/")
@@ -98,7 +98,7 @@ class TestDatalakeUtils:
             SimpleNamespace(
                 app=SimpleNamespace(dataset_name="Sale"),
                 datalake={
-                    "app.datalake": SimpleNamespace(
+                    "data-platform.datalake": SimpleNamespace(
                         environment="dev",
                         scheme="s3a",
                         bucket_name="app-datalake",

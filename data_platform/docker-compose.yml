@@ -117,7 +117,6 @@ x-data-platform-env: &data_platform_env
   DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME: ${DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME}
   DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS: ${DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS}
   DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME: ${DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME}
-  TEST_DATA_API_URL: ${TEST_DATA_API_URL}
 services:
   database:
     image: ${DATABASE_IMAGE}
@@ -131,10 +130,9 @@ services:
       - "${DATA_PLATFORM_DATABASE_PORT}:5432"
     volumes:
       - ${DATABASE_VOLUME}:/var/lib/postgresql/data
-      - ./data_platform/scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
-      - ./data_platform/scripts/database/sale/create_tables.sql:/docker-entrypoint-initdb.d/20_sale_create_tables.sql
-      - ./data_platform/scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
-      - ./test_data/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/40_test_data_create_schema.sql:ro
+      - ./scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
+      - ./scripts/database/sale/create_tables.sql:/docker-entrypoint-initdb.d/20_sale_create_tables.sql
+      - ./scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
     healthcheck:
       test:
         [
@@ -216,10 +214,10 @@ services:
       - "${DATA_PLATFORM_DATAWAREHOUSE_PORT}:8123"
     volumes:
       - ${DATAWAREHOUSE_VOLUME}:/var/lib/clickhouse
-      - ./data_platform/scripts/datawarehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
-      - ./data_platform/scripts/datawarehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
-      - ./data_platform/scripts/datawarehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
-      - ./data_platform/scripts/datawarehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
+      - ./scripts/datawarehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
+      - ./scripts/datawarehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
+      - ./scripts/datawarehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
+      - ./scripts/datawarehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
     healthcheck:
       test:
         [
@@ -232,7 +230,7 @@ services:
   master:
     image: ${SPARK_IMAGE}
     build:
-      context: data_platform
+      context: .
       dockerfile: ${SPARK_DOCKERFILE}
     hostname: ${SPARK_MASTER_HOST}
     container_name: ${SPARK_MASTER_CONTAINER_NAME}
@@ -246,12 +244,12 @@ services:
       - "${SPARK_MASTER_RPC_PORT}:${SPARK_MASTER_RPC_PORT}"
       - "${SPARK_MASTER_UI_PORT}:${SPARK_MASTER_UI_PORT}"
     volumes:
-      - ./data_platform/resources:/app/resources
-      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
+      - ./resources:/app/resources
+      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
   worker:
     image: ${SPARK_IMAGE}
     build:
-      context: data_platform
+      context: .
       dockerfile: ${SPARK_DOCKERFILE}
     hostname: ${SPARK_WORKER_HOST}
     container_name: ${SPARK_WORKER_CONTAINER_NAME}
@@ -266,8 +264,8 @@ services:
     ports:
       - "${SPARK_WORKER_UI_PORT}:${SPARK_WORKER_UI_PORT}"
     volumes:
-      - ./data_platform/resources:/app/resources
-      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
+      - ./resources:/app/resources
+      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
   airflow-database:
     image: ${DATABASE_IMAGE}
     container_name: ${AIRFLOW_DATABASE_CONTAINER_NAME}
@@ -288,7 +286,7 @@ services:
   airflow:
     image: ${AIRFLOW_IMAGE}
     build:
-      context: ./data_platform
+      context: .
       dockerfile: airflow/Dockerfile
     hostname: ${AIRFLOW_HOST}
     container_name: ${AIRFLOW_CONTAINER_NAME}
@@ -303,14 +301,14 @@ services:
       PYTHONPATH: ${AIRFLOW_PYTHONPATH}
       SPARK_DRIVER_HOST: ${AIRFLOW_HOST}
     volumes:
-      - ./data_platform/dags:${AIRFLOW_DAGS_DIR}
-      - ./data_platform/src:${AIRFLOW_SRC_DIR}
-      - ./data_platform/plugins:${AIRFLOW_PLUGINS_DIR}
-      - ./data_platform/resources:${AIRFLOW_RESOURCES_DIR}
-      - ./data_platform/output:${AIRFLOW_OUTPUT_DIR}
-      - ./data_platform/scripts:${AIRFLOW_SCRIPTS_DIR}
-      - ./data_platform/airflow/simple_auth_manager_passwords.json.generated:${AIRFLOW_PASSWORD_FILE}
-      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
+      - ./dags:${AIRFLOW_DAGS_DIR}
+      - ./src:${AIRFLOW_SRC_DIR}
+      - ./plugins:${AIRFLOW_PLUGINS_DIR}
+      - ./resources:${AIRFLOW_RESOURCES_DIR}
+      - ./output:${AIRFLOW_OUTPUT_DIR}
+      - ./scripts:${AIRFLOW_SCRIPTS_DIR}
+      - ./airflow/simple_auth_manager_passwords.json.generated:${AIRFLOW_PASSWORD_FILE}
+      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
     ports:
       - "${AIRFLOW_PORT}:8080"
     command:
@@ -392,7 +390,7 @@ services:
   data-platform:
     image: ${DATA_PLATFORM_IMAGE}
     build:
-      context: data_platform
+      context: .
       dockerfile: Dockerfile
     hostname: ${DATA_PLATFORM_HOST}
     container_name: ${DATA_PLATFORM_CONTAINER_NAME}
@@ -401,10 +399,10 @@ services:
     environment:
       <<: *data_platform_env
     volumes:
-      - ./data_platform/resources:/app/resources
-      - ./data_platform/output:/app/output
-      - ./data_platform/scripts:/app/scripts
-      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
+      - ./resources:/app/resources
+      - ./output:/app/output
+      - ./scripts:/app/scripts
+      - ./spark/log4j2.properties:/app/spark/log4j2.properties:ro
     depends_on:
       database:
         condition: service_healthy
@@ -420,43 +418,8 @@ services:
         condition: service_started
       kafka-init:
         condition: service_completed_successfully
-      test-data:
-        condition: service_healthy
     command: >
       sh -c "python -m main"
-  test-data:
-    image: ${TEST_DATA_IMAGE}
-    build:
-      context: test_data
-      dockerfile: Dockerfile
-    hostname: ${TEST_DATA_HOST}
-    container_name: ${TEST_DATA_CONTAINER_NAME}
-    environment:
-      PROJECT_ROOT: /app
-      CONFIG_DIR: /app/config
-      OUTPUT_DIR: /app/output
-      HOST: 0.0.0.0
-      PORT: 8080
-      DATABASE_URL: postgresql+psycopg2://${TEST_DATA_DATABASE_USER}:${TEST_DATA_DATABASE_PASSWORD}@${TEST_DATA_DATABASE_HOST}:${TEST_DATA_DATABASE_PORT}/${TEST_DATA_DATABASE_NAME}
-      DATABASE_SCHEMA: test_data
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
-    ports:
-      - "${TEST_DATA_API_PORT}:8080"
-    volumes:
-      - ./test_data/config:/app/config:ro
-      - ./test_data/data:/app/data:ro
-      - ./test_data/output:/app/output
-      - ./test_data/scripts:/app/scripts:ro
-    healthcheck:
-      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://localhost:8080/health')"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-    depends_on:
-      database:
-        condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
 
 volumes:
   airflow_database_data:
@@ -467,3 +430,4 @@ volumes:
     name: ${DATALAKE_VOLUME}
   datawarehouse_data:
     name: ${DATAWAREHOUSE_VOLUME}
+

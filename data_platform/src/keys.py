@@ -3,17 +3,17 @@ from enum import StrEnum
 
 
 class Key(StrEnum):
-    APP_DATABASE = "app.database"
+    DATA_PLATFORM_DATABASE = "data-platform.database"
     SALE_DATABASE = "sale.database"
     HOUSE_DATABASE = "house.database"
     AUDIT_DATABASE = "audit.database"
 
-    APP_DATALAKE = "app.datalake"
+    DATA_PLATFORM_DATALAKE = "data-platform.datalake"
     SALE_DATALAKE = "sale.datalake"
     HOUSE_DATALAKE = "house.datalake"
     AUDIT_DATALAKE = "audit.datalake"
 
-    APP_DATAWAREHOUSE = "app.datawarehouse"
+    DATA_PLATFORM_DATAWAREHOUSE = "data-platform.datawarehouse"
     SALE_DATAWAREHOUSE = "sale.datawarehouse"
     HOUSE_DATAWAREHOUSE = "house.datawarehouse"
     AUDIT_DATAWAREHOUSE = "audit.datawarehouse"

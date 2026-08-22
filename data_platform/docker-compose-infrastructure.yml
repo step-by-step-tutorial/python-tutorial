@@ -1,0 +1,152 @@
+name: ${COMPOSE_PROJECT_NAME}
+services:
+  database:
+    image: ${DATABASE_IMAGE}
+    hostname: ${DATA_PLATFORM_DATABASE_HOST}
+    container_name: ${DATABASE_CONTAINER_NAME}
+    environment:
+      POSTGRES_DB: ${DATA_PLATFORM_DATABASE_NAME}
+      POSTGRES_USER: ${DATA_PLATFORM_DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATA_PLATFORM_DATABASE_PASSWORD}
+    ports:
+      - "${DATA_PLATFORM_DATABASE_PORT}:5432"
+    volumes:
+      - ${DATABASE_VOLUME}:/var/lib/postgresql/data
+      - ./scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
+      - ./scripts/database/sale/create_tables.sql:/docker-entrypoint-initdb.d/20_sale_create_tables.sql
+      - ./scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready --username ${DATA_PLATFORM_DATABASE_USER} --dbname ${DATA_PLATFORM_DATABASE_NAME}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  database-ui:
+    image: ${ADMINER_IMAGE}
+    hostname: ${ADMINER_HOST}
+    container_name: ${ADMINER_CONTAINER_NAME}
+    restart: always
+    ports:
+      - "${ADMINER_PORT}:8080"
+  datalake:
+    image: ${DATALAKE_IMAGE}
+    hostname: ${DATALAKE_HOST}
+    container_name: ${DATALAKE_CONTAINER_NAME}
+    command: >
+      server /data
+      --console-address ":${DATALAKE_CONSOLE_PORT}"
+    environment:
+      MINIO_ROOT_USER: ${DATA_PLATFORM_DATALAKE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${DATA_PLATFORM_DATALAKE_SECRET_KEY}
+    ports:
+      - "${DATALAKE_API_PORT}:9000"
+      - "${DATALAKE_CONSOLE_PORT}:9001"
+    volumes:
+      - ${DATALAKE_VOLUME}:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "http://localhost:9000/minio/health/live"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  datalake-init:
+    image: ${DATALAKE_CLIENT_IMAGE}
+    hostname: ${DATALAKE_CLIENT_HOST}
+    container_name: ${DATALAKE_CLIENT_CONTAINER_NAME}
+    depends_on:
+      datalake:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${DATA_PLATFORM_DATALAKE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${DATA_PLATFORM_DATALAKE_SECRET_KEY}
+      MINIO_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BUCKET_NAME}
+      MINIO_AUDIT_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        mc alias set local http://${DATALAKE_HOST}:9000 \
+          "$${MINIO_ROOT_USER}" \
+          "$${MINIO_ROOT_PASSWORD}"
+
+        mc mb --ignore-existing \
+          "local/$${MINIO_BUCKET_NAME}"
+
+        mc mb --ignore-existing \
+          "local/$${MINIO_AUDIT_BUCKET_NAME}"
+
+  datawarehouse:
+    image: ${DATAWAREHOUSE_IMAGE}
+    hostname: ${DATA_PLATFORM_DATAWAREHOUSE_HOST}
+    container_name: ${DATAWAREHOUSE_CONTAINER_NAME}
+    environment:
+      CLICKHOUSE_DB: ${DATA_PLATFORM_DATAWAREHOUSE_NAME}
+      CLICKHOUSE_USER: ${DATA_PLATFORM_DATAWAREHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${DATA_PLATFORM_DATAWAREHOUSE_PASSWORD}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${DATAWAREHOUSE_DEFAULT_ACCESS_MANAGEMENT}
+    ports:
+      - "${DATA_PLATFORM_DATAWAREHOUSE_PORT}:8123"
+    volumes:
+      - ${DATAWAREHOUSE_VOLUME}:/var/lib/clickhouse
+      - ./scripts/datawarehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
+      - ./scripts/datawarehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
+      - ./scripts/datawarehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
+      - ./scripts/datawarehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "clickhouse-client --user ${DATA_PLATFORM_DATAWAREHOUSE_USER} --password ${DATA_PLATFORM_DATAWAREHOUSE_PASSWORD} --query 'SELECT 1'"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: LOCALHOST://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,CONTAINER://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: LOCALHOST://localhost:9092,CONTAINER://kafka:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: LOCALHOST
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,LOCALHOST:PLAINTEXT,CONTAINER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    container_name: kafdrop
+    hostname: kafdrop
+    restart: always
+    ports:
+      - "9002:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9094
+      JVM_OPTS: "-Xms32M -Xmx64M"
+volumes:
+  database_data:
+    name: ${DATABASE_VOLUME}
+  datalake_data:
+    name: ${DATALAKE_VOLUME}
+  datawarehouse_data:
+    name: ${DATAWAREHOUSE_VOLUME}
+
+

@@ -1,5 +1,5 @@
 from dataset.definition import Dataset, FileEndpoint, MessagingEndpoint
-from exposer.csv_publisher import CsvPublisher
+from service.csv_publisher import CsvPublisher
 from keys import Key
 from transformation.conversion.event_mapper import MappedEvent
 
@@ -20,16 +20,16 @@ class TestCsvPublisher:
             consumer({"order_id": "2"})
             return 2
 
-        mock_read_csv = mocker.patch("exposer.csv_publisher.read_csv_file", side_effect=_read_csv)
-        mock_mapper = mocker.patch("exposer.csv_publisher.get_event_mapper")
+        mock_read_csv = mocker.patch("service.csv_publisher.read_csv_file", side_effect=_read_csv)
+        mock_mapper = mocker.patch("service.csv_publisher.get_event_mapper")
         mock_mapper.return_value.map.side_effect = [
             MappedEvent(key="1", payload={"order_id": 1}),
             MappedEvent(key="2", payload={"order_id": 2}),
         ]
-        mock_get_connection = mocker.patch("exposer.csv_publisher.get_connection")
+        mock_get_connection = mocker.patch("service.csv_publisher.get_connection")
         given_producer = mocker.Mock()
         mock_get_connection.return_value = given_producer
-        mock_ensure_topic = mocker.patch("exposer.csv_publisher.ensure_topic_exists")
+        mock_ensure_topic = mocker.patch("service.csv_publisher.ensure_topic_exists")
 
         actual = CsvPublisher(
             dataset=given_dataset,
@@ -61,9 +61,9 @@ class TestCsvPublisher:
             channel_name="sale-events",
             bootstrap_servers="localhost:9092",
         )
-        mock_mapper = mocker.patch("exposer.csv_publisher.get_event_mapper")
+        mock_mapper = mocker.patch("service.csv_publisher.get_event_mapper")
         mock_mapper.return_value.map.return_value = MappedEvent(key="1", payload={"order_id": 1})
-        mock_get_connection = mocker.patch("exposer.csv_publisher.get_connection")
+        mock_get_connection = mocker.patch("service.csv_publisher.get_connection")
         given_producer = mocker.Mock()
         mock_get_connection.return_value = given_producer
 

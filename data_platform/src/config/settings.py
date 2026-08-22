@@ -109,7 +109,7 @@ app = AppSettings(
 
 database = MappingProxyType(
     {
-        Key.APP_DATABASE: DatabaseSettings(
+        Key.DATA_PLATFORM_DATABASE: DatabaseSettings(
             host=os.getenv("DATA_PLATFORM_DATABASE_HOST", "localhost"),
             port=int(os.getenv("DATA_PLATFORM_DATABASE_PORT", "5432")),
             database_name=os.getenv("DATA_PLATFORM_DATABASE_NAME", "app_database"),
@@ -210,7 +210,7 @@ database = MappingProxyType(
 
 datalake = MappingProxyType(
     {
-        Key.APP_DATALAKE: DataLakeSettings(
+        Key.DATA_PLATFORM_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_DATALAKE_ENDPOINT", "http://localhost:9000"),
             access_key=os.getenv("DATA_PLATFORM_DATALAKE_ACCESS_KEY", "admin"),
             secret_key=os.getenv("DATA_PLATFORM_DATALAKE_SECRET_KEY", "administrator"),
@@ -255,7 +255,7 @@ datalake = MappingProxyType(
 
 datawarehouse = MappingProxyType(
     {
-        Key.APP_DATAWAREHOUSE: DataWarehouseSettings(
+        Key.DATA_PLATFORM_DATAWAREHOUSE: DataWarehouseSettings(
             host=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_HOST", "localhost"),
             port=int(os.getenv("DATA_PLATFORM_DATAWAREHOUSE_PORT", "8123")),
             database_name=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_NAME", "app_datawarehouse"),
