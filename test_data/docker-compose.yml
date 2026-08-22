@@ -85,7 +85,7 @@ services:
       KAFKA_BROKERCONNECT: kafka:9094
       JVM_OPTS: "-Xms32M -Xmx64M"
   test-data:
-    image: ${TEST_DATA_IMAGE:-test-data:local}
+    image: ${TEST_DATA_IMAGE}
     build:
       context: .
       dockerfile: Dockerfile
@@ -97,11 +97,11 @@ services:
       OUTPUT_DIR: /app/output
       HOST: 0.0.0.0
       PORT: 8080
-      DATABASE_URL: postgresql+psycopg2://${TEST_DATA_DATABASE_USER}:${TEST_DATA_DATABASE_PASSWORD}@database:5432/${TEST_DATA_DATABASE_NAME}
+      DATABASE_URL: postgresql+psycopg2://${TEST_DATA_DATABASE_USER}:${TEST_DATA_DATABASE_PASSWORD}@${TEST_DATA_DATABASE_HOST}:${TEST_DATA_DATABASE_PORT}/${TEST_DATA_DATABASE_NAME}
       DATABASE_SCHEMA: test_data
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
     ports:
-      - "${TEST_DATA_API_PORT:-8080}:8080"
+      - "${TEST_DATA_API_PORT}:8080"
     volumes:
       - ./config:/app/config
       - ./data:/app/data

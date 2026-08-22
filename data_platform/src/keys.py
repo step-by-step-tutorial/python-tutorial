@@ -22,7 +22,6 @@ class Key(StrEnum):
     HOUSE_FILE_CSV = "house.file.csv"
 
     SALE_REST = "sale.rest"
-    HOUSE_REST = "house.rest"
 
     SALE_KAFKA_LISTENER = "sale.kafka.listener"
     HOUSE_KAFKA_LISTENER = "house.kafka.listener"

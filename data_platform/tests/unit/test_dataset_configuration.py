@@ -154,8 +154,6 @@ class TestConcreteDatasetConfiguration:
                                           DataWarehouseEndpoint).connection_name == "house.datawarehouse"
         assert HOUSE_DATASET.get_endpoint("house.datawarehouse",
                                           DataWarehouseEndpoint).full_table_name == "app_datawarehouse.house_table"
-        assert HOUSE_DATASET.get_endpoint("house.rest", RestApiEndpoint).url == "http://localhost:8080"
-        assert HOUSE_DATASET.get_endpoint("house.rest", RestApiEndpoint).method == "GET"
         assert HOUSE_DATASET.audit.database_connection_name == "audit.database"
         assert HOUSE_DATASET.audit.messaging_connection_name == "audit.kafka.producer"
         assert HOUSE_DATASET.audit.datalake_connection_name == "audit.datalake"

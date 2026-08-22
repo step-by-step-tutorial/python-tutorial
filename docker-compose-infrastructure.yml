@@ -15,33 +15,12 @@ services:
       - ./data_platform/scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
       - ./data_platform/scripts/database/sale/create_tables.sql:/docker-entrypoint-initdb.d/20_sale_create_tables.sql
       - ./data_platform/scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
+      - ./test_data/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/40_test_data_create_schema.sql:ro
     healthcheck:
       test:
         [
           "CMD-SHELL",
           "pg_isready --username ${DATA_PLATFORM_DATABASE_USER} --dbname ${DATA_PLATFORM_DATABASE_NAME}"
-        ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-  testdata-database:
-    image: ${DATABASE_IMAGE}
-    hostname: testdata-database
-    container_name: testdata-database
-    environment:
-      POSTGRES_DB: ${TEST_DATA_DATABASE_NAME:-test_data}
-      POSTGRES_USER: ${TEST_DATA_DATABASE_USER:-test_data}
-      POSTGRES_PASSWORD: ${TEST_DATA_DATABASE_PASSWORD:-test_data}
-    ports:
-      - "${TEST_DATA_DATABASE_PORT:-5434}:5432"
-    volumes:
-      - ${TEST_DATA_DATABASE_VOLUME:-testdata_database_data}:/var/lib/postgresql/data
-      - ./test_data/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/10_create_test_data_schema.sql:ro
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready --username ${TEST_DATA_DATABASE_USER:-test_data} --dbname ${TEST_DATA_DATABASE_NAME:-test_data}"
         ]
       interval: 5s
       timeout: 5s
@@ -166,8 +145,6 @@ services:
 volumes:
   database_data:
     name: ${DATABASE_VOLUME}
-  testdata_database_data:
-    name: ${TEST_DATA_DATABASE_VOLUME:-testdata_database_data}
   datalake_data:
     name: ${DATALAKE_VOLUME}
   datawarehouse_data:

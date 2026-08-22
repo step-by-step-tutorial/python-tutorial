@@ -63,12 +63,6 @@ class MessagingSettings:
 
 
 @dataclass(frozen=True)
-class RestSettings:
-    url: str
-    method: str
-
-
-@dataclass(frozen=True)
 class TestDataSettings:
     api_url: str
     dataset_name: str
@@ -98,7 +92,6 @@ class MainSettings:
     datalake: Mapping[str, DataLakeSettings]
     datawarehouse: Mapping[str, DataWarehouseSettings]
     messaging: Mapping[str, MessagingSettings]
-    rest: Mapping[str, RestSettings]
     test_data: TestDataSettings
     spark: SparkSettings
 
@@ -362,15 +355,6 @@ messaging = MappingProxyType(
     }
 )
 
-rest = MappingProxyType(
-    {
-        Key.HOUSE_REST: RestSettings(
-            url=os.getenv("DATA_PLATFORM_HOUSE_REST_URL", "http://localhost:8080"),
-            method=os.getenv("DATA_PLATFORM_HOUSE_REST_METHOD", "GET"),
-        ),
-    }
-)
-
 test_data = TestDataSettings(
     api_url=os.getenv("TEST_DATA_API_URL", "http://localhost:8080"),
     dataset_name=app.dataset_name,
@@ -394,7 +378,6 @@ settings = MainSettings(
     datalake=datalake,
     datawarehouse=datawarehouse,
     messaging=messaging,
-    rest=rest,
     test_data=test_data,
     spark=spark,
 )

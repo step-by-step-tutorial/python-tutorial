@@ -16,7 +16,6 @@ class TestMainSettings:
             "audit.kafka.producer",
             "audit.kafka.listener",
         }
-        assert set(settings.rest) == {"house.rest"}
         assert settings.test_data.download_url == (
             f"http://localhost:8080/datasets/{settings.app.dataset_name.lower()}.json/download?format=json"
         )

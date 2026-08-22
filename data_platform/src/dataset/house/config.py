@@ -8,7 +8,6 @@ from dataset.definition import (
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
-    RestApiEndpoint,
 )
 from dataset.house.attribute import HOUSE_ATTRIBUTE as columns
 from dataset.house.spark_schema import build_schema
@@ -48,11 +47,6 @@ HOUSE_DATASET = Dataset(
             name=Key.HOUSE_FILE_CSV,
             file_name="house.csv",
             file_path=str(main_settings.app.root / main_settings.app.resources_dir / "house.csv"),
-        ),
-        Key.HOUSE_REST: RestApiEndpoint(
-            name=Key.HOUSE_REST,
-            url=main_settings.rest[Key.HOUSE_REST].url,
-            method=main_settings.rest[Key.HOUSE_REST].method,
         ),
         Key.HOUSE_KAFKA_LISTENER: MessagingEndpoint(
             name=Key.HOUSE_KAFKA_LISTENER,
