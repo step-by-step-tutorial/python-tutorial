@@ -8,16 +8,15 @@ version = "1.1.0"
 description = "Generate CSV, JSON, database, or Kafka test data from plain text sources and JSON configs."
 requires-python = ">=3.10"
 dependencies = [
+    "fastapi>=0.110",
+    "pydantic>=2.0",
     "sqlalchemy>=2.0",
     "psycopg2-binary>=2.9",
     "confluent-kafka>=2.5",
+    "uvicorn>=0.27",
 ]
 
 [project.optional-dependencies]
-api = [
-    "fastapi>=0.110",
-    "uvicorn>=0.27",
-]
 test = [
     "pytest>=8",
     "httpx>=0.27",
