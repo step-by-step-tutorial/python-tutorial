@@ -44,9 +44,21 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ```
 
 ```shell
+python ./test_data/src/test_data/main.py --config ./config/sale.json
+python ./test_data/src/test_data/main.py --config ./config/online_shopping.json
+python ./test_data/src/test_data/main.py --config ./config/hr.json
+```
+
+```shell
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\test_data
+python ./test_data/src/test_data/api/dataset_api.py 
+```
+
+```shell
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
 python ./data_platform/src/main.py
 ```
+
 
 ```shell
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v

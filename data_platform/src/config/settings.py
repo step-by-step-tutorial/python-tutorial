@@ -69,6 +69,16 @@ class RestSettings:
 
 
 @dataclass(frozen=True)
+class TestDataSettings:
+    api_url: str
+    dataset_name: str
+
+    @property
+    def download_url(self) -> str:
+        return f"{self.api_url.rstrip('/')}/datasets/{self.dataset_name.lower()}.json/download?format=json"
+
+
+@dataclass(frozen=True)
 class SparkSettings:
     application_name: str
     master_url: str
@@ -89,6 +99,7 @@ class MainSettings:
     datawarehouse: Mapping[str, DataWarehouseSettings]
     messaging: Mapping[str, MessagingSettings]
     rest: Mapping[str, RestSettings]
+    test_data: TestDataSettings
     spark: SparkSettings
 
 
@@ -106,99 +117,99 @@ app = AppSettings(
 database = MappingProxyType(
     {
         Key.APP_DATABASE: DatabaseSettings(
-            host=os.getenv("APP_DATABASE_HOST", "localhost"),
-            port=int(os.getenv("APP_DATABASE_PORT", "5432")),
-            database_name=os.getenv("APP_DATABASE_NAME", "app_database"),
-            user=os.getenv("APP_DATABASE_USER", "admin"),
-            password=os.getenv("APP_DATABASE_PASSWORD", "admin"),
-            driver=os.getenv("APP_DATABASE_DRIVER", "org.postgresql.Driver"),
+            host=os.getenv("DATA_PLATFORM_DATABASE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_DATABASE_PORT", "5432")),
+            database_name=os.getenv("DATA_PLATFORM_DATABASE_NAME", "app_database"),
+            user=os.getenv("DATA_PLATFORM_DATABASE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_DATABASE_PASSWORD", "admin"),
+            driver=os.getenv("DATA_PLATFORM_DATABASE_DRIVER", "org.postgresql.Driver"),
             jdbc_url=os.getenv(
-                "APP_DATABASE_JDBC_URL",
+                "DATA_PLATFORM_DATABASE_JDBC_URL",
                 "jdbc:postgresql://"
-                f"{os.getenv('APP_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('APP_DATABASE_NAME', 'app_database')}",
+                f"{os.getenv('DATA_PLATFORM_DATABASE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_DATABASE_PORT', '5432')}/"
+                f"{os.getenv('DATA_PLATFORM_DATABASE_NAME', 'app_database')}",
             ),
             sqlalchemy_url=os.getenv(
-                "APP_DATABASE_SQLALCHEMY_URL",
+                "DATA_PLATFORM_DATABASE_SQLALCHEMY_URL",
                 "postgresql+psycopg2://"
-                f"{os.getenv('APP_DATABASE_USER', 'admin')}:"
-                f"{os.getenv('APP_DATABASE_PASSWORD', 'admin')}@"
-                f"{os.getenv('APP_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('APP_DATABASE_NAME', 'app_database')}",
+                f"{os.getenv('DATA_PLATFORM_DATABASE_USER', 'admin')}:"
+                f"{os.getenv('DATA_PLATFORM_DATABASE_PASSWORD', 'admin')}@"
+                f"{os.getenv('DATA_PLATFORM_DATABASE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_DATABASE_PORT', '5432')}/"
+                f"{os.getenv('DATA_PLATFORM_DATABASE_NAME', 'app_database')}",
             ),
         ),
         Key.SALE_DATABASE: DatabaseSettings(
-            host=os.getenv("APP_SALE_DATABASE_HOST", "localhost"),
-            port=int(os.getenv("APP_SALE_DATABASE_PORT", "5432")),
-            database_name=os.getenv("APP_SALE_DATABASE_NAME", "app_database"),
-            user=os.getenv("APP_SALE_DATABASE_USER", "admin"),
-            password=os.getenv("APP_SALE_DATABASE_PASSWORD", "admin"),
-            driver=os.getenv("APP_SALE_DATABASE_DRIVER", "org.postgresql.Driver"),
+            host=os.getenv("DATA_PLATFORM_SALE_DATABASE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_SALE_DATABASE_PORT", "5432")),
+            database_name=os.getenv("DATA_PLATFORM_SALE_DATABASE_NAME", "app_database"),
+            user=os.getenv("DATA_PLATFORM_SALE_DATABASE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_SALE_DATABASE_PASSWORD", "admin"),
+            driver=os.getenv("DATA_PLATFORM_SALE_DATABASE_DRIVER", "org.postgresql.Driver"),
             jdbc_url=os.getenv(
-                "APP_SALE_DATABASE_JDBC_URL",
+                "DATA_PLATFORM_SALE_DATABASE_JDBC_URL",
                 "jdbc:postgresql://"
-                f"{os.getenv('APP_SALE_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_SALE_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('APP_SALE_DATABASE_NAME', 'app_database')}",
+                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_PORT', '5432')}/"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_NAME', 'app_database')}",
             ),
             sqlalchemy_url=os.getenv(
-                "APP_SALE_DATABASE_SQLALCHEMY_URL",
+                "DATA_PLATFORM_SALE_DATABASE_SQLALCHEMY_URL",
                 "postgresql+psycopg2://"
-                f"{os.getenv('APP_SALE_DATABASE_USER', 'admin')}:"
-                f"{os.getenv('APP_SALE_DATABASE_PASSWORD', 'admin')}@"
-                f"{os.getenv('APP_SALE_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_SALE_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('APP_SALE_DATABASE_NAME', 'app_database')}",
+                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_USER', 'admin')}:"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_PASSWORD', 'admin')}@"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_PORT', '5432')}/"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_NAME', 'app_database')}",
             ),
         ),
         Key.HOUSE_DATABASE: DatabaseSettings(
-            host=os.getenv("APP_HOUSE_DATABASE_HOST", "localhost"),
-            port=int(os.getenv("APP_HOUSE_DATABASE_PORT", "5432")),
-            database_name=os.getenv("APP_HOUSE_DATABASE_NAME", "app_database"),
-            user=os.getenv("APP_HOUSE_DATABASE_USER", "admin"),
-            password=os.getenv("APP_HOUSE_DATABASE_PASSWORD", "admin"),
-            driver=os.getenv("APP_HOUSE_DATABASE_DRIVER", "org.postgresql.Driver"),
+            host=os.getenv("DATA_PLATFORM_HOUSE_DATABASE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_HOUSE_DATABASE_PORT", "5432")),
+            database_name=os.getenv("DATA_PLATFORM_HOUSE_DATABASE_NAME", "app_database"),
+            user=os.getenv("DATA_PLATFORM_HOUSE_DATABASE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_HOUSE_DATABASE_PASSWORD", "admin"),
+            driver=os.getenv("DATA_PLATFORM_HOUSE_DATABASE_DRIVER", "org.postgresql.Driver"),
             jdbc_url=os.getenv(
-                "APP_HOUSE_DATABASE_JDBC_URL",
+                "DATA_PLATFORM_HOUSE_DATABASE_JDBC_URL",
                 "jdbc:postgresql://"
-                f"{os.getenv('APP_HOUSE_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_HOUSE_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('APP_HOUSE_DATABASE_NAME', 'app_database')}",
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATABASE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATABASE_PORT', '5432')}/"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATABASE_NAME', 'app_database')}",
             ),
             sqlalchemy_url=os.getenv(
-                "APP_HOUSE_DATABASE_SQLALCHEMY_URL",
+                "DATA_PLATFORM_HOUSE_DATABASE_SQLALCHEMY_URL",
                 "postgresql+psycopg2://"
-                f"{os.getenv('APP_HOUSE_DATABASE_USER', 'admin')}:"
-                f"{os.getenv('APP_HOUSE_DATABASE_PASSWORD', 'admin')}@"
-                f"{os.getenv('APP_HOUSE_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_HOUSE_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('APP_HOUSE_DATABASE_NAME', 'app_database')}",
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATABASE_USER', 'admin')}:"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATABASE_PASSWORD', 'admin')}@"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATABASE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATABASE_PORT', '5432')}/"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATABASE_NAME', 'app_database')}",
             ),
         ),
         Key.AUDIT_DATABASE: DatabaseSettings(
-            host=os.getenv("APP_AUDIT_DATABASE_HOST", "localhost"),
-            port=int(os.getenv("APP_AUDIT_DATABASE_PORT", "5432")),
-            database_name=os.getenv("APP_AUDIT_DATABASE_NAME", "app_database"),
-            user=os.getenv("APP_AUDIT_DATABASE_USER", "admin"),
-            password=os.getenv("APP_AUDIT_DATABASE_PASSWORD", "admin"),
-            driver=os.getenv("APP_AUDIT_DATABASE_DRIVER", "org.postgresql.Driver"),
+            host=os.getenv("DATA_PLATFORM_AUDIT_DATABASE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_AUDIT_DATABASE_PORT", "5432")),
+            database_name=os.getenv("DATA_PLATFORM_AUDIT_DATABASE_NAME", "app_database"),
+            user=os.getenv("DATA_PLATFORM_AUDIT_DATABASE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_AUDIT_DATABASE_PASSWORD", "admin"),
+            driver=os.getenv("DATA_PLATFORM_AUDIT_DATABASE_DRIVER", "org.postgresql.Driver"),
             jdbc_url=os.getenv(
-                "APP_AUDIT_DATABASE_JDBC_URL",
+                "DATA_PLATFORM_AUDIT_DATABASE_JDBC_URL",
                 "jdbc:postgresql://"
-                f"{os.getenv('APP_AUDIT_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_AUDIT_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('APP_AUDIT_DATABASE_NAME', 'app_database')}",
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATABASE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATABASE_PORT', '5432')}/"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATABASE_NAME', 'app_database')}",
             ),
             sqlalchemy_url=os.getenv(
-                "APP_AUDIT_DATABASE_SQLALCHEMY_URL",
+                "DATA_PLATFORM_AUDIT_DATABASE_SQLALCHEMY_URL",
                 "postgresql+psycopg2://"
-                f"{os.getenv('APP_AUDIT_DATABASE_USER', 'admin')}:"
-                f"{os.getenv('APP_AUDIT_DATABASE_PASSWORD', 'admin')}@"
-                f"{os.getenv('APP_AUDIT_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_AUDIT_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('APP_AUDIT_DATABASE_NAME', 'app_database')}",
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATABASE_USER', 'admin')}:"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATABASE_PASSWORD', 'admin')}@"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATABASE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATABASE_PORT', '5432')}/"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATABASE_NAME', 'app_database')}",
             ),
         ),
     }
@@ -207,44 +218,44 @@ database = MappingProxyType(
 datalake = MappingProxyType(
     {
         Key.APP_DATALAKE: DataLakeSettings(
-            endpoint=os.getenv("APP_DATALAKE_ENDPOINT", "http://localhost:9000"),
-            access_key=os.getenv("APP_DATALAKE_ACCESS_KEY", "admin"),
-            secret_key=os.getenv("APP_DATALAKE_SECRET_KEY", "administrator"),
-            bucket_name=os.getenv("APP_DATALAKE_BUCKET_NAME", "app-datalake"),
-            audit_bucket_name=os.getenv("APP_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
-            scheme=os.getenv("APP_DATALAKE_SCHEME", "s3a"),
-            environment=os.getenv("APP_DATALAKE_ENVIRONMENT", "dev"),
-            checkpoint_path=os.getenv("APP_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/sale-events"),
+            endpoint=os.getenv("DATA_PLATFORM_DATALAKE_ENDPOINT", "http://localhost:9000"),
+            access_key=os.getenv("DATA_PLATFORM_DATALAKE_ACCESS_KEY", "admin"),
+            secret_key=os.getenv("DATA_PLATFORM_DATALAKE_SECRET_KEY", "administrator"),
+            bucket_name=os.getenv("DATA_PLATFORM_DATALAKE_BUCKET_NAME", "app-datalake"),
+            audit_bucket_name=os.getenv("DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
+            scheme=os.getenv("DATA_PLATFORM_DATALAKE_SCHEME", "s3a"),
+            environment=os.getenv("DATA_PLATFORM_DATALAKE_ENVIRONMENT", "dev"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/sale-events"),
         ),
         Key.SALE_DATALAKE: DataLakeSettings(
-            endpoint=os.getenv("APP_SALE_DATALAKE_ENDPOINT", "http://localhost:9000"),
-            access_key=os.getenv("APP_SALE_DATALAKE_ACCESS_KEY", "admin"),
-            secret_key=os.getenv("APP_SALE_DATALAKE_SECRET_KEY", "administrator"),
-            bucket_name=os.getenv("APP_SALE_DATALAKE_BUCKET_NAME", "app-datalake"),
-            audit_bucket_name=os.getenv("APP_SALE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
-            scheme=os.getenv("APP_SALE_DATALAKE_SCHEME", "s3a"),
-            environment=os.getenv("APP_SALE_DATALAKE_ENVIRONMENT", "dev"),
-            checkpoint_path=os.getenv("APP_SALE_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/sale-events"),
+            endpoint=os.getenv("DATA_PLATFORM_SALE_DATALAKE_ENDPOINT", "http://localhost:9000"),
+            access_key=os.getenv("DATA_PLATFORM_SALE_DATALAKE_ACCESS_KEY", "admin"),
+            secret_key=os.getenv("DATA_PLATFORM_SALE_DATALAKE_SECRET_KEY", "administrator"),
+            bucket_name=os.getenv("DATA_PLATFORM_SALE_DATALAKE_BUCKET_NAME", "app-datalake"),
+            audit_bucket_name=os.getenv("DATA_PLATFORM_SALE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
+            scheme=os.getenv("DATA_PLATFORM_SALE_DATALAKE_SCHEME", "s3a"),
+            environment=os.getenv("DATA_PLATFORM_SALE_DATALAKE_ENVIRONMENT", "dev"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_SALE_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/sale-events"),
         ),
         Key.HOUSE_DATALAKE: DataLakeSettings(
-            endpoint=os.getenv("APP_HOUSE_DATALAKE_ENDPOINT", "http://localhost:9000"),
-            access_key=os.getenv("APP_HOUSE_DATALAKE_ACCESS_KEY", "admin"),
-            secret_key=os.getenv("APP_HOUSE_DATALAKE_SECRET_KEY", "administrator"),
-            bucket_name=os.getenv("APP_HOUSE_DATALAKE_BUCKET_NAME", "app-datalake-house"),
-            audit_bucket_name=os.getenv("APP_HOUSE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
-            scheme=os.getenv("APP_HOUSE_DATALAKE_SCHEME", "s3a"),
-            environment=os.getenv("APP_HOUSE_DATALAKE_ENVIRONMENT", "dev"),
-            checkpoint_path=os.getenv("APP_HOUSE_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/house-events"),
+            endpoint=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENDPOINT", "http://localhost:9000"),
+            access_key=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ACCESS_KEY", "admin"),
+            secret_key=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_SECRET_KEY", "administrator"),
+            bucket_name=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_BUCKET_NAME", "app-datalake-house"),
+            audit_bucket_name=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
+            scheme=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_SCHEME", "s3a"),
+            environment=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENVIRONMENT", "dev"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/house-events"),
         ),
         Key.AUDIT_DATALAKE: DataLakeSettings(
-            endpoint=os.getenv("APP_AUDIT_DATALAKE_ENDPOINT", "http://localhost:9000"),
-            access_key=os.getenv("APP_AUDIT_DATALAKE_ACCESS_KEY", "admin"),
-            secret_key=os.getenv("APP_AUDIT_DATALAKE_SECRET_KEY", "administrator"),
-            bucket_name=os.getenv("APP_AUDIT_DATALAKE_BUCKET_NAME", "app-datalake-audit"),
-            audit_bucket_name=os.getenv("APP_AUDIT_BUCKET_NAME", "app-datalake-audit"),
-            scheme=os.getenv("APP_AUDIT_DATALAKE_SCHEME", "s3a"),
-            environment=os.getenv("APP_AUDIT_DATALAKE_ENVIRONMENT", "dev"),
-            checkpoint_path=os.getenv("APP_AUDIT_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/audit-events"),
+            endpoint=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_ENDPOINT", "http://localhost:9000"),
+            access_key=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_ACCESS_KEY", "admin"),
+            secret_key=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_SECRET_KEY", "administrator"),
+            bucket_name=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_BUCKET_NAME", "app-datalake-audit"),
+            audit_bucket_name=os.getenv("DATA_PLATFORM_AUDIT_BUCKET_NAME", "app-datalake-audit"),
+            scheme=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_SCHEME", "s3a"),
+            environment=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_ENVIRONMENT", "dev"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/audit-events"),
         ),
     }
 )
@@ -252,59 +263,59 @@ datalake = MappingProxyType(
 datawarehouse = MappingProxyType(
     {
         Key.APP_DATAWAREHOUSE: DataWarehouseSettings(
-            host=os.getenv("APP_DATAWAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("APP_DATAWAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("APP_DATAWAREHOUSE_NAME", "app_datawarehouse"),
-            user=os.getenv("APP_DATAWAREHOUSE_USER", "admin"),
-            password=os.getenv("APP_DATAWAREHOUSE_PASSWORD", "admin"),
+            host=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_DATAWAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_PASSWORD", "admin"),
             jdbc_url=os.getenv(
-                "APP_DATAWAREHOUSE_JDBC_URL",
+                "DATA_PLATFORM_DATAWAREHOUSE_JDBC_URL",
                 "jdbc:clickhouse://"
-                f"{os.getenv('APP_DATAWAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_DATAWAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('APP_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
+                f"{os.getenv('DATA_PLATFORM_DATAWAREHOUSE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_DATAWAREHOUSE_PORT', '8123')}/"
+                f"{os.getenv('DATA_PLATFORM_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
         Key.SALE_DATAWAREHOUSE: DataWarehouseSettings(
-            host=os.getenv("APP_SALE_DATAWAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("APP_SALE_DATAWAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("APP_SALE_DATAWAREHOUSE_NAME", "app_datawarehouse"),
-            user=os.getenv("APP_SALE_DATAWAREHOUSE_USER", "admin"),
-            password=os.getenv("APP_SALE_DATAWAREHOUSE_PASSWORD", "admin"),
+            host=os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_PASSWORD", "admin"),
             jdbc_url=os.getenv(
-                "APP_SALE_DATAWAREHOUSE_JDBC_URL",
+                "DATA_PLATFORM_SALE_DATAWAREHOUSE_JDBC_URL",
                 "jdbc:clickhouse://"
-                f"{os.getenv('APP_SALE_DATAWAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_SALE_DATAWAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('APP_SALE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
+                f"{os.getenv('DATA_PLATFORM_SALE_DATAWAREHOUSE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATAWAREHOUSE_PORT', '8123')}/"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
         Key.HOUSE_DATAWAREHOUSE: DataWarehouseSettings(
-            host=os.getenv("APP_HOUSE_DATAWAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("APP_HOUSE_DATAWAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("APP_HOUSE_DATAWAREHOUSE_NAME", "app_datawarehouse"),
-            user=os.getenv("APP_HOUSE_DATAWAREHOUSE_USER", "admin"),
-            password=os.getenv("APP_HOUSE_DATAWAREHOUSE_PASSWORD", "admin"),
+            host=os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_PASSWORD", "admin"),
             jdbc_url=os.getenv(
-                "APP_HOUSE_DATAWAREHOUSE_JDBC_URL",
+                "DATA_PLATFORM_HOUSE_DATAWAREHOUSE_JDBC_URL",
                 "jdbc:clickhouse://"
-                f"{os.getenv('APP_HOUSE_DATAWAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_HOUSE_DATAWAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('APP_HOUSE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATAWAREHOUSE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATAWAREHOUSE_PORT', '8123')}/"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
         Key.AUDIT_DATAWAREHOUSE: DataWarehouseSettings(
-            host=os.getenv("APP_AUDIT_DATAWAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("APP_AUDIT_DATAWAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("APP_AUDIT_DATAWAREHOUSE_NAME", "app_datawarehouse"),
-            user=os.getenv("APP_AUDIT_DATAWAREHOUSE_USER", "admin"),
-            password=os.getenv("APP_AUDIT_DATAWAREHOUSE_PASSWORD", "admin"),
+            host=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_PASSWORD", "admin"),
             jdbc_url=os.getenv(
-                "APP_AUDIT_DATAWAREHOUSE_JDBC_URL",
+                "DATA_PLATFORM_AUDIT_DATAWAREHOUSE_JDBC_URL",
                 "jdbc:clickhouse://"
-                f"{os.getenv('APP_AUDIT_DATAWAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('APP_AUDIT_DATAWAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('APP_AUDIT_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATAWAREHOUSE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATAWAREHOUSE_PORT', '8123')}/"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
     }
@@ -313,55 +324,56 @@ datawarehouse = MappingProxyType(
 messaging = MappingProxyType(
     {
         Key.SALE_KAFKA_LISTENER: MessagingSettings(
-            bootstrap_servers=os.getenv("APP_SALE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("APP_SALE_CHANNEL_NAME", "sale-events"),
-            audit_channel_name=os.getenv("APP_SALE_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
-            starting_offsets=os.getenv("APP_SALE_STREAMING_STARTING_OFFSETS", "earliest"),
+            bootstrap_servers=os.getenv("DATA_PLATFORM_SALE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
+            channel_name=os.getenv("DATA_PLATFORM_SALE_CHANNEL_NAME", "sale-events"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_SALE_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
+            starting_offsets=os.getenv("DATA_PLATFORM_SALE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.SALE_KAFKA_PRODUCER: MessagingSettings(
-            bootstrap_servers=os.getenv("APP_SALE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("APP_SALE_CHANNEL_NAME", "sale-events"),
-            audit_channel_name=os.getenv("APP_SALE_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
-            starting_offsets=os.getenv("APP_SALE_STREAMING_STARTING_OFFSETS", "earliest"),
+            bootstrap_servers=os.getenv("DATA_PLATFORM_SALE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
+            channel_name=os.getenv("DATA_PLATFORM_SALE_CHANNEL_NAME", "sale-events"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_SALE_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
+            starting_offsets=os.getenv("DATA_PLATFORM_SALE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.HOUSE_KAFKA_LISTENER: MessagingSettings(
-            bootstrap_servers=os.getenv("APP_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("APP_HOUSE_CHANNEL_NAME", "house-events"),
-            audit_channel_name=os.getenv("APP_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.event.v1"),
-            starting_offsets=os.getenv("APP_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
+            bootstrap_servers=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
+            channel_name=os.getenv("DATA_PLATFORM_HOUSE_CHANNEL_NAME", "house-events"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.event.v1"),
+            starting_offsets=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.HOUSE_KAFKA_PRODUCER: MessagingSettings(
-            bootstrap_servers=os.getenv("APP_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("APP_HOUSE_CHANNEL_NAME", "house-events"),
-            audit_channel_name=os.getenv("APP_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.event.v1"),
-            starting_offsets=os.getenv("APP_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
+            bootstrap_servers=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
+            channel_name=os.getenv("DATA_PLATFORM_HOUSE_CHANNEL_NAME", "house-events"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.event.v1"),
+            starting_offsets=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.AUDIT_KAFKA_PRODUCER: MessagingSettings(
-            bootstrap_servers=os.getenv("APP_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("APP_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
-            audit_channel_name=os.getenv("APP_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
-            starting_offsets=os.getenv("APP_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
+            bootstrap_servers=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
+            channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
+            starting_offsets=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.AUDIT_KAFKA_LISTENER: MessagingSettings(
-            bootstrap_servers=os.getenv("APP_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("APP_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
-            audit_channel_name=os.getenv("APP_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
-            starting_offsets=os.getenv("APP_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
+            bootstrap_servers=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
+            channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
+            starting_offsets=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
     }
 )
 
 rest = MappingProxyType(
     {
-        Key.SALE_REST: RestSettings(
-            url=os.getenv("APP_SALE_REST_URL", "http://localhost:8080"),
-            method=os.getenv("APP_SALE_REST_METHOD", "GET"),
-        ),
         Key.HOUSE_REST: RestSettings(
-            url=os.getenv("APP_HOUSE_REST_URL", "http://localhost:8080"),
-            method=os.getenv("APP_HOUSE_REST_METHOD", "GET"),
+            url=os.getenv("DATA_PLATFORM_HOUSE_REST_URL", "http://localhost:8080"),
+            method=os.getenv("DATA_PLATFORM_HOUSE_REST_METHOD", "GET"),
         ),
     }
+)
+
+test_data = TestDataSettings(
+    api_url=os.getenv("TEST_DATA_API_URL", "http://localhost:8080"),
+    dataset_name=app.dataset_name,
 )
 
 spark = SparkSettings(
@@ -383,5 +395,6 @@ settings = MainSettings(
     datawarehouse=datawarehouse,
     messaging=messaging,
     rest=rest,
+    test_data=test_data,
     spark=spark,
 )

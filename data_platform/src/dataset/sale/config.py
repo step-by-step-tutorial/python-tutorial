@@ -51,8 +51,7 @@ SALE_DATASET = Dataset(
         ),
         Key.SALE_REST: RestApiEndpoint(
             name=Key.SALE_REST,
-            url=main_settings.rest[Key.SALE_REST].url,
-            method=main_settings.rest[Key.SALE_REST].method,
+            url=main_settings.test_data.download_url,
         ),
         Key.SALE_KAFKA_LISTENER: MessagingEndpoint(
             name=Key.SALE_KAFKA_LISTENER,

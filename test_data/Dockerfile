@@ -15,7 +15,6 @@ COPY src ./src
 COPY config ./config
 COPY data ./data
 COPY scripts ./scripts
-COPY output ./output
 
 RUN python -m pip install --no-cache-dir --upgrade pip \
     && python -m pip install --no-cache-dir .

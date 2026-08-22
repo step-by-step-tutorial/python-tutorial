@@ -16,7 +16,10 @@ class TestMainSettings:
             "audit.kafka.producer",
             "audit.kafka.listener",
         }
-        assert set(settings.rest) == {"sale.rest", "house.rest"}
+        assert set(settings.rest) == {"house.rest"}
+        assert settings.test_data.download_url == (
+            f"http://localhost:8080/datasets/{settings.app.dataset_name.lower()}.json/download?format=json"
+        )
         assert settings.messaging["audit.kafka.producer"].audit_channel_name == "sale.audit.event.v1"
         assert settings.datalake["audit.datalake"].audit_bucket_name == "app-datalake-audit"
         assert settings.messaging["sale.kafka.listener"].starting_offsets == "earliest"

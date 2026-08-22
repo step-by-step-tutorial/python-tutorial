@@ -73,13 +73,13 @@ class TestRun:
             ("task-11", 11.0),
         ]
 
-        mocker.patch("pipeline.spark_based_streaming_pipeline.AuditService", return_value=given_audit_service)
-        mocker.patch("pipeline.spark_based_streaming_pipeline.create_session", return_value=mocker.Mock())
+        mocker.patch("pipeline.spark_streaming_pipeline.AuditService", return_value=given_audit_service)
+        mocker.patch("pipeline.spark_streaming_pipeline.create_session", return_value=mocker.Mock())
         given_csv_publisher = mocker.Mock()
-        mock_csv_publisher = mocker.patch("pipeline.spark_based_streaming_pipeline.CsvPublisher", return_value=given_csv_publisher)
+        mock_csv_publisher = mocker.patch("pipeline.spark_streaming_pipeline.CsvPublisher", return_value=given_csv_publisher)
         given_raw_topic_ingestor = mocker.Mock()
         given_raw_topic_ingestor.ingest.return_value = "raw-data"
-        mocker.patch("pipeline.spark_based_streaming_pipeline.get_ingestor", return_value=given_raw_topic_ingestor)
+        mocker.patch("pipeline.spark_streaming_pipeline.get_ingestor", return_value=given_raw_topic_ingestor)
         given_pipeline = SparkStreamingPipeline(build_dataset())
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
         mocker.patch.object(given_pipeline, "cleaning", return_value="clean")

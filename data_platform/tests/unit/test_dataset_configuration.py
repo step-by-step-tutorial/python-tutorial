@@ -15,6 +15,7 @@ from dataset.definition import (
 )
 from dataset.house.config import HOUSE_DATASET
 from dataset.registry import get_dataset
+from config.settings import settings
 from dataset.sale.config import SALE_DATASET
 
 
@@ -124,7 +125,7 @@ class TestConcreteDatasetConfiguration:
                                          DataWarehouseEndpoint).connection_name == "sale.datawarehouse"
         assert SALE_DATASET.get_endpoint("sale.datawarehouse",
                                          DataWarehouseEndpoint).full_table_name == "app_datawarehouse.sale_table"
-        assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).url == "http://localhost:8080"
+        assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).url == settings.test_data.download_url
         assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).method == "GET"
         assert SALE_DATASET.audit.database_connection_name == "audit.database"
         assert SALE_DATASET.audit.messaging_connection_name == "audit.kafka.producer"

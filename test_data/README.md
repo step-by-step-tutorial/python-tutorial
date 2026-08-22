@@ -174,7 +174,7 @@ docker compose --file docker-compose.yml --project-name test --env-file ./.env.d
 ```shell
 cd ./test_data
 docker compose --file docker-compose.yml --project-name test --env-file ./.env.dev down -v
-docker rmi samanalishiri/testdata:latest
+docker rmi samanalishiri/test-data:latest
 ```
 
 The output file is overwritten on every run, and `output/` is created if missing. Generated CSVs are git-ignored, so the

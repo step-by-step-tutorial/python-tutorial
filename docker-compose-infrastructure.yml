@@ -2,14 +2,14 @@ name: ${COMPOSE_PROJECT_NAME}
 services:
   database:
     image: ${DATABASE_IMAGE}
-    hostname: ${APP_DATABASE_HOST}
+    hostname: ${DATA_PLATFORM_DATABASE_HOST}
     container_name: ${DATABASE_CONTAINER_NAME}
     environment:
-      POSTGRES_DB: ${APP_DATABASE_NAME}
-      POSTGRES_USER: ${APP_DATABASE_USER}
-      POSTGRES_PASSWORD: ${APP_DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATA_PLATFORM_DATABASE_NAME}
+      POSTGRES_USER: ${DATA_PLATFORM_DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATA_PLATFORM_DATABASE_PASSWORD}
     ports:
-      - "${APP_DATABASE_PORT}:5432"
+      - "${DATA_PLATFORM_DATABASE_PORT}:5432"
     volumes:
       - ${DATABASE_VOLUME}:/var/lib/postgresql/data
       - ./data_platform/scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
@@ -19,7 +19,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready --username ${APP_DATABASE_USER} --dbname ${APP_DATABASE_NAME}"
+          "pg_isready --username ${DATA_PLATFORM_DATABASE_USER} --dbname ${DATA_PLATFORM_DATABASE_NAME}"
         ]
       interval: 5s
       timeout: 5s
@@ -36,6 +36,7 @@ services:
       - "${TEST_DATA_DATABASE_PORT:-5434}:5432"
     volumes:
       - ${TEST_DATA_DATABASE_VOLUME:-testdata_database_data}:/var/lib/postgresql/data
+      - ./test_data/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/10_create_test_data_schema.sql:ro
     healthcheck:
       test:
         [
@@ -60,8 +61,8 @@ services:
       server /data
       --console-address ":${DATALAKE_CONSOLE_PORT}"
     environment:
-      MINIO_ROOT_USER: ${APP_DATALAKE_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${APP_DATALAKE_SECRET_KEY}
+      MINIO_ROOT_USER: ${DATA_PLATFORM_DATALAKE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${DATA_PLATFORM_DATALAKE_SECRET_KEY}
     ports:
       - "${DATALAKE_API_PORT}:9000"
       - "${DATALAKE_CONSOLE_PORT}:9001"
@@ -86,10 +87,10 @@ services:
       datalake:
         condition: service_healthy
     environment:
-      MINIO_ROOT_USER: ${APP_DATALAKE_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${APP_DATALAKE_SECRET_KEY}
-      MINIO_BUCKET_NAME: ${APP_DATALAKE_BUCKET_NAME}
-      MINIO_AUDIT_BUCKET_NAME: ${APP_DATALAKE_AUDIT_BUCKET_NAME}
+      MINIO_ROOT_USER: ${DATA_PLATFORM_DATALAKE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${DATA_PLATFORM_DATALAKE_SECRET_KEY}
+      MINIO_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BUCKET_NAME}
+      MINIO_AUDIT_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME}
     entrypoint:
       - /bin/sh
       - -c
@@ -106,15 +107,15 @@ services:
 
   datawarehouse:
     image: ${DATAWAREHOUSE_IMAGE}
-    hostname: ${APP_DATAWAREHOUSE_HOST}
+    hostname: ${DATA_PLATFORM_DATAWAREHOUSE_HOST}
     container_name: ${DATAWAREHOUSE_CONTAINER_NAME}
     environment:
-      CLICKHOUSE_DB: ${APP_DATAWAREHOUSE_NAME}
-      CLICKHOUSE_USER: ${APP_DATAWAREHOUSE_USER}
-      CLICKHOUSE_PASSWORD: ${APP_DATAWAREHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${DATA_PLATFORM_DATAWAREHOUSE_NAME}
+      CLICKHOUSE_USER: ${DATA_PLATFORM_DATAWAREHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${DATA_PLATFORM_DATAWAREHOUSE_PASSWORD}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${DATAWAREHOUSE_DEFAULT_ACCESS_MANAGEMENT}
     ports:
-      - "${APP_DATAWAREHOUSE_PORT}:8123"
+      - "${DATA_PLATFORM_DATAWAREHOUSE_PORT}:8123"
     volumes:
       - ${DATAWAREHOUSE_VOLUME}:/var/lib/clickhouse
       - ./data_platform/scripts/datawarehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
@@ -125,7 +126,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "clickhouse-client --user ${APP_DATAWAREHOUSE_USER} --password ${APP_DATAWAREHOUSE_PASSWORD} --query 'SELECT 1'"
+          "clickhouse-client --user ${DATA_PLATFORM_DATAWAREHOUSE_USER} --password ${DATA_PLATFORM_DATAWAREHOUSE_PASSWORD} --query 'SELECT 1'"
         ]
       interval: 5s
       timeout: 5s

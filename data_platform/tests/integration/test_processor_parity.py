@@ -6,6 +6,7 @@ from typing import cast
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
+from pyspark import SparkContext
 from pyspark.sql import SparkSession
 
 from dataset.house.attribute import HOUSE_ATTRIBUTE
@@ -24,6 +25,11 @@ def spark_session() -> SparkSession:
     os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
     os.environ["SPARK_LOCAL_HOSTNAME"] = "localhost"
     os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
+    active_context = SparkContext._active_spark_context
+    if active_context is not None:
+        active_context.stop()
+    SparkSession._instantiatedSession = None
+    SparkSession._activeSession = None
     session = (
         SparkSession.builder
         .master("local[1]")

@@ -2,14 +2,14 @@ name: ${COMPOSE_PROJECT_NAME}
 services:
   database:
     image: ${DATABASE_IMAGE}
-    hostname: ${APP_DATABASE_HOST}
+    hostname: ${TEST_DATA_DATABASE_HOST}
     container_name: ${DATABASE_CONTAINER_NAME}
     environment:
-      POSTGRES_DB: ${APP_DATABASE_NAME}
-      POSTGRES_USER: ${APP_DATABASE_USER}
-      POSTGRES_PASSWORD: ${APP_DATABASE_PASSWORD}
+      POSTGRES_DB: ${TEST_DATA_DATABASE_NAME}
+      POSTGRES_USER: ${TEST_DATA_DATABASE_USER}
+      POSTGRES_PASSWORD: ${TEST_DATA_DATABASE_PASSWORD}
     ports:
-      - "${APP_DATABASE_PORT}:5432"
+      - "${TEST_DATA_DATABASE_PORT}:5432"
     volumes:
       - ${DATABASE_VOLUME}:/var/lib/postgresql/data
       - ./scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/10_create_test_data_schema.sql:ro
@@ -17,7 +17,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready --username ${APP_DATABASE_USER} --dbname ${APP_DATABASE_NAME}"
+          "pg_isready --username ${TEST_DATA_DATABASE_USER} --dbname ${TEST_DATA_DATABASE_NAME}"
         ]
       interval: 5s
       timeout: 5s
@@ -51,6 +51,29 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  kafka-init:
+    image: apache/kafka:latest
+    container_name: kafka-init
+    hostname: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        /opt/kafka/bin/kafka-topics.sh \
+          --bootstrap-server kafka:9094 \
+          --create \
+          --if-not-exists \
+          --topic sale-events \
+          --partitions 3 \
+          --replication-factor 1
   kafdrop:
     image: obsidiandynamics/kafdrop:latest
     container_name: kafdrop
@@ -61,20 +84,20 @@ services:
     environment:
       KAFKA_BROKERCONNECT: kafka:9094
       JVM_OPTS: "-Xms32M -Xmx64M"
-  testdata:
-    image: ${TEST_DATA_IMAGE}
+  test-data:
+    image: ${TEST_DATA_IMAGE:-test-data:local}
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: testdata
-    hostname: testdata
+    container_name: test-data
+    hostname: test-data
     environment:
       PROJECT_ROOT: /app
       CONFIG_DIR: /app/config
       OUTPUT_DIR: /app/output
       HOST: 0.0.0.0
       PORT: 8080
-      DATABASE_URL: postgresql+psycopg2://${APP_DATABASE_USER}:${APP_DATABASE_PASSWORD}@database:5432/${APP_DATABASE_NAME}
+      DATABASE_URL: postgresql+psycopg2://${TEST_DATA_DATABASE_USER}:${TEST_DATA_DATABASE_PASSWORD}@database:5432/${TEST_DATA_DATABASE_NAME}
       DATABASE_SCHEMA: test_data
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
     ports:
@@ -84,11 +107,16 @@ services:
       - ./data:/app/data
       - ./output:/app/output
       - ./scripts:/app/scripts
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://localhost:8080/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     depends_on:
       database:
         condition: service_healthy
-      kafka:
-        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
 volumes:
   database_data:
     name: ${DATABASE_VOLUME}

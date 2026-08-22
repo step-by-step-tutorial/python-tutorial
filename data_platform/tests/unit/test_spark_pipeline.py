@@ -72,8 +72,8 @@ class TestRun:
             ("task-11", 11.0),
         ] 
 
-        mocker.patch("pipeline.spark_based_pipeline.AuditService", return_value=given_audit_service)
-        mocker.patch("pipeline.spark_based_pipeline.create_session", return_value=mocker.Mock())
+        mocker.patch("pipeline.spark_pipeline.AuditService", return_value=given_audit_service)
+        mocker.patch("pipeline.spark_pipeline.create_session", return_value=mocker.Mock())
         given_pipeline = SparkPipeline(build_dataset())
         mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
