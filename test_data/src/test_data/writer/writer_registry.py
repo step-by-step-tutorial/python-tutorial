@@ -59,10 +59,10 @@ class DatabaseWriter(Writer):
     name = "database"
 
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
-        repository = DatabaseRepository(env_config.DATABASE_URL)
+        repository = DatabaseRepository(env_config.DATABASE_URL, schema=env_config.DATABASE_SCHEMA)
         table_name = Path(config.output_name).stem
         repository.write_rows(table_name=table_name, headers=config.column_names, rows=rows)
-        logger.info("Database output written to table %s", table_name)
+        logger.info("Database output written to table %s.%s", env_config.DATABASE_SCHEMA, table_name)
 
 
 class KafkaWriter(Writer):

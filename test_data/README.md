@@ -120,7 +120,7 @@ pip install -e .
 `pytest` is needed only to run the tests. Install the project with `pip install -e .` before using
 the command-line or API entry points.
 
-## Run the Tests
+## Test
 
 ```shell
 cd ./test_data
@@ -131,14 +131,14 @@ pytest
 The suite covers email normalisation, CSV writing, every column type, joined mapped files,
 dependency resolution across column order, and rejection of circular dependencies.
 
-## Run the Application
+## Local
 
 `--config` is required — it selects the dataset. Run from the `test_data` folder:
 
 ```shell
 cd ./test_data
-docker compose --file docker-compose.yml --project-name test --env-file ./.env.test down -v
-docker compose --file docker-compose.yml --project-name test --env-file ./.env.test up --build -d
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test down -v
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test up --build -d
 ```
 
 ```shell
@@ -161,11 +161,28 @@ API Documentation: [localhost:8080/redoc](http://localhost:8080/redoc)
 
 ```shell
 cd ./test_data
-docker compose --file docker-compose.yml --project-name test --env-file ./.env.test down -v
+docker compose --file docker-compose-infrastructure.yml --project-name test --env-file ./.env.test down -v
+```
+
+
+## Dockerize
+
+
+```shell
+cd ./test_data
+docker compose --file docker-compose.yml --project-name test --env-file ./.env.dev down -v
+docker compose --file docker-compose.yml --project-name test --env-file ./.env.dev up --build -d
+```
+
+```shell
+cd ./test_data
+docker compose --file docker-compose.yml --project-name test --env-file ./.env.dev down -v
 ```
 
 The output file is overwritten on every run, and `output/` is created if missing. Generated CSVs are
 git-ignored, so the repository keeps the inputs, not the results.
+
+Database output is written to the `test_data` PostgreSQL schema by default. Set `DATABASE_SCHEMA` to use a different schema.
 
 ## Configuration Guide
 

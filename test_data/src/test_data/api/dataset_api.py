@@ -75,7 +75,9 @@ def create_api() -> FastAPI:
             raise HTTPException(status_code=404, detail=f"Dataset {name} has no database destination.")
 
         try:
-            items, total = DatabaseRepository(env_config.DATABASE_URL).read_page(
+            items, total = DatabaseRepository(
+                env_config.DATABASE_URL, schema=env_config.DATABASE_SCHEMA
+            ).read_page(
                 table_name=Path(dataset.config.output_name).stem,
                 page=page,
                 page_size=page_size,

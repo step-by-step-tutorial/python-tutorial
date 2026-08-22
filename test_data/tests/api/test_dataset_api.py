@@ -83,6 +83,7 @@ async def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -
     database_path = project_root / "test_data.sqlite"
     monkeypatch.setenv("DATABASE_URL", f"sqlite+pysqlite:///{database_path}")
     importlib.reload(env_config)
+    monkeypatch.setattr(env_config, "DATABASE_SCHEMA", None)
     try:
         DatasetGenerator("demo.json").write()
 

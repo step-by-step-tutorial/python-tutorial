@@ -78,3 +78,11 @@ def test_database_url_uses_env_override(monkeypatch) -> None:
     assert module.DATABASE_URL == override
     monkeypatch.delenv("DATABASE_URL", raising=False)
     importlib.reload(env_config)
+
+
+def test_database_schema_defaults_to_test_data(monkeypatch) -> None:
+    monkeypatch.delenv("DATABASE_SCHEMA", raising=False)
+
+    module = importlib.reload(env_config)
+
+    assert module.DATABASE_SCHEMA == "test_data"
