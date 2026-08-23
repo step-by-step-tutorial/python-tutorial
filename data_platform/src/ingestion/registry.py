@@ -20,13 +20,6 @@ registry: dict[str, Any] = {
     Key.SALE_DATAWAREHOUSE: DataWarehouseIngestor(SALE_DATASET.endpoints[Key.SALE_DATAWAREHOUSE]),
     Key.SALE_DATALAKE: DataLakeIngestor(SALE_DATASET.endpoints[Key.SALE_DATALAKE]),
     Key.SALE_KAFKA_LISTENER: KafkaIngestor(SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER]),
-    Key.SALE_SPARK_CSV: SparkCsvFileIngestor(create_session()),
-    Key.SALE_SPARK_DATALAKE: SparkDataLakeIngestor(SALE_DATASET.endpoints[Key.SALE_DATALAKE], create_session()),
-    Key.SALE_SPARK_KAFKA: SparkKafkaIngestor(
-        SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER],
-        create_session(),
-        SALE_DATASET.dataframe.schema,
-    ),
     Key.SALE_REST: RestApiIngestor(SALE_DATASET.endpoints[Key.SALE_REST]),
 }
 
@@ -47,21 +40,24 @@ def _is_session_active(session: Any) -> bool:
 
 
 def get_ingestor(name: str) -> Any:
-    ingestor = registry[name]
+    if name not in SPARK_INGESTORS:
+        return registry[name]
 
-    if name in SPARK_INGESTORS:
-        session = getattr(ingestor, "session", None)
-        if session is None or not _is_session_active(session):
-            if name == Key.SALE_SPARK_CSV:
-                ingestor = SparkCsvFileIngestor(create_session())
-            elif name == Key.SALE_SPARK_DATALAKE:
-                ingestor = SparkDataLakeIngestor(SALE_DATASET.endpoints[Key.SALE_DATALAKE], create_session())
-            elif name == Key.SALE_SPARK_KAFKA:
-                ingestor = SparkKafkaIngestor(
-                    SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER],
-                    create_session(),
-                    SALE_DATASET.dataframe.schema,
-                )
-            registry[name] = ingestor
+    ingestor = registry.get(name)
+    session = getattr(ingestor, "session", None)
+    if session is not None and _is_session_active(session):
+        return ingestor
 
+    session = create_session()
+    if name == Key.SALE_SPARK_CSV:
+        ingestor = SparkCsvFileIngestor(session)
+    elif name == Key.SALE_SPARK_DATALAKE:
+        ingestor = SparkDataLakeIngestor(SALE_DATASET.endpoints[Key.SALE_DATALAKE], session)
+    else:
+        ingestor = SparkKafkaIngestor(
+            SALE_DATASET.endpoints[Key.SALE_KAFKA_LISTENER],
+            session,
+            SALE_DATASET.dataframe.schema,
+        )
+    registry[name] = ingestor
     return ingestor

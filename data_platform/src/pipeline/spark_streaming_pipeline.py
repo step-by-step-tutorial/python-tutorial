@@ -31,21 +31,31 @@ class SparkStreamingPipeline(BatchPipeline):
         producer_endpoint = self.dataset.get_endpoint(Key.SALE_KAFKA_PRODUCER, MessagingEndpoint)
         messaging_endpoint = self.dataset.get_endpoint(Key.SALE_KAFKA_LISTENER, MessagingEndpoint)
         self.csv_publisher = CsvPublisher(ds, file_endpoint, producer_endpoint)
-        spark_session = create_session()
-        self.spark = SparkService(spark_session, datalake_endpoint, messaging_endpoint)
+        self._datalake_endpoint = datalake_endpoint
+        self._messaging_endpoint = messaging_endpoint
+        self._spark_service: SparkService | None = None
         self.database_repository = DatabaseRepository(database_endpoint)
         self.datawarehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
-        self.raw_topic_ingestor = get_ingestor(Key.SALE_SPARK_KAFKA)
+
+    @property
+    def spark_service(self) -> SparkService:
+        if self._spark_service is None:
+            self._spark_service = SparkService(
+                create_session(),
+                self._datalake_endpoint,
+                self._messaging_endpoint,
+            )
+        return self._spark_service
 
     def ingest_raw_data(self) -> DataFrame:
         self.csv_publisher.publish_data()
-        return self.raw_topic_ingestor.ingest()
+        return get_ingestor(Key.SALE_SPARK_KAFKA).ingest()
 
     def store_raw_data(self, raw_data: DataFrame) -> str:
         relative_path = generate_relative_path(DatalakeEnv.RAW, self.ingestion_time, self.dataset.name.lower())
 
         logger.info("Writing streaming raw data to %s", relative_path)
-        self.spark.append_stream_to_object_storage(
+        self.spark_service.append_stream_to_object_storage(
             dataframe=raw_data,
             path=relative_path,
             checkpoint_path=main_settings.datalake[Key.DATA_PLATFORM_DATALAKE].checkpoint_path,
@@ -54,25 +64,25 @@ class SparkStreamingPipeline(BatchPipeline):
         return relative_path
 
     def cleaning(self, raw_relative_path: str) -> DataFrame:
-        raw_dataframe = self.spark.read_from_object_storage(path=raw_relative_path)
+        raw_dataframe = self.spark_service.read_from_object_storage(path=raw_relative_path)
         return self.dataset.get_processor("spark").clean(raw_dataframe)
 
     def store_cleaned_data(self, cleaned_data: DataFrame) -> str:
         relative_path = generate_relative_path(DatalakeEnv.CLEANED, self.ingestion_time, self.dataset.name.lower())
-        self.spark.append_to_object_storage(dataframe=cleaned_data, path=relative_path)
+        self.spark_service.append_to_object_storage(dataframe=cleaned_data, path=relative_path)
         return relative_path
 
     def enriching(self, cleaned_relative_path: str) -> DataFrame:
-        cleaned_dataframe = self.spark.read_from_object_storage(path=cleaned_relative_path)
+        cleaned_dataframe = self.spark_service.read_from_object_storage(path=cleaned_relative_path)
         return self.dataset.get_processor("spark").enrich(cleaned_dataframe)
 
     def store_enriched_data(self, enriched_data: DataFrame) -> str:
         relative_path = generate_relative_path(DatalakeEnv.ENRICHED, self.ingestion_time, self.dataset.name.lower())
-        self.spark.append_to_object_storage(dataframe=enriched_data, path=relative_path)
+        self.spark_service.append_to_object_storage(dataframe=enriched_data, path=relative_path)
         return relative_path
 
     def download_enriched_data(self, relative_path: str) -> DataFrame:
-        return self.spark.read_from_object_storage(path=relative_path)
+        return self.spark_service.read_from_object_storage(path=relative_path)
 
     def populate_database(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
@@ -108,4 +118,6 @@ class SparkStreamingPipeline(BatchPipeline):
         enriched_dataframe.show()
 
     def after_run(self) -> None:
-        self.spark.stop()
+        if self._spark_service is not None:
+            self._spark_service.stop()
+            self._spark_service = None

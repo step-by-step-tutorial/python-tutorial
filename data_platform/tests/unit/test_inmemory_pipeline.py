@@ -74,11 +74,11 @@ class TestRun:
 
         mocker.patch("pipeline.inmemory_pipeline.AuditService", return_value=given_audit_service)
         given_pipeline = InmemoryPipeline(build_dataset())
-        mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
+        mock_ingest_raw_data = mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
-        mocker.patch.object(given_pipeline, "cleaning", return_value="clean")
+        mock_cleaning = mocker.patch.object(given_pipeline, "cleaning", return_value="clean")
         mocker.patch.object(given_pipeline, "store_cleaned_data", return_value="clean-path")
-        mocker.patch.object(given_pipeline, "enriching", return_value="enriched")
+        mock_enriching = mocker.patch.object(given_pipeline, "enriching", return_value="enriched")
         mocker.patch.object(given_pipeline, "store_enriched_data", return_value="enriched-path")
         mocker.patch.object(given_pipeline, "populate_database")
         mocker.patch.object(given_pipeline, "populate_datawarehouse")
@@ -89,11 +89,11 @@ class TestRun:
 
         given_pipeline.run()
 
-        assert given_pipeline.ingest_raw_data.call_count == 1
+        assert mock_ingest_raw_data.call_count == 1
         assert given_pipeline.store_raw_data.call_count == 1
-        assert given_pipeline.cleaning.call_count == 1
+        assert mock_cleaning.call_count == 1
         assert given_pipeline.store_cleaned_data.call_count == 1
-        assert given_pipeline.enriching.call_count == 1
+        assert mock_enriching.call_count == 1
         assert given_pipeline.store_enriched_data.call_count == 1
         assert given_pipeline.populate_database.call_count == 1
         assert given_pipeline.populate_datawarehouse.call_count == 1

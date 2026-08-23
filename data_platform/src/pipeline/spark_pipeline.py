@@ -29,16 +29,25 @@ class SparkPipeline(BatchPipeline):
         datawarehouse_endpoint = self.dataset.get_endpoint(Key.SALE_DATAWAREHOUSE, DataWarehouseEndpoint)
         datalake_endpoint = self.dataset.get_endpoint(Key.SALE_DATALAKE, DataLakeEndpoint)
         messaging_endpoint = self.dataset.get_endpoint(Key.SALE_KAFKA_LISTENER, MessagingEndpoint)
-        spark_session = create_session()
-
-        self.spark_service = SparkService(spark_session, datalake_endpoint, messaging_endpoint)
+        self._datalake_endpoint = datalake_endpoint
+        self._messaging_endpoint = messaging_endpoint
+        self._spark_service: SparkService | None = None
         self.database_repository = DatabaseRepository(database_endpoint)
         self.datawarehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
         self.file_path = Path(file_endpoint.file_path)
-        self.raw_data_ingestor = get_ingestor(Key.SALE_SPARK_CSV)
+
+    @property
+    def spark_service(self) -> SparkService:
+        if self._spark_service is None:
+            self._spark_service = SparkService(
+                create_session(),
+                self._datalake_endpoint,
+                self._messaging_endpoint,
+            )
+        return self._spark_service
 
     def ingest_raw_data(self) -> DataFrame:
-        return self.raw_data_ingestor.ingest(self.file_path, self.dataset.dataframe.schema)
+        return get_ingestor(Key.SALE_SPARK_CSV).ingest(self.file_path, self.dataset.dataframe.schema)
 
     def store_raw_data(self, raw_data: DataFrame) -> str:
         relative_path = generate_relative_path(DatalakeEnv.RAW, self.ingestion_time, self.dataset.name.lower())
@@ -98,4 +107,6 @@ class SparkPipeline(BatchPipeline):
         return None
 
     def after_run(self) -> None:
-        self.spark_service.stop()
+        if self._spark_service is not None:
+            self._spark_service.stop()
+            self._spark_service = None
