@@ -12,8 +12,10 @@ from data_platform.model.house_attribute import HOUSE_ATTRIBUTE as columns
 from data_platform.registry.endpoint_registry import AUDIT_ENDPOINT, endpoint_registry
 from data_platform.dataset.house_spark_schema import build_schema
 from data_platform.keys import Key
-from data_platform.processor.inmemory_house_processor import InmemoryHouseProcessor
-from data_platform.processor.spark_house_processor import SparkHouseProcessor
+from data_platform.analyzer.inmemory_house_analyzer import InmemoryHouseAnalyzer
+from data_platform.analyzer.spark_house_analyzer import SparkHouseAnalyzer
+from data_platform.data_transformer.inmemory_house_transformer import InmemoryHouseTransformer
+from data_platform.data_transformer.spark_house_transformer import SparkHouseTransformer
 
 HOUSE_DATASET = Dataset(
     name="house",
@@ -91,8 +93,12 @@ HOUSE_DATASET = Dataset(
             },
         ),
     },
-    processors={
-        "inmemory": InmemoryHouseProcessor(),
-        "spark": SparkHouseProcessor(),
+    transformers={
+        "inmemory": InmemoryHouseTransformer(),
+        "spark": SparkHouseTransformer(),
+    },
+    analyzers={
+        "inmemory": InmemoryHouseAnalyzer(),
+        "spark": SparkHouseAnalyzer(),
     },
 )

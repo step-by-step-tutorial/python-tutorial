@@ -3,6 +3,13 @@ from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
 
 
 class TestDagPipelineAdapter:
+    def test_should_prepare_pipeline(self, mocker) -> None:
+        pipeline = mocker.Mock(spec=BatchPipeline)
+
+        DagPipelineAdapter(pipeline).prepare()
+
+        pipeline.before_run.assert_called_once()
+
     def test_should_ingest_and_store_raw_data(self, mocker) -> None:
         pipeline = mocker.Mock(spec=BatchPipeline)
         pipeline.ingest_raw_data.return_value = "raw-data"
@@ -34,3 +41,10 @@ class TestDagPipelineAdapter:
         assert result == "enriched/path"
         pipeline.enrich.assert_called_once_with("cleaned/path")
         pipeline.store_enriched_data.assert_called_once_with("enriched-data")
+
+    def test_should_clean_up_pipeline(self, mocker) -> None:
+        pipeline = mocker.Mock(spec=BatchPipeline)
+
+        DagPipelineAdapter(pipeline).clean_up()
+
+        pipeline.after_run.assert_called_once()

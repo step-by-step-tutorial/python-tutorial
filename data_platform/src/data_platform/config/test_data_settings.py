@@ -5,6 +5,8 @@ from data_platform.config.app_settings import app
 
 @dataclass(frozen=True)
 class TestDataSettings:
+    __test__ = False
+
     api_url: str
     dataset_name: str
 

@@ -5,6 +5,9 @@ class DagPipelineAdapter:
     def __init__(self, pipeline: BatchPipeline) -> None:
         self._pipeline = pipeline
 
+    def prepare(self) -> None:
+        self._pipeline.before_run()
+
     def ingest_raw_data(self) -> str:
         return self._pipeline.store_raw_data(self._pipeline.ingest_raw_data())
 
@@ -13,3 +16,6 @@ class DagPipelineAdapter:
 
     def enrich(self, cleaned_relative_path: str) -> str:
         return self._pipeline.store_enriched_data(self._pipeline.enrich(cleaned_relative_path))
+
+    def clean_up(self) -> None:
+        self._pipeline.after_run()

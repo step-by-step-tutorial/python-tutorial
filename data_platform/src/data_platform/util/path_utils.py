@@ -4,6 +4,7 @@ from datetime import datetime
 from data_platform.config.data_lake_environment import DataLakeEnvironment
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.keys import Key
+from data_platform.model import DataLakeEndpoint
 
 def generate_relative_path(
         env: DataLakeEnvironment,
@@ -29,3 +30,7 @@ def generate_relative_path(
 
 def generate_full_path(bucket_name: str, relative_path: str) -> str:
     return f"{main_settings.data_lake[Key.DATA_PLATFORM_DATALAKE].scheme}://{bucket_name.strip()}/{relative_path.strip('/')}"
+
+
+def generate_data_lake_path(endpoint: DataLakeEndpoint, relative_path: str) -> str:
+    return f"{endpoint.scheme}://{endpoint.bucket_name.strip()}/{relative_path.strip('/')}"

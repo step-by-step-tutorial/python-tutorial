@@ -75,10 +75,13 @@ class BatchPipeline(ABC):
     def analyze_data_warehouse(self) -> None:
         raise NotImplementedError
 
+    def before_run(self) -> None:
+        return None
+
     def after_run(self) -> None:
         return None
 
-    def _run_task(self, task_name: str, task_callable):
+    def run_task(self, task_name: str, task_callable):
         task_started_at = time.perf_counter()
         task_id = f"{self.pipeline_id}-{task_name}"
         self.audit_service.emit(
@@ -134,6 +137,7 @@ class BatchPipeline(ABC):
         pipeline_started_at = None
         try:
             pipeline_started_at = time.perf_counter()
+            self.before_run()
             self.audit_service.emit(
                 AuditEventFactory.create_pipeline_started_event(
                     PipelineStartedAuditRequest(
@@ -147,32 +151,32 @@ class BatchPipeline(ABC):
                 )
             )
 
-            raw_data = self._run_task("ingest_raw_data", self.ingest_raw_data)
+            raw_data = self.run_task("ingest_raw_data", self.ingest_raw_data)
             log_line()
 
-            raw_relative_path = self._run_task("store_raw_data", lambda: self.store_raw_data(raw_data))
+            raw_relative_path = self.run_task("store_raw_data", lambda: self.store_raw_data(raw_data))
             log_line()
 
-            cleaned_data = self._run_task("clean", lambda: self.clean(raw_relative_path))
+            cleaned_data = self.run_task("clean", lambda: self.clean(raw_relative_path))
             log_line()
 
-            cleaned_relative_path = self._run_task("store_cleaned_data", lambda: self.store_cleaned_data(cleaned_data))
+            cleaned_relative_path = self.run_task("store_cleaned_data", lambda: self.store_cleaned_data(cleaned_data))
             log_line()
 
-            enriched_data = self._run_task("enrich", lambda: self.enrich(cleaned_relative_path))
+            enriched_data = self.run_task("enrich", lambda: self.enrich(cleaned_relative_path))
             log_line()
 
-            enriched_relative_path = self._run_task("store_enriched_data", lambda: self.store_enriched_data(enriched_data))
+            enriched_relative_path = self.run_task("store_enriched_data", lambda: self.store_enriched_data(enriched_data))
             log_line()
-            self._run_task("populate_database", lambda: self.populate_database(enriched_relative_path))
+            self.run_task("populate_database", lambda: self.populate_database(enriched_relative_path))
             log_line()
-            self._run_task("populate_datawarehouse", lambda: self.populate_datawarehouse(enriched_relative_path))
+            self.run_task("populate_datawarehouse", lambda: self.populate_datawarehouse(enriched_relative_path))
             log_line()
-            self._run_task("show_dataframe", lambda: self.show_dataframe(enriched_relative_path))
+            self.run_task("show_dataframe", lambda: self.show_dataframe(enriched_relative_path))
             log_line()
-            self._run_task("analyze_primary", lambda: self.analyze_dataframe(enriched_relative_path))
+            self.run_task("analyze_primary", lambda: self.analyze_dataframe(enriched_relative_path))
             log_line()
-            self._run_task("analyze_data_warehouse", self.analyze_data_warehouse)
+            self.run_task("analyze_data_warehouse", self.analyze_data_warehouse)
             log_line()
         except Exception as error:
             if pipeline_started_at is not None:

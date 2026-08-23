@@ -39,7 +39,7 @@ class InmemoryPipeline(BatchPipeline):
 
     def clean(self, raw_relative_path: str) -> pd.DataFrame:
         raw_dataframe = self.data_lake_repository.download(raw_relative_path)
-        return self.dataset.get_processor("inmemory").clean(raw_dataframe)
+        return self.dataset.get_transformer("inmemory").clean(raw_dataframe)
 
     def store_cleaned_data(self, cleaned_data: pd.DataFrame) -> str:
         relative_path = generate_relative_path(DataLakeEnvironment.CLEANED, self.ingestion_time, self.dataset.name.lower())
@@ -48,7 +48,7 @@ class InmemoryPipeline(BatchPipeline):
 
     def enrich(self, cleaned_relative_path: str) -> pd.DataFrame:
         cleaned_dataframe = self.data_lake_repository.download(cleaned_relative_path)
-        return self.dataset.get_processor("inmemory").enrich(cleaned_dataframe)
+        return self.dataset.get_transformer("inmemory").enrich(cleaned_dataframe)
 
     def store_enriched_data(self, enriched_data: pd.DataFrame) -> str:
         relative_path = generate_relative_path(DataLakeEnvironment.ENRICHED, self.ingestion_time, self.dataset.name.lower())
@@ -71,7 +71,7 @@ class InmemoryPipeline(BatchPipeline):
     def analyze_dataframe(self, enriched_data_path: str):
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Analyzing enriched data via memory")
-        results = self.dataset.get_processor("inmemory").analyze(enriched_dataframe)
+        results = self.dataset.get_analyzer("inmemory").analyze(enriched_dataframe)
         show_map_of_dataframe(results)
 
     def analyze_data_warehouse(self):

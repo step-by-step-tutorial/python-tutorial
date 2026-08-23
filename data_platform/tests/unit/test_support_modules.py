@@ -9,7 +9,7 @@ import pytest
 from data_platform.config.main_settings import settings
 from data_platform.config.data_lake_environment import DataLakeEnvironment
 from data_platform.util.kafka_utils import handle_kafka_response
-from data_platform.transformer.value_transformer import (
+from data_platform.converter.value_converter import (
     convert_to_integer,
     convert_to_optional_float,
     normalize_optional_text,

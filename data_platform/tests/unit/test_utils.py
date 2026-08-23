@@ -4,8 +4,8 @@ import pandas as pd
 import pytest
 
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE
-from data_platform.transformer.pandas_transformer import sum_by_group
-from data_platform.transformer.value_transformer import (
+from data_platform.converter.pandas_converter import sum_by_group
+from data_platform.converter.value_converter import (
     convert_to_integer,
     convert_to_float,
     convert_to_optional_float,

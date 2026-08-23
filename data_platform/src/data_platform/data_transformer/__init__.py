@@ -1,22 +1,19 @@
-from collections.abc import Mapping
-
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE as schema
-from data_platform.model import DataProcessor
-from data_platform.transformer.spark_transformer import (
+from data_platform.model import DatasetTransformer
+from data_platform.converter.spark_converter import (
     convert_datetime_column,
     convert_numeric_column,
     fill_missing_by_column_average,
     fill_missing_by_group_average,
     remove_duplicates,
-    sum_by_group,
     filter_dataframe,
 )
 
 
-class SparkSaleProcessor(DataProcessor[DataFrame]):
+class SparkSaleTransformer(DatasetTransformer[DataFrame]):
     def clean(self, dataframe: DataFrame) -> DataFrame:
         df = dataframe.coalesce(1)
 
@@ -46,19 +43,4 @@ class SparkSaleProcessor(DataProcessor[DataFrame]):
             .withColumn(schema.year, sf.year(schema.order_date))
             .withColumn(schema.month, sf.month(schema.order_date))
         )
-
-    def analyze(self, dataframe: DataFrame) -> Mapping[str, DataFrame]:
-        return {
-            "revenue_by_category": sum_by_group(
-                df=dataframe,
-                group_field=schema.category,
-                original_field=schema.total_price,
-                alias_field=schema.revenue
-            ),
-            "revenue_by_country": sum_by_group(
-                df=dataframe,
-                group_field=schema.country,
-                original_field=schema.total_price,
-                alias_field=schema.revenue
-            )
-        }
+"""Dataset transformation implementations."""

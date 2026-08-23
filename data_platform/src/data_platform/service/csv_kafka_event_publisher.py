@@ -5,14 +5,14 @@ from typing import Any
 from data_platform.registry.connection_registry import connection_registry
 from confluent_kafka import Producer
 from data_platform.model import Dataset, FileEndpoint, MessagingEndpoint
-from data_platform.transformer.event_transformer import get_event_transformer
+from data_platform.converter.event_converter import get_event_converter
 from data_platform.util.file_utils import read_csv_file
 from data_platform.util.kafka_admin import ensure_topic_exists
 
 logger = logging.getLogger(__name__)
 
 
-class CsvPublisherService:
+class CsvKafkaEventPublisher:
     def __init__(
         self,
         dataset: Dataset,
@@ -23,7 +23,7 @@ class CsvPublisherService:
         self.file_endpoint = file_endpoint
         self.messaging_endpoint = messaging_endpoint
         self._producer: Producer = connection_registry.get_item(messaging_endpoint.connection_name)
-        self._event_mapper = get_event_transformer(dataset.name.lower())
+        self._event_mapper = get_event_converter(dataset.name.lower())
 
     def publish_data(self) -> int:
         ensure_topic_exists(self.messaging_endpoint.bootstrap_servers, self.messaging_endpoint.channel_name)

@@ -1,12 +1,9 @@
-from collections.abc import Mapping
-
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
 from data_platform.model.house_attribute import HOUSE_ATTRIBUTE as schema
-from data_platform.model import DataProcessor
-from data_platform.transformer.spark_transformer import (
-    average_by_group,
+from data_platform.model import DatasetTransformer
+from data_platform.converter.spark_converter import (
     convert_boolean_column,
     convert_numeric_column,
     create_hash_column,
@@ -29,7 +26,7 @@ _RENAME = {
 }
 
 
-class SparkHouseProcessor(DataProcessor[DataFrame]):
+class SparkHouseTransformer(DatasetTransformer[DataFrame]):
     def clean(self, dataframe: DataFrame) -> DataFrame:
         df = dataframe.coalesce(1)
 
@@ -92,19 +89,3 @@ class SparkHouseProcessor(DataProcessor[DataFrame]):
                 ),
             ],
         )
-
-    def analyze(self, dataframe: DataFrame) -> Mapping[str, DataFrame]:
-        return {
-            "average_price_by_address": average_by_group(
-                df=dataframe,
-                group_field=schema.address,
-                original_field=schema.price,
-                alias_field="average_price",
-            ),
-            "average_price_per_square_meter_by_room": average_by_group(
-                df=dataframe,
-                group_field=schema.room,
-                original_field=schema.price_per_square_meter,
-                alias_field="average_price_per_square_meter",
-            ),
-        }

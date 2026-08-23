@@ -33,7 +33,7 @@ def read_text_files(file_names: list[str]) -> list[str]:
 
 def read_csv_file(path_str: str, consumer: Callable[[dict[str, Any]], None]) -> int:
     should_not_be_none(path_str, "CSV file path")
-    should_not_be_none(consumer, "CSV row processor")
+    should_not_be_none(consumer, "CSV row consumer")
     path = Path(path_str)
     should_be_exists(path)
     logger.info("Reading CSV file from %s", path_str)

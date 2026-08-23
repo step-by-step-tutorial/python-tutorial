@@ -16,7 +16,7 @@ def build_dataset() -> Dataset:
             create_sql_files={"create": "database/audit/create_tables.sql"},
             write_sql_files={"write": "database/audit/insert_event.sql"},
         ),
-        processors={},
+        transformers={},
         endpoints={
             "file": FileEndpoint(file_name="example.csv"),
             "database": DatabaseEndpoint(

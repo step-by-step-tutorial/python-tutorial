@@ -1,24 +1,21 @@
 import logging
-from collections.abc import Mapping
-
 from pandas import DataFrame
 
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE as model
-from data_platform.model import DataProcessor
-from data_platform.transformer.pandas_transformer import (
+from data_platform.model import DatasetTransformer
+from data_platform.converter.pandas_converter import (
     remove_duplicates,
     convert_numeric_column,
     fill_missing_by_group_average,
     fill_missing_by_column_average,
     convert_datetime_column,
     reset_index,
-    sum_by_group,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class InmemorySaleProcessor(DataProcessor[DataFrame]):
+class InmemorySaleTransformer(DatasetTransformer[DataFrame]):
     def clean(self, dataframe: DataFrame) -> DataFrame:
         df = dataframe.copy()
 
@@ -53,20 +50,3 @@ class InmemorySaleProcessor(DataProcessor[DataFrame]):
         df[model.year] = df[model.order_date].dt.year
         df[model.month] = df[model.order_date].dt.month
         return df
-
-    def analyze(self, dataframe: DataFrame) -> Mapping[str, DataFrame]:
-        result = {
-            "revenue_by_category": sum_by_group(
-                df=dataframe,
-                group_field=model.category,
-                original_field=model.total_price,
-                alias_field=model.revenue
-            ),
-            "revenue_by_country": sum_by_group(
-                df=dataframe,
-                group_field=model.country,
-                original_field=model.total_price,
-                alias_field=model.revenue
-            )
-        }
-        return result

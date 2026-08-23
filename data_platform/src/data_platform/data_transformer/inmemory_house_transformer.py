@@ -1,13 +1,10 @@
 import hashlib
-from collections.abc import Mapping
-
 import pandas as pd
 from pandas import DataFrame
 
 from data_platform.model.house_attribute import HOUSE_ATTRIBUTE as schema
-from data_platform.model import DataProcessor
-from data_platform.transformer.pandas_transformer import (
-    average_by_group,
+from data_platform.model import DatasetTransformer
+from data_platform.converter.pandas_converter import (
     convert_boolean_column,
     convert_numeric_column,
     create_column,
@@ -52,7 +49,7 @@ def create_listing_key(row: pd.Series) -> str:
     return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()
 
 
-class InmemoryHouseProcessor(DataProcessor[DataFrame]):
+class InmemoryHouseTransformer(DatasetTransformer[DataFrame]):
 
     def clean(self, dataframe: DataFrame) -> DataFrame:
         df = dataframe.copy()
@@ -116,19 +113,3 @@ class InmemoryHouseProcessor(DataProcessor[DataFrame]):
         )
 
         return df
-
-    def analyze(self, dataframe: DataFrame) -> Mapping[str, DataFrame]:
-        return {
-            "average_price_by_address": average_by_group(
-                df=dataframe,
-                group_field=schema.address,
-                original_field=schema.price,
-                alias_field="average_price",
-            ),
-            "average_price_by_square_meter": average_by_group(
-                df=dataframe,
-                group_field=schema.room,
-                original_field=schema.price_per_square_meter,
-                alias_field="average_price_by_square_meter",
-            ),
-        }

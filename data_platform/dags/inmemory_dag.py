@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
+from airflow.task.trigger_rule import TriggerRule
 
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.registry.dataset_registry import dataset_registry
@@ -20,6 +21,11 @@ with DAG(
         catchup=False,
         tags={"inmemory", "etl", "datalake"},
 ) as dag:
+    prepare_task = PythonOperator(
+        task_id="prepare",
+        python_callable=dag_pipeline_adapter.prepare,
+    )
+
     ingest_raw_data_task = PythonOperator(
         task_id="ingest_raw_data",
         python_callable=dag_pipeline_adapter.ingest_raw_data,
@@ -78,7 +84,13 @@ with DAG(
         python_callable=pipeline.analyze_data_warehouse,
     )
 
-    ingest_raw_data_task >> clean_task >> enrich_task
+    clean_up_task = PythonOperator(
+        task_id="clean_up",
+        python_callable=dag_pipeline_adapter.clean_up,
+        trigger_rule=TriggerRule.ALL_DONE,
+    )
+
+    prepare_task >> ingest_raw_data_task >> clean_task >> enrich_task
 
     enrich_task >> [
         populate_database_task,
@@ -88,3 +100,4 @@ with DAG(
     ]
 
     populate_datawarehouse_task >> analyze_via_datawarehouse_task
+    [populate_database_task, show_dataframe_task, analyze_dataframe_task, analyze_via_datawarehouse_task] >> clean_up_task

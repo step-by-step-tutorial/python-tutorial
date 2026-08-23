@@ -13,8 +13,10 @@ from data_platform.model import (
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE
 from data_platform.registry.endpoint_registry import AUDIT_ENDPOINT, endpoint_registry
 from data_platform.dataset.sale_spark_schema import build_schema
-from data_platform.processor.inmemory_sale_processor import InmemorySaleProcessor
-from data_platform.processor.spark_sale_processor import SparkSaleProcessor
+from data_platform.analyzer.inmemory_sale_analyzer import InmemorySaleAnalyzer
+from data_platform.analyzer.spark_sale_analyzer import SparkSaleAnalyzer
+from data_platform.data_transformer.inmemory_sale_transformer import InmemorySaleTransformer
+from data_platform.data_transformer.spark_sale_transformer import SparkSaleTransformer
 
 SALE_DATASET = Dataset(
     name="Sale",
@@ -107,8 +109,12 @@ SALE_DATASET = Dataset(
             },
         ),
     },
-    processors={
-        "inmemory": InmemorySaleProcessor(),
-        "spark": SparkSaleProcessor(),
+    transformers={
+        "inmemory": InmemorySaleTransformer(),
+        "spark": SparkSaleTransformer(),
+    },
+    analyzers={
+        "inmemory": InmemorySaleAnalyzer(),
+        "spark": SparkSaleAnalyzer(),
     },
 )

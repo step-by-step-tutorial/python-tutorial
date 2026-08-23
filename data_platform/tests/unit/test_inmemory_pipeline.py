@@ -12,15 +12,15 @@ from data_platform.pipeline.inmemory_pipeline import InmemoryPipeline
 
 
 def build_dataset() -> Dataset:
-    processor = type(
-        "Processor",
+    converter = type(
+        "Converter",
         (),
         {
             "clean": lambda self, dataframe: dataframe,
             "enrich": lambda self, dataframe: dataframe,
-            "analyze": lambda self, dataframe: {},
         },
     )()
+    analyzer = type("Analyzer", (), {"analyze": lambda self, dataframe: {}})()
 
     return Dataset(
         name="example",
@@ -32,7 +32,8 @@ def build_dataset() -> Dataset:
             create_sql_files={"create": "database/audit/create_tables.sql"},
             write_sql_files={"write": "database/audit/insert_event.sql"},
         ),
-        processors={"inmemory": processor},
+        transformers={"inmemory": converter},
+        analyzers={"inmemory": analyzer},
         endpoints={
             "sale.file.csv": FileEndpoint(file_name="sale.csv", file_path="resources/example.csv"),
             "sale.kafka.listener": MessagingEndpoint(connection_name="sale.kafka.listener", channel_name="example-events"),

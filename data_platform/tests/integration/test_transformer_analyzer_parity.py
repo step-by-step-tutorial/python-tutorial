@@ -11,10 +11,14 @@ from pyspark.sql import SparkSession
 
 from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE
-from data_platform.processor.inmemory_house_processor import InmemoryHouseProcessor
-from data_platform.processor.inmemory_sale_processor import InmemorySaleProcessor
-from data_platform.processor.spark_house_processor import SparkHouseProcessor
-from data_platform.processor.spark_sale_processor import SparkSaleProcessor
+from data_platform.data_transformer.inmemory_house_transformer import InmemoryHouseTransformer
+from data_platform.data_transformer.inmemory_sale_transformer import InmemorySaleTransformer
+from data_platform.data_transformer.spark_house_transformer import SparkHouseTransformer
+from data_platform.data_transformer.spark_sale_transformer import SparkSaleTransformer
+from data_platform.analyzer.inmemory_house_analyzer import InmemoryHouseAnalyzer
+from data_platform.analyzer.inmemory_sale_analyzer import InmemorySaleAnalyzer
+from data_platform.analyzer.spark_house_analyzer import SparkHouseAnalyzer
+from data_platform.analyzer.spark_sale_analyzer import SparkSaleAnalyzer
 
 pytestmark = pytest.mark.integration
 
@@ -33,7 +37,7 @@ def spark_session() -> SparkSession:
     session = (
         SparkSession.builder
         .master("local[1]")
-        .appName("processor-parity-tests")
+        .appName("transformer-analyzer-parity-tests")
         .config("spark.ui.enabled", "false")
         .config("spark.driver.host", "127.0.0.1")
         .config("spark.driver.bindAddress", "127.0.0.1")
@@ -75,7 +79,7 @@ def _compare_frames(left: pd.DataFrame, right: pd.DataFrame, sort_columns: list[
     )
 
 
-class TestSaleProcessorParity:
+class TestSaleTransformerAnalyzerParity:
 
     def test_should_match_between_pandas_and_spark(self, spark_session: SparkSession) -> None:
         raw = pd.DataFrame(
@@ -113,16 +117,16 @@ class TestSaleProcessorParity:
             ]
         )
 
-        in_memory_cleaned = InmemorySaleProcessor().clean(raw)
-        in_memory = InmemorySaleProcessor().enrich(in_memory_cleaned)
-        spark_cleaned = SparkSaleProcessor().clean(spark_session.createDataFrame(raw))
-        spark_enriched = SparkSaleProcessor().enrich(spark_cleaned)
+        in_memory_cleaned = InmemorySaleTransformer().clean(raw)
+        in_memory = InmemorySaleTransformer().enrich(in_memory_cleaned)
+        spark_cleaned = SparkSaleTransformer().clean(spark_session.createDataFrame(raw))
+        spark_enriched = SparkSaleTransformer().enrich(spark_cleaned)
         spark = spark_enriched.toPandas()
 
         _compare_frames(in_memory, spark, sort_columns=[SALE_ATTRIBUTE.order_id])
 
-        in_memory_analysis = InmemorySaleProcessor().analyze(in_memory)
-        spark_analysis = SparkSaleProcessor().analyze(spark_enriched)
+        in_memory_analysis = InmemorySaleAnalyzer().analyze(in_memory)
+        spark_analysis = SparkSaleAnalyzer().analyze(spark_enriched)
 
         _compare_frames(
             in_memory_analysis["revenue_by_category"],
@@ -136,7 +140,7 @@ class TestSaleProcessorParity:
         )
 
 
-class TestHouseProcessorParity:
+class TestHouseTransformerAnalyzerParity:
 
     def test_should_match_between_pandas_and_spark(self, spark_session: SparkSession) -> None:
         raw = pd.DataFrame(
@@ -164,16 +168,16 @@ class TestHouseProcessorParity:
             ]
         )
 
-        in_memory_cleaned = InmemoryHouseProcessor().clean(raw)
-        in_memory = InmemoryHouseProcessor().enrich(in_memory_cleaned)
-        spark_cleaned = SparkHouseProcessor().clean(spark_session.createDataFrame(raw))
-        spark_enriched = SparkHouseProcessor().enrich(spark_cleaned)
+        in_memory_cleaned = InmemoryHouseTransformer().clean(raw)
+        in_memory = InmemoryHouseTransformer().enrich(in_memory_cleaned)
+        spark_cleaned = SparkHouseTransformer().clean(spark_session.createDataFrame(raw))
+        spark_enriched = SparkHouseTransformer().enrich(spark_cleaned)
         spark = spark_enriched.toPandas()
 
         _compare_frames(in_memory, spark, sort_columns=[HOUSE_ATTRIBUTE.address])
 
-        in_memory_analysis = InmemoryHouseProcessor().analyze(in_memory)
-        spark_analysis = SparkHouseProcessor().analyze(spark_enriched)
+        in_memory_analysis = InmemoryHouseAnalyzer().analyze(in_memory)
+        spark_analysis = SparkHouseAnalyzer().analyze(spark_enriched)
 
         _compare_frames(
             in_memory_analysis["average_price_by_address"],

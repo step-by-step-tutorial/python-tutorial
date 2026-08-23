@@ -3,11 +3,11 @@ import pytest
 
 from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE
-from data_platform.processor.inmemory_house_processor import InmemoryHouseProcessor
-from data_platform.processor.inmemory_sale_processor import InmemorySaleProcessor
+from data_platform.data_transformer.inmemory_house_transformer import InmemoryHouseTransformer
+from data_platform.data_transformer.inmemory_sale_transformer import InmemorySaleTransformer
 
 
-class TestInmemorySaleProcessor:
+class TestInmemorySaleTransformer:
 
     def test_should_clean_and_enrich_sale_records(self) -> None:
         dataframe = pd.DataFrame(
@@ -55,9 +55,9 @@ class TestInmemorySaleProcessor:
             ]
         )
 
-        processor = InmemorySaleProcessor()
-        cleaned = processor.clean(dataframe)
-        enriched = processor.enrich(cleaned)
+        converter = InmemorySaleTransformer()
+        cleaned = converter.clean(dataframe)
+        enriched = converter.enrich(cleaned)
 
         assert len(cleaned) == 2
         assert list(cleaned[SALE_ATTRIBUTE.order_id]) == [1, 2]
@@ -65,7 +65,7 @@ class TestInmemorySaleProcessor:
         assert list(enriched[SALE_ATTRIBUTE.year]) == [2026, 2026]
 
 
-class TestInmemoryHouseProcessor:
+class TestInmemoryHouseTransformer:
 
     def test_should_clean_and_enrich_house_records(self) -> None:
         dataframe = pd.DataFrame(
@@ -113,9 +113,9 @@ class TestInmemoryHouseProcessor:
             ]
         )
 
-        processor = InmemoryHouseProcessor()
-        cleaned = processor.clean(dataframe)
-        enriched = processor.enrich(cleaned)
+        converter = InmemoryHouseTransformer()
+        cleaned = converter.clean(dataframe)
+        enriched = converter.enrich(cleaned)
 
         assert len(cleaned) == 2
         assert list(cleaned[HOUSE_ATTRIBUTE.address]) == ["Main Street", "Oak Avenue"]

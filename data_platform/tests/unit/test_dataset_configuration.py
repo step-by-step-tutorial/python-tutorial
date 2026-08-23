@@ -35,7 +35,7 @@ class TestDataset:
                 bucket_name="example-audit-bucket",
                 write_sql_files={"write": "database/audit/insert_event.sql"},
             ),
-            processors={},
+            transformers={},
             endpoints={
                 "sale.file.csv": FileEndpoint(file_name="sale.csv", file_path="/tmp/example.csv"),
                 "sale.kafka.listener": MessagingEndpoint(connection_name="sale.kafka.listener",
@@ -165,6 +165,8 @@ class TestConcreteDatasetConfiguration:
         assert HOUSE_DATASET.audit.channel_name == "sale.audit.event.v1"
         assert HOUSE_DATASET.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
 
-    def test_dataset_processors_should_be_lazy(self) -> None:
-        assert SALE_DATASET.processors["spark"] is not None
-        assert HOUSE_DATASET.processors["spark"] is not None
+    def test_dataset_transformers_and_analyzers_should_be_configured(self) -> None:
+        assert SALE_DATASET.transformers["spark"] is not None
+        assert HOUSE_DATASET.transformers["spark"] is not None
+        assert SALE_DATASET.analyzers["spark"] is not None
+        assert HOUSE_DATASET.analyzers["spark"] is not None

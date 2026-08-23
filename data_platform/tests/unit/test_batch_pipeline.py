@@ -65,9 +65,11 @@ class TestBatchPipeline:
         mocker.patch.object(given_pipeline, "store_cleaned_data", return_value="clean-path")
         mocker.patch.object(given_pipeline, "enrich", return_value="enriched")
         mocker.patch.object(given_pipeline, "store_enriched_data", return_value="enriched-path")
+        mock_before_run = mocker.patch.object(given_pipeline, "before_run")
 
         given_pipeline.run()
 
+        assert mock_before_run.call_count == 1
         assert given_audit_service.emit.call_count == 24
 
     def test_should_record_task_and_pipeline_failure(self, mocker) -> None:

@@ -25,18 +25,18 @@ class Registry(Generic[RegistryItem]):
         self.lazy_item[key] = (lazy_function, cache)
 
     def get_item(self, name: str) -> RegistryItem:
-        item: RegistryItem = None
         key = self.key_transform(name)
 
         if key in self.items:
-            item = self.items[key]
-        elif key in self.lazy_item:
+            return self.items[key]
+        if key in self.lazy_item:
             lazy_function, should_cache = self.lazy_item[key]
             item = lazy_function()
             if should_cache:
                 self.register(key, item)
+            return item
 
-        return item
+        raise ValueError(f"Unsupported {self.registry_name}: {name}")
 
     def contains(self, name: str) -> bool:
         return self.key_transform(name) in self.items or self.key_transform(name) in self.lazy_item

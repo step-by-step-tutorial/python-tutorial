@@ -10,8 +10,8 @@ from pyspark.sql import SparkSession
 
 from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE
-from data_platform.processor.spark_house_processor import SparkHouseProcessor
-from data_platform.processor.spark_sale_processor import SparkSaleProcessor
+from data_platform.data_transformer.spark_house_transformer import SparkHouseTransformer
+from data_platform.data_transformer.spark_sale_transformer import SparkSaleTransformer
 
 pytestmark = pytest.mark.integration
 
@@ -30,7 +30,7 @@ def spark_session() -> SparkSession:
     session = (
         SparkSession.builder
         .master("local[1]")
-        .appName("processor-tests")
+        .appName("transformer-tests")
         .config("spark.ui.enabled", "false")
         .config("spark.driver.host", "127.0.0.1")
         .config("spark.driver.bindAddress", "127.0.0.1")
@@ -47,7 +47,7 @@ def spark_session() -> SparkSession:
     session.stop()
 
 
-class TestSparkSaleProcessor:
+class TestSparkSaleTransformer:
 
     def test_should_clean_and_enrich_sale_records(self, spark_session: SparkSession) -> None:
         dataframe = spark_session.createDataFrame(
@@ -97,16 +97,16 @@ class TestSparkSaleProcessor:
             )
         )
 
-        processor = SparkSaleProcessor()
-        cleaned = processor.clean(dataframe)
-        enriched = processor.enrich(cleaned)
+        converter = SparkSaleTransformer()
+        cleaned = converter.clean(dataframe)
+        enriched = converter.enrich(cleaned)
 
         assert cleaned.count() == 2
         assert [row[SALE_ATTRIBUTE.order_id] for row in cleaned.orderBy(SALE_ATTRIBUTE.order_id).collect()] == ["1", "2"]
         assert [row[SALE_ATTRIBUTE.total_price] for row in enriched.orderBy(SALE_ATTRIBUTE.order_id).collect()] == [20.0, 20.0]
 
 
-class TestSparkHouseProcessor:
+class TestSparkHouseTransformer:
 
     def test_should_clean_and_enrich_house_records(self, spark_session: SparkSession) -> None:
         dataframe = spark_session.createDataFrame(
@@ -156,9 +156,9 @@ class TestSparkHouseProcessor:
             )
         )
 
-        processor = SparkHouseProcessor()
-        cleaned = processor.clean(dataframe)
-        enriched = processor.enrich(cleaned)
+        converter = SparkHouseTransformer()
+        cleaned = converter.clean(dataframe)
+        enriched = converter.enrich(cleaned)
 
         assert cleaned.count() == 2
         assert [row[HOUSE_ATTRIBUTE.address] for row in cleaned.orderBy(HOUSE_ATTRIBUTE.address).collect()] == ["Main Street", "Oak Avenue"]

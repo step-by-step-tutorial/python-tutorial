@@ -6,7 +6,7 @@ from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE
 from data_platform.model.house_event import HouseEvent
 from data_platform.model.sale_event import SaleEvent
-from data_platform.transformer.value_transformer import (
+from data_platform.converter.value_converter import (
     convert_to_integer,
     convert_to_float,
     convert_to_optional_float,
@@ -21,13 +21,13 @@ class MappedEvent:
     payload: dict[str, Any]
 
 
-class EventTransformer(Protocol):
+class EventConverter(Protocol):
     def map(self, row: Mapping[str, Any]) -> MappedEvent:
         ...
 
 
 @dataclass(frozen=True)
-class SaleEventTransformer:
+class SaleEventConverter:
     def map(self, row: Mapping[str, Any]) -> MappedEvent:
         event = SaleEvent(
             order_id=convert_to_integer(row.get(SALE_ATTRIBUTE.order_id)),
@@ -55,7 +55,7 @@ class SaleEventTransformer:
 
 
 @dataclass(frozen=True)
-class HouseEventTransformer:
+class HouseEventConverter:
     def map(self, row: Mapping[str, Any]) -> MappedEvent:
         event = HouseEvent(
             area=convert_to_float(row.get(HOUSE_ATTRIBUTE.area_raw)),
@@ -82,15 +82,15 @@ class HouseEventTransformer:
         )
 
 
-_EVENT_MAPPERS: dict[str, EventTransformer] = {
-    "sale": SaleEventTransformer(),
-    "house": HouseEventTransformer(),
+_EVENT_CONVERTERS: dict[str, EventConverter] = {
+    "sale": SaleEventConverter(),
+    "house": HouseEventConverter(),
 }
 
 
-def get_event_transformer(dataset_name: str) -> EventTransformer:
+def get_event_converter(dataset_name: str) -> EventConverter:
     try:
-        return _EVENT_MAPPERS[dataset_name.lower()]
+        return _EVENT_CONVERTERS[dataset_name.lower()]
     except KeyError as error:
-        available = ", ".join(sorted(_EVENT_MAPPERS)) or "<none>"
+        available = ", ".join(sorted(_EVENT_CONVERTERS)) or "<none>"
         raise KeyError(f"Unknown event mapper for dataset '{dataset_name}'. Available: {available}") from error

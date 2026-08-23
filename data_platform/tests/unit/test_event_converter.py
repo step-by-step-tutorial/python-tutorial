@@ -1,14 +1,14 @@
 import pytest
 
-from data_platform.transformer.event_transformer import get_event_transformer
+from data_platform.converter.event_converter import get_event_converter
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE
 from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
 
 
-class TestEventTransformer:
+class TestEventConverter:
 
     def test_should_map_sale_rows_to_prepared_events(self) -> None:
-        mapper = get_event_transformer("sale")
+        mapper = get_event_converter("sale")
 
         actual = mapper.map(
             {
@@ -28,7 +28,7 @@ class TestEventTransformer:
         assert actual.payload[SALE_ATTRIBUTE.CUSTOMER_NAME] == "Alex Johnson"
 
     def test_should_map_sale_rows_with_pandas_typed_values(self) -> None:
-        mapper = get_event_transformer("sale")
+        mapper = get_event_converter("sale")
 
         actual = mapper.map(
             {
@@ -48,7 +48,7 @@ class TestEventTransformer:
         assert actual.payload[SALE_ATTRIBUTE.QUANTITY] == 2.0
 
     def test_should_map_house_rows_to_prepared_events(self) -> None:
-        mapper = get_event_transformer("house")
+        mapper = get_event_converter("house")
 
         actual = mapper.map(
             {
@@ -68,7 +68,7 @@ class TestEventTransformer:
         assert actual.payload[HOUSE_ATTRIBUTE.price_raw] == 1000.0
 
     def test_should_map_house_rows_with_missing_address_to_optional_key(self) -> None:
-        mapper = get_event_transformer("house")
+        mapper = get_event_converter("house")
 
         actual = mapper.map(
             {
@@ -87,7 +87,7 @@ class TestEventTransformer:
         assert actual.payload[HOUSE_ATTRIBUTE.address_raw] is None
 
     def test_should_map_house_rows_with_comma_formatted_numbers(self) -> None:
-        mapper = get_event_transformer("house")
+        mapper = get_event_converter("house")
 
         actual = mapper.map(
             {
@@ -107,4 +107,4 @@ class TestEventTransformer:
 
     def test_should_raise_for_unknown_dataset(self) -> None:
         with pytest.raises(KeyError):
-            get_event_transformer("missing")
+            get_event_converter("missing")

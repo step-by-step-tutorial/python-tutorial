@@ -1,7 +1,8 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, cast
-from data_platform.model.data_processor import DataProcessor
+from data_platform.model.dataset_analyzer import DatasetAnalyzer
+from data_platform.model.dataset_transformer import DatasetTransformer
 from data_platform.model.data_frame_definition import DataFrameDefinition
 from data_platform.model.endpoints import AuditEndpoint, Endpoint, EndpointType
 
@@ -11,7 +12,8 @@ class Dataset:
     name: str
     audit: AuditEndpoint
     dataframe: DataFrameDefinition = field(default_factory=DataFrameDefinition)
-    processors: Mapping[str, DataProcessor] = field(default_factory=dict)
+    transformers: Mapping[str, DatasetTransformer] = field(default_factory=dict)
+    analyzers: Mapping[str, DatasetAnalyzer] = field(default_factory=dict)
     endpoints: Mapping[str, Endpoint] = field(default_factory=dict)
 
     def get_endpoint(self, name: str, endpoint_type: type[EndpointType]) -> EndpointType:
@@ -20,8 +22,11 @@ class Dataset:
             raise TypeError(f"Endpoint '{name}' is not a {endpoint_type.__name__}")
         return cast(EndpointType, endpoint)
 
-    def get_processor(self, name: str) -> DataProcessor:
-        return self.processors[name]
+    def get_transformer(self, name: str) -> DatasetTransformer:
+        return self.transformers[name]
+
+    def get_analyzer(self, name: str) -> DatasetAnalyzer:
+        return self.analyzers[name]
 
     @property
     def dataframe_schema(self) -> Any:
