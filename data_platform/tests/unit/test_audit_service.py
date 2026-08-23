@@ -1,15 +1,15 @@
-from audit.audit_event_factory import DatasetReadAuditRequest
-from audit.audit_event_factory import DatasetWrittenAuditRequest
-from audit.audit_event_factory import PipelineCompletedAuditRequest
-from audit.audit_event_factory import PipelineFailedAuditRequest
-from audit.audit_event_factory import PipelineStartedAuditRequest
-from audit.audit_event_factory import TaskCompletedAuditRequest
-from audit.audit_event_factory import TaskFailedAuditRequest
-from audit.audit_event_factory import TaskStartedAuditRequest
-from audit.audit_event_factory import AuditEventFactory
-from audit.audit_service import AuditService
-from dataset.definition import AuditEndpoint
-from model.audit_event import AuditEventType
+from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
+from data_platform.audit.audit_event_factory import DatasetWrittenAuditRequest
+from data_platform.audit.audit_event_factory import PipelineCompletedAuditRequest
+from data_platform.audit.audit_event_factory import PipelineFailedAuditRequest
+from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
+from data_platform.audit.audit_event_factory import TaskCompletedAuditRequest
+from data_platform.audit.audit_event_factory import TaskFailedAuditRequest
+from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
+from data_platform.audit.audit_event_factory import AuditEventFactory
+from data_platform.audit.audit_service import AuditService
+from data_platform.model import AuditEndpoint
+from data_platform.model.audit_event import AuditEventType
 
 
 class TestAuditService:
@@ -20,19 +20,19 @@ class TestAuditService:
         given_archive_service = mocker.Mock()
         given_log_service = mocker.Mock()
         mock_log_service_ctor = mocker.patch(
-            "audit.audit_service.AuditLogService",
+            "data_platform.audit.audit_service.AuditLogService",
             return_value=given_log_service,
         )
         mock_database_service_ctor = mocker.patch(
-            "audit.audit_service.AuditDatabaseService",
+            "data_platform.audit.audit_service.AuditDatabaseService",
             return_value=given_database_service,
         )
         mock_messaging_service_ctor = mocker.patch(
-            "audit.audit_service.AuditMessagingService",
+            "data_platform.audit.audit_service.AuditMessagingService",
             return_value=given_messaging_service,
         )
         mock_archive_service_ctor = mocker.patch(
-            "audit.audit_service.AuditArchiveService",
+            "data_platform.audit.audit_service.AuditArchiveService",
             return_value=given_archive_service,
         )
 
@@ -153,10 +153,10 @@ class TestAuditService:
         given_messaging_service = mocker.Mock()
         given_archive_service = mocker.Mock()
         given_log_service = mocker.Mock()
-        mocker.patch("audit.audit_service.AuditLogService", return_value=given_log_service)
-        mocker.patch("audit.audit_service.AuditDatabaseService", return_value=given_database_service)
-        mocker.patch("audit.audit_service.AuditMessagingService", return_value=given_messaging_service)
-        mocker.patch("audit.audit_service.AuditArchiveService", return_value=given_archive_service)
+        mocker.patch("data_platform.audit.audit_service.AuditLogService", return_value=given_log_service)
+        mocker.patch("data_platform.audit.audit_service.AuditDatabaseService", return_value=given_database_service)
+        mocker.patch("data_platform.audit.audit_service.AuditMessagingService", return_value=given_messaging_service)
+        mocker.patch("data_platform.audit.audit_service.AuditArchiveService", return_value=given_archive_service)
 
         given_service = AuditService(
             AuditEndpoint(

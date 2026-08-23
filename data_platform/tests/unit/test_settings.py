@@ -1,4 +1,4 @@
-from config.settings import settings
+from data_platform.config.main_settings import settings
 
 
 class TestMainSettings:

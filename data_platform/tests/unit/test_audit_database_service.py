@@ -1,7 +1,7 @@
-from audit.audit_database_service import AuditDatabaseService
-from audit.audit_event_factory import AuditEventFactory
-from audit.audit_event_factory import PipelineStartedAuditRequest
-from dataset.definition import AuditEndpoint
+from data_platform.audit.audit_database_service import AuditDatabaseService
+from data_platform.audit.audit_event_factory import AuditEventFactory
+from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
+from data_platform.model import AuditEndpoint
 
 
 class TestAuditDatabaseService:
@@ -22,11 +22,11 @@ class TestAuditDatabaseService:
         given_connection.begin.return_value = given_transaction_context
 
         mock_create_connection = mocker.patch(
-            "audit.audit_database_service.get_connection",
+            "data_platform.audit.audit_database_service.get_connection",
             return_value=given_connection
         )
         mock_read_text_file = mocker.patch(
-            "audit.audit_database_service.read_text_file",
+            "data_platform.audit.audit_database_service.read_text_file",
             return_value="insert into audit.event values (:event_id)"
         )
 

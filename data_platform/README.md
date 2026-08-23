@@ -42,7 +42,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 
 ```shell
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
-python -m main
+python -m data_platform.main
 ```
 
 

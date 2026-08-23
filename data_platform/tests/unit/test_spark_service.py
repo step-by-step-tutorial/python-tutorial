@@ -2,8 +2,8 @@ import pytest
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType
 
-from dataset.definition import DataLakeEndpoint, MessagingEndpoint
-from service import spark_service as system_under_test
+from data_platform.model import DataLakeEndpoint, MessagingEndpoint
+from data_platform.service import spark_service as system_under_test
 
 class TestReadSaleData:
 
@@ -50,7 +50,7 @@ class TestAppendBatchToObjectStorage:
             messaging_endpoint=MessagingEndpoint(channel_name="topic", bootstrap_servers="localhost:9092"),
         )
         mock_persisted_dataframes = mocker.patch(
-            "service.spark_service.persisted_dataframes",
+            "data_platform.service.spark_service.persisted_dataframes",
             return_value=given_context,
         )
         mock_append = mocker.patch.object(service, "append_to_object_storage")

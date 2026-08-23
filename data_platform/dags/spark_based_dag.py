@@ -2,25 +2,15 @@ from datetime import UTC, datetime
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
 
-from config.settings import settings as main_settings
-from dataset.registry import get_dataset
-from pipeline.spark_pipeline import SparkPipeline
+from data_platform.config.main_settings import settings as main_settings
+from data_platform.dataset.registry import get_dataset
+from data_platform.pipeline.spark_pipeline import SparkPipeline
+from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
 
 DAG_ID = "spark_etl_dag"
 
 pipeline = SparkPipeline(get_dataset(main_settings.app.dataset_name))
-
-
-def ingest_raw_data() -> str:
-    return pipeline.store_raw_data(pipeline.ingest_raw_data())
-
-
-def cleaning(raw_relative_path: str) -> str:
-    return pipeline.store_cleaned_data(pipeline.cleaning(raw_relative_path))
-
-
-def enriching(cleaned_relative_path: str) -> str:
-    return pipeline.store_enriched_data(pipeline.enriching(cleaned_relative_path))
+dag_pipeline_adapter = DagPipelineAdapter(pipeline)
 
 
 with DAG(
@@ -32,18 +22,18 @@ with DAG(
 ) as dag:
     ingest_raw_data_task = PythonOperator(
         task_id="ingest_raw_data",
-        python_callable=ingest_raw_data,
+        python_callable=dag_pipeline_adapter.ingest_raw_data,
     )
 
     cleaning_task = PythonOperator(
         task_id="cleaning",
-        python_callable=cleaning,
+        python_callable=dag_pipeline_adapter.cleaning,
         op_kwargs={"raw_relative_path": ingest_raw_data_task.output}
     )
 
     enriching_task = PythonOperator(
         task_id="enriching",
-        python_callable=enriching,
+        python_callable=dag_pipeline_adapter.enriching,
         op_kwargs={"cleaned_relative_path": cleaning_task.output}
     )
 

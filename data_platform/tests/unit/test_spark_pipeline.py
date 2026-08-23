@@ -1,14 +1,14 @@
-from dataset.definition import (
+from data_platform.model import (
     AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    Dataframe,
+    DataframeDefinition,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
 )
-from pipeline.spark_pipeline import SparkPipeline
+from data_platform.pipeline.spark_pipeline import SparkPipeline
 
 
 def build_dataset() -> Dataset:
@@ -24,7 +24,7 @@ def build_dataset() -> Dataset:
 
     return Dataset(
         name="example",
-        dataframe=Dataframe(schema=None, required_columns=frozenset()),
+        dataframe=DataframeDefinition(schema=None, required_columns=frozenset()),
         audit=AuditEndpoint(
             database_connection_name="audit.database",
             messaging_connection_name="audit.kafka.producer",
@@ -72,8 +72,8 @@ class TestRun:
             ("task-11", 11.0),
         ] 
 
-        mocker.patch("pipeline.spark_pipeline.AuditService", return_value=given_audit_service)
-        mocker.patch("pipeline.spark_pipeline.create_session", return_value=mocker.Mock())
+        mocker.patch("data_platform.pipeline.spark_pipeline.AuditService", return_value=given_audit_service)
+        mocker.patch("data_platform.pipeline.spark_pipeline.create_session", return_value=mocker.Mock())
         given_pipeline = SparkPipeline(build_dataset())
         mock_ingest_raw_data = mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")

@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
 
-from dataset.house.attribute import HOUSE_ATTRIBUTE
-from dataset.sale.attribute import SALE_ATTRIBUTE
-from processor.inmemory.house_processor import InmemoryHouseProcessor
-from processor.inmemory.sale_processor import InmemorySaleProcessor
+from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
+from data_platform.model.sale_attribute import SALE_ATTRIBUTE
+from data_platform.processor.inmemory_house_processor import InmemoryHouseProcessor
+from data_platform.processor.inmemory_sale_processor import InmemorySaleProcessor
 
 
 class TestInmemorySaleProcessor:

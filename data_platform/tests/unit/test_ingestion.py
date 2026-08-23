@@ -2,7 +2,7 @@ import pandas as pd
 
 from pyspark.sql import SparkSession
 
-from dataset.definition import (
+from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
     DatabaseEndpoint,
@@ -10,14 +10,14 @@ from dataset.definition import (
     MessagingEndpoint,
     RestApiEndpoint,
 )
-from ingestion.csv_file_ingestor import CsvFileIngestor
-from ingestion.database_ingestor import DatabaseIngestor
-from ingestion.datalake_ingestor import DataLakeIngestor
-from ingestion.datawarehouse_ingestor import DataWarehouseIngestor
-from ingestion.kafka_ingestor import KafkaIngestor
-from ingestion.rest_api_ingestor import RestApiIngestor
-from ingestion.spark_kafka_ingestor import SparkKafkaIngestor
-from ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
+from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
+from data_platform.ingestion.database_ingestor import DatabaseIngestor
+from data_platform.ingestion.datalake_ingestor import DataLakeIngestor
+from data_platform.ingestion.datawarehouse_ingestor import DataWarehouseIngestor
+from data_platform.ingestion.kafka_ingestor import KafkaIngestor
+from data_platform.ingestion.rest_api_ingestor import RestApiIngestor
+from data_platform.ingestion.spark_kafka_ingestor import SparkKafkaIngestor
+from data_platform.ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
 
 
 class TestCsvFileIngestor:
@@ -60,9 +60,9 @@ class TestDataLakeIngestor:
         given_client = mocker.Mock()
         given_client.list_objects_v2.return_value = {"Contents": [{"Key": "raw/part-001.parquet"}]}
         given_client.download_fileobj.side_effect = lambda bucket, key, buffer: buffer.write(b"parquet")
-        mocker.patch("persistence.datalake_repository.get_connection", return_value=given_client)
-        mocker.patch("ingestion.datalake_ingestor.pd.read_parquet", return_value=given_dataframe)
-        mocker.patch("ingestion.datalake_ingestor.pd.concat", return_value=given_dataframe)
+        mocker.patch("data_platform.persistence.datalake_repository.get_connection", return_value=given_client)
+        mocker.patch("data_platform.ingestion.datalake_ingestor.pd.read_parquet", return_value=given_dataframe)
+        mocker.patch("data_platform.ingestion.datalake_ingestor.pd.concat", return_value=given_dataframe)
 
         actual = DataLakeIngestor(
             endpoint=DataLakeEndpoint(
@@ -84,7 +84,7 @@ class TestRestApiIngestor:
         given_response.read.return_value = b'[{"id": 1}, {"id": 2}]'
         given_connection = mocker.Mock()
         given_connection.open.return_value = given_response
-        mock_build_opener = mocker.patch("ingestion.rest_api_ingestor.build_opener", return_value=given_connection)
+        mock_build_opener = mocker.patch("data_platform.ingestion.rest_api_ingestor.build_opener", return_value=given_connection)
 
         actual = RestApiIngestor(
             endpoint=RestApiEndpoint(
@@ -109,7 +109,7 @@ class TestMessageQueueIngestor:
         given_message_2.error.return_value = None
         given_message_2.value.return_value = b'{"id": 2}'
         given_consumer.poll.side_effect = [given_message_1, given_message_2, None]
-        mocker.patch("ingestion.kafka_ingestor.get_connection", return_value=given_consumer)
+        mocker.patch("data_platform.ingestion.kafka_ingestor.get_connection", return_value=given_consumer)
 
         actual = KafkaIngestor(
             endpoint=MessagingEndpoint(
@@ -141,9 +141,9 @@ class TestDatabaseIngestor:
         given_context = mocker.MagicMock()
         given_context.__enter__.return_value = given_connection
         given_engine.connect.return_value = given_context
-        mocker.patch("ingestion.database_ingestor.read_text_file", return_value="select * from {table_name}")
+        mocker.patch("data_platform.ingestion.database_ingestor.read_text_file", return_value="select * from {table_name}")
         expected = pd.DataFrame({"id": [1]})
-        mock_execute = mocker.patch("ingestion.database_ingestor.execute_sql", return_value=expected)
+        mock_execute = mocker.patch("data_platform.ingestion.database_ingestor.execute_sql", return_value=expected)
 
         actual = DatabaseIngestor(endpoint=given_dataset).ingest(given_dataset.full_stage_table_name)
 
@@ -164,8 +164,8 @@ class TestDataWarehouseIngestor:
             query_sql_files={"select_all": "datawarehouse/select_all.sql"},
         )
         given_connection = mocker.Mock()
-        mocker.patch("ingestion.datawarehouse_ingestor.get_connection", return_value=given_connection)
-        mocker.patch("ingestion.datawarehouse_ingestor.read_text_file", return_value="select * from {table_name}")
+        mocker.patch("data_platform.ingestion.datawarehouse_ingestor.get_connection", return_value=given_connection)
+        mocker.patch("data_platform.ingestion.datawarehouse_ingestor.read_text_file", return_value="select * from {table_name}")
         expected = pd.DataFrame({"id": [1]})
         given_connection.query_df.return_value = expected
 
@@ -190,8 +190,8 @@ class TestStreamingChannelIngestor:
         given_dataframe.select.return_value = given_dataframe
         given_column = mocker.Mock()
         given_column.cast.return_value = "value-as-string"
-        mock_col = mocker.patch("ingestion.spark_kafka_ingestor.sf.col", return_value=given_column)
-        mock_from_json = mocker.patch("ingestion.spark_kafka_ingestor.sf.from_json")
+        mock_col = mocker.patch("data_platform.ingestion.spark_kafka_ingestor.sf.col", return_value=given_column)
+        mock_from_json = mocker.patch("data_platform.ingestion.spark_kafka_ingestor.sf.from_json")
         mock_from_json.return_value.alias.return_value = "payload"
 
         ingestor = SparkKafkaIngestor(

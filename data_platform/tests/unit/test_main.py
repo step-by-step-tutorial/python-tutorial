@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-import main as system_under_test
+import data_platform.main as system_under_test
 
 
 class TestRunPipeline:

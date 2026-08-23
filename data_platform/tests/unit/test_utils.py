@@ -3,16 +3,16 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from dataset.sale.attribute import SALE_ATTRIBUTE
-from transformation.inmemory.pandas_ops import sum_by_group
-from transformation.conversion.type_converter import (
+from data_platform.model.sale_attribute import SALE_ATTRIBUTE
+from data_platform.transformer.pandas_transformer import sum_by_group
+from data_platform.transformer.value_transformer import (
     convert_to_integer,
     convert_to_float,
     convert_to_optional_float,
     normalize_optional_text,
 )
-from transformation.validation.schema_validator import require_columns
-from util import csv_utils, file_utils
+from data_platform.validation.dataframe_validator import require_columns
+from data_platform.util import csv_utils, file_utils
 
 
 class TestFileUtils:
@@ -53,7 +53,7 @@ class TestCsvUtils:
         assert normalize_optional_text("  hello  ") == "hello"
 
 
-class TestPandasDataframeUtils:
+class TestPandasDataframeDefinitionUtils:
 
     def test_should_require_columns(self) -> None:
         # Given

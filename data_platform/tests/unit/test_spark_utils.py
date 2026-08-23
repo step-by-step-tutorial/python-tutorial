@@ -1,5 +1,5 @@
-from util.collection_utils import batch_of_list
-from util.spark_utils import dataframe_to_list
+from data_platform.util.collection_utils import batch_of_list
+from data_platform.util.spark_utils import dataframe_to_list
 
 
 class TestCollectRows:

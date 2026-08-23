@@ -1,10 +1,10 @@
-from dataset.definition import Dataset, FileEndpoint, MessagingEndpoint
-from service.csv_publisher import CsvPublisher
-from keys import Key
-from transformation.conversion.event_mapper import MappedEvent
+from data_platform.model import Dataset, FileEndpoint, MessagingEndpoint
+from data_platform.service.csv_publisher_service import CsvPublisherService
+from data_platform.keys import Key
+from data_platform.transformer.event_transformer import MappedEvent
 
 
-class TestCsvPublisher:
+class TestCsvPublisherService:
 
     def test_should_read_csv_rows_and_publish_them_to_kafka(self, mocker) -> None:
         given_dataset = Dataset(name="sale")
@@ -20,18 +20,18 @@ class TestCsvPublisher:
             consumer({"order_id": "2"})
             return 2
 
-        mock_read_csv = mocker.patch("service.csv_publisher.read_csv_file", side_effect=_read_csv)
-        mock_mapper = mocker.patch("service.csv_publisher.get_event_mapper")
+        mock_read_csv = mocker.patch("data_platform.service.csv_publisher_service.read_csv_file", side_effect=_read_csv)
+        mock_mapper = mocker.patch("data_platform.service.csv_publisher_service.get_event_transformer")
         mock_mapper.return_value.map.side_effect = [
             MappedEvent(key="1", payload={"order_id": 1}),
             MappedEvent(key="2", payload={"order_id": 2}),
         ]
-        mock_get_connection = mocker.patch("service.csv_publisher.get_connection")
+        mock_get_connection = mocker.patch("data_platform.service.csv_publisher_service.get_connection")
         given_producer = mocker.Mock()
         mock_get_connection.return_value = given_producer
-        mock_ensure_topic = mocker.patch("service.csv_publisher.ensure_topic_exists")
+        mock_ensure_topic = mocker.patch("data_platform.service.csv_publisher_service.ensure_topic_exists")
 
-        actual = CsvPublisher(
+        actual = CsvPublisherService(
             dataset=given_dataset,
             file_endpoint=given_file_endpoint,
             messaging_endpoint=given_messaging_endpoint,
@@ -61,13 +61,13 @@ class TestCsvPublisher:
             channel_name="sale-events",
             bootstrap_servers="localhost:9092",
         )
-        mock_mapper = mocker.patch("service.csv_publisher.get_event_mapper")
+        mock_mapper = mocker.patch("data_platform.service.csv_publisher_service.get_event_transformer")
         mock_mapper.return_value.map.return_value = MappedEvent(key="1", payload={"order_id": 1})
-        mock_get_connection = mocker.patch("service.csv_publisher.get_connection")
+        mock_get_connection = mocker.patch("data_platform.service.csv_publisher_service.get_connection")
         given_producer = mocker.Mock()
         mock_get_connection.return_value = given_producer
 
-        publisher = CsvPublisher(
+        publisher = CsvPublisherService(
             dataset=given_dataset,
             file_endpoint=given_file_endpoint,
             messaging_endpoint=given_messaging_endpoint,

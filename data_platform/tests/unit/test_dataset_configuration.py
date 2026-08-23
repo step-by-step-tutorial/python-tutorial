@@ -2,21 +2,21 @@ from pathlib import Path
 
 import pytest
 
-from dataset.definition import (
+from data_platform.model import (
     AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    Dataframe,
+    DataframeDefinition,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
     RestApiEndpoint,
 )
-from dataset.house.config import HOUSE_DATASET
-from dataset.registry import get_dataset
-from config.settings import settings
-from dataset.sale.config import SALE_DATASET
+from data_platform.dataset.house_config import HOUSE_DATASET
+from data_platform.dataset.registry import get_dataset
+from data_platform.config.main_settings import settings
+from data_platform.dataset.sale_config import SALE_DATASET
 
 
 class TestDataset:
@@ -24,7 +24,7 @@ class TestDataset:
     def test_should_lookup_sources_and_destinations(self) -> None:
         given_dataset = Dataset(
             name="example",
-            dataframe=Dataframe(schema=None, required_columns=frozenset({"id"})),
+            dataframe=DataframeDefinition(schema=None, required_columns=frozenset({"id"})),
             audit=AuditEndpoint(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",

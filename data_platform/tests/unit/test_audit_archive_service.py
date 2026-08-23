@@ -1,9 +1,9 @@
 from datetime import UTC, datetime
 
-from audit.audit_archive_service import AuditArchiveService
-from audit.audit_event_factory import AuditEventFactory
-from audit.audit_event_factory import PipelineStartedAuditRequest
-from dataset.definition import AuditEndpoint
+from data_platform.audit.audit_archive_service import AuditArchiveService
+from data_platform.audit.audit_event_factory import AuditEventFactory
+from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
+from data_platform.model import AuditEndpoint
 
 
 class TestAuditArchiveService:
@@ -20,7 +20,7 @@ class TestAuditArchiveService:
         given_connection = mocker.Mock()
         given_connection.list_buckets.return_value = {"Buckets": []}
         mock_create_connection = mocker.patch(
-            "audit.audit_archive_service.get_connection",
+            "data_platform.audit.audit_archive_service.get_connection",
             return_value=given_connection,
         )
 
@@ -49,7 +49,7 @@ class TestAuditArchiveService:
         given_connection = mocker.Mock()
         given_connection.list_buckets.return_value = {"Buckets": []}
         mock_create_connection = mocker.patch(
-            "audit.audit_archive_service.get_connection",
+            "data_platform.audit.audit_archive_service.get_connection",
             return_value=given_connection,
         )
 

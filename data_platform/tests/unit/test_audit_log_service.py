@@ -1,6 +1,6 @@
-from audit.audit_event_factory import AuditEventFactory
-from audit.audit_event_factory import PipelineStartedAuditRequest
-from audit.audit_log_service import AuditLogService
+from data_platform.audit.audit_event_factory import AuditEventFactory
+from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
+from data_platform.audit.audit_log_service import AuditLogService
 
 
 class TestAuditLogService:
@@ -12,7 +12,7 @@ class TestAuditLogService:
                 pipeline_id="pipeline-001",
             )
         )
-        mock_logger_info = mocker.patch("audit.audit_log_service.logger.info")
+        mock_logger_info = mocker.patch("data_platform.audit.audit_log_service.logger.info")
 
         AuditLogService().write(given_event)
 

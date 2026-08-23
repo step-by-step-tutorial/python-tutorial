@@ -1,13 +1,13 @@
-from audit.audit_event_factory import AuditEventFactory
-from audit.audit_event_factory import DatasetReadAuditRequest
-from audit.audit_event_factory import DatasetWrittenAuditRequest
-from audit.audit_event_factory import PipelineCompletedAuditRequest
-from audit.audit_event_factory import PipelineFailedAuditRequest
-from audit.audit_event_factory import PipelineStartedAuditRequest
-from audit.audit_event_factory import TaskCompletedAuditRequest
-from audit.audit_event_factory import TaskFailedAuditRequest
-from audit.audit_event_factory import TaskStartedAuditRequest
-from model.audit_event import AuditEventType, AuditStatus
+from data_platform.audit.audit_event_factory import AuditEventFactory
+from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
+from data_platform.audit.audit_event_factory import DatasetWrittenAuditRequest
+from data_platform.audit.audit_event_factory import PipelineCompletedAuditRequest
+from data_platform.audit.audit_event_factory import PipelineFailedAuditRequest
+from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
+from data_platform.audit.audit_event_factory import TaskCompletedAuditRequest
+from data_platform.audit.audit_event_factory import TaskFailedAuditRequest
+from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
+from data_platform.model.audit_event import AuditEventType, AuditStatus
 
 
 class TestAuditEventFactory:

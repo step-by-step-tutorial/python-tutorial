@@ -1,8 +1,8 @@
 from pyspark.sql import DataFrame, SparkSession
 
-from dataset.definition import DataLakeEndpoint, MessagingEndpoint
-from dataset.sale.config import SALE_DATASET
-from service import spark_service as system_under_test
+from data_platform.model import DataLakeEndpoint, MessagingEndpoint
+from data_platform.dataset.sale_config import SALE_DATASET
+from data_platform.service import spark_service as system_under_test
 
 
 class TestReadStream:

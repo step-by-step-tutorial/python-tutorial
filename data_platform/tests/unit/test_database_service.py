@@ -1,14 +1,14 @@
 import pytest
 import pandas as pd
 
-from dataset.definition import AuditEndpoint, Dataframe, DatabaseEndpoint, Dataset, FileEndpoint
-from persistence import database_repository as system_under_test
+from data_platform.model import AuditEndpoint, DataframeDefinition, DatabaseEndpoint, Dataset, FileEndpoint
+from data_platform.persistence import database_repository as system_under_test
 
 
 def build_dataset() -> Dataset:
     return Dataset(
         name="example",
-        dataframe=Dataframe(schema=None, required_columns=frozenset()),
+        dataframe=DataframeDefinition(schema=None, required_columns=frozenset()),
         audit=AuditEndpoint(
             database_connection_name="audit.database",
             messaging_connection_name="audit.kafka.producer",
@@ -47,7 +47,7 @@ class TestPopulateStageFromPandas:
         given_database_engine.begin.return_value = given_transaction_context
 
         mock_create_connection = mocker.patch(
-            "persistence.database_repository.get_connection",
+            "data_platform.persistence.database_repository.get_connection",
             return_value=given_database_engine,
         )
 
@@ -75,7 +75,7 @@ class TestPopulateStageFromPandas:
         given_dataframe.to_sql.side_effect = RuntimeError(given_error_message)
 
         mocker.patch(
-            "persistence.database_repository.get_connection",
+            "data_platform.persistence.database_repository.get_connection",
             return_value=given_database_engine,
         )
 

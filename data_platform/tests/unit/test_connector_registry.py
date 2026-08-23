@@ -1,4 +1,4 @@
-from connector import registry as system_under_test
+from data_platform.connector import connection_registry as system_under_test
 
 
 class TestConnectionRegistry:

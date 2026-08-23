@@ -1,5 +1,5 @@
-from dataset.definition import AuditEndpoint, Dataset
-from pipeline.batch_pipeline import BatchPipeline
+from data_platform.model import AuditEndpoint, Dataset
+from data_platform.pipeline.batch_pipeline import BatchPipeline
 
 
 class _TestBatchPipeline(BatchPipeline):

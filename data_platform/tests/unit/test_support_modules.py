@@ -6,15 +6,15 @@ from uuid import UUID
 import pandas as pd
 import pytest
 
-from config.settings import settings
-from util.kafka_utils import handle_kafka_response
-from transformation.conversion.type_converter import (
+from data_platform.config.main_settings import settings
+from data_platform.util.kafka_utils import handle_kafka_response
+from data_platform.transformer.value_transformer import (
     convert_to_integer,
     convert_to_optional_float,
     normalize_optional_text,
 )
-from transformation.validation.schema_validator import require_columns, requires_column
-from util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
+from data_platform.validation.dataframe_validator import require_columns, requires_column
+from data_platform.util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
     time_utils, path_utils as datalake_path_utils, spark_utils
 
 
@@ -37,7 +37,7 @@ class TestTimeUtils:
         assert actual.tzinfo is UTC
 
     def test_should_compute_elapsed_milliseconds(self, mocker) -> None:
-        mocker.patch("util.time_utils.time.perf_counter", return_value=3.5)
+        mocker.patch("data_platform.util.time_utils.time.perf_counter", return_value=3.5)
 
         actual = time_utils.elapsed_milliseconds(1.0)
 
@@ -142,7 +142,7 @@ class TestDatabaseUtils:
         given_transaction_context.__enter__.return_value = given_connection
         given_connection.begin.return_value = given_transaction_context
         mock_create_connection = mocker.patch(
-            "util.database_utils.get_connection",
+            "data_platform.util.database_utils.get_connection",
             return_value=given_connection,
         )
 
@@ -156,7 +156,7 @@ class TestDatabaseUtils:
         assert given_connection.commit.call_count == 1
 
 
-class TestDataframeValidation:
+class TestDataframeDefinitionValidation:
 
     def test_should_validate_required_columns_for_pandas_dataframe(self) -> None:
         # Given
@@ -264,7 +264,7 @@ class TestLoggingAndStreaming:
 
     def test_should_configure_logging_and_write_log_line(self, mocker) -> None:
         # Given
-        mock_basic_config = mocker.patch("util.log_utils.logging.basicConfig")
+        mock_basic_config = mocker.patch("data_platform.util.log_utils.logging.basicConfig")
         mock_logger_info = mocker.patch.object(log_utils.logger, "info")
 
         # When

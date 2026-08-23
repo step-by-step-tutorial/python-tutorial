@@ -8,10 +8,10 @@ import pytest
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 
-from dataset.house.attribute import HOUSE_ATTRIBUTE
-from dataset.sale.attribute import SALE_ATTRIBUTE
-from processor.spark.house_processor import SparkHouseProcessor
-from processor.spark.sale_processor import SparkSaleProcessor
+from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
+from data_platform.model.sale_attribute import SALE_ATTRIBUTE
+from data_platform.processor.spark_house_processor import SparkHouseProcessor
+from data_platform.processor.spark_sale_processor import SparkSaleProcessor
 
 pytestmark = pytest.mark.integration
 

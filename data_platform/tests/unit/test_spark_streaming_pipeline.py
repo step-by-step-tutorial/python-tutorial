@@ -1,14 +1,14 @@
-from dataset.definition import (
+from data_platform.model import (
     AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    Dataframe,
+    DataframeDefinition,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
 )
-from pipeline.spark_streaming_pipeline import SparkStreamingPipeline
+from data_platform.pipeline.spark_streaming_pipeline import SparkStreamingPipeline
 
 
 def build_dataset() -> Dataset:
@@ -24,7 +24,7 @@ def build_dataset() -> Dataset:
 
     return Dataset(
         name="sale",
-        dataframe=Dataframe(schema=None, required_columns=frozenset()),
+        dataframe=DataframeDefinition(schema=None, required_columns=frozenset()),
         audit=AuditEndpoint(
             database_connection_name="audit.database",
             messaging_connection_name="audit.kafka.producer",
@@ -73,13 +73,13 @@ class TestRun:
             ("task-11", 11.0),
         ]
 
-        mocker.patch("pipeline.spark_streaming_pipeline.AuditService", return_value=given_audit_service)
-        mocker.patch("pipeline.spark_streaming_pipeline.create_session", return_value=mocker.Mock())
+        mocker.patch("data_platform.pipeline.spark_streaming_pipeline.AuditService", return_value=given_audit_service)
+        mocker.patch("data_platform.pipeline.spark_streaming_pipeline.create_session", return_value=mocker.Mock())
         given_csv_publisher = mocker.Mock()
-        mock_csv_publisher = mocker.patch("pipeline.spark_streaming_pipeline.CsvPublisher", return_value=given_csv_publisher)
+        mock_csv_publisher = mocker.patch("data_platform.pipeline.spark_streaming_pipeline.CsvPublisherService", return_value=given_csv_publisher)
         given_raw_topic_ingestor = mocker.Mock()
         given_raw_topic_ingestor.ingest.return_value = "raw-data"
-        mocker.patch("pipeline.spark_streaming_pipeline.get_ingestor", return_value=given_raw_topic_ingestor)
+        mocker.patch("data_platform.pipeline.spark_streaming_pipeline.get_ingestor", return_value=given_raw_topic_ingestor)
         given_pipeline = SparkStreamingPipeline(build_dataset())
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
         mock_cleaning = mocker.patch.object(given_pipeline, "cleaning", return_value="clean")
