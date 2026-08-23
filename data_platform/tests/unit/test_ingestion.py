@@ -12,8 +12,8 @@ from data_platform.model import (
 )
 from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
 from data_platform.ingestion.database_ingestor import DatabaseIngestor
-from data_platform.ingestion.datalake_ingestor import DataLakeIngestor
-from data_platform.ingestion.datawarehouse_ingestor import DataWarehouseIngestor
+from data_platform.ingestion.data_lake_ingestor import DataLakeIngestor
+from data_platform.ingestion.data_warehouse_ingestor import DataWarehouseIngestor
 from data_platform.ingestion.kafka_ingestor import KafkaIngestor
 from data_platform.ingestion.rest_api_ingestor import RestApiIngestor
 from data_platform.ingestion.spark_kafka_ingestor import SparkKafkaIngestor
@@ -60,9 +60,9 @@ class TestDataLakeIngestor:
         given_client = mocker.Mock()
         given_client.list_objects_v2.return_value = {"Contents": [{"Key": "raw/part-001.parquet"}]}
         given_client.download_fileobj.side_effect = lambda bucket, key, buffer: buffer.write(b"parquet")
-        mocker.patch("data_platform.persistence.datalake_repository.get_connection", return_value=given_client)
-        mocker.patch("data_platform.ingestion.datalake_ingestor.pd.read_parquet", return_value=given_dataframe)
-        mocker.patch("data_platform.ingestion.datalake_ingestor.pd.concat", return_value=given_dataframe)
+        mocker.patch("data_platform.persistence.data_lake_repository.get_connection", return_value=given_client)
+        mocker.patch("data_platform.ingestion.data_lake_ingestor.pd.read_parquet", return_value=given_dataframe)
+        mocker.patch("data_platform.ingestion.data_lake_ingestor.pd.concat", return_value=given_dataframe)
 
         actual = DataLakeIngestor(
             endpoint=DataLakeEndpoint(
@@ -164,8 +164,8 @@ class TestDataWarehouseIngestor:
             query_sql_files={"select_all": "datawarehouse/select_all.sql"},
         )
         given_connection = mocker.Mock()
-        mocker.patch("data_platform.ingestion.datawarehouse_ingestor.get_connection", return_value=given_connection)
-        mocker.patch("data_platform.ingestion.datawarehouse_ingestor.read_text_file", return_value="select * from {table_name}")
+        mocker.patch("data_platform.ingestion.data_warehouse_ingestor.get_connection", return_value=given_connection)
+        mocker.patch("data_platform.ingestion.data_warehouse_ingestor.read_text_file", return_value="select * from {table_name}")
         expected = pd.DataFrame({"id": [1]})
         given_connection.query_df.return_value = expected
 

@@ -13,13 +13,13 @@ class _TestBatchPipeline(BatchPipeline):
     def store_raw_data(self, raw_data) -> str:
         return "raw"
 
-    def cleaning(self, raw_relative_path: str):
+    def clean(self, raw_relative_path: str):
         return "clean"
 
     def store_cleaned_data(self, cleaned_data) -> str:
         return "clean-path"
 
-    def enriching(self, cleaned_relative_path: str):
+    def enrich(self, cleaned_relative_path: str):
         return "enriched"
 
     def store_enriched_data(self, enriched_data) -> str:
@@ -34,10 +34,10 @@ class _TestBatchPipeline(BatchPipeline):
     def show_dataframe(self, enriched_data_path: str) -> None:
         return None
 
-    def analyze_via_dataframe(self, enriched_data_path: str) -> None:
+    def analyze_dataframe(self, enriched_data_path: str) -> None:
         return None
 
-    def analyzing_via_datawarehouse(self) -> None:
+    def analyze_data_warehouse(self) -> None:
         return None
 
 
@@ -61,9 +61,9 @@ class TestBatchPipeline:
         )
         mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
-        mocker.patch.object(given_pipeline, "cleaning", return_value="clean")
+        mocker.patch.object(given_pipeline, "clean", return_value="clean")
         mocker.patch.object(given_pipeline, "store_cleaned_data", return_value="clean-path")
-        mocker.patch.object(given_pipeline, "enriching", return_value="enriched")
+        mocker.patch.object(given_pipeline, "enrich", return_value="enriched")
         mocker.patch.object(given_pipeline, "store_enriched_data", return_value="enriched-path")
 
         given_pipeline.run()
@@ -88,7 +88,7 @@ class TestBatchPipeline:
         )
         mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
-        mocker.patch.object(given_pipeline, "cleaning", side_effect=RuntimeError("boom"))
+        mocker.patch.object(given_pipeline, "clean", side_effect=RuntimeError("boom"))
 
         try:
             given_pipeline.run()

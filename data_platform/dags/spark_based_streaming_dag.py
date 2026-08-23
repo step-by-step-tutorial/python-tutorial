@@ -27,52 +27,52 @@ with DAG(
         python_callable=dag_pipeline_adapter.ingest_raw_data,
     )
 
-    cleaning_task = PythonOperator(
-        task_id="cleaning",
-        python_callable=dag_pipeline_adapter.cleaning,
+    clean_task = PythonOperator(
+        task_id="clean",
+        python_callable=dag_pipeline_adapter.clean,
         op_kwargs={"raw_relative_path": ingest_raw_data_task.output},
     )
 
-    enriching_task = PythonOperator(
-        task_id="enriching",
-        python_callable=dag_pipeline_adapter.enriching,
-        op_kwargs={"cleaned_relative_path": cleaning_task.output},
+    enrich_task = PythonOperator(
+        task_id="enrich",
+        python_callable=dag_pipeline_adapter.enrich,
+        op_kwargs={"cleaned_relative_path": clean_task.output},
     )
 
     populate_database_task = PythonOperator(
         task_id="populate_database",
         python_callable=pipeline.populate_database,
-        op_kwargs={"enriched_data_path": enriching_task.output},
+        op_kwargs={"enriched_data_path": enrich_task.output},
     )
 
     populate_datawarehouse_task = PythonOperator(
         task_id="populate_datawarehouse",
         python_callable=pipeline.populate_datawarehouse,
-        op_kwargs={"enriched_data_path": enriching_task.output},
+        op_kwargs={"enriched_data_path": enrich_task.output},
     )
 
     show_dataframe_task = PythonOperator(
         task_id="show_dataframe",
         python_callable=pipeline.show_dataframe,
-        op_kwargs={"enriched_data_path": enriching_task.output},
+        op_kwargs={"enriched_data_path": enrich_task.output},
     )
 
-    analyze_via_dataframe_task = PythonOperator(
-        task_id="analyze_via_dataframe",
-        python_callable=pipeline.analyze_via_dataframe,
-        op_kwargs={"enriched_data_path": enriching_task.output},
+    analyze_dataframe_task = PythonOperator(
+        task_id="analyze_dataframe",
+        python_callable=pipeline.analyze_dataframe,
+        op_kwargs={"enriched_data_path": enrich_task.output},
     )
 
     analyze_via_datawarehouse_task = PythonOperator(
         task_id="analyze_via_datawarehouse",
-        python_callable=pipeline.analyzing_via_datawarehouse,
+        python_callable=pipeline.analyze_data_warehouse,
     )
 
-    ingest_raw_data_task >> cleaning_task >> enriching_task
-    enriching_task >> [
+    ingest_raw_data_task >> clean_task >> enrich_task
+    enrich_task >> [
         populate_database_task,
         populate_datawarehouse_task,
         show_dataframe_task,
-        analyze_via_dataframe_task,
+        analyze_dataframe_task,
     ]
     populate_datawarehouse_task >> analyze_via_datawarehouse_task

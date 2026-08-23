@@ -2,7 +2,7 @@ from data_platform.config.main_settings import settings as main_settings
 from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    DataframeDefinition,
+    DataFrameDefinition,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
@@ -18,7 +18,7 @@ from data_platform.processor.spark_house_processor import SparkHouseProcessor
 
 HOUSE_DATASET = Dataset(
     name="house",
-    dataframe=DataframeDefinition(
+    dataframe=DataFrameDefinition(
         schema=build_schema(),
         required_columns=frozenset(
             {
@@ -56,8 +56,8 @@ HOUSE_DATASET = Dataset(
         Key.HOUSE_DATALAKE: DataLakeEndpoint(
             name=Key.HOUSE_DATALAKE,
             connection_name=Key.HOUSE_DATALAKE,
-            bucket_name=main_settings.datalake[Key.HOUSE_DATALAKE].bucket_name,
-            scheme=main_settings.datalake[Key.HOUSE_DATALAKE].scheme,
+            bucket_name=main_settings.data_lake[Key.HOUSE_DATALAKE].bucket_name,
+            scheme=main_settings.data_lake[Key.HOUSE_DATALAKE].scheme,
         ),
         Key.HOUSE_DATABASE: DatabaseEndpoint(
             name=Key.HOUSE_DATABASE,
@@ -74,9 +74,9 @@ HOUSE_DATASET = Dataset(
         Key.HOUSE_DATAWAREHOUSE: DataWarehouseEndpoint(
             name=Key.HOUSE_DATAWAREHOUSE,
             connection_name=Key.HOUSE_DATAWAREHOUSE,
-            schema=main_settings.datawarehouse[Key.HOUSE_DATAWAREHOUSE].database_name,
+            schema=main_settings.data_warehouse[Key.HOUSE_DATAWAREHOUSE].database_name,
             table_name="house_table",
-            full_table_name=f"{main_settings.datawarehouse[Key.HOUSE_DATAWAREHOUSE].database_name}.house_table",
+            full_table_name=f"{main_settings.data_warehouse[Key.HOUSE_DATAWAREHOUSE].database_name}.house_table",
             create_sql_files={
                 "create_database": "datawarehouse/house/create_database.sql",
                 "create_table": "datawarehouse/house/create_table.sql",

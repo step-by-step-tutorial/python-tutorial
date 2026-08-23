@@ -10,7 +10,7 @@ AUDIT_ENDPOINT = AuditEndpoint(
     schema="audit",
     create_sql_files={"create": "database/audit/create_tables.sql"},
     channel_name=main_settings.messaging[Key.AUDIT_KAFKA_PRODUCER].audit_channel_name,
-    bucket_name=main_settings.datalake[Key.AUDIT_DATALAKE].audit_bucket_name,
+    bucket_name=main_settings.data_lake[Key.AUDIT_DATALAKE].audit_bucket_name,
     write_sql_files={"write": "database/audit/insert_event.sql"},
 )
 

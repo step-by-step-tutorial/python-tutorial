@@ -40,7 +40,7 @@ class BatchPipeline(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def cleaning(self, raw_relative_path: str) -> Any:
+    def clean(self, raw_relative_path: str) -> Any:
         raise NotImplementedError
 
     @abstractmethod
@@ -48,7 +48,7 @@ class BatchPipeline(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def enriching(self, cleaned_relative_path: str) -> Any:
+    def enrich(self, cleaned_relative_path: str) -> Any:
         raise NotImplementedError
 
     @abstractmethod
@@ -68,11 +68,11 @@ class BatchPipeline(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def analyze_via_dataframe(self, enriched_data_path: str) -> None:
+    def analyze_dataframe(self, enriched_data_path: str) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def analyzing_via_datawarehouse(self) -> None:
+    def analyze_data_warehouse(self) -> None:
         raise NotImplementedError
 
     def after_run(self) -> None:
@@ -153,13 +153,13 @@ class BatchPipeline(ABC):
             raw_relative_path = self._run_task("store_raw_data", lambda: self.store_raw_data(raw_data))
             log_line()
 
-            cleaned_data = self._run_task("cleaning", lambda: self.cleaning(raw_relative_path))
+            cleaned_data = self._run_task("clean", lambda: self.clean(raw_relative_path))
             log_line()
 
             cleaned_relative_path = self._run_task("store_cleaned_data", lambda: self.store_cleaned_data(cleaned_data))
             log_line()
 
-            enriched_data = self._run_task("enriching", lambda: self.enriching(cleaned_relative_path))
+            enriched_data = self._run_task("enrich", lambda: self.enrich(cleaned_relative_path))
             log_line()
 
             enriched_relative_path = self._run_task("store_enriched_data", lambda: self.store_enriched_data(enriched_data))
@@ -170,9 +170,9 @@ class BatchPipeline(ABC):
             log_line()
             self._run_task("show_dataframe", lambda: self.show_dataframe(enriched_relative_path))
             log_line()
-            self._run_task("analyze_primary", lambda: self.analyze_via_dataframe(enriched_relative_path))
+            self._run_task("analyze_primary", lambda: self.analyze_dataframe(enriched_relative_path))
             log_line()
-            self._run_task("analyzing_via_datawarehouse", self.analyzing_via_datawarehouse)
+            self._run_task("analyze_data_warehouse", self.analyze_data_warehouse)
             log_line()
         except Exception as error:
             if pipeline_started_at is not None:

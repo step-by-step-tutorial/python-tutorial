@@ -18,9 +18,10 @@ class SaleAttribute:
 
     def __getattr__(self, item: str) -> str:
         lowered = item.lower()
-        if hasattr(self, lowered):
-            return getattr(self, lowered)
-        raise AttributeError(item)
+        try:
+            return object.__getattribute__(self, lowered)
+        except AttributeError as error:
+            raise AttributeError(item) from error
 
 
 SALE_ATTRIBUTE = SaleAttribute()

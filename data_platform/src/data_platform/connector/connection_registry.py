@@ -2,8 +2,8 @@ import atexit
 from typing import Any, Callable
 
 import data_platform.connector.database_connections
-import data_platform.connector.datalake_connections
-import data_platform.connector.datawarehouse_connections
+import data_platform.connector.data_lake_connections
+import data_platform.connector.data_warehouse_connections
 import data_platform.connector.kafka_connections
 from data_platform.keys import Key
 
@@ -11,12 +11,12 @@ factories: dict[str, Callable[[], Any]] = {
     Key.SALE_DATABASE: data_platform.connector.database_connections.create_sale_connection,
     Key.HOUSE_DATABASE: data_platform.connector.database_connections.create_house_connection,
     Key.AUDIT_DATABASE: data_platform.connector.database_connections.create_audit_connection,
-    Key.SALE_DATALAKE: data_platform.connector.datalake_connections.create_sale_connection,
-    Key.HOUSE_DATALAKE: data_platform.connector.datalake_connections.create_house_connection,
-    Key.AUDIT_DATALAKE: data_platform.connector.datalake_connections.create_audit_connection,
-    Key.SALE_DATAWAREHOUSE: data_platform.connector.datawarehouse_connections.create_sale_connection,
-    Key.HOUSE_DATAWAREHOUSE: data_platform.connector.datawarehouse_connections.create_house_connection,
-    Key.AUDIT_DATAWAREHOUSE: data_platform.connector.datawarehouse_connections.create_audit_connection,
+    Key.SALE_DATALAKE: data_platform.connector.data_lake_connections.create_sale_connection,
+    Key.HOUSE_DATALAKE: data_platform.connector.data_lake_connections.create_house_connection,
+    Key.AUDIT_DATALAKE: data_platform.connector.data_lake_connections.create_audit_connection,
+    Key.SALE_DATAWAREHOUSE: data_platform.connector.data_warehouse_connections.create_sale_connection,
+    Key.HOUSE_DATAWAREHOUSE: data_platform.connector.data_warehouse_connections.create_house_connection,
+    Key.AUDIT_DATAWAREHOUSE: data_platform.connector.data_warehouse_connections.create_audit_connection,
     Key.SALE_KAFKA_PRODUCER: data_platform.connector.kafka_connections.create_sale_publisher_connection,
     Key.HOUSE_KAFKA_PRODUCER: data_platform.connector.kafka_connections.create_house_publisher_connection,
     Key.AUDIT_KAFKA_PRODUCER: data_platform.connector.kafka_connections.create_audit_publisher_connection,

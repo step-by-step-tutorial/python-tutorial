@@ -3,6 +3,6 @@ from typing import Any
 
 
 @dataclass(frozen=True)
-class DataframeDefinition:
+class DataFrameDefinition:
     schema: Any = None
     required_columns: frozenset[str] = frozenset()

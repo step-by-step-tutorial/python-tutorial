@@ -6,7 +6,7 @@ from data_platform.model import (
     AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    DataframeDefinition,
+    DataFrameDefinition,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
@@ -15,6 +15,7 @@ from data_platform.model import (
 )
 from data_platform.dataset.house_config import HOUSE_DATASET
 from data_platform.dataset.registry import get_dataset
+from data_platform.dataset.shared_endpoints import AUDIT_ENDPOINT
 from data_platform.config.main_settings import settings
 from data_platform.dataset.sale_config import SALE_DATASET
 
@@ -24,7 +25,7 @@ class TestDataset:
     def test_should_lookup_sources_and_destinations(self) -> None:
         given_dataset = Dataset(
             name="example",
-            dataframe=DataframeDefinition(schema=None, required_columns=frozenset({"id"})),
+            dataframe=DataFrameDefinition(schema=None, required_columns=frozenset({"id"})),
             audit=AuditEndpoint(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",
@@ -76,8 +77,11 @@ class TestDataset:
         assert given_dataset.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
         assert not hasattr(given_dataset, "event")
 
+        with pytest.raises(TypeError, match="not a DatabaseEndpoint"):
+            given_dataset.get_endpoint("sale.file.csv", DatabaseEndpoint)
+
     def test_should_raise_error_for_missing_endpoint(self) -> None:
-        given_dataset = Dataset(name="example")
+        given_dataset = Dataset(name="example", audit=AUDIT_ENDPOINT)
 
         with pytest.raises(KeyError):
             given_dataset.get_endpoint("missing", FileEndpoint)

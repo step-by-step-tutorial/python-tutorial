@@ -13,7 +13,7 @@ class DataWarehouseSettings:
     password: str
     jdbc_url: str
 
-datawarehouse = MappingProxyType(
+data_warehouse = MappingProxyType(
     {
         Key.DATA_PLATFORM_DATAWAREHOUSE: DataWarehouseSettings(
             host=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_HOST", "localhost"),

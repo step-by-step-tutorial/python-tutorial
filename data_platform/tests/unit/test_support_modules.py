@@ -7,13 +7,14 @@ import pandas as pd
 import pytest
 
 from data_platform.config.main_settings import settings
+from data_platform.config.data_lake_environment import DataLakeEnvironment
 from data_platform.util.kafka_utils import handle_kafka_response
 from data_platform.transformer.value_transformer import (
     convert_to_integer,
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.validation.dataframe_validator import require_columns, requires_column
+from data_platform.validation.dataframe_validator import validate_required_columns, validate_required_columns
 from data_platform.util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
     time_utils, path_utils as datalake_path_utils, spark_utils
 
@@ -62,7 +63,7 @@ class TestDatalakeUtils:
             "main_settings",
             SimpleNamespace(
                 app=SimpleNamespace(dataset_name="Sale"),
-                datalake={
+                data_lake={
                     "data-platform.datalake": SimpleNamespace(
                         environment="dev",
                         scheme="s3a",
@@ -75,13 +76,13 @@ class TestDatalakeUtils:
 
         # When
         actual_relative = datalake_path_utils.generate_relative_path(
-            datalake_path_utils.DatalakeEnv.RAW,
+            DataLakeEnvironment.RAW,
             given_time,
             "sale"
         )
         actual_full = datalake_path_utils.generate_full_path("bucket", "path/to/file")
-        actual_datalake_uri = datalake_path_utils.generate_full_path(settings.datalake["data-platform.datalake"].bucket_name, "path/to/file")
-        actual_audit_uri = datalake_path_utils.generate_full_path(settings.datalake["data-platform.datalake"].audit_bucket_name, "audit/file.json")
+        actual_datalake_uri = datalake_path_utils.generate_full_path(settings.data_lake["data-platform.datalake"].bucket_name, "path/to/file")
+        actual_audit_uri = datalake_path_utils.generate_full_path(settings.data_lake["data-platform.datalake"].audit_bucket_name, "audit/file.json")
 
         # Then
         assert actual_relative.startswith("dev/raw/sale/")
@@ -97,7 +98,7 @@ class TestDatalakeUtils:
             "main_settings",
             SimpleNamespace(
                 app=SimpleNamespace(dataset_name="Sale"),
-                datalake={
+                data_lake={
                     "data-platform.datalake": SimpleNamespace(
                         environment="dev",
                         scheme="s3a",
@@ -110,7 +111,7 @@ class TestDatalakeUtils:
         mocker.patch.object(datalake_path_utils, "datetime", SimpleNamespace(now=lambda tz=None: given_time))
 
         # When
-        actual = datalake_path_utils.generate_relative_path(datalake_path_utils.DatalakeEnv.RAW)
+        actual = datalake_path_utils.generate_relative_path(DataLakeEnvironment.RAW)
 
         # Then
         assert actual.startswith("dev/raw/sale/")
@@ -156,14 +157,14 @@ class TestDatabaseUtils:
         assert given_connection.commit.call_count == 1
 
 
-class TestDataframeDefinitionValidation:
+class TestDataFrameDefinitionValidation:
 
     def test_should_validate_required_columns_for_pandas_dataframe(self) -> None:
         # Given
         given_dataframe = pd.DataFrame({"id": [1], "name": ["sale"]})
 
         # When
-        require_columns(given_dataframe, frozenset({"id"}))
+        validate_required_columns(given_dataframe, frozenset({"id"}))
 
         # Then
         assert list(given_dataframe.columns) == ["id", "name"]
@@ -174,11 +175,11 @@ class TestDataframeDefinitionValidation:
 
         # When / Then
         with pytest.raises(ValueError):
-            require_columns(given_dataframe, frozenset({"id", "name"}))
+            validate_required_columns(given_dataframe, frozenset({"id", "name"}))
 
     def test_should_reject_none_pandas_dataframe(self) -> None:
         with pytest.raises(ValueError):
-            require_columns(None, frozenset({"id"}))
+            validate_required_columns(None, frozenset({"id"}))
 
     def test_should_validate_required_columns_for_spark_dataframe(self, mocker) -> None:
         # Given
@@ -186,7 +187,7 @@ class TestDataframeDefinitionValidation:
         given_dataframe.columns = ["id", "name"]
 
         # When
-        requires_column(given_dataframe, ["id"])
+        validate_required_columns(given_dataframe, ["id"])
 
         # Then
         assert given_dataframe.columns == ["id", "name"]
@@ -198,11 +199,11 @@ class TestDataframeDefinitionValidation:
 
         # When / Then
         with pytest.raises(ValueError):
-            requires_column(given_dataframe, ["id", "name"])
+            validate_required_columns(given_dataframe, ["id", "name"])
 
     def test_should_reject_none_spark_dataframe(self) -> None:
         with pytest.raises(ValueError):
-            requires_column(None, ["id"])
+            validate_required_columns(None, ["id"])
 
 
 class TestCsvUtils:

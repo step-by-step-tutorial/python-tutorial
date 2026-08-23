@@ -1,18 +1,12 @@
 from datetime import UTC
 from datetime import datetime
-from enum import StrEnum
 
+from data_platform.config.data_lake_environment import DataLakeEnvironment
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.keys import Key
 
-class DatalakeEnv(StrEnum):
-    RAW = "raw"
-    CLEANED = "cleaned"
-    ENRICHED = "enriched"
-
-
 def generate_relative_path(
-        env: DatalakeEnv,
+        env: DataLakeEnvironment,
         ingestion_time: datetime | None = None,
         dataset_name: str | None = None
 ) -> str:
@@ -25,7 +19,7 @@ def generate_relative_path(
     ingestion_id = ingestion_time.strftime("%Y%m%dT%H%M%S%fZ")
 
     return (
-        f"{main_settings.datalake[Key.DATA_PLATFORM_DATALAKE].environment}/{env.value}/{dataset_name.lower()}/"
+        f"{main_settings.data_lake[Key.DATA_PLATFORM_DATALAKE].environment}/{env.value}/{dataset_name.lower()}/"
         f"ingestion_year={ingestion_time.year}/"
         f"ingestion_month={ingestion_time.month:02d}/"
         f"ingestion_day={ingestion_time.day:02d}/"
@@ -34,4 +28,4 @@ def generate_relative_path(
 
 
 def generate_full_path(bucket_name: str, relative_path: str) -> str:
-    return f"{main_settings.datalake[Key.DATA_PLATFORM_DATALAKE].scheme}://{bucket_name.strip()}/{relative_path.strip('/')}"
+    return f"{main_settings.data_lake[Key.DATA_PLATFORM_DATALAKE].scheme}://{bucket_name.strip()}/{relative_path.strip('/')}"

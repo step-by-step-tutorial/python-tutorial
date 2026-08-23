@@ -11,7 +11,7 @@ from data_platform.transformer.value_transformer import (
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.validation.dataframe_validator import require_columns
+from data_platform.validation.dataframe_validator import validate_required_columns
 from data_platform.util import csv_utils, file_utils
 
 
@@ -53,15 +53,15 @@ class TestCsvUtils:
         assert normalize_optional_text("  hello  ") == "hello"
 
 
-class TestPandasDataframeDefinitionUtils:
+class TestPandasDataFrameDefinitionUtils:
 
-    def test_should_require_columns(self) -> None:
+    def test_should_validate_required_columns(self) -> None:
         # Given
         dataframe = pd.DataFrame({SALE_ATTRIBUTE.ORDER_ID: [1]})
 
         # When / Then
         with pytest.raises(ValueError):
-            require_columns(dataframe, frozenset({SALE_ATTRIBUTE.ORDER_ID, SALE_ATTRIBUTE.CATEGORY}))
+            validate_required_columns(dataframe, frozenset({SALE_ATTRIBUTE.ORDER_ID, SALE_ATTRIBUTE.CATEGORY}))
 
     def test_should_sum_by_group(self) -> None:
         # Given
@@ -83,3 +83,7 @@ class TestPandasDataframeDefinitionUtils:
         # Then
         assert actual.iloc[0][SALE_ATTRIBUTE.CATEGORY] == "A"
         assert actual.iloc[0][SALE_ATTRIBUTE.REVENUE] == 30.0
+
+    def test_should_raise_attribute_error_for_unknown_attribute(self) -> None:
+        with pytest.raises(AttributeError):
+            _ = SALE_ATTRIBUTE.unknown_column

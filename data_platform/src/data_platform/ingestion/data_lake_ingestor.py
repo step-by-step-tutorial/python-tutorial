@@ -4,7 +4,7 @@ from io import BytesIO
 import pandas as pd
 
 from data_platform.model import DataLakeEndpoint
-from data_platform.persistence.datalake_repository import DataLakeRepository
+from data_platform.persistence.data_lake_repository import DataLakeRepository
 
 
 class DataLakeIngestor:

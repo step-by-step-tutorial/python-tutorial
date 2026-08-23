@@ -3,7 +3,7 @@ from data_platform.keys import Key
 from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    DataframeDefinition,
+    DataFrameDefinition,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
@@ -19,7 +19,7 @@ from data_platform.processor.spark_sale_processor import SparkSaleProcessor
 
 SALE_DATASET = Dataset(
     name="Sale",
-    dataframe=DataframeDefinition(
+    dataframe=DataFrameDefinition(
         schema=build_schema(),
         required_columns=frozenset(
             {
@@ -61,8 +61,8 @@ SALE_DATASET = Dataset(
         Key.SALE_DATALAKE: DataLakeEndpoint(
             name=Key.SALE_DATALAKE,
             connection_name=Key.SALE_DATALAKE,
-            bucket_name=main_settings.datalake[Key.SALE_DATALAKE].bucket_name,
-            scheme=main_settings.datalake[Key.SALE_DATALAKE].scheme,
+            bucket_name=main_settings.data_lake[Key.SALE_DATALAKE].bucket_name,
+            scheme=main_settings.data_lake[Key.SALE_DATALAKE].scheme,
         ),
         Key.SALE_DATABASE: DatabaseEndpoint(
             name=Key.SALE_DATABASE,
@@ -90,9 +90,9 @@ SALE_DATASET = Dataset(
         Key.SALE_DATAWAREHOUSE: DataWarehouseEndpoint(
             name=Key.SALE_DATAWAREHOUSE,
             connection_name=Key.SALE_DATAWAREHOUSE,
-            schema=main_settings.datawarehouse[Key.SALE_DATAWAREHOUSE].database_name,
+            schema=main_settings.data_warehouse[Key.SALE_DATAWAREHOUSE].database_name,
             table_name="sale_table",
-            full_table_name=f"{main_settings.datawarehouse[Key.SALE_DATAWAREHOUSE].database_name}.sale_table",
+            full_table_name=f"{main_settings.data_warehouse[Key.SALE_DATAWAREHOUSE].database_name}.sale_table",
             create_sql_files={
                 "create_database": "datawarehouse/sale/create_database.sql",
                 "create_table": "datawarehouse/sale/create_table.sql",

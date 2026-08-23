@@ -2,7 +2,7 @@ from data_platform.model import (
     AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    DataframeDefinition,
+    DataFrameDefinition,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
@@ -24,7 +24,7 @@ def build_dataset() -> Dataset:
 
     return Dataset(
         name="example",
-        dataframe=DataframeDefinition(schema=None, required_columns=frozenset()),
+        dataframe=DataFrameDefinition(schema=None, required_columns=frozenset()),
         audit=AuditEndpoint(
             database_connection_name="audit.database",
             messaging_connection_name="audit.kafka.producer",
@@ -77,15 +77,15 @@ class TestRun:
         given_pipeline = SparkPipeline(build_dataset())
         mock_ingest_raw_data = mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
-        mock_cleaning = mocker.patch.object(given_pipeline, "cleaning", return_value="clean")
+        mock_clean = mocker.patch.object(given_pipeline, "clean", return_value="clean")
         mocker.patch.object(given_pipeline, "store_cleaned_data", return_value="clean-path")
-        mock_enriching = mocker.patch.object(given_pipeline, "enriching", return_value="enriched")
+        mock_enrich = mocker.patch.object(given_pipeline, "enrich", return_value="enriched")
         mocker.patch.object(given_pipeline, "store_enriched_data", return_value="enriched-path")
         mocker.patch.object(given_pipeline, "populate_database")
         mocker.patch.object(given_pipeline, "populate_datawarehouse")
         mocker.patch.object(given_pipeline, "show_dataframe")
-        mocker.patch.object(given_pipeline, "analyze_via_dataframe")
-        mocker.patch.object(given_pipeline, "analyzing_via_datawarehouse")
+        mocker.patch.object(given_pipeline, "analyze_dataframe")
+        mocker.patch.object(given_pipeline, "analyze_data_warehouse")
         given_spark_service = given_pipeline.spark_service
         mocker.patch.object(given_spark_service, "stop")
 
@@ -93,13 +93,13 @@ class TestRun:
 
         assert mock_ingest_raw_data.call_count == 1
         assert given_pipeline.store_raw_data.call_count == 1
-        assert mock_cleaning.call_count == 1
+        assert mock_clean.call_count == 1
         assert given_pipeline.store_cleaned_data.call_count == 1
-        assert mock_enriching.call_count == 1
+        assert mock_enrich.call_count == 1
         assert given_pipeline.store_enriched_data.call_count == 1
         assert given_pipeline.populate_database.call_count == 1
         assert given_pipeline.populate_datawarehouse.call_count == 1
         assert given_pipeline.show_dataframe.call_count == 1
-        assert given_pipeline.analyze_via_dataframe.call_count == 1
-        assert given_pipeline.analyzing_via_datawarehouse.call_count == 1
+        assert given_pipeline.analyze_dataframe.call_count == 1
+        assert given_pipeline.analyze_data_warehouse.call_count == 1
         assert given_spark_service.stop.call_count == 1

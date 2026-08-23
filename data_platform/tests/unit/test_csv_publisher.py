@@ -1,4 +1,5 @@
 from data_platform.model import Dataset, FileEndpoint, MessagingEndpoint
+from data_platform.dataset.shared_endpoints import AUDIT_ENDPOINT
 from data_platform.service.csv_publisher_service import CsvPublisherService
 from data_platform.keys import Key
 from data_platform.transformer.event_transformer import MappedEvent
@@ -7,7 +8,7 @@ from data_platform.transformer.event_transformer import MappedEvent
 class TestCsvPublisherService:
 
     def test_should_read_csv_rows_and_publish_them_to_kafka(self, mocker) -> None:
-        given_dataset = Dataset(name="sale")
+        given_dataset = Dataset(name="sale", audit=AUDIT_ENDPOINT)
         given_file_endpoint = FileEndpoint(name="sale.file.csv", file_path="/tmp/sale.csv")
         given_messaging_endpoint = MessagingEndpoint(
             connection_name="sale.kafka.producer",
@@ -54,7 +55,7 @@ class TestCsvPublisherService:
         assert given_producer.flush.call_count == 1
 
     def test_should_publish_a_single_row(self, mocker) -> None:
-        given_dataset = Dataset(name="sale")
+        given_dataset = Dataset(name="sale", audit=AUDIT_ENDPOINT)
         given_file_endpoint = FileEndpoint(name="sale.file.csv", file_path="/tmp/sale.csv")
         given_messaging_endpoint = MessagingEndpoint(
             connection_name="sale.kafka.producer",

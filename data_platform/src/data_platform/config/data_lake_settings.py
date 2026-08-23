@@ -14,7 +14,7 @@ class DataLakeSettings:
     scheme: str
     environment: str
     checkpoint_path: str
-datalake = MappingProxyType(
+data_lake = MappingProxyType(
     {
         Key.DATA_PLATFORM_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_DATALAKE_ENDPOINT", "http://localhost:9000"),

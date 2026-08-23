@@ -15,22 +15,22 @@ class TestDagPipelineAdapter:
 
     def test_should_clean_and_store_data(self, mocker) -> None:
         pipeline = mocker.Mock(spec=BatchPipeline)
-        pipeline.cleaning.return_value = "cleaned-data"
+        pipeline.clean.return_value = "cleaned-data"
         pipeline.store_cleaned_data.return_value = "cleaned/path"
 
-        result = DagPipelineAdapter(pipeline).cleaning("raw/path")
+        result = DagPipelineAdapter(pipeline).clean("raw/path")
 
         assert result == "cleaned/path"
-        pipeline.cleaning.assert_called_once_with("raw/path")
+        pipeline.clean.assert_called_once_with("raw/path")
         pipeline.store_cleaned_data.assert_called_once_with("cleaned-data")
 
     def test_should_enrich_and_store_data(self, mocker) -> None:
         pipeline = mocker.Mock(spec=BatchPipeline)
-        pipeline.enriching.return_value = "enriched-data"
+        pipeline.enrich.return_value = "enriched-data"
         pipeline.store_enriched_data.return_value = "enriched/path"
 
-        result = DagPipelineAdapter(pipeline).enriching("cleaned/path")
+        result = DagPipelineAdapter(pipeline).enrich("cleaned/path")
 
         assert result == "enriched/path"
-        pipeline.enriching.assert_called_once_with("cleaned/path")
+        pipeline.enrich.assert_called_once_with("cleaned/path")
         pipeline.store_enriched_data.assert_called_once_with("enriched-data")

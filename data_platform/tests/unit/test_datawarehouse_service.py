@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from data_platform.model import DataWarehouseEndpoint
-from data_platform.persistence import datawarehouse_repository as system_under_test
+from data_platform.persistence import data_warehouse_repository as system_under_test
 
 
 class TestTruncateAndPopulateFromPandas:
@@ -20,11 +20,11 @@ class TestTruncateAndPopulateFromPandas:
         given_dataframe = pd.DataFrame({"id": [1]})
         given_connection = mocker.Mock()
         mock_create_connection = mocker.patch(
-            "data_platform.persistence.datawarehouse_repository.get_connection",
+            "data_platform.persistence.data_warehouse_repository.get_connection",
             return_value=given_connection,
         )
         mock_read_text_file = mocker.patch(
-            "data_platform.persistence.datawarehouse_repository.read_text_file",
+            "data_platform.persistence.data_warehouse_repository.read_text_file",
             return_value="truncate table warehouse.example",
         )
 
@@ -57,20 +57,20 @@ class TestTruncateAndPopulateFromSpark:
 
         given_connection = mocker.Mock()
         mock_create_connection = mocker.patch(
-            "data_platform.persistence.datawarehouse_repository.get_connection",
+            "data_platform.persistence.data_warehouse_repository.get_connection",
             return_value=given_connection,
         )
         mock_read_text_file = mocker.patch(
-            "data_platform.persistence.datawarehouse_repository.read_text_file",
+            "data_platform.persistence.data_warehouse_repository.read_text_file",
             return_value="truncate table warehouse.example",
         )
         repository = system_under_test.DataWarehouseRepository(given_datawarehouse)
         mock_collect_rows = mocker.patch(
-            "data_platform.persistence.datawarehouse_repository.dataframe_to_list",
+            "data_platform.persistence.data_warehouse_repository.dataframe_to_list",
             return_value=[(1,), (2,)],
         )
         mock_batch_rows = mocker.patch(
-            "data_platform.persistence.datawarehouse_repository.batch_of_list",
+            "data_platform.persistence.data_warehouse_repository.batch_of_list",
             return_value=[[(1,)], [(2,)]],
         )
         actual = repository.truncate_and_populate_from_spark(given_dataframe)
@@ -104,11 +104,11 @@ class TestAnalyze:
         )
         given_connection = mocker.Mock()
         mock_create_connection = mocker.patch(
-            "data_platform.persistence.datawarehouse_repository.get_connection",
+            "data_platform.persistence.data_warehouse_repository.get_connection",
             return_value=given_connection,
         )
         mock_read_text_file = mocker.patch(
-            "data_platform.persistence.datawarehouse_repository.read_text_file",
+            "data_platform.persistence.data_warehouse_repository.read_text_file",
             return_value="select 1",
         )
 

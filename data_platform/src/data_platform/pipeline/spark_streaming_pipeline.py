@@ -11,11 +11,12 @@ from data_platform.service.csv_publisher_service import CsvPublisherService
 from data_platform.ingestion.registry import get_ingestor
 from data_platform.keys import Key
 from data_platform.persistence.database_repository import DatabaseRepository
-from data_platform.persistence.datawarehouse_repository import DataWarehouseRepository
+from data_platform.persistence.data_warehouse_repository import DataWarehouseRepository
 from data_platform.pipeline.batch_pipeline import BatchPipeline
 from data_platform.presentation.dataframe_display import show
 from data_platform.service.spark_service import SparkService
-from data_platform.util.path_utils import DatalakeEnv, generate_relative_path
+from data_platform.config.data_lake_environment import DataLakeEnvironment
+from data_platform.util.path_utils import generate_relative_path
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class SparkStreamingPipeline(BatchPipeline):
         self._messaging_endpoint = messaging_endpoint
         self._spark_service: SparkService | None = None
         self.database_repository = DatabaseRepository(database_endpoint)
-        self.datawarehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
+        self.data_warehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
 
     @property
     def spark_service(self) -> SparkService:
@@ -52,32 +53,32 @@ class SparkStreamingPipeline(BatchPipeline):
         return get_ingestor(Key.SALE_SPARK_KAFKA).ingest()
 
     def store_raw_data(self, raw_data: DataFrame) -> str:
-        relative_path = generate_relative_path(DatalakeEnv.RAW, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DataLakeEnvironment.RAW, self.ingestion_time, self.dataset.name.lower())
 
         logger.info("Writing streaming raw data to %s", relative_path)
         self.spark_service.append_stream_to_object_storage(
             dataframe=raw_data,
             path=relative_path,
-            checkpoint_path=main_settings.datalake[Key.DATA_PLATFORM_DATALAKE].checkpoint_path,
+            checkpoint_path=main_settings.data_lake[Key.DATA_PLATFORM_DATALAKE].checkpoint_path,
         )
 
         return relative_path
 
-    def cleaning(self, raw_relative_path: str) -> DataFrame:
+    def clean(self, raw_relative_path: str) -> DataFrame:
         raw_dataframe = self.spark_service.read_from_object_storage(path=raw_relative_path)
         return self.dataset.get_processor("spark").clean(raw_dataframe)
 
     def store_cleaned_data(self, cleaned_data: DataFrame) -> str:
-        relative_path = generate_relative_path(DatalakeEnv.CLEANED, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DataLakeEnvironment.CLEANED, self.ingestion_time, self.dataset.name.lower())
         self.spark_service.append_to_object_storage(dataframe=cleaned_data, path=relative_path)
         return relative_path
 
-    def enriching(self, cleaned_relative_path: str) -> DataFrame:
+    def enrich(self, cleaned_relative_path: str) -> DataFrame:
         cleaned_dataframe = self.spark_service.read_from_object_storage(path=cleaned_relative_path)
         return self.dataset.get_processor("spark").enrich(cleaned_dataframe)
 
     def store_enriched_data(self, enriched_data: DataFrame) -> str:
-        relative_path = generate_relative_path(DatalakeEnv.ENRICHED, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DataLakeEnvironment.ENRICHED, self.ingestion_time, self.dataset.name.lower())
         self.spark_service.append_to_object_storage(dataframe=enriched_data, path=relative_path)
         return relative_path
 
@@ -92,9 +93,9 @@ class SparkStreamingPipeline(BatchPipeline):
     def populate_datawarehouse(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Populating data warehouse with enriched data")
-        self.datawarehouse_repository.truncate_and_populate_from_spark(enriched_dataframe)
+        self.data_warehouse_repository.truncate_and_populate_from_spark(enriched_dataframe)
 
-    def analyze_via_dataframe(self, enriched_data_path: str) -> None:
+    def analyze_dataframe(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
         logger.info("Analyzing enriched data via Spark")
 
@@ -104,9 +105,9 @@ class SparkStreamingPipeline(BatchPipeline):
             logger.info("Displaying analysis result %s", name)
             dataframe.show()
 
-    def analyzing_via_datawarehouse(self) -> None:
-        query_names = [name for name in self.datawarehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
-        results = self.datawarehouse_repository.select_by_queries(query_names)
+    def analyze_data_warehouse(self) -> None:
+        query_names = [name for name in self.data_warehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
+        results = self.data_warehouse_repository.select_by_queries(query_names)
         logger.info("Analyzing enriched data via data warehouse")
 
         for dataframe in results.values():

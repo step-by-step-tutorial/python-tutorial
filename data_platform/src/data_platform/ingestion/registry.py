@@ -15,12 +15,12 @@ from data_platform.dataset.registry import get_dataset
 from data_platform.keys import Key
 from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
 from data_platform.ingestion.database_ingestor import DatabaseIngestor
-from data_platform.ingestion.datalake_ingestor import DataLakeIngestor
-from data_platform.ingestion.datawarehouse_ingestor import DataWarehouseIngestor
+from data_platform.ingestion.data_lake_ingestor import DataLakeIngestor
+from data_platform.ingestion.data_warehouse_ingestor import DataWarehouseIngestor
 from data_platform.ingestion.kafka_ingestor import KafkaIngestor
 from data_platform.ingestion.rest_api_ingestor import RestApiIngestor
 from data_platform.ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
-from data_platform.ingestion.spark_datalake_ingestor import SparkDataLakeIngestor
+from data_platform.ingestion.spark_data_lake_ingestor import SparkDataLakeIngestor
 from data_platform.ingestion.spark_kafka_ingestor import SparkKafkaIngestor
 
 registry: dict[str, Any] = {}

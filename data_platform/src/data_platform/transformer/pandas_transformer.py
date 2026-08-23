@@ -1,13 +1,9 @@
-import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import reduce
 from operator import and_
 
 import pandas as pd
 from pandas import DataFrame
-
-logger = logging.getLogger(__name__)
-
 
 def convert_numeric_column(df: DataFrame, column: str, default_value: float | int | None = None) -> DataFrame:
     converted = pd.to_numeric(
@@ -116,9 +112,3 @@ def average_by_group(df: DataFrame, group_field: str, original_field: str, alias
         .mean()
         .rename(columns={original_field: alias_field})
     )
-
-
-def show_map_of_dataframe(map_of_dataframe: Mapping[str, DataFrame]) -> None:
-    for key, value in map_of_dataframe.items():
-        logger.info("%s", key)
-        print(value)
