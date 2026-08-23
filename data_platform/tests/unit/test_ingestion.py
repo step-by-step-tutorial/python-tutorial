@@ -60,7 +60,7 @@ class TestDataLakeIngestor:
         given_client = mocker.Mock()
         given_client.list_objects_v2.return_value = {"Contents": [{"Key": "raw/part-001.parquet"}]}
         given_client.download_fileobj.side_effect = lambda bucket, key, buffer: buffer.write(b"parquet")
-        mocker.patch("data_platform.persistence.data_lake_repository.get_connection", return_value=given_client)
+        mocker.patch("data_platform.persistence.data_lake_repository.connection_registry.get_item", return_value=given_client)
         mocker.patch("data_platform.ingestion.data_lake_ingestor.pd.read_parquet", return_value=given_dataframe)
         mocker.patch("data_platform.ingestion.data_lake_ingestor.pd.concat", return_value=given_dataframe)
 
@@ -109,7 +109,7 @@ class TestMessageQueueIngestor:
         given_message_2.error.return_value = None
         given_message_2.value.return_value = b'{"id": 2}'
         given_consumer.poll.side_effect = [given_message_1, given_message_2, None]
-        mocker.patch("data_platform.ingestion.kafka_ingestor.get_connection", return_value=given_consumer)
+        mocker.patch("data_platform.ingestion.kafka_ingestor.connection_registry.get_item", return_value=given_consumer)
 
         actual = KafkaIngestor(
             endpoint=MessagingEndpoint(
@@ -164,7 +164,7 @@ class TestDataWarehouseIngestor:
             query_sql_files={"select_all": "datawarehouse/select_all.sql"},
         )
         given_connection = mocker.Mock()
-        mocker.patch("data_platform.ingestion.data_warehouse_ingestor.get_connection", return_value=given_connection)
+        mocker.patch("data_platform.ingestion.data_warehouse_ingestor.connection_registry.get_item", return_value=given_connection)
         mocker.patch("data_platform.ingestion.data_warehouse_ingestor.read_text_file", return_value="select * from {table_name}")
         expected = pd.DataFrame({"id": [1]})
         given_connection.query_df.return_value = expected

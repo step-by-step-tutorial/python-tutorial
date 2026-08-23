@@ -143,7 +143,7 @@ class TestDatabaseUtils:
         given_transaction_context.__enter__.return_value = given_connection
         given_connection.begin.return_value = given_transaction_context
         mock_create_connection = mocker.patch(
-            "data_platform.util.database_utils.get_connection",
+            "data_platform.util.database_utils.connection_registry.get_item",
             return_value=given_connection,
         )
 

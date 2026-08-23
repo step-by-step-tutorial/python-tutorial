@@ -2,7 +2,7 @@ import logging
 from functools import partial
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
-from data_platform.connector.connection_registry import get_connection
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.model import AuditEndpoint
 from data_platform.model.audit_event import AuditEvent
@@ -17,7 +17,7 @@ class AuditMessagingService(AbstractAuditService):
     def __init__(self, audit_endpoint: AuditEndpoint) -> None:
         self.connection_name = audit_endpoint.messaging_connection_name
         self.channel_name = audit_endpoint.channel_name
-        self._producer = get_connection(self.connection_name)
+        self._producer = connection_registry.get_item(self.connection_name)
 
     def write(self, event: AuditEvent) -> None:
         ensure_topic_exists(

@@ -1,4 +1,4 @@
-from data_platform.connector import connection_registry as system_under_test
+from data_platform.registry.connection_registry import connection_registry
 
 
 class TestConnectionRegistry:
@@ -12,17 +12,20 @@ class TestConnectionRegistry:
             return connection
 
         connection_name = "test.connection.cache"
-        system_under_test.registry.pop(connection_name, None)
-        system_under_test.factories[connection_name] = create_connection
+        connection_registry.remove(connection_name)
+        connection_registry.register_lazy_item(connection_name, create_connection)
 
-        first = system_under_test.get_connection(connection_name)
-        second = system_under_test.get_connection(connection_name)
+        first = connection_registry.get_item(connection_name)
+        second = connection_registry.get_item(connection_name)
 
         assert first is second
         assert created == [first]
 
-        system_under_test.close_connection(connection_name)
-        assert connection_name not in system_under_test.registry
+        connection_registry.close(connection_name)
+        third = connection_registry.get_item(connection_name)
+
+        assert third is not first
+        assert created == [first, third]
 
     def test_should_flush_before_close_when_available(self) -> None:
         calls: list[str] = []
@@ -35,11 +38,11 @@ class TestConnectionRegistry:
                 calls.append("close")
 
         connection_name = "test.connection.cleanup"
-        system_under_test.registry.pop(connection_name, None)
-        system_under_test.registry[connection_name] = DummyConnection()
+        connection_registry.remove(connection_name)
+        connection_registry.register(connection_name, DummyConnection())
 
-        _ = system_under_test.get_connection(connection_name)
-        system_under_test.close_connection(connection_name)
+        _ = connection_registry.get_item(connection_name)
+        connection_registry.close(connection_name)
 
         assert calls == ["flush", "close"]
-        assert connection_name not in system_under_test.registry
+        assert not connection_registry.contains(connection_name)

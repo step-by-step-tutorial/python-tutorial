@@ -3,7 +3,7 @@ import json
 
 import pandas as pd
 
-from data_platform.connector.connection_registry import get_connection
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.model import MessagingEndpoint
 
 
@@ -12,7 +12,7 @@ class KafkaIngestor:
         self.endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:
-        consumer = get_connection(self.endpoint.connection_name)
+        consumer = connection_registry.get_item(self.endpoint.connection_name)
         consumer.subscribe([self.endpoint.channel_name])
 
         records: list[dict[str, object]] = []

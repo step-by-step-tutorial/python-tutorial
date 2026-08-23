@@ -3,7 +3,7 @@ import pandas
 import pyspark
 
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.connector.connection_registry import get_connection
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.model import DatabaseEndpoint
 from data_platform.keys import Key
 from data_platform.util.collection_utils import list_of_values
@@ -22,7 +22,7 @@ class DatabaseRepository:
         self.run_sql_files(list_of_values(self._endpoint.truncate_sql_files))
 
     def populate_stage_table_from_memory(self, dataframe: pandas.DataFrame) -> None:
-        with get_connection(self._connection_name).begin() as connection:
+        with connection_registry.get_item(self._connection_name).begin() as connection:
             dataframe.to_sql(
                 name=self._endpoint.stage_table_name,
                 con=connection,

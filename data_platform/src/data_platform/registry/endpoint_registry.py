@@ -1,7 +1,15 @@
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.dataset.endpoint_registry import endpoint_registry
 from data_platform.keys import Key
-from data_platform.model import AuditEndpoint
+from data_platform.model import AuditEndpoint, Endpoint
+from data_platform.registry.base_registry import Registry
+
+
+class EndpointRegistry(Registry[Endpoint]):
+    def __init__(self) -> None:
+        super().__init__("endpoint")
+
+
+endpoint_registry = EndpointRegistry()
 
 AUDIT_ENDPOINT = AuditEndpoint(
     database_connection_name=Key.AUDIT_DATABASE,
@@ -14,4 +22,4 @@ AUDIT_ENDPOINT = AuditEndpoint(
     write_sql_files={"write": "database/audit/insert_event.sql"},
 )
 
-endpoint_registry.register(AUDIT_ENDPOINT)
+endpoint_registry.register(AUDIT_ENDPOINT.name, AUDIT_ENDPOINT)

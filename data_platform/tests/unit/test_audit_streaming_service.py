@@ -16,7 +16,7 @@ class TestAuditMessagingService:
         )
         given_producer = mocker.Mock()
         mock_create_producer = mocker.patch(
-            "data_platform.audit.audit_messaging_service.get_connection",
+            "data_platform.audit.audit_messaging_service.connection_registry.get_item",
             return_value=given_producer,
         )
 
@@ -51,7 +51,7 @@ class TestAuditMessagingService:
         given_producer = mocker.Mock()
         given_producer.produce.side_effect = RuntimeError("boom")
         mocker.patch(
-            "data_platform.audit.audit_messaging_service.get_connection",
+            "data_platform.audit.audit_messaging_service.connection_registry.get_item",
             return_value=given_producer,
         )
         service = AuditMessagingService(
@@ -76,7 +76,7 @@ class TestAuditMessagingService:
     def test_should_create_producer_in_init(self, mocker) -> None:
         given_producer = mocker.Mock()
         mock_create_producer = mocker.patch(
-            "data_platform.audit.audit_messaging_service.get_connection",
+            "data_platform.audit.audit_messaging_service.connection_registry.get_item",
             return_value=given_producer,
         )
 

@@ -47,7 +47,7 @@ class TestPopulateStageFromPandas:
         given_database_engine.begin.return_value = given_transaction_context
 
         mock_create_connection = mocker.patch(
-            "data_platform.persistence.database_repository.get_connection",
+            "data_platform.persistence.database_repository.connection_registry.get_item",
             return_value=given_database_engine,
         )
 
@@ -75,7 +75,7 @@ class TestPopulateStageFromPandas:
         given_dataframe.to_sql.side_effect = RuntimeError(given_error_message)
 
         mocker.patch(
-            "data_platform.persistence.database_repository.get_connection",
+            "data_platform.persistence.database_repository.connection_registry.get_item",
             return_value=given_database_engine,
         )
 

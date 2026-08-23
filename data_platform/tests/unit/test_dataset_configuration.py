@@ -14,8 +14,8 @@ from data_platform.model import (
     RestApiEndpoint,
 )
 from data_platform.dataset.house_config import HOUSE_DATASET
-from data_platform.dataset.registry import get_dataset
-from data_platform.dataset.shared_endpoints import AUDIT_ENDPOINT
+from data_platform.registry.dataset_registry import dataset_registry
+from data_platform.registry.endpoint_registry import AUDIT_ENDPOINT
 from data_platform.config.main_settings import settings
 from data_platform.dataset.sale_config import SALE_DATASET
 
@@ -92,14 +92,14 @@ class TestDataset:
 
 class TestDatasetRegistry:
     def test_should_return_sale_dataset(self) -> None:
-        assert get_dataset("sale") is SALE_DATASET
+        assert dataset_registry.get_item("sale") is SALE_DATASET
 
     def test_should_return_house_dataset(self) -> None:
-        assert get_dataset("house") is HOUSE_DATASET
+        assert dataset_registry.get_item("house") is HOUSE_DATASET
 
     def test_should_raise_error_for_unsupported_dataset(self) -> None:
         with pytest.raises(ValueError):
-            get_dataset("missing")
+            dataset_registry.get_item("missing")
 
 
 class TestConcreteDatasetConfiguration:

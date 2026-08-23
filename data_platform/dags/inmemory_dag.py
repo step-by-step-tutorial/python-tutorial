@@ -3,13 +3,13 @@ from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
 
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.dataset.registry import get_dataset
+from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.pipeline.inmemory_pipeline import InmemoryPipeline
 from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
 
 DAG_ID = "inmemory_etl_dag"
 
-pipeline = InmemoryPipeline(get_dataset(main_settings.app.dataset_name))
+pipeline = InmemoryPipeline(dataset_registry.get_item(main_settings.app.dataset_name))
 dag_pipeline_adapter = DagPipelineAdapter(pipeline)
 
 

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pandas as pd
 
-from data_platform.connector.connection_registry import get_connection
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.model import DataLakeEndpoint
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class DataLakeRepository:
         self.bucket_name = endpoint.bucket_name
 
     def list_of_object_keys(self, relative_path: str) -> list[str]:
-        client = get_connection(self.connection_name)
+        client = connection_registry.get_item(self.connection_name)
         response = client.list_objects_v2(Bucket=self.bucket_name, Prefix=relative_path.strip("/"))
 
         return [object_metadata["Key"] for object_metadata in response.get("Contents", [])]
@@ -29,7 +29,7 @@ class DataLakeRepository:
         parquet_buffer.seek(0)
 
         object_key = f"{relative_path.strip('/')}/part-{uuid4()}.{file_extension}"
-        client = get_connection(self.connection_name)
+        client = connection_registry.get_item(self.connection_name)
         buckets = client.list_buckets()
         bucket_names = {bucket["Name"] for bucket in buckets.get("Buckets", [])}
         if self.bucket_name not in bucket_names:
@@ -40,13 +40,13 @@ class DataLakeRepository:
         return object_key
 
     def create_bucket(self, bucket_name: str):
-        client = get_connection(self.connection_name)
+        client = connection_registry.get_item(self.connection_name)
         client.create_bucket(Bucket=bucket_name)
 
     def download(self, relative_path: str, file_extension: str = "parquet") -> pd.DataFrame:
 
         dataframes: list[pd.DataFrame] = []
-        client = get_connection(self.connection_name)
+        client = connection_registry.get_item(self.connection_name)
 
         for object_key in self.list_of_object_keys(relative_path):
             if not object_key.endswith(f".{file_extension}"):

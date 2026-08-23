@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
-from data_platform.connector.connection_registry import get_connection
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.model import AuditEndpoint
 from data_platform.model.audit_event import AuditEvent
 from data_platform.util.path_utils import generate_full_path
@@ -12,7 +12,7 @@ from data_platform.util.path_utils import generate_full_path
 class AuditArchiveService(AbstractAuditService):
 
     def __init__(self, audit_endpoint: AuditEndpoint) -> None:
-        self._client = get_connection(audit_endpoint.datalake_connection_name)
+        self._client = connection_registry.get_item(audit_endpoint.datalake_connection_name)
         self._bucket_name = audit_endpoint.bucket_name
 
     def write(self, event: AuditEvent) -> None:

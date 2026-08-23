@@ -20,7 +20,7 @@ class TestTruncateAndPopulateFromPandas:
         given_dataframe = pd.DataFrame({"id": [1]})
         given_connection = mocker.Mock()
         mock_create_connection = mocker.patch(
-            "data_platform.persistence.data_warehouse_repository.get_connection",
+            "data_platform.persistence.data_warehouse_repository.connection_registry.get_item",
             return_value=given_connection,
         )
         mock_read_text_file = mocker.patch(
@@ -57,7 +57,7 @@ class TestTruncateAndPopulateFromSpark:
 
         given_connection = mocker.Mock()
         mock_create_connection = mocker.patch(
-            "data_platform.persistence.data_warehouse_repository.get_connection",
+            "data_platform.persistence.data_warehouse_repository.connection_registry.get_item",
             return_value=given_connection,
         )
         mock_read_text_file = mocker.patch(
@@ -104,7 +104,7 @@ class TestAnalyze:
         )
         given_connection = mocker.Mock()
         mock_create_connection = mocker.patch(
-            "data_platform.persistence.data_warehouse_repository.get_connection",
+            "data_platform.persistence.data_warehouse_repository.connection_registry.get_item",
             return_value=given_connection,
         )
         mock_read_text_file = mocker.patch(

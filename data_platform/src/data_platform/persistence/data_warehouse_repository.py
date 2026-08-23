@@ -4,7 +4,7 @@ import logging
 import pandas
 import pyspark
 
-from data_platform.connector.connection_registry import get_connection
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.model import DataWarehouseEndpoint
 from data_platform.util.collection_utils import batch_of_list
 from data_platform.util.file_utils import read_text_file
@@ -22,7 +22,7 @@ class DataWarehouseRepository:
     @property
     def connection(self):
         if self._connection is None:
-            self._connection = get_connection(self.connection_name)
+            self._connection = connection_registry.get_item(self.connection_name)
         return self._connection
 
     def truncate_tables(self) -> None:

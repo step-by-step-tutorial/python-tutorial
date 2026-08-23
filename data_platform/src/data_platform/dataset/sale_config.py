@@ -11,8 +11,7 @@ from data_platform.model import (
     RestApiEndpoint,
 )
 from data_platform.model.sale_attribute import SALE_ATTRIBUTE
-from data_platform.dataset.endpoint_registry import endpoint_registry
-from data_platform.dataset.shared_endpoints import AUDIT_ENDPOINT
+from data_platform.registry.endpoint_registry import AUDIT_ENDPOINT, endpoint_registry
 from data_platform.dataset.sale_spark_schema import build_schema
 from data_platform.processor.inmemory_sale_processor import InmemorySaleProcessor
 from data_platform.processor.spark_sale_processor import SparkSaleProcessor
@@ -34,7 +33,7 @@ SALE_DATASET = Dataset(
             }
         ),
     ),
-    audit=endpoint_registry.get(AUDIT_ENDPOINT.name),
+    audit=endpoint_registry.get_item(AUDIT_ENDPOINT.name),
     endpoints={
         Key.SALE_FILE_CSV: FileEndpoint(
             name=Key.SALE_FILE_CSV,

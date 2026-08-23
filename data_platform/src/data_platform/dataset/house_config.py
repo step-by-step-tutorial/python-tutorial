@@ -9,8 +9,7 @@ from data_platform.model import (
     MessagingEndpoint,
 )
 from data_platform.model.house_attribute import HOUSE_ATTRIBUTE as columns
-from data_platform.dataset.endpoint_registry import endpoint_registry
-from data_platform.dataset.shared_endpoints import AUDIT_ENDPOINT
+from data_platform.registry.endpoint_registry import AUDIT_ENDPOINT, endpoint_registry
 from data_platform.dataset.house_spark_schema import build_schema
 from data_platform.keys import Key
 from data_platform.processor.inmemory_house_processor import InmemoryHouseProcessor
@@ -33,7 +32,7 @@ HOUSE_DATASET = Dataset(
             }
         ),
     ),
-    audit=endpoint_registry.get(AUDIT_ENDPOINT.name),
+    audit=endpoint_registry.get_item(AUDIT_ENDPOINT.name),
     endpoints={
         Key.HOUSE_FILE_CSV: FileEndpoint(
             name=Key.HOUSE_FILE_CSV,

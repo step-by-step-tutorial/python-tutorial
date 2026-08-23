@@ -3,7 +3,7 @@ import sys
 from importlib import import_module
 
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.dataset.registry import get_dataset
+from data_platform.registry.dataset_registry import dataset_registry
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -39,7 +39,7 @@ def run_pipeline(pipeline_type: str, dataset_name: str) -> None:
     if dataset_name not in DATASETS:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 
-    pipeline = PIPELINES[pipeline_type](get_dataset(dataset_name))
+    pipeline = PIPELINES[pipeline_type](dataset_registry.get_item(dataset_name))
     pipeline.run()
 
 

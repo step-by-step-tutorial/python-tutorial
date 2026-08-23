@@ -22,7 +22,7 @@ class TestAuditDatabaseService:
         given_connection.begin.return_value = given_transaction_context
 
         mock_create_connection = mocker.patch(
-            "data_platform.audit.audit_database_service.get_connection",
+            "data_platform.audit.audit_database_service.connection_registry.get_item",
             return_value=given_connection
         )
         mock_read_text_file = mocker.patch(

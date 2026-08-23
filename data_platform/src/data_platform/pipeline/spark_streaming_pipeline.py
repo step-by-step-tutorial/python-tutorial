@@ -8,7 +8,7 @@ from data_platform.config.main_settings import settings as main_settings
 from data_platform.connector.spark_session_factory import create_session
 from data_platform.model import DataLakeEndpoint, DatabaseEndpoint, DataWarehouseEndpoint, Dataset, FileEndpoint, MessagingEndpoint
 from data_platform.service.csv_publisher_service import CsvPublisherService
-from data_platform.ingestion.registry import get_ingestor
+from data_platform.registry.ingestor_registry import ingestor_registry
 from data_platform.keys import Key
 from data_platform.persistence.database_repository import DatabaseRepository
 from data_platform.persistence.data_warehouse_repository import DataWarehouseRepository
@@ -50,7 +50,7 @@ class SparkStreamingPipeline(BatchPipeline):
 
     def ingest_raw_data(self) -> DataFrame:
         self.csv_publisher.publish_data()
-        return get_ingestor(Key.SALE_SPARK_KAFKA).ingest()
+        return ingestor_registry.get_item(Key.SALE_SPARK_KAFKA).ingest()
 
     def store_raw_data(self, raw_data: DataFrame) -> str:
         relative_path = generate_relative_path(DataLakeEnvironment.RAW, self.ingestion_time, self.dataset.name.lower())

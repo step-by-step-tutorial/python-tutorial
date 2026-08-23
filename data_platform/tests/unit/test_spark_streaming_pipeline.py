@@ -79,7 +79,7 @@ class TestRun:
         mock_csv_publisher = mocker.patch("data_platform.pipeline.spark_streaming_pipeline.CsvPublisherService", return_value=given_csv_publisher)
         given_raw_topic_ingestor = mocker.Mock()
         given_raw_topic_ingestor.ingest.return_value = "raw-data"
-        mocker.patch("data_platform.pipeline.spark_streaming_pipeline.get_ingestor", return_value=given_raw_topic_ingestor)
+        mocker.patch("data_platform.pipeline.spark_streaming_pipeline.ingestor_registry.get_item", return_value=given_raw_topic_ingestor)
         given_pipeline = SparkStreamingPipeline(build_dataset())
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
         mock_clean = mocker.patch.object(given_pipeline, "clean", return_value="clean")

@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Any
 
-from data_platform.connector.connection_registry import get_connection
+from data_platform.registry.connection_registry import connection_registry
 from confluent_kafka import Producer
 from data_platform.model import Dataset, FileEndpoint, MessagingEndpoint
 from data_platform.transformer.event_transformer import get_event_transformer
@@ -22,7 +22,7 @@ class CsvPublisherService:
         self.dataset = dataset
         self.file_endpoint = file_endpoint
         self.messaging_endpoint = messaging_endpoint
-        self._producer: Producer = get_connection(messaging_endpoint.connection_name)
+        self._producer: Producer = connection_registry.get_item(messaging_endpoint.connection_name)
         self._event_mapper = get_event_transformer(dataset.name.lower())
 
     def publish_data(self) -> int:

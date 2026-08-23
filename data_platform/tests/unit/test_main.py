@@ -12,7 +12,7 @@ class TestRunPipeline:
         given_dataset = SimpleNamespace(name="sale")
         given_pipeline_instance = mocker.Mock()
         given_pipeline_class = mocker.Mock(return_value=given_pipeline_instance)
-        mock_get_dataset = mocker.patch.object(system_under_test, "get_dataset", return_value=given_dataset)
+        mock_dataset_lookup = mocker.patch.object(system_under_test.dataset_registry, "get_item", return_value=given_dataset)
         mocker.patch.dict(system_under_test.PIPELINES, {"inmemory": given_pipeline_class}, clear=True)
         mocker.patch.dict(system_under_test.DATASETS, {"sale": "sale"}, clear=True)
 
@@ -20,7 +20,7 @@ class TestRunPipeline:
         system_under_test.run_pipeline("inmemory", "sale")
 
         # Then
-        assert mock_get_dataset.call_count == 1
+        assert mock_dataset_lookup.call_count == 1
         assert given_pipeline_class.call_count == 1
         assert given_pipeline_instance.run.call_count == 1
 

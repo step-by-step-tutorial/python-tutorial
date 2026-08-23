@@ -1,5 +1,5 @@
 from data_platform.model import Dataset, FileEndpoint, MessagingEndpoint
-from data_platform.dataset.shared_endpoints import AUDIT_ENDPOINT
+from data_platform.registry.endpoint_registry import AUDIT_ENDPOINT
 from data_platform.service.csv_publisher_service import CsvPublisherService
 from data_platform.keys import Key
 from data_platform.transformer.event_transformer import MappedEvent
@@ -27,7 +27,7 @@ class TestCsvPublisherService:
             MappedEvent(key="1", payload={"order_id": 1}),
             MappedEvent(key="2", payload={"order_id": 2}),
         ]
-        mock_get_connection = mocker.patch("data_platform.service.csv_publisher_service.get_connection")
+        mock_get_connection = mocker.patch("data_platform.service.csv_publisher_service.connection_registry.get_item")
         given_producer = mocker.Mock()
         mock_get_connection.return_value = given_producer
         mock_ensure_topic = mocker.patch("data_platform.service.csv_publisher_service.ensure_topic_exists")
@@ -64,7 +64,7 @@ class TestCsvPublisherService:
         )
         mock_mapper = mocker.patch("data_platform.service.csv_publisher_service.get_event_transformer")
         mock_mapper.return_value.map.return_value = MappedEvent(key="1", payload={"order_id": 1})
-        mock_get_connection = mocker.patch("data_platform.service.csv_publisher_service.get_connection")
+        mock_get_connection = mocker.patch("data_platform.service.csv_publisher_service.connection_registry.get_item")
         given_producer = mocker.Mock()
         mock_get_connection.return_value = given_producer
 
