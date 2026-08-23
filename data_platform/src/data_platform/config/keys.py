@@ -22,6 +22,9 @@ class Key(StrEnum):
 
     SALE_REST_API = "sale.rest"
 
+    ONLINE_SHOPPING_REST_API = "online_shopping.rest.api"
+    ONLINE_SHOPPING_DATA_LAKE = "online_shopping.datalake"
+
     SALE_KAFKA_CONSUMER = "sale.kafka.listener"
     HOUSE_KAFKA_CONSUMER = "house.kafka.listener"
     AUDIT_KAFKA_PRODUCER = "audit.kafka.producer"

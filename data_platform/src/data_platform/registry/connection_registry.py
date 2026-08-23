@@ -59,6 +59,10 @@ connection_registry.register_lazy_item(
     data_platform.connector.data_lake_connections.create_audit_connection
 )
 connection_registry.register_lazy_item(
+    Key.ONLINE_SHOPPING_DATA_LAKE,
+    data_platform.connector.data_lake_connections.create_online_shopping_connection
+)
+connection_registry.register_lazy_item(
     Key.SALE_DATA_WAREHOUSE,
     data_platform.connector.data_warehouse_connections.create_sale_connection
 )
