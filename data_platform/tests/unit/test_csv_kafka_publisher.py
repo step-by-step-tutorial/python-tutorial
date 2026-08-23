@@ -1,6 +1,6 @@
 from data_platform.model import FileEndpoint, MessagingEndpoint
 from data_platform.service.csv_kafka_publisher import CsvKafkaPublisher
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 from data_platform.model.mapped_event import MappedEvent
 
 

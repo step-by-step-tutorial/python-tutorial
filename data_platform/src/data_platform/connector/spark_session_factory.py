@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 
 SPARK_JARS = [
     "org.postgresql:postgresql:42.7.7",
@@ -38,9 +38,9 @@ def create_session() -> SparkSession:
         .config("spark.driver.bindAddress", main_settings.spark.driver_bind_address)
         .config("spark.jars.packages", ",".join(SPARK_JARS))
         .config("spark.jars.excludes", "org.slf4j:slf4j-api")
-        .config("spark.hadoop.fs.s3a.endpoint", main_settings.data_lake[Key.DATA_PLATFORM_DATALAKE].endpoint)
-        .config("spark.hadoop.fs.s3a.access.key", main_settings.data_lake[Key.DATA_PLATFORM_DATALAKE].access_key)
-        .config("spark.hadoop.fs.s3a.secret.key", main_settings.data_lake[Key.DATA_PLATFORM_DATALAKE].secret_key)
+        .config("spark.hadoop.fs.s3a.endpoint", main_settings.data_lake[Key.PLATFORM_DATA_LAKE].endpoint)
+        .config("spark.hadoop.fs.s3a.access.key", main_settings.data_lake[Key.PLATFORM_DATA_LAKE].access_key)
+        .config("spark.hadoop.fs.s3a.secret.key", main_settings.data_lake[Key.PLATFORM_DATA_LAKE].secret_key)
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
         .config("spark.hadoop.fs.s3a.fast.upload", "true")

@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from types import MappingProxyType
 
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 
 
 @dataclass(frozen=True)
@@ -17,60 +17,60 @@ class DataWarehouseSettings:
 
 data_warehouse = MappingProxyType(
     {
-        Key.DATA_PLATFORM_DATAWAREHOUSE: DataWarehouseSettings(
-            host=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("DATA_PLATFORM_DATAWAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_NAME", "app_datawarehouse"),
-            user=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_USER", "admin"),
-            password=os.getenv("DATA_PLATFORM_DATAWAREHOUSE_PASSWORD", "admin"),
+        Key.PLATFORM_DATA_WAREHOUSE: DataWarehouseSettings(
+            host=os.getenv("PLATFORM_DATA_WAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("PLATFORM_DATA_WAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("PLATFORM_DATA_WAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("PLATFORM_DATA_WAREHOUSE_USER", "admin"),
+            password=os.getenv("PLATFORM_DATA_WAREHOUSE_PASSWORD", "admin"),
             jdbc_url=os.getenv(
-                "DATA_PLATFORM_DATAWAREHOUSE_JDBC_URL",
+                "PLATFORM_DATA_WAREHOUSE_JDBC_URL",
                 "jdbc:clickhouse://"
-                f"{os.getenv('DATA_PLATFORM_DATAWAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('DATA_PLATFORM_DATAWAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('DATA_PLATFORM_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
+                f"{os.getenv('PLATFORM_DATA_WAREHOUSE_HOST', 'localhost')}:"
+                f"{os.getenv('PLATFORM_DATA_WAREHOUSE_PORT', '8123')}/"
+                f"{os.getenv('PLATFORM_DATA_WAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
-        Key.SALE_DATAWAREHOUSE: DataWarehouseSettings(
-            host=os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_NAME", "app_datawarehouse"),
-            user=os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_USER", "admin"),
-            password=os.getenv("DATA_PLATFORM_SALE_DATAWAREHOUSE_PASSWORD", "admin"),
+        Key.SALE_DATA_WAREHOUSE: DataWarehouseSettings(
+            host=os.getenv("DATA_PLATFORM_SALE_DATA_WAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_SALE_DATA_WAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("DATA_PLATFORM_SALE_DATA_WAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("DATA_PLATFORM_SALE_DATA_WAREHOUSE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_SALE_DATA_WAREHOUSE_PASSWORD", "admin"),
             jdbc_url=os.getenv(
-                "DATA_PLATFORM_SALE_DATAWAREHOUSE_JDBC_URL",
+                "DATA_PLATFORM_SALE_DATA_WAREHOUSE_JDBC_URL",
                 "jdbc:clickhouse://"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATAWAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATAWAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
+                f"{os.getenv('DATA_PLATFORM_SALE_DATA_WAREHOUSE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATA_WAREHOUSE_PORT', '8123')}/"
+                f"{os.getenv('DATA_PLATFORM_SALE_DATA_WAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
-        Key.HOUSE_DATAWAREHOUSE: DataWarehouseSettings(
-            host=os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_NAME", "app_datawarehouse"),
-            user=os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_USER", "admin"),
-            password=os.getenv("DATA_PLATFORM_HOUSE_DATAWAREHOUSE_PASSWORD", "admin"),
+        Key.HOUSE_DATA_WAREHOUSE: DataWarehouseSettings(
+            host=os.getenv("DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_PASSWORD", "admin"),
             jdbc_url=os.getenv(
-                "DATA_PLATFORM_HOUSE_DATAWAREHOUSE_JDBC_URL",
+                "DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_JDBC_URL",
                 "jdbc:clickhouse://"
-                f"{os.getenv('DATA_PLATFORM_HOUSE_DATAWAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('DATA_PLATFORM_HOUSE_DATAWAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('DATA_PLATFORM_HOUSE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_PORT', '8123')}/"
+                f"{os.getenv('DATA_PLATFORM_HOUSE_DATA_WAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
-        Key.AUDIT_DATAWAREHOUSE: DataWarehouseSettings(
-            host=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_NAME", "app_datawarehouse"),
-            user=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_USER", "admin"),
-            password=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_PASSWORD", "admin"),
+        Key.AUDIT_DATA_WAREHOUSE: DataWarehouseSettings(
+            host=os.getenv("DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_PASSWORD", "admin"),
             jdbc_url=os.getenv(
-                "DATA_PLATFORM_AUDIT_DATAWAREHOUSE_JDBC_URL",
+                "DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_JDBC_URL",
                 "jdbc:clickhouse://"
-                f"{os.getenv('DATA_PLATFORM_AUDIT_DATAWAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('DATA_PLATFORM_AUDIT_DATAWAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('DATA_PLATFORM_AUDIT_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_HOST', 'localhost')}:"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_PORT', '8123')}/"
+                f"{os.getenv('DATA_PLATFORM_AUDIT_DATA_WAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
     }

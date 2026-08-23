@@ -1,0 +1,36 @@
+from enum import StrEnum
+
+
+class Key(StrEnum):
+    PLATFORM_DATABASE = "data-platform.database"
+    SALE_DATABASE = "sale.database"
+    HOUSE_DATABASE = "house.database"
+    AUDIT_DATABASE = "audit.database"
+
+    PLATFORM_DATA_LAKE = "data-platform.datalake"
+    SALE_DATA_LAKE = "sale.datalake"
+    HOUSE_DATA_LAKE = "house.datalake"
+    AUDIT_DATA_LAKE = "audit.datalake"
+
+    PLATFORM_DATA_WAREHOUSE = "data-platform.datawarehouse"
+    SALE_DATA_WAREHOUSE = "sale.datawarehouse"
+    HOUSE_DATA_WAREHOUSE = "house.datawarehouse"
+    AUDIT_DATA_WAREHOUSE = "audit.datawarehouse"
+
+    SALE_CSV_FILE = "sale.file.csv"
+    HOUSE_CSV_FILE = "house.file.csv"
+
+    SALE_REST_API = "sale.rest"
+
+    SALE_KAFKA_CONSUMER = "sale.kafka.listener"
+    HOUSE_KAFKA_CONSUMER = "house.kafka.listener"
+    AUDIT_KAFKA_PRODUCER = "audit.kafka.producer"
+    AUDIT_KAFKA_CONSUMER = "audit.kafka.listener"
+    SALE_KAFKA_PRODUCER = "sale.kafka.producer"
+    HOUSE_KAFKA_PRODUCER = "house.kafka.producer"
+
+    SALE_SPARK_CSV = "sale.spark.csv"
+    SALE_SPARK_DATA_LAKE = "sale.spark.datalake"
+    SALE_SPARK_KAFKA = "sale.spark.kafka"
+    HOUSE_SPARK_CSV = "house.spark.csv"
+    HOUSE_SPARK_KAFKA = "house.spark.kafka"

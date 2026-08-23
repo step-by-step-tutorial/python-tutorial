@@ -8,7 +8,7 @@ from data_platform.ingestion.rest_api_ingestor import RestApiIngestor
 from data_platform.ingestion.spark_csv_file_ingestor import SparkCsvFileIngestor
 from data_platform.ingestion.spark_data_lake_ingestor import SparkDataLakeIngestor
 from data_platform.ingestion.spark_kafka_ingestor import SparkKafkaIngestor
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
@@ -21,33 +21,33 @@ from data_platform.registry.ingestor_registry import ingestor_registry
 from data_platform.domain.sale.dataset import SALE_DATASET
 
 def register_sale_ingestors() -> None:
-    if not ingestor_registry.contains(Key.SALE_FILE_CSV):
-        sale_file_csv_ingestor = CsvFileIngestor(SALE_DATASET.get_endpoint(Key.SALE_FILE_CSV, FileEndpoint))
-        ingestor_registry.register(Key.SALE_FILE_CSV, sale_file_csv_ingestor)
-    if not ingestor_registry.contains(Key.SALE_REST):
-        sale_rest_api_ingestor = RestApiIngestor(SALE_DATASET.get_endpoint(Key.SALE_REST, RestApiEndpoint))
-        ingestor_registry.register(Key.SALE_REST, sale_rest_api_ingestor)
-    if not ingestor_registry.contains(Key.SALE_KAFKA_LISTENER):
+    if not ingestor_registry.contains(Key.SALE_CSV_FILE):
+        sale_file_csv_ingestor = CsvFileIngestor(SALE_DATASET.get_endpoint(Key.SALE_CSV_FILE, FileEndpoint))
+        ingestor_registry.register(Key.SALE_CSV_FILE, sale_file_csv_ingestor)
+    if not ingestor_registry.contains(Key.SALE_REST_API):
+        sale_rest_api_ingestor = RestApiIngestor(SALE_DATASET.get_endpoint(Key.SALE_REST_API, RestApiEndpoint))
+        ingestor_registry.register(Key.SALE_REST_API, sale_rest_api_ingestor)
+    if not ingestor_registry.contains(Key.SALE_KAFKA_CONSUMER):
         sale_kafka_listener_ingestor = KafkaIngestor(
-            SALE_DATASET.get_endpoint(Key.SALE_KAFKA_LISTENER, MessagingEndpoint)
+            SALE_DATASET.get_endpoint(Key.SALE_KAFKA_CONSUMER, MessagingEndpoint)
         )
-        ingestor_registry.register(Key.SALE_KAFKA_LISTENER, sale_kafka_listener_ingestor)
+        ingestor_registry.register(Key.SALE_KAFKA_CONSUMER, sale_kafka_listener_ingestor)
     if not ingestor_registry.contains(Key.SALE_KAFKA_PRODUCER):
         sale_kafka_producer_ingestor = KafkaIngestor(
             SALE_DATASET.get_endpoint(Key.SALE_KAFKA_PRODUCER, MessagingEndpoint)
         )
         ingestor_registry.register(Key.SALE_KAFKA_PRODUCER, sale_kafka_producer_ingestor)
-    if not ingestor_registry.contains(Key.SALE_DATALAKE):
-        sale_data_lake_ingestor = DataLakeIngestor(SALE_DATASET.get_endpoint(Key.SALE_DATALAKE, DataLakeEndpoint))
-        ingestor_registry.register(Key.SALE_DATALAKE, sale_data_lake_ingestor)
+    if not ingestor_registry.contains(Key.SALE_DATA_LAKE):
+        sale_data_lake_ingestor = DataLakeIngestor(SALE_DATASET.get_endpoint(Key.SALE_DATA_LAKE, DataLakeEndpoint))
+        ingestor_registry.register(Key.SALE_DATA_LAKE, sale_data_lake_ingestor)
     if not ingestor_registry.contains(Key.SALE_DATABASE):
         sale_database_ingestor = DatabaseIngestor(SALE_DATASET.get_endpoint(Key.SALE_DATABASE, DatabaseEndpoint))
         ingestor_registry.register(Key.SALE_DATABASE, sale_database_ingestor)
-    if not ingestor_registry.contains(Key.SALE_DATAWAREHOUSE):
+    if not ingestor_registry.contains(Key.SALE_DATA_WAREHOUSE):
         sale_data_warehouse_ingestor = DataWarehouseIngestor(
-            SALE_DATASET.get_endpoint(Key.SALE_DATAWAREHOUSE, DataWarehouseEndpoint)
+            SALE_DATASET.get_endpoint(Key.SALE_DATA_WAREHOUSE, DataWarehouseEndpoint)
         )
-        ingestor_registry.register(Key.SALE_DATAWAREHOUSE, sale_data_warehouse_ingestor)
+        ingestor_registry.register(Key.SALE_DATA_WAREHOUSE, sale_data_warehouse_ingestor)
 
 
 def register_sale_lazy_ingestors() -> None:
@@ -57,11 +57,11 @@ def register_sale_lazy_ingestors() -> None:
             lambda: SparkCsvFileIngestor(create_session()),
             cache=False,
         )
-    if not ingestor_registry.contains(Key.SALE_SPARK_DATALAKE):
+    if not ingestor_registry.contains(Key.SALE_SPARK_DATA_LAKE):
         ingestor_registry.register_lazy_item(
-            Key.SALE_SPARK_DATALAKE,
+            Key.SALE_SPARK_DATA_LAKE,
             lambda: SparkDataLakeIngestor(
-                SALE_DATASET.get_endpoint(Key.SALE_DATALAKE, DataLakeEndpoint),
+                SALE_DATASET.get_endpoint(Key.SALE_DATA_LAKE, DataLakeEndpoint),
                 create_session(),
             ),
             cache=False,
@@ -70,7 +70,7 @@ def register_sale_lazy_ingestors() -> None:
         ingestor_registry.register_lazy_item(
             Key.SALE_SPARK_KAFKA,
             lambda: SparkKafkaIngestor(
-                SALE_DATASET.get_endpoint(Key.SALE_KAFKA_LISTENER, MessagingEndpoint),
+                SALE_DATASET.get_endpoint(Key.SALE_KAFKA_CONSUMER, MessagingEndpoint),
                 create_session(),
                 SALE_DATASET.dataframe.schema,
             ),

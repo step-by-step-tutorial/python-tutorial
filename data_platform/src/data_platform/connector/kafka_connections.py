@@ -1,7 +1,7 @@
 from confluent_kafka import Consumer, Producer
 
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 
 
 def create_sale_publisher_connection() -> Producer:
@@ -46,7 +46,7 @@ def create_audit_publisher_connection() -> Producer:
 def create_sale_listener_connection() -> Consumer:
     return Consumer(
         {
-            "bootstrap.servers": main_settings.messaging[Key.SALE_KAFKA_LISTENER].bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging[Key.SALE_KAFKA_CONSUMER].bootstrap_servers,
             "group.id": "data-platform-messaging",
             "auto.offset.reset": "earliest",
             "enable.auto.commit": False,
@@ -57,7 +57,7 @@ def create_sale_listener_connection() -> Consumer:
 def create_house_listener_connection() -> Consumer:
     return Consumer(
         {
-            "bootstrap.servers": main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging[Key.HOUSE_KAFKA_CONSUMER].bootstrap_servers,
             "group.id": "data-platform-messaging",
             "auto.offset.reset": "earliest",
             "enable.auto.commit": False,
@@ -68,7 +68,7 @@ def create_house_listener_connection() -> Consumer:
 def create_audit_listener_connection() -> Consumer:
     return Consumer(
         {
-            "bootstrap.servers": main_settings.messaging[Key.AUDIT_KAFKA_LISTENER].bootstrap_servers,
+            "bootstrap.servers": main_settings.messaging[Key.AUDIT_KAFKA_CONSUMER].bootstrap_servers,
             "group.id": "data-platform-messaging",
             "auto.offset.reset": "earliest",
             "enable.auto.commit": False,

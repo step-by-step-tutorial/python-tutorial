@@ -6,7 +6,7 @@ from data_platform.audit.audit_service import AuditService
 from data_platform.config.data_lake_environment import DataLakeEnvironment
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.connector.spark_session_factory import create_session
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 from data_platform.model import DataLakeEndpoint, DatabaseEndpoint, DataWarehouseEndpoint, Dataset, FileEndpoint, \
     MessagingEndpoint
 from data_platform.persistence.spark_data_warehouse_repository import SparkDataWarehouseRepository
@@ -90,7 +90,7 @@ class SparkStreamingPipeline(BatchPipeline):
         self._spark_streaming_service.save_stream(
             dataframe=raw_data,
             path=relative_path,
-            checkpoint_path=main_settings.data_lake[Key.DATA_PLATFORM_DATALAKE].checkpoint_path,
+            checkpoint_path=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].checkpoint_path,
         )
 
         return relative_path

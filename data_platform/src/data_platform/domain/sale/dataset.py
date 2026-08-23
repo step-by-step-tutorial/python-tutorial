@@ -1,5 +1,5 @@
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
@@ -39,21 +39,21 @@ SALE_DATASET = Dataset(
     ),
     audit=endpoint_registry.get_item(audit_endpoint.name),
     endpoints={
-        Key.SALE_FILE_CSV: FileEndpoint(
-            name=Key.SALE_FILE_CSV,
+        Key.SALE_CSV_FILE: FileEndpoint(
+            name=Key.SALE_CSV_FILE,
             file_name="sale.csv",
             file_path=str(main_settings.app.root / main_settings.app.resources_dir / "sale.csv"),
         ),
-        Key.SALE_REST: RestApiEndpoint(
-            name=Key.SALE_REST,
+        Key.SALE_REST_API: RestApiEndpoint(
+            name=Key.SALE_REST_API,
             url=main_settings.test_data.download_url,
         ),
-        Key.SALE_KAFKA_LISTENER: MessagingEndpoint(
-            name=Key.SALE_KAFKA_LISTENER,
-            connection_name=Key.SALE_KAFKA_LISTENER,
-            channel_name=main_settings.messaging[Key.SALE_KAFKA_LISTENER].channel_name,
-            bootstrap_servers=main_settings.messaging[Key.SALE_KAFKA_LISTENER].bootstrap_servers,
-            starting_offsets=main_settings.messaging[Key.SALE_KAFKA_LISTENER].starting_offsets,
+        Key.SALE_KAFKA_CONSUMER: MessagingEndpoint(
+            name=Key.SALE_KAFKA_CONSUMER,
+            connection_name=Key.SALE_KAFKA_CONSUMER,
+            channel_name=main_settings.messaging[Key.SALE_KAFKA_CONSUMER].channel_name,
+            bootstrap_servers=main_settings.messaging[Key.SALE_KAFKA_CONSUMER].bootstrap_servers,
+            starting_offsets=main_settings.messaging[Key.SALE_KAFKA_CONSUMER].starting_offsets,
         ),
         Key.SALE_KAFKA_PRODUCER: MessagingEndpoint(
             name=Key.SALE_KAFKA_PRODUCER,
@@ -61,11 +61,11 @@ SALE_DATASET = Dataset(
             channel_name=main_settings.messaging[Key.SALE_KAFKA_PRODUCER].channel_name,
             bootstrap_servers=main_settings.messaging[Key.SALE_KAFKA_PRODUCER].bootstrap_servers,
         ),
-        Key.SALE_DATALAKE: DataLakeEndpoint(
-            name=Key.SALE_DATALAKE,
-            connection_name=Key.SALE_DATALAKE,
-            bucket_name=main_settings.data_lake[Key.SALE_DATALAKE].bucket_name,
-            scheme=main_settings.data_lake[Key.SALE_DATALAKE].scheme,
+        Key.SALE_DATA_LAKE: DataLakeEndpoint(
+            name=Key.SALE_DATA_LAKE,
+            connection_name=Key.SALE_DATA_LAKE,
+            bucket_name=main_settings.data_lake[Key.SALE_DATA_LAKE].bucket_name,
+            scheme=main_settings.data_lake[Key.SALE_DATA_LAKE].scheme,
         ),
         Key.SALE_DATABASE: DatabaseEndpoint(
             name=Key.SALE_DATABASE,
@@ -90,12 +90,12 @@ SALE_DATASET = Dataset(
             },
             query_sql_files={"select_all": "database/select_all.sql"},
         ),
-        Key.SALE_DATAWAREHOUSE: DataWarehouseEndpoint(
-            name=Key.SALE_DATAWAREHOUSE,
-            connection_name=Key.SALE_DATAWAREHOUSE,
-            schema=main_settings.data_warehouse[Key.SALE_DATAWAREHOUSE].database_name,
+        Key.SALE_DATA_WAREHOUSE: DataWarehouseEndpoint(
+            name=Key.SALE_DATA_WAREHOUSE,
+            connection_name=Key.SALE_DATA_WAREHOUSE,
+            schema=main_settings.data_warehouse[Key.SALE_DATA_WAREHOUSE].database_name,
             table_name="sale_table",
-            full_table_name=f"{main_settings.data_warehouse[Key.SALE_DATAWAREHOUSE].database_name}.sale_table",
+            full_table_name=f"{main_settings.data_warehouse[Key.SALE_DATA_WAREHOUSE].database_name}.sale_table",
             create_sql_files={
                 "create_database": "datawarehouse/sale/create_database.sql",
                 "create_table": "datawarehouse/sale/create_table.sql",

@@ -5,7 +5,7 @@ import data_platform.connector.data_lake_connections
 import data_platform.connector.data_warehouse_connections
 import data_platform.connector.database_connections
 import data_platform.connector.kafka_connections
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 from data_platform.registry.base_registry import Registry
 
 
@@ -47,27 +47,27 @@ connection_registry.register_lazy_item(
     data_platform.connector.database_connections.create_audit_connection
 )
 connection_registry.register_lazy_item(
-    Key.SALE_DATALAKE,
+    Key.SALE_DATA_LAKE,
     data_platform.connector.data_lake_connections.create_sale_connection
 )
 connection_registry.register_lazy_item(
-    Key.HOUSE_DATALAKE,
+    Key.HOUSE_DATA_LAKE,
     data_platform.connector.data_lake_connections.create_house_connection
 )
 connection_registry.register_lazy_item(
-    Key.AUDIT_DATALAKE,
+    Key.AUDIT_DATA_LAKE,
     data_platform.connector.data_lake_connections.create_audit_connection
 )
 connection_registry.register_lazy_item(
-    Key.SALE_DATAWAREHOUSE,
+    Key.SALE_DATA_WAREHOUSE,
     data_platform.connector.data_warehouse_connections.create_sale_connection
 )
 connection_registry.register_lazy_item(
-    Key.HOUSE_DATAWAREHOUSE,
+    Key.HOUSE_DATA_WAREHOUSE,
     data_platform.connector.data_warehouse_connections.create_house_connection
 )
 connection_registry.register_lazy_item(
-    Key.AUDIT_DATAWAREHOUSE,
+    Key.AUDIT_DATA_WAREHOUSE,
     data_platform.connector.data_warehouse_connections.create_audit_connection
 )
 connection_registry.register_lazy_item(
@@ -83,15 +83,15 @@ connection_registry.register_lazy_item(
     data_platform.connector.kafka_connections.create_audit_publisher_connection
 )
 connection_registry.register_lazy_item(
-    Key.SALE_KAFKA_LISTENER,
+    Key.SALE_KAFKA_CONSUMER,
     data_platform.connector.kafka_connections.create_sale_listener_connection
 )
 connection_registry.register_lazy_item(
-    Key.HOUSE_KAFKA_LISTENER,
+    Key.HOUSE_KAFKA_CONSUMER,
     data_platform.connector.kafka_connections.create_house_listener_connection
 )
 connection_registry.register_lazy_item(
-    Key.AUDIT_KAFKA_LISTENER,
+    Key.AUDIT_KAFKA_CONSUMER,
     data_platform.connector.kafka_connections.create_audit_listener_connection
 )
 

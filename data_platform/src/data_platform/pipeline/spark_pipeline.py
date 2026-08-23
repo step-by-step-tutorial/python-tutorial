@@ -6,7 +6,7 @@ from pyspark.sql import DataFrame
 from data_platform.audit.audit_service import AuditService
 from data_platform.config.data_lake_environment import DataLakeEnvironment
 from data_platform.connector.spark_session_factory import create_session
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 from data_platform.model import DataLakeEndpoint, DatabaseEndpoint, Dataset, DataWarehouseEndpoint, FileEndpoint
 from data_platform.persistence.spark_data_warehouse_repository import SparkDataWarehouseRepository
 from data_platform.persistence.spark_database_repository import SparkDatabaseRepository

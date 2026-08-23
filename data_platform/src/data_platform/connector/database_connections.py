@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 
 
 def create_sale_connection():

@@ -6,7 +6,7 @@ from data_platform.domain.house.spark_analyzer import SparkHouseAnalyzer
 from data_platform.domain.house.spark_schema import build_schema
 from data_platform.domain.house.spark_transformer import SparkHouseTransformer
 from data_platform.domain.house.data_warehouse_analyzer import DataWarehouseHouseAnalyzer
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
@@ -38,29 +38,29 @@ HOUSE_DATASET = Dataset(
     ),
     audit=endpoint_registry.get_item(audit_endpoint.name),
     endpoints={
-        Key.HOUSE_FILE_CSV: FileEndpoint(
-            name=Key.HOUSE_FILE_CSV,
+        Key.HOUSE_CSV_FILE: FileEndpoint(
+            name=Key.HOUSE_CSV_FILE,
             file_name="house.csv",
             file_path=str(main_settings.app.root / main_settings.app.resources_dir / "house.csv"),
         ),
-        Key.HOUSE_KAFKA_LISTENER: MessagingEndpoint(
-            name=Key.HOUSE_KAFKA_LISTENER,
-            connection_name=Key.HOUSE_KAFKA_LISTENER,
-            channel_name=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].channel_name,
-            bootstrap_servers=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].bootstrap_servers,
-            starting_offsets=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].starting_offsets,
+        Key.HOUSE_KAFKA_CONSUMER: MessagingEndpoint(
+            name=Key.HOUSE_KAFKA_CONSUMER,
+            connection_name=Key.HOUSE_KAFKA_CONSUMER,
+            channel_name=main_settings.messaging[Key.HOUSE_KAFKA_CONSUMER].channel_name,
+            bootstrap_servers=main_settings.messaging[Key.HOUSE_KAFKA_CONSUMER].bootstrap_servers,
+            starting_offsets=main_settings.messaging[Key.HOUSE_KAFKA_CONSUMER].starting_offsets,
         ),
         Key.HOUSE_KAFKA_PRODUCER: MessagingEndpoint(
             name=Key.HOUSE_KAFKA_PRODUCER,
             connection_name=Key.HOUSE_KAFKA_PRODUCER,
-            channel_name=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].channel_name,
-            bootstrap_servers=main_settings.messaging[Key.HOUSE_KAFKA_LISTENER].bootstrap_servers,
+            channel_name=main_settings.messaging[Key.HOUSE_KAFKA_CONSUMER].channel_name,
+            bootstrap_servers=main_settings.messaging[Key.HOUSE_KAFKA_CONSUMER].bootstrap_servers,
         ),
-        Key.HOUSE_DATALAKE: DataLakeEndpoint(
-            name=Key.HOUSE_DATALAKE,
-            connection_name=Key.HOUSE_DATALAKE,
-            bucket_name=main_settings.data_lake[Key.HOUSE_DATALAKE].bucket_name,
-            scheme=main_settings.data_lake[Key.HOUSE_DATALAKE].scheme,
+        Key.HOUSE_DATA_LAKE: DataLakeEndpoint(
+            name=Key.HOUSE_DATA_LAKE,
+            connection_name=Key.HOUSE_DATA_LAKE,
+            bucket_name=main_settings.data_lake[Key.HOUSE_DATA_LAKE].bucket_name,
+            scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
         ),
         Key.HOUSE_DATABASE: DatabaseEndpoint(
             name=Key.HOUSE_DATABASE,
@@ -74,12 +74,12 @@ HOUSE_DATASET = Dataset(
             write_sql_files={},
             query_sql_files={"select_all": "database/select_all.sql"},
         ),
-        Key.HOUSE_DATAWAREHOUSE: DataWarehouseEndpoint(
-            name=Key.HOUSE_DATAWAREHOUSE,
-            connection_name=Key.HOUSE_DATAWAREHOUSE,
-            schema=main_settings.data_warehouse[Key.HOUSE_DATAWAREHOUSE].database_name,
+        Key.HOUSE_DATA_WAREHOUSE: DataWarehouseEndpoint(
+            name=Key.HOUSE_DATA_WAREHOUSE,
+            connection_name=Key.HOUSE_DATA_WAREHOUSE,
+            schema=main_settings.data_warehouse[Key.HOUSE_DATA_WAREHOUSE].database_name,
             table_name="house_table",
-            full_table_name=f"{main_settings.data_warehouse[Key.HOUSE_DATAWAREHOUSE].database_name}.house_table",
+            full_table_name=f"{main_settings.data_warehouse[Key.HOUSE_DATA_WAREHOUSE].database_name}.house_table",
             create_sql_files={
                 "create_database": "datawarehouse/house/create_database.sql",
                 "create_table": "datawarehouse/house/create_table.sql",

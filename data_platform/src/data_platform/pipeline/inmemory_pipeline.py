@@ -4,7 +4,7 @@ import pandas as pd
 
 from data_platform.audit.audit_service import AuditService
 from data_platform.config.data_lake_environment import DataLakeEnvironment
-from data_platform.keys import Key
+from data_platform.config.keys import Key
 from data_platform.model import DataLakeEndpoint, DatabaseEndpoint, Dataset, DataWarehouseEndpoint, FileEndpoint
 from data_platform.persistence.data_lake_repository import DataLakeRepository
 from data_platform.persistence.inmemory_data_warehouse_repository import InmemoryDataWarehouseRepository
