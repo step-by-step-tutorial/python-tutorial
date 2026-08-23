@@ -18,6 +18,7 @@ from data_platform.sale.inmemory_transformer import InmemorySaleTransformer
 from data_platform.sale.spark_analyzer import SparkSaleAnalyzer
 from data_platform.sale.spark_schema import build_schema
 from data_platform.sale.spark_transformer import SparkSaleTransformer
+from data_platform.sale.data_warehouse_analyzer import DataWarehouseSaleAnalyzer
 
 SALE_DATASET = Dataset(
     name="sale",
@@ -117,6 +118,7 @@ SALE_DATASET = Dataset(
     analyzers={
         "inmemory": InmemorySaleAnalyzer(),
         "spark": SparkSaleAnalyzer(),
+        "datawarehouse": DataWarehouseSaleAnalyzer(),
     },
 )
 

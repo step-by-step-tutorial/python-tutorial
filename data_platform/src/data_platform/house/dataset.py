@@ -5,6 +5,7 @@ from data_platform.house.inmemory_transformer import InmemoryHouseTransformer
 from data_platform.house.spark_analyzer import SparkHouseAnalyzer
 from data_platform.house.spark_schema import build_schema
 from data_platform.house.spark_transformer import SparkHouseTransformer
+from data_platform.house.data_warehouse_analyzer import DataWarehouseHouseAnalyzer
 from data_platform.keys import Key
 from data_platform.model import (
     DataLakeEndpoint,
@@ -101,6 +102,7 @@ HOUSE_DATASET = Dataset(
     analyzers={
         "inmemory": InmemoryHouseAnalyzer(),
         "spark": SparkHouseAnalyzer(),
+        "datawarehouse": DataWarehouseHouseAnalyzer(),
     },
 )
 

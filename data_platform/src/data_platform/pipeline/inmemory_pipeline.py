@@ -10,8 +10,8 @@ from data_platform.persistence.data_warehouse_repository import DataWarehouseRep
 from data_platform.persistence.database_repository import DatabaseRepository
 from data_platform.persistence.repository_data_populator import RepositoryDataPopulator
 from data_platform.pipeline.batch_pipeline import BatchPipeline
-from data_platform.analyzer.dataframe_analyzer import DataFrameAnalyzer
-from data_platform.analyzer.data_warehouse_analyzer import DataWarehouseAnalyzer
+from data_platform.service.dataframe_analysis_service import DataFrameAnalyzer
+from data_platform.service.data_warehouse_analysis_service import DataWarehouseAnalyzer
 from data_platform.presentation.dataframe_display import show
 from data_platform.presentation.dataframe_display import show_map_of_dataframe
 from data_platform.registry.ingestor_registry import ingestor_registry
@@ -40,8 +40,8 @@ class InmemoryPipeline(BatchPipeline):
         self.analyzers = (
             DataFrameAnalyzer(self.download_enriched_data, self.dataset.get_analyzer("inmemory"), show_map_of_dataframe),
             DataWarehouseAnalyzer(
-                self.data_warehouse_repository.select_by_queries,
-                [name for name in self.data_warehouse_repository.datawarehouse.query_sql_files if name != "select_all"],
+                self.data_warehouse_repository,
+                self.dataset.get_analyzer("datawarehouse"),
                 show_map_of_dataframe,
             ),
         )
