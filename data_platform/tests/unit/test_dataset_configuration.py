@@ -6,19 +6,19 @@ from data_platform.model import (
     AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    DataFrameDefinition,
+    DataFrameModel,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
     RestApiEndpoint,
 )
-from data_platform.house.dataset import HOUSE_DATASET
+from data_platform.domain.house.dataset import HOUSE_DATASET
 from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.registry.bootstrap import initialize_registries
 from data_platform.registry.endpoint_registry import audit_endpoint
 from data_platform.config.main_settings import settings
-from data_platform.sale.dataset import SALE_DATASET
+from data_platform.domain.sale.dataset import SALE_DATASET
 
 initialize_registries()
 
@@ -28,7 +28,7 @@ class TestDataset:
     def test_should_lookup_sources_and_destinations(self) -> None:
         given_dataset = Dataset(
             name="example",
-            dataframe=DataFrameDefinition(schema=None, required_columns=frozenset({"id"})),
+            dataframe=DataFrameModel(schema=None, required_columns=frozenset({"id"})),
             audit=AuditEndpoint(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",

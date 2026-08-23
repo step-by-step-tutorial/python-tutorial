@@ -2,7 +2,7 @@ from data_platform.model import (
     AuditEndpoint,
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    DataFrameDefinition,
+    DataFrameModel,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
@@ -24,7 +24,7 @@ def build_dataset() -> Dataset:
 
     return Dataset(
         name="sale",
-        dataframe=DataFrameDefinition(schema=None, required_columns=frozenset()),
+        dataframe=DataFrameModel(schema=None, required_columns=frozenset()),
         audit=AuditEndpoint(
             database_connection_name="audit.database",
             messaging_connection_name="audit.kafka.producer",
@@ -33,7 +33,7 @@ def build_dataset() -> Dataset:
             write_sql_files={"write": "database/audit/insert_event.sql"},
         ),
         transformers={"spark": converter},
-        analyzers={"spark": analyzer},
+        analyzers={"spark": analyzer, "datawarehouse": analyzer},
         endpoints={
             "sale.file.csv": FileEndpoint(file_name="sale.csv", file_path="resources/example.csv"),
             "sale.kafka.listener": MessagingEndpoint(connection_name="sale.kafka.listener", channel_name="example-events"),

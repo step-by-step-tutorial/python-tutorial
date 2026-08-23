@@ -157,7 +157,7 @@ class TestDatabaseUtils:
         assert given_connection.commit.call_count == 1
 
 
-class TestDataFrameDefinitionValidation:
+class TestDataFrameModelValidation:
 
     def test_should_validate_required_columns_for_pandas_dataframe(self) -> None:
         # Given

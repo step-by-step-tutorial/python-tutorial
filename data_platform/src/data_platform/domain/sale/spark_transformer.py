@@ -10,7 +10,7 @@ from data_platform.converter.spark_converter import (
     filter_dataframe,
 )
 from data_platform.model import DatasetTransformer
-from data_platform.sale.attribute import SALE_ATTRIBUTE as schema
+from data_platform.domain.sale.attribute import SALE_ATTRIBUTE as schema
 
 
 class SparkSaleTransformer(DatasetTransformer[DataFrame]):

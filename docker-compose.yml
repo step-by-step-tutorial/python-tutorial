@@ -423,7 +423,7 @@ services:
       test-data:
         condition: service_healthy
     command: >
-      sh -c "python -m main"
+      sh -c "python -m data_platform.main"
   test-data:
     image: ${TEST_DATA_IMAGE}
     build:

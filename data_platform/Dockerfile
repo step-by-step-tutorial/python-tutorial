@@ -25,4 +25,4 @@ RUN python -m pip install --upgrade pip \
 RUN java -version \
     && test -x "${JAVA_HOME}/bin/java"
 
-CMD ["sh", "-c", "python -m main"]
+CMD ["sh", "-c", "python -m data_platform.main"]

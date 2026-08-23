@@ -1,14 +1,14 @@
 import pytest
 import pandas as pd
 
-from data_platform.model import AuditEndpoint, DataFrameDefinition, DatabaseEndpoint, Dataset, FileEndpoint
+from data_platform.model import AuditEndpoint, DataFrameModel, DatabaseEndpoint, Dataset, FileEndpoint
 from data_platform.persistence import database_repository as system_under_test
 
 
 def build_dataset() -> Dataset:
     return Dataset(
         name="example",
-        dataframe=DataFrameDefinition(schema=None, required_columns=frozenset()),
+        dataframe=DataFrameModel(schema=None, required_columns=frozenset()),
         audit=AuditEndpoint(
             database_connection_name="audit.database",
             messaging_connection_name="audit.kafka.producer",

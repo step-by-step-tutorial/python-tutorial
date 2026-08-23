@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from data_platform.sale.attribute import SALE_ATTRIBUTE
+from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
 from data_platform.converter.pandas_converter import sum_by_group
 from data_platform.converter.value_converter import (
     convert_to_integer,
@@ -53,7 +53,7 @@ class TestCsvUtils:
         assert normalize_optional_text("  hello  ") == "hello"
 
 
-class TestPandasDataFrameDefinitionUtils:
+class TestPandasDataFrameModelUtils:
 
     def test_should_validate_required_columns(self) -> None:
         # Given

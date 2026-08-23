@@ -2,7 +2,7 @@ import traceback
 from dataclasses import dataclass
 from typing import Any
 
-from data_platform.model.audit_event import AuditEvent, AuditEventType, AuditStatus
+from data_platform.audit.audit_event import AuditEvent, AuditEventType, AuditStatus
 
 
 @dataclass(frozen=True)

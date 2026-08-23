@@ -12,7 +12,8 @@ from data_platform.audit.audit_event_factory import TaskCompletedAuditRequest
 from data_platform.audit.audit_event_factory import TaskFailedAuditRequest
 from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
 from data_platform.audit.audit_service import AuditService
-from data_platform.model import DataPopulator, Dataset, PipelineAnalyzer
+from data_platform.model import Dataset, PipelineAnalyzer
+from data_platform.service.data_populator import DataPopulator
 from data_platform.util.log_utils import log_line
 from data_platform.util.pipeline_utils import create_pipeline_id
 from data_platform.util.time_utils import elapsed_milliseconds
@@ -54,6 +55,10 @@ class BatchPipeline(ABC):
 
     @abstractmethod
     def store_enriched_data(self, enriched_data: Any) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def download_enriched_data(self, enriched_data_path: str) -> Any:
         raise NotImplementedError
 
     def populate_enriched_data(self, enriched_data_path: str) -> None:

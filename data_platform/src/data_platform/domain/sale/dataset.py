@@ -3,7 +3,7 @@ from data_platform.keys import Key
 from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    DataFrameDefinition,
+    DataFrameModel,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
@@ -12,17 +12,17 @@ from data_platform.model import (
 )
 from data_platform.registry.endpoint_registry import audit_endpoint, endpoint_registry
 from data_platform.registry.dataset_registry import dataset_registry
-from data_platform.sale.attribute import SALE_ATTRIBUTE
-from data_platform.sale.inmemory_analyzer import InmemorySaleAnalyzer
-from data_platform.sale.inmemory_transformer import InmemorySaleTransformer
-from data_platform.sale.spark_analyzer import SparkSaleAnalyzer
-from data_platform.sale.spark_schema import build_schema
-from data_platform.sale.spark_transformer import SparkSaleTransformer
-from data_platform.sale.data_warehouse_analyzer import DataWarehouseSaleAnalyzer
+from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
+from data_platform.domain.sale.inmemory_analyzer import InmemorySaleAnalyzer
+from data_platform.domain.sale.inmemory_transformer import InmemorySaleTransformer
+from data_platform.domain.sale.spark_analyzer import SparkSaleAnalyzer
+from data_platform.domain.sale.spark_schema import build_schema
+from data_platform.domain.sale.spark_transformer import SparkSaleTransformer
+from data_platform.domain.sale.data_warehouse_analyzer import DataWarehouseSaleAnalyzer
 
 SALE_DATASET = Dataset(
     name="sale",
-    dataframe=DataFrameDefinition(
+    dataframe=DataFrameModel(
         schema=build_schema(),
         required_columns=frozenset(
             {

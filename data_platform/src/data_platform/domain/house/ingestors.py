@@ -1,5 +1,5 @@
 from data_platform.connector.spark_session_factory import create_session
-from data_platform.house.dataset import HOUSE_DATASET
+from data_platform.domain.house.dataset import HOUSE_DATASET
 from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
 from data_platform.ingestion.data_lake_ingestor import DataLakeIngestor
 from data_platform.ingestion.data_warehouse_ingestor import DataWarehouseIngestor

@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame, SparkSession
 
 from data_platform.model import DataLakeEndpoint, MessagingEndpoint
-from data_platform.sale.dataset import SALE_DATASET
+from data_platform.domain.sale.dataset import SALE_DATASET
 from data_platform.service import spark_streaming_service as system_under_test
 
 

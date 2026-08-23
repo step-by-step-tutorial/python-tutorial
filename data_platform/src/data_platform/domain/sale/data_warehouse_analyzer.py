@@ -3,5 +3,5 @@ from data_platform.persistence.data_warehouse_repository import DataWarehouseRep
 
 
 class DataWarehouseSaleAnalyzer(DatasetAnalyzer[DataWarehouseRepository]):
-    def analyze(self, repository: DataWarehouseRepository):
-        return repository.select_by_queries(["revenue_by_category", "revenue_by_country"])
+    def analyze(self, data: DataWarehouseRepository):
+        return data.select_by_queries(["revenue_by_category", "revenue_by_country"])

@@ -25,6 +25,9 @@ class _TestBatchPipeline(BatchPipeline):
     def store_enriched_data(self, enriched_data) -> str:
         return "enriched-path"
 
+    def download_enriched_data(self, enriched_data_path: str):
+        return "enriched"
+
     def populate_database(self, enriched_data_path: str) -> None:
         return None
 

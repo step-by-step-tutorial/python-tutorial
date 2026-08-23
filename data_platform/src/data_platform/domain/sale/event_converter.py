@@ -7,8 +7,8 @@ from data_platform.converter.value_converter import (
     normalize_optional_text,
 )
 from data_platform.model.mapped_event import MappedEvent
-from data_platform.sale.attribute import SALE_ATTRIBUTE
-from data_platform.sale.event import SaleEvent
+from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
+from data_platform.domain.sale.event import SaleEvent
 from data_platform.registry.event_converter_registry import event_converter_registry
 
 

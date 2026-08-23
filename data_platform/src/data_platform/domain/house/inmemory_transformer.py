@@ -14,7 +14,7 @@ from data_platform.converter.pandas_converter import (
     reset_index,
     strip_string_column,
 )
-from data_platform.house.attribute import HOUSE_ATTRIBUTE as schema
+from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE as schema
 from data_platform.model import DatasetTransformer
 
 _RENAME = {

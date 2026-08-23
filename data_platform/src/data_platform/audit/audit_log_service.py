@@ -1,7 +1,7 @@
 import logging
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
-from data_platform.model.audit_event import AuditEvent
+from data_platform.audit.audit_event import AuditEvent
 
 logger = logging.getLogger(__name__)
 

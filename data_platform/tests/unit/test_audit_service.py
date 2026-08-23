@@ -9,7 +9,7 @@ from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
 from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_service import AuditService
 from data_platform.model import AuditEndpoint
-from data_platform.model.audit_event import AuditEventType
+from data_platform.audit.audit_event import AuditEventType
 
 
 class TestAuditService:

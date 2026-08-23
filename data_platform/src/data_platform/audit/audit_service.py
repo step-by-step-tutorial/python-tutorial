@@ -4,7 +4,7 @@ from data_platform.audit.audit_database_service import AuditDatabaseService
 from data_platform.audit.audit_log_service import AuditLogService
 from data_platform.audit.audit_messaging_service import AuditMessagingService
 from data_platform.model import AuditEndpoint
-from data_platform.model.audit_event import AuditEvent
+from data_platform.audit.audit_event import AuditEvent
 
 
 class AuditService:

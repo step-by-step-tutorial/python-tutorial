@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import Generic, TypeVar
 
-DataFrameType = TypeVar("DataFrameType")
+AnalysisSource = TypeVar("AnalysisSource")
 
 
-class DatasetAnalyzer(ABC, Generic[DataFrameType]):
+class DatasetAnalyzer(ABC, Generic[AnalysisSource]):
     @abstractmethod
-    def analyze(self, dataframe: DataFrameType) -> Mapping[str, DataFrameType]:
+    def analyze(self, data: AnalysisSource) -> Mapping[str, AnalysisSource]:
         raise NotImplementedError

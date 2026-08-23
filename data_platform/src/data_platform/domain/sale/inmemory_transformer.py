@@ -11,7 +11,7 @@ from data_platform.converter.pandas_converter import (
     reset_index,
 )
 from data_platform.model import DatasetTransformer
-from data_platform.sale.attribute import SALE_ATTRIBUTE as model
+from data_platform.domain.sale.attribute import SALE_ATTRIBUTE as model
 
 logger = logging.getLogger(__name__)
 

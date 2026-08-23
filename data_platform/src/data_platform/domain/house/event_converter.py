@@ -8,8 +8,8 @@ from data_platform.converter.value_converter import (
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.house.attribute import HOUSE_ATTRIBUTE
-from data_platform.house.event import HouseEvent
+from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE
+from data_platform.domain.house.event import HouseEvent
 from data_platform.model.mapped_event import MappedEvent
 from data_platform.registry.event_converter_registry import event_converter_registry
 

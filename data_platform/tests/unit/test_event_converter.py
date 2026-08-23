@@ -2,8 +2,8 @@ import pytest
 
 from data_platform.registry.event_converter_registry import event_converter_registry
 from data_platform.registry.bootstrap import initialize_registries
-from data_platform.sale.attribute import SALE_ATTRIBUTE
-from data_platform.house.attribute import HOUSE_ATTRIBUTE
+from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
+from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE
 
 initialize_registries()
 

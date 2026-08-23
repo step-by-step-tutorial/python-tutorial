@@ -1,16 +1,16 @@
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.house.attribute import HOUSE_ATTRIBUTE as columns
-from data_platform.house.inmemory_analyzer import InmemoryHouseAnalyzer
-from data_platform.house.inmemory_transformer import InmemoryHouseTransformer
-from data_platform.house.spark_analyzer import SparkHouseAnalyzer
-from data_platform.house.spark_schema import build_schema
-from data_platform.house.spark_transformer import SparkHouseTransformer
-from data_platform.house.data_warehouse_analyzer import DataWarehouseHouseAnalyzer
+from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE as columns
+from data_platform.domain.house.inmemory_analyzer import InmemoryHouseAnalyzer
+from data_platform.domain.house.inmemory_transformer import InmemoryHouseTransformer
+from data_platform.domain.house.spark_analyzer import SparkHouseAnalyzer
+from data_platform.domain.house.spark_schema import build_schema
+from data_platform.domain.house.spark_transformer import SparkHouseTransformer
+from data_platform.domain.house.data_warehouse_analyzer import DataWarehouseHouseAnalyzer
 from data_platform.keys import Key
 from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
-    DataFrameDefinition,
+    DataFrameModel,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
@@ -21,7 +21,7 @@ from data_platform.registry.dataset_registry import dataset_registry
 
 HOUSE_DATASET = Dataset(
     name="house",
-    dataframe=DataFrameDefinition(
+    dataframe=DataFrameModel(
         schema=build_schema(),
         required_columns=frozenset(
             {

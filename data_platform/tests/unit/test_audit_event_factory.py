@@ -7,7 +7,7 @@ from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
 from data_platform.audit.audit_event_factory import TaskCompletedAuditRequest
 from data_platform.audit.audit_event_factory import TaskFailedAuditRequest
 from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
-from data_platform.model.audit_event import AuditEventType, AuditStatus
+from data_platform.audit.audit_event import AuditEventType, AuditStatus
 
 
 class TestAuditEventFactory:

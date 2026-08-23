@@ -18,7 +18,7 @@ from data_platform.model import (
     RestApiEndpoint
 )
 from data_platform.registry.ingestor_registry import ingestor_registry
-from data_platform.sale.dataset import SALE_DATASET
+from data_platform.domain.sale.dataset import SALE_DATASET
 
 def register_sale_ingestors() -> None:
     if not ingestor_registry.contains(Key.SALE_FILE_CSV):

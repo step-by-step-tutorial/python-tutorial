@@ -1,8 +1,8 @@
 import pytest
 
 from data_platform.registry.endpoint_registry import EndpointRegistry, endpoint_registry
-from data_platform.house.dataset import HOUSE_DATASET
-from data_platform.sale.dataset import SALE_DATASET
+from data_platform.domain.house.dataset import HOUSE_DATASET
+from data_platform.domain.sale.dataset import SALE_DATASET
 from data_platform.registry.endpoint_registry import audit_endpoint
 from data_platform.model import FileEndpoint
 

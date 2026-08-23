@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from data_platform.model.audit_event import AuditEvent
+from data_platform.audit.audit_event import AuditEvent
 
 
 def to_persistable_event(event: AuditEvent) -> dict[str, Any]:

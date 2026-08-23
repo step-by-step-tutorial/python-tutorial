@@ -9,16 +9,16 @@ from pandas.testing import assert_frame_equal
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 
-from data_platform.house.attribute import HOUSE_ATTRIBUTE
-from data_platform.sale.attribute import SALE_ATTRIBUTE
-from data_platform.house.inmemory_transformer import InmemoryHouseTransformer
-from data_platform.sale.inmemory_transformer import InmemorySaleTransformer
-from data_platform.house.spark_transformer import SparkHouseTransformer
-from data_platform.sale.spark_transformer import SparkSaleTransformer
-from data_platform.house.inmemory_analyzer import InmemoryHouseAnalyzer
-from data_platform.sale.inmemory_analyzer import InmemorySaleAnalyzer
-from data_platform.house.spark_analyzer import SparkHouseAnalyzer
-from data_platform.sale.spark_analyzer import SparkSaleAnalyzer
+from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE
+from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
+from data_platform.domain.house.inmemory_transformer import InmemoryHouseTransformer
+from data_platform.domain.sale.inmemory_transformer import InmemorySaleTransformer
+from data_platform.domain.house.spark_transformer import SparkHouseTransformer
+from data_platform.domain.sale.spark_transformer import SparkSaleTransformer
+from data_platform.domain.house.inmemory_analyzer import InmemoryHouseAnalyzer
+from data_platform.domain.sale.inmemory_analyzer import InmemorySaleAnalyzer
+from data_platform.domain.house.spark_analyzer import SparkHouseAnalyzer
+from data_platform.domain.sale.spark_analyzer import SparkSaleAnalyzer
 
 pytestmark = pytest.mark.integration
 

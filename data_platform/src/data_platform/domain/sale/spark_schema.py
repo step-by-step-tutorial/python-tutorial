@@ -1,7 +1,7 @@
 def build_schema():
     from pyspark.sql.types import DoubleType, LongType, StringType, StructField, StructType
 
-    from data_platform.sale.attribute import SALE_ATTRIBUTE
+    from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
 
     return StructType(
         [

@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
 
-from data_platform.house.attribute import HOUSE_ATTRIBUTE
-from data_platform.sale.attribute import SALE_ATTRIBUTE
-from data_platform.house.inmemory_transformer import InmemoryHouseTransformer
-from data_platform.sale.inmemory_transformer import InmemorySaleTransformer
+from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE
+from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
+from data_platform.domain.house.inmemory_transformer import InmemoryHouseTransformer
+from data_platform.domain.sale.inmemory_transformer import InmemorySaleTransformer
 
 
 class TestInmemorySaleTransformer:
