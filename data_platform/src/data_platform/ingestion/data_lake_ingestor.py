@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 class DataLakeIngestor:
     def __init__(self, endpoint: DataLakeEndpoint) -> None:
-        self.repository = DataLakeRepository(endpoint)
+        self._repository = DataLakeRepository(endpoint)
 
     def ingest(self, relative_path: str, file_extension: str = "parquet") -> pd.DataFrame:
         logger.info("Ingesting %s data from data lake path %s", file_extension, relative_path)
-        return self.repository.download(relative_path, file_extension)
+        return self._repository.find(relative_path, file_extension)
 import logging

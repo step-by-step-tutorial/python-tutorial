@@ -15,7 +15,7 @@ class AuditArchiveService(AbstractAuditService):
         self._client = connection_registry.get_item(audit_endpoint.datalake_connection_name)
         self._bucket_name = audit_endpoint.bucket_name
 
-    def write(self, event: AuditEvent) -> None:
+    def save(self, event: AuditEvent) -> None:
         self._ensure_bucket_exists()
         object_key = (
             f"events/event_date={event.event_time.date().isoformat()}"

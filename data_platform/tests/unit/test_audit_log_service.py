@@ -14,7 +14,7 @@ class TestAuditLogService:
         )
         mock_logger_info = mocker.patch("data_platform.audit.audit_log_service.logger.info")
 
-        AuditLogService().write(given_event)
+        AuditLogService().save(given_event)
 
         assert mock_logger_info.call_count == 1
         assert mock_logger_info.call_args.args[0] == "Audit event: %s"

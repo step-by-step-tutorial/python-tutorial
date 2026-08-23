@@ -39,7 +39,7 @@ class TestAuditDatabaseService:
             write_sql_files={"write": "database/audit/insert_event.sql"},
         )
         service = AuditDatabaseService(given_endpoint)
-        service.write(given_event)
+        service.save(given_event)
 
         # Then
         assert mock_create_connection.call_count == 1

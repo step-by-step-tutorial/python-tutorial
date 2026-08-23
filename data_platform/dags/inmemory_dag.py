@@ -59,7 +59,7 @@ with DAG(
 
     show_dataframe_task = PythonOperator(
         task_id="show_dataframe",
-        python_callable=pipeline.show_dataframe,
+        python_callable=dag_pipeline_adapter.show_dataframe,
         op_kwargs={
             "enriched_data_path": enrich_task.output,
         },

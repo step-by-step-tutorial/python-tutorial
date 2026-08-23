@@ -15,20 +15,20 @@ logger = logging.getLogger(__name__)
 class AuditMessagingService(AbstractAuditService):
 
     def __init__(self, audit_endpoint: AuditEndpoint) -> None:
-        self.connection_name = audit_endpoint.messaging_connection_name
-        self.channel_name = audit_endpoint.channel_name
-        self._producer = connection_registry.get_item(self.connection_name)
+        self._connection_name = audit_endpoint.messaging_connection_name
+        self._channel_name = audit_endpoint.channel_name
+        self._producer = connection_registry.get_item(self._connection_name)
 
-    def write(self, event: AuditEvent) -> None:
+    def save(self, event: AuditEvent) -> None:
         ensure_topic_exists(
-            main_settings.messaging[self.connection_name].bootstrap_servers,
-            self.channel_name,
+            main_settings.messaging[self._connection_name].bootstrap_servers,
+            self._channel_name,
         )
-        logger.info("Publishing audit event %s to messaging channel %s", event.event_id, self.channel_name)
+        logger.info("Publishing audit event %s to messaging channel %s", event.event_id, self._channel_name)
 
         try:
             self._producer.produce(
-                topic=self.channel_name,
+                topic=self._channel_name,
                 key=str(event.event_id),
                 value=event.model_dump_json(),
                 headers={

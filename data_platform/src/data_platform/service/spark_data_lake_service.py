@@ -12,27 +12,27 @@ logger = logging.getLogger(__name__)
 
 class SparkDataLakeService:
     def __init__(self, session: SparkSession, data_lake_endpoint: DataLakeEndpoint) -> None:
-        self.session = session
-        self.data_lake_endpoint = data_lake_endpoint
+        self._session = session
+        self._data_lake_endpoint = data_lake_endpoint
 
-    def read_from_object_storage(self, path: str) -> DataFrame:
+    def find(self, path: str) -> DataFrame:
         should_not_be_none_or_empty(path, "path")
         logger.info("Reading data from %s", path)
-        return self.session.read.parquet(generate_data_lake_path(self.data_lake_endpoint, path))
+        return self._session.read.parquet(generate_data_lake_path(self._data_lake_endpoint, path))
 
-    def overwrite_to_object_storage(self, dataframe: DataFrame, path: str) -> None:
+    def replace(self, dataframe: DataFrame, path: str) -> None:
         should_not_be_none(dataframe, "dataframe")
         should_not_be_none_or_empty(path, "path")
         logger.info("Overwriting data in %s", path)
-        dataframe.write.mode("overwrite").parquet(generate_data_lake_path(self.data_lake_endpoint, path))
+        dataframe.write.mode("overwrite").parquet(generate_data_lake_path(self._data_lake_endpoint, path))
 
-    def append_to_object_storage(self, dataframe: DataFrame, path: str) -> None:
+    def save(self, dataframe: DataFrame, path: str) -> None:
         should_not_be_none(dataframe, "dataframe")
         should_not_be_none_or_empty(path, "path")
         logger.info("Appending data to %s", path)
-        dataframe.write.mode("append").parquet(generate_data_lake_path(self.data_lake_endpoint, path))
+        dataframe.write.mode("append").parquet(generate_data_lake_path(self._data_lake_endpoint, path))
 
-    def append_batch_to_object_storage(self, dataframe: DataFrame, path: str) -> None:
+    def save_batch(self, dataframe: DataFrame, path: str) -> None:
         should_not_be_none(dataframe, "dataframe")
         should_not_be_none_or_empty(path, "path")
         logger.info("Appending batch data to %s", path)
@@ -42,4 +42,4 @@ class SparkDataLakeService:
                 return
             batch_dataframe = dataframe.persist()
             persisted.append(batch_dataframe)
-            self.append_to_object_storage(dataframe=batch_dataframe, path=path)
+            self.save(dataframe=batch_dataframe, path=path)

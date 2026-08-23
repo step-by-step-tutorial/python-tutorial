@@ -79,8 +79,8 @@ class TestRun:
         mocker.patch("data_platform.pipeline.spark_streaming_pipeline.create_session", return_value=given_session)
         mocker.patch("data_platform.pipeline.spark_streaming_pipeline.connection_registry.get_item", return_value=mocker.Mock())
         mocker.patch("data_platform.pipeline.spark_streaming_pipeline.event_converter_registry.get_item", return_value=mocker.Mock())
-        given_csv_kafka_event_publisher = mocker.Mock()
-        mock_csv_kafka_event_publisher = mocker.patch("data_platform.pipeline.spark_streaming_pipeline.CsvKafkaEventPublisher", return_value=given_csv_kafka_event_publisher)
+        given_csv_kafka_publisher = mocker.Mock()
+        mock_csv_kafka_publisher = mocker.patch("data_platform.pipeline.spark_streaming_pipeline.CsvKafkaPublisher", return_value=given_csv_kafka_publisher)
         given_raw_topic_ingestor = mocker.Mock()
         given_raw_topic_ingestor.ingest.return_value = "raw-data"
         mocker.patch("data_platform.pipeline.spark_streaming_pipeline.ingestor_registry.get_item", return_value=given_raw_topic_ingestor)
@@ -95,8 +95,8 @@ class TestRun:
         mocker.patch.object(given_pipeline, "analyze_enriched_data")
         given_pipeline.run()
 
-        assert mock_csv_kafka_event_publisher.call_count == 1
-        assert given_csv_kafka_event_publisher.publish_data.call_count == 1
+        assert mock_csv_kafka_publisher.call_count == 1
+        assert given_csv_kafka_publisher.publish.call_count == 1
         assert given_raw_topic_ingestor.ingest.call_count == 1
         assert given_pipeline.store_raw_data.call_count == 1
         assert mock_clean.call_count == 1

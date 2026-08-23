@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 class CsvFileIngestor:
     def __init__(self, endpoint: FileEndpoint) -> None:
-        self.endpoint = endpoint
+        self._endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:
-        logger.info("Ingesting CSV file from %s", self.endpoint.file_path)
-        return csv_to_dataframe(self.endpoint.file_path)
+        logger.info("Ingesting CSV file from %s", self._endpoint.file_path)
+        return csv_to_dataframe(self._endpoint.file_path)

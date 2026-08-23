@@ -31,7 +31,7 @@ class TestAuditMessagingService:
                 write_sql_files={"write": "database/audit/insert_event.sql"},
             )
         )
-        actual.write(given_event)
+        actual.save(given_event)
 
         # Then
         assert mock_create_producer.call_count == 1
@@ -67,7 +67,7 @@ class TestAuditMessagingService:
 
         # When / Then
         try:
-            service.write(given_event)
+            service.save(given_event)
         except RuntimeError:
             pass
 

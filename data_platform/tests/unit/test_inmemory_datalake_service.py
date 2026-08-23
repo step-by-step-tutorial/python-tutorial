@@ -24,7 +24,7 @@ class TestUploadParquet:
         given_client.put_object.return_value = None
 
         # When
-        actual = repository.upload(
+        actual = repository.save(
             df=given_dataframe,
             relative_path="raw",
         )

@@ -34,7 +34,7 @@ class TestAuditArchiveService:
             write_sql_files={"write": "database/audit/insert_event.sql"},
         )
 
-        actual = AuditArchiveService(given_endpoint).write(given_event)
+        actual = AuditArchiveService(given_endpoint).save(given_event)
 
         # Then
         assert actual is None

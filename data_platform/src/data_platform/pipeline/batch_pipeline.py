@@ -29,9 +29,9 @@ class BatchPipeline(ABC):
         self.dataset = ds
         self.pipeline_id = create_pipeline_id()
         self.ingestion_time: datetime = generate_ingestion_time()
-        self.audit_service = audit_service or AuditService(ds.audit)
-        self.populators: tuple[DataPopulator, ...] = ()
-        self.analyzers: tuple[PipelineAnalyzer, ...] = ()
+        self._audit_service = audit_service or AuditService(ds.audit)
+        self._populators: tuple[DataPopulator, ...] = ()
+        self._analyzers: tuple[PipelineAnalyzer, ...] = ()
 
     @abstractmethod
     def ingest_raw_data(self) -> Any:
@@ -62,7 +62,7 @@ class BatchPipeline(ABC):
         raise NotImplementedError
 
     def populate_enriched_data(self, enriched_data_path: str) -> None:
-        for populator in self.populators:
+        for populator in self._populators:
             populator.populate(enriched_data_path)
 
     @abstractmethod
@@ -70,19 +70,23 @@ class BatchPipeline(ABC):
         raise NotImplementedError
 
     def analyze_enriched_data(self, enriched_data_path: str) -> None:
-        for analyzer in self.analyzers:
+        for analyzer in self._analyzers:
             analyzer.analyze(enriched_data_path)
 
     def before_run(self) -> None:
+        return None
+
+    def before_task(self) -> None:
         return None
 
     def after_run(self) -> None:
         return None
 
     def run_task(self, task_name: str, task_callable):
+        self.before_task()
         task_started_at = time.perf_counter()
         task_id = f"{self.pipeline_id}-{task_name}"
-        self.audit_service.emit(
+        self._audit_service.emit(
             AuditEventFactory.create_task_started_event(
                 TaskStartedAuditRequest(
                     pipeline_name=self.pipeline_name,
@@ -97,7 +101,7 @@ class BatchPipeline(ABC):
         try:
             result = task_callable()
         except Exception as error:
-            self.audit_service.emit(
+            self._audit_service.emit(
                 AuditEventFactory.create_task_failed_event(
                     TaskFailedAuditRequest(
                         pipeline_name=self.pipeline_name,
@@ -112,7 +116,7 @@ class BatchPipeline(ABC):
             )
             raise
         else:
-            self.audit_service.emit(
+            self._audit_service.emit(
                 AuditEventFactory.create_task_completed_event(
                     TaskCompletedAuditRequest(
                         pipeline_name=self.pipeline_name,
@@ -136,7 +140,7 @@ class BatchPipeline(ABC):
         try:
             pipeline_started_at = time.perf_counter()
             self.before_run()
-            self.audit_service.emit(
+            self._audit_service.emit(
                 AuditEventFactory.create_pipeline_started_event(
                     PipelineStartedAuditRequest(
                         pipeline_name=self.pipeline_name,
@@ -175,7 +179,7 @@ class BatchPipeline(ABC):
             log_line()
         except Exception as error:
             if pipeline_started_at is not None:
-                self.audit_service.emit(
+                self._audit_service.emit(
                     AuditEventFactory.create_pipeline_failed_event(
                         PipelineFailedAuditRequest(
                             pipeline_name=self.pipeline_name,
@@ -192,7 +196,7 @@ class BatchPipeline(ABC):
             raise
         else:
             if pipeline_started_at is not None:
-                self.audit_service.emit(
+                self._audit_service.emit(
                     AuditEventFactory.create_pipeline_completed_event(
                         PipelineCompletedAuditRequest(
                             pipeline_name=self.pipeline_name,

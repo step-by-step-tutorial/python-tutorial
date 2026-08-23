@@ -4,6 +4,6 @@ from data_platform.persistence.data_warehouse_repository import DataWarehouseRep
 
 class DataWarehouseHouseAnalyzer(DatasetAnalyzer[DataWarehouseRepository]):
     def analyze(self, data: DataWarehouseRepository):
-        return data.select_by_queries(
+        return data.find_by_queries(
             ["average_price_by_address", "average_price_per_square_meter_by_room"]
         )

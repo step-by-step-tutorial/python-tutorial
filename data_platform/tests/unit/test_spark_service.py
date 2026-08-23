@@ -23,9 +23,9 @@ class TestAppendBatchToObjectStorage:
             "data_platform.service.spark_data_lake_service.persisted_dataframes",
             return_value=given_context,
         )
-        mock_append = mocker.patch.object(service, "append_to_object_storage")
+        mock_append = mocker.patch.object(service, "save")
 
-        service.append_batch_to_object_storage(given_dataframe, "cleaned/path")
+        service.save_batch(given_dataframe, "cleaned/path")
 
         assert mock_persisted_dataframes.call_count == 1
         assert given_dataframe.persist.call_count == 1

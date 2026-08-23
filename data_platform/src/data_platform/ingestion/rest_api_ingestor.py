@@ -12,12 +12,12 @@ logger = logging.getLogger(__name__)
 
 class RestApiIngestor:
     def __init__(self, endpoint: RestApiEndpoint) -> None:
-        self.endpoint = endpoint
+        self._endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:
-        logger.info("Ingesting REST API data from %s", self.endpoint.url)
+        logger.info("Ingesting REST API data from %s", self._endpoint.url)
         rest_connection = build_opener()
-        request = Request(self.endpoint.url, method=self.endpoint.method, headers=self.endpoint.headers)
+        request = Request(self._endpoint.url, method=self._endpoint.method, headers=self._endpoint.headers)
         with rest_connection.open(request) as response:
             payload = response.read().decode("utf-8")
 

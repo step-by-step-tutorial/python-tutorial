@@ -25,7 +25,7 @@ class TestReadStream:
                 starting_offsets="earliest",
             ),
             data_lake_endpoint=DataLakeEndpoint(bucket_name="bucket"),
-        ).read_from_kafka()
+        ).find()
 
         assert actual is given_dataframe
         assert given_session.readStream.format.call_count == 1
@@ -48,9 +48,9 @@ class TestReadStream:
             messaging_endpoint=MessagingEndpoint(channel_name="topic", bootstrap_servers="localhost:9092"),
             data_lake_endpoint=DataLakeEndpoint(bucket_name="bucket"),
         )
-        mock_append_batch = mocker.patch.object(service, "append_batch_to_object_storage")
+        mock_append_batch = mocker.patch.object(service, "save_batch")
 
-        service.append_stream_to_object_storage(given_dataframe, "raw/path", "checkpoint/path")
+        service.save_stream(given_dataframe, "raw/path", "checkpoint/path")
 
         batch_handler = given_stream_writer.foreachBatch.call_args.args[0]
         batch_handler(given_batch, 0)

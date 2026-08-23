@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class AuditLogService(AbstractAuditService):
 
-    def write(self, event: AuditEvent) -> None:
+    def save(self, event: AuditEvent) -> None:
         logger.info(
             "Audit event: %s",
             f"Pipeline={event.pipeline_name}, Task={event.task_name}, ID={event.event_id}",

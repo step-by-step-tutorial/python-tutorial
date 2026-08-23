@@ -14,6 +14,6 @@ class AuditDatabaseService(AbstractAuditService):
         self._connection = connection_registry.get_item(audit_endpoint.database_connection_name)
         self._insert_event_sql = read_text_file(audit_endpoint.write_sql_files["write"])
 
-    def write(self, event: AuditEvent) -> None:
+    def save(self, event: AuditEvent) -> None:
         with self._connection.begin() as connection:
             connection.execute(text(self._insert_event_sql), to_persistable_event(event))

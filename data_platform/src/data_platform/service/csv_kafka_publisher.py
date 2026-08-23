@@ -11,7 +11,7 @@ from data_platform.util.kafka_admin import ensure_topic_exists
 logger = logging.getLogger(__name__)
 
 
-class CsvKafkaEventPublisher:
+class CsvKafkaPublisher:
     def __init__(
             self,
             file_endpoint: FileEndpoint,
@@ -19,19 +19,19 @@ class CsvKafkaEventPublisher:
             producer: Producer,
             event_converter: EventConverter,
     ) -> None:
-        self.file_endpoint = file_endpoint
-        self.messaging_endpoint = messaging_endpoint
+        self._file_endpoint = file_endpoint
+        self._messaging_endpoint = messaging_endpoint
         self._producer = producer
         self._event_converter = event_converter
 
-    def publish_data(self) -> int:
-        ensure_topic_exists(self.messaging_endpoint.bootstrap_servers, self.messaging_endpoint.channel_name)
-        logger.info("Reading CSV file from %s", self.file_endpoint.file_path)
-        event_counter = read_csv_file(self.file_endpoint.file_path, self.publish_event)
+    def publish(self) -> int:
+        ensure_topic_exists(self._messaging_endpoint.bootstrap_servers, self._messaging_endpoint.channel_name)
+        logger.info("Reading CSV file from %s", self._file_endpoint.file_path)
+        event_counter = read_csv_file(self._file_endpoint.file_path, self.publish_event)
         self._producer.poll(0)
         self._producer.flush()
 
-        logger.info("Published %s CSV rows to streaming topic %s", event_counter, self.messaging_endpoint.channel_name)
+        logger.info("Published %s CSV rows to streaming topic %s", event_counter, self._messaging_endpoint.channel_name)
         return event_counter
 
     def publish_event(self, data: dict[str, Any]) -> None:
@@ -40,7 +40,7 @@ class CsvKafkaEventPublisher:
         value = json.dumps(event.payload, ensure_ascii=False).encode("utf-8")
 
         self._producer.produce(
-            topic=self.messaging_endpoint.channel_name,
+            topic=self._messaging_endpoint.channel_name,
             key=key,
             value=value,
         )

@@ -5,7 +5,6 @@ from typing import Any, cast
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset_analyzer import DatasetAnalyzer
 from data_platform.model.dataset_transformer import DatasetTransformer
-from data_platform.model.endpoint_role import EndpointRole
 from data_platform.model.endpoints import AuditEndpoint, Endpoint, EndpointType
 
 
@@ -23,9 +22,6 @@ class Dataset:
         if not isinstance(endpoint, endpoint_type):
             raise TypeError(f"Endpoint '{name}' is not a {endpoint_type.__name__}")
         return cast(EndpointType, endpoint)
-
-    def get_endpoint_by_role(self, role: EndpointRole, endpoint_type: type[EndpointType]) -> EndpointType:
-        return self.get_endpoint(f"{self.name.lower()}.{role.value}", endpoint_type)
 
     def get_transformer(self, name: str) -> DatasetTransformer:
         return self.transformers[name]

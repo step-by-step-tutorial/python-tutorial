@@ -12,24 +12,24 @@ logger = logging.getLogger(__name__)
 
 class SparkKafkaIngestor:
     def __init__(self, endpoint: MessagingEndpoint, session: SparkSession, schema: StructType) -> None:
-        self.endpoint = endpoint
-        self.session = session
-        self.schema = schema
+        self._endpoint = endpoint
+        self._session = session
+        self._schema = schema
 
     def ingest(self) -> DataFrame:
-        ensure_topic_exists(self.endpoint.bootstrap_servers, self.endpoint.channel_name)
-        logger.info("Reading data from Kafka topic %s", self.endpoint.channel_name)
+        ensure_topic_exists(self._endpoint.bootstrap_servers, self._endpoint.channel_name)
+        logger.info("Reading data from Kafka topic %s", self._endpoint.channel_name)
         return (
-            self.session
+            self._session
             .readStream
             .format("kafka")
-            .option("kafka.bootstrap.servers", self.endpoint.bootstrap_servers)
-            .option("subscribe", self.endpoint.channel_name)
-            .option("startingOffsets", self.endpoint.starting_offsets)
+            .option("kafka.bootstrap.servers", self._endpoint.bootstrap_servers)
+            .option("subscribe", self._endpoint.channel_name)
+            .option("startingOffsets", self._endpoint.starting_offsets)
             .option("failOnDataLoss", "false")
             .load()
             .select(
-                sf.from_json(sf.col("value").cast("string"), self.schema).alias("payload")
+                sf.from_json(sf.col("value").cast("string"), self._schema).alias("payload")
             )
             .select("payload.*")
         )

@@ -9,8 +9,8 @@ logger = logging.getLogger(__name__)
 
 class SparkDataLakeIngestor:
     def __init__(self, endpoint: DataLakeEndpoint, session: SparkSession) -> None:
-        self.endpoint = endpoint
-        self.session = session
+        self._endpoint = endpoint
+        self._session = session
 
     def ingest(self, relative_path: str) -> DataFrame:
         if not relative_path:
@@ -18,11 +18,11 @@ class SparkDataLakeIngestor:
 
         logger.info("Reading data from %s", relative_path)
         return (
-            self.session
+            self._session
             .read
             .parquet(
-                f"{self.endpoint.scheme}://"
-                f"{self.endpoint.bucket_name.strip()}/"
+                f"{self._endpoint.scheme}://"
+                f"{self._endpoint.bucket_name.strip()}/"
                 f"{relative_path.strip('/')}"
             )
         )

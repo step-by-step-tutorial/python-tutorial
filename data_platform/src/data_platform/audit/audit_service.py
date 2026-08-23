@@ -19,4 +19,4 @@ class AuditService:
 
     def emit(self, event: AuditEvent) -> None:
         for write_service in self._write_services:
-            write_service.write(event)
+            write_service.save(event)

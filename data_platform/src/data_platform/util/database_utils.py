@@ -12,5 +12,5 @@ def execute_sql(connection_name: str, *queries: str):
         connection.commit()
 
 
-def run_sql_files(connection_name: str, file_names: list[str]) -> None:
+def execute_files(connection_name: str, file_names: list[str]) -> None:
     execute_sql(connection_name, *read_text_files(file_names))
