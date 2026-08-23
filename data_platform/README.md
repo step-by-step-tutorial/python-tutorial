@@ -24,10 +24,12 @@ docker --version
 ## Test
 
 ```shell
+cd ./data_platform
 pytest
 ```
 
 ```shell
+cd ./data_platform
 pytest --html=./report/test/test-report.html
 pytest --cov --cov-report=html:./report/coverage
 python -m http.server 8000 --directory ./report
@@ -36,11 +38,13 @@ python -m http.server 8000 --directory ./report
 ## LocalHost
 
 ```shell
+cd ./data_platform
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
 ```
 
 ```shell
+cd ./data_platform
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
 python -m data_platform.main
 ```
@@ -53,10 +57,12 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ## Dockerization
 
 ```shell
+cd ./data_platform
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev up --build -d
 ```
 
 ```shell
+cd ./data_platform
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
 docker rmi samanalishiri/data-platform:latest
 ```
