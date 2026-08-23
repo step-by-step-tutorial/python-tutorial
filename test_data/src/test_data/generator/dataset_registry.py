@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from test_data.config import settings as env_config
 from test_data.config.config_utils import read_config
 from test_data.model.schemas import Dataset, DatasetMetadata
@@ -9,7 +11,7 @@ from test_data.util.file_utils import list_of_file_names
 class DatasetRegistry:
     def __init__(self) -> None:
         self._datasets = {
-            name: Dataset(name=name, config=read_config(name)) for name in list_of_file_names(env_config.CONFIG_DIR)
+            Path(name).stem: Dataset(name=Path(name).stem, config=read_config(name)) for name in list_of_file_names(env_config.CONFIG_DIR)
         }
 
     def get_all_datasets(self) -> list[Dataset]:

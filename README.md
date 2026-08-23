@@ -56,7 +56,7 @@ python -m test_data.api.dataset_api
 
 ```shell
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
-python -m main
+python -m data_platform.main
 ```
 
 
