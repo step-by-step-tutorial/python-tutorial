@@ -4,6 +4,7 @@ from types import MappingProxyType
 
 from data_platform.keys import Key
 
+
 @dataclass(frozen=True)
 class DataLakeSettings:
     endpoint: str
@@ -14,6 +15,8 @@ class DataLakeSettings:
     scheme: str
     environment: str
     checkpoint_path: str
+
+
 data_lake = MappingProxyType(
     {
         Key.DATA_PLATFORM_DATALAKE: DataLakeSettings(
@@ -24,7 +27,8 @@ data_lake = MappingProxyType(
             audit_bucket_name=os.getenv("DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
             scheme=os.getenv("DATA_PLATFORM_DATALAKE_SCHEME", "s3a"),
             environment=os.getenv("DATA_PLATFORM_DATALAKE_ENVIRONMENT", "dev"),
-            checkpoint_path=os.getenv("DATA_PLATFORM_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/sale-events"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_DATALAKE_CHECKPOINT_PATH",
+                                      "s3a://app-datalake/checkpoints/sale-events"),
         ),
         Key.SALE_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_SALE_DATALAKE_ENDPOINT", "http://localhost:9000"),
@@ -34,7 +38,8 @@ data_lake = MappingProxyType(
             audit_bucket_name=os.getenv("DATA_PLATFORM_SALE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
             scheme=os.getenv("DATA_PLATFORM_SALE_DATALAKE_SCHEME", "s3a"),
             environment=os.getenv("DATA_PLATFORM_SALE_DATALAKE_ENVIRONMENT", "dev"),
-            checkpoint_path=os.getenv("DATA_PLATFORM_SALE_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/sale-events"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_SALE_DATALAKE_CHECKPOINT_PATH",
+                                      "s3a://app-datalake/checkpoints/sale-events"),
         ),
         Key.HOUSE_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENDPOINT", "http://localhost:9000"),
@@ -44,7 +49,8 @@ data_lake = MappingProxyType(
             audit_bucket_name=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
             scheme=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_SCHEME", "s3a"),
             environment=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENVIRONMENT", "dev"),
-            checkpoint_path=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/house-events"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_CHECKPOINT_PATH",
+                                      "s3a://app-datalake/checkpoints/house-events"),
         ),
         Key.AUDIT_DATALAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_ENDPOINT", "http://localhost:9000"),
@@ -54,7 +60,8 @@ data_lake = MappingProxyType(
             audit_bucket_name=os.getenv("DATA_PLATFORM_AUDIT_BUCKET_NAME", "app-datalake-audit"),
             scheme=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_SCHEME", "s3a"),
             environment=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_ENVIRONMENT", "dev"),
-            checkpoint_path=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_CHECKPOINT_PATH", "s3a://app-datalake/checkpoints/audit-events"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_CHECKPOINT_PATH",
+                                      "s3a://app-datalake/checkpoints/audit-events"),
         ),
     }
 )

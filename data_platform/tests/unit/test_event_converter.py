@@ -1,14 +1,17 @@
 import pytest
 
-from data_platform.converter.event_converter import get_event_converter
-from data_platform.model.sale_attribute import SALE_ATTRIBUTE
-from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
+from data_platform.registry.event_converter_registry import event_converter_registry
+from data_platform.registry.bootstrap import initialize_registries
+from data_platform.sale.attribute import SALE_ATTRIBUTE
+from data_platform.house.attribute import HOUSE_ATTRIBUTE
+
+initialize_registries()
 
 
 class TestEventConverter:
 
     def test_should_map_sale_rows_to_prepared_events(self) -> None:
-        mapper = get_event_converter("sale")
+        mapper = event_converter_registry.get_item("sale")
 
         actual = mapper.map(
             {
@@ -28,7 +31,7 @@ class TestEventConverter:
         assert actual.payload[SALE_ATTRIBUTE.CUSTOMER_NAME] == "Alex Johnson"
 
     def test_should_map_sale_rows_with_pandas_typed_values(self) -> None:
-        mapper = get_event_converter("sale")
+        mapper = event_converter_registry.get_item("sale")
 
         actual = mapper.map(
             {
@@ -48,7 +51,7 @@ class TestEventConverter:
         assert actual.payload[SALE_ATTRIBUTE.QUANTITY] == 2.0
 
     def test_should_map_house_rows_to_prepared_events(self) -> None:
-        mapper = get_event_converter("house")
+        mapper = event_converter_registry.get_item("house")
 
         actual = mapper.map(
             {
@@ -68,7 +71,7 @@ class TestEventConverter:
         assert actual.payload[HOUSE_ATTRIBUTE.price_raw] == 1000.0
 
     def test_should_map_house_rows_with_missing_address_to_optional_key(self) -> None:
-        mapper = get_event_converter("house")
+        mapper = event_converter_registry.get_item("house")
 
         actual = mapper.map(
             {
@@ -87,7 +90,7 @@ class TestEventConverter:
         assert actual.payload[HOUSE_ATTRIBUTE.address_raw] is None
 
     def test_should_map_house_rows_with_comma_formatted_numbers(self) -> None:
-        mapper = get_event_converter("house")
+        mapper = event_converter_registry.get_item("house")
 
         actual = mapper.map(
             {
@@ -106,5 +109,5 @@ class TestEventConverter:
         assert actual.payload[HOUSE_ATTRIBUTE.price_raw] == 3310000000.0
 
     def test_should_raise_for_unknown_dataset(self) -> None:
-        with pytest.raises(KeyError):
-            get_event_converter("missing")
+        with pytest.raises(ValueError):
+            event_converter_registry.get_item("missing")

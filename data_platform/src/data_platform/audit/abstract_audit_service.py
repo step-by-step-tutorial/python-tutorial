@@ -1,4 +1,3 @@
-
 from abc import ABC, abstractmethod
 
 from data_platform.model.audit_event import AuditEvent

@@ -8,10 +8,10 @@ import pytest
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 
-from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
-from data_platform.model.sale_attribute import SALE_ATTRIBUTE
-from data_platform.data_transformer.spark_house_transformer import SparkHouseTransformer
-from data_platform.data_transformer.spark_sale_transformer import SparkSaleTransformer
+from data_platform.house.attribute import HOUSE_ATTRIBUTE
+from data_platform.sale.attribute import SALE_ATTRIBUTE
+from data_platform.house.spark_transformer import SparkHouseTransformer
+from data_platform.sale.spark_transformer import SparkSaleTransformer
 
 pytestmark = pytest.mark.integration
 

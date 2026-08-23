@@ -5,6 +5,7 @@ from operator import and_
 import pandas as pd
 from pandas import DataFrame
 
+
 def convert_numeric_column(df: DataFrame, column: str, default_value: float | int | None = None) -> DataFrame:
     converted = pd.to_numeric(
         df[column].astype("string").str.replace(",", "", regex=False).str.strip(),
@@ -91,11 +92,11 @@ def remove_rows_with_missing_values(df: DataFrame, columns: Sequence[str]) -> Da
 
 
 def divide_columns(
-    df: DataFrame,
-    numerator_field: str,
-    denominator_field: str,
-    alias_field: str,
-    decimal_places: int = 2,
+        df: DataFrame,
+        numerator_field: str,
+        denominator_field: str,
+        alias_field: str,
+        decimal_places: int = 2,
 ) -> DataFrame:
     df[alias_field] = (df[numerator_field] / df[denominator_field]).round(decimal_places)
     return df

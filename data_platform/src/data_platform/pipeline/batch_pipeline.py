@@ -1,4 +1,3 @@
-
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -13,7 +12,7 @@ from data_platform.audit.audit_event_factory import TaskCompletedAuditRequest
 from data_platform.audit.audit_event_factory import TaskFailedAuditRequest
 from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
 from data_platform.audit.audit_service import AuditService
-from data_platform.model import Dataset
+from data_platform.model import DataPopulator, Dataset, PipelineAnalyzer
 from data_platform.util.log_utils import log_line
 from data_platform.util.pipeline_utils import create_pipeline_id
 from data_platform.util.time_utils import elapsed_milliseconds
@@ -30,6 +29,8 @@ class BatchPipeline(ABC):
         self.pipeline_id = create_pipeline_id()
         self.ingestion_time: datetime = generate_ingestion_time()
         self.audit_service = audit_service or AuditService(ds.audit)
+        self.populators: tuple[DataPopulator, ...] = ()
+        self.analyzers: tuple[PipelineAnalyzer, ...] = ()
 
     @abstractmethod
     def ingest_raw_data(self) -> Any:
@@ -55,25 +56,17 @@ class BatchPipeline(ABC):
     def store_enriched_data(self, enriched_data: Any) -> str:
         raise NotImplementedError
 
-    @abstractmethod
-    def populate_database(self, enriched_data_path: str) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def populate_datawarehouse(self, enriched_data_path: str) -> None:
-        raise NotImplementedError
+    def populate_enriched_data(self, enriched_data_path: str) -> None:
+        for populator in self.populators:
+            populator.populate(enriched_data_path)
 
     @abstractmethod
     def show_dataframe(self, enriched_data_path: str) -> None:
         raise NotImplementedError
 
-    @abstractmethod
-    def analyze_dataframe(self, enriched_data_path: str) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def analyze_data_warehouse(self) -> None:
-        raise NotImplementedError
+    def analyze_enriched_data(self, enriched_data_path: str) -> None:
+        for analyzer in self.analyzers:
+            analyzer.analyze(enriched_data_path)
 
     def before_run(self) -> None:
         return None
@@ -166,17 +159,14 @@ class BatchPipeline(ABC):
             enriched_data = self.run_task("enrich", lambda: self.enrich(cleaned_relative_path))
             log_line()
 
-            enriched_relative_path = self.run_task("store_enriched_data", lambda: self.store_enriched_data(enriched_data))
+            enriched_relative_path = self.run_task("store_enriched_data",
+                                                   lambda: self.store_enriched_data(enriched_data))
             log_line()
-            self.run_task("populate_database", lambda: self.populate_database(enriched_relative_path))
-            log_line()
-            self.run_task("populate_datawarehouse", lambda: self.populate_datawarehouse(enriched_relative_path))
+            self.run_task("populate_enriched_data", lambda: self.populate_enriched_data(enriched_relative_path))
             log_line()
             self.run_task("show_dataframe", lambda: self.show_dataframe(enriched_relative_path))
             log_line()
-            self.run_task("analyze_primary", lambda: self.analyze_dataframe(enriched_relative_path))
-            log_line()
-            self.run_task("analyze_data_warehouse", self.analyze_data_warehouse)
+            self.run_task("analyze_enriched_data", lambda: self.analyze_enriched_data(enriched_relative_path))
             log_line()
         except Exception as error:
             if pipeline_started_at is not None:

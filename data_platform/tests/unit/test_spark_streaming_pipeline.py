@@ -77,6 +77,8 @@ class TestRun:
         mocker.patch("data_platform.pipeline.spark_streaming_pipeline.AuditService", return_value=given_audit_service)
         given_session = mocker.Mock()
         mocker.patch("data_platform.pipeline.spark_streaming_pipeline.create_session", return_value=given_session)
+        mocker.patch("data_platform.pipeline.spark_streaming_pipeline.connection_registry.get_item", return_value=mocker.Mock())
+        mocker.patch("data_platform.pipeline.spark_streaming_pipeline.event_converter_registry.get_item", return_value=mocker.Mock())
         given_csv_kafka_event_publisher = mocker.Mock()
         mock_csv_kafka_event_publisher = mocker.patch("data_platform.pipeline.spark_streaming_pipeline.CsvKafkaEventPublisher", return_value=given_csv_kafka_event_publisher)
         given_raw_topic_ingestor = mocker.Mock()
@@ -88,11 +90,9 @@ class TestRun:
         mocker.patch.object(given_pipeline, "store_cleaned_data", return_value="clean-path")
         mock_enrich = mocker.patch.object(given_pipeline, "enrich", return_value="enriched")
         mocker.patch.object(given_pipeline, "store_enriched_data", return_value="enriched-path")
-        mocker.patch.object(given_pipeline, "populate_database")
-        mocker.patch.object(given_pipeline, "populate_datawarehouse")
+        mocker.patch.object(given_pipeline, "populate_enriched_data")
         mocker.patch.object(given_pipeline, "show_dataframe")
-        mocker.patch.object(given_pipeline, "analyze_dataframe")
-        mocker.patch.object(given_pipeline, "analyze_data_warehouse")
+        mocker.patch.object(given_pipeline, "analyze_enriched_data")
         given_pipeline.run()
 
         assert mock_csv_kafka_event_publisher.call_count == 1
@@ -103,9 +103,7 @@ class TestRun:
         assert given_pipeline.store_cleaned_data.call_count == 1
         assert mock_enrich.call_count == 1
         assert given_pipeline.store_enriched_data.call_count == 1
-        assert given_pipeline.populate_database.call_count == 1
-        assert given_pipeline.populate_datawarehouse.call_count == 1
+        assert given_pipeline.populate_enriched_data.call_count == 1
         assert given_pipeline.show_dataframe.call_count == 1
-        assert given_pipeline.analyze_dataframe.call_count == 1
-        assert given_pipeline.analyze_data_warehouse.call_count == 1
+        assert given_pipeline.analyze_enriched_data.call_count == 1
         assert given_session.stop.call_count == 1

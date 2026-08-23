@@ -1,10 +1,13 @@
+import logging
 
 import json
 
 import pandas as pd
 
-from data_platform.registry.connection_registry import connection_registry
 from data_platform.model import MessagingEndpoint
+from data_platform.registry.connection_registry import connection_registry
+
+logger = logging.getLogger(__name__)
 
 
 class KafkaIngestor:
@@ -12,6 +15,7 @@ class KafkaIngestor:
         self.endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:
+        logger.info("Ingesting messages from Kafka topic %s", self.endpoint.channel_name)
         consumer = connection_registry.get_item(self.endpoint.connection_name)
         consumer.subscribe([self.endpoint.channel_name])
 
@@ -30,4 +34,6 @@ class KafkaIngestor:
         finally:
             consumer.close()
 
+        logger.info("Ingested %s Kafka messages from topic %s", len(records), self.endpoint.channel_name)
         return pd.json_normalize(records)
+import logging

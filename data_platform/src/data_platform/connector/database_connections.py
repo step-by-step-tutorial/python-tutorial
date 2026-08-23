@@ -1,4 +1,3 @@
-
 from sqlalchemy import create_engine
 
 from data_platform.config.main_settings import settings as main_settings

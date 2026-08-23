@@ -5,11 +5,13 @@ from airflow.task.trigger_rule import TriggerRule
 
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.registry.dataset_registry import dataset_registry
+from data_platform.registry.bootstrap import initialize_registries
 from data_platform.pipeline.spark_pipeline import SparkPipeline
 from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
 
 DAG_ID = "spark_etl_dag"
 
+initialize_registries()
 pipeline = SparkPipeline(dataset_registry.get_item(main_settings.app.dataset_name))
 dag_pipeline_adapter = DagPipelineAdapter(pipeline)
 
@@ -43,15 +45,9 @@ with DAG(
         op_kwargs={"cleaned_relative_path": clean_task.output}
     )
 
-    populate_database_task = PythonOperator(
-        task_id="populate_database",
-        python_callable=pipeline.populate_database,
-        op_kwargs={"enriched_data_path": enrich_task.output}
-    )
-
-    populate_datawarehouse_task = PythonOperator(
-        task_id="populate_datawarehouse",
-        python_callable=pipeline.populate_datawarehouse,
+    populate_enriched_data_task = PythonOperator(
+        task_id="populate_enriched_data",
+        python_callable=dag_pipeline_adapter.populate_enriched_data,
         op_kwargs={"enriched_data_path": enrich_task.output}
     )
 
@@ -61,15 +57,10 @@ with DAG(
         op_kwargs={"enriched_data_path": enrich_task.output}
     )
 
-    analyze_dataframe_task = PythonOperator(
-        task_id="analyze_dataframe",
-        python_callable=pipeline.analyze_dataframe,
-        op_kwargs={"enriched_data_path": enrich_task.output}
-    )
-
-    analyze_via_datawarehouse_task = PythonOperator(
-        task_id="analyze_via_datawarehouse",
-        python_callable=pipeline.analyze_data_warehouse,
+    analyze_enriched_data_task = PythonOperator(
+        task_id="analyze_enriched_data",
+        python_callable=dag_pipeline_adapter.analyze_enriched_data,
+        op_kwargs={"enriched_data_path": enrich_task.output},
     )
 
     clean_up_task = PythonOperator(
@@ -81,11 +72,10 @@ with DAG(
     prepare_task >> ingest_raw_data_task >> clean_task >> enrich_task
 
     enrich_task >> [
-        populate_database_task,
-        populate_datawarehouse_task,
+        populate_enriched_data_task,
         show_dataframe_task,
-        analyze_dataframe_task
+        analyze_enriched_data_task
     ]
 
-    populate_datawarehouse_task >> analyze_via_datawarehouse_task
-    [populate_database_task, show_dataframe_task, analyze_dataframe_task, analyze_via_datawarehouse_task] >> clean_up_task
+    populate_enriched_data_task >> analyze_enriched_data_task
+    [populate_enriched_data_task, show_dataframe_task, analyze_enriched_data_task] >> clean_up_task

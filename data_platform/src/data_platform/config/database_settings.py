@@ -4,6 +4,7 @@ from types import MappingProxyType
 
 from data_platform.keys import Key
 
+
 @dataclass(frozen=True)
 class DatabaseSettings:
     host: str
@@ -14,6 +15,8 @@ class DatabaseSettings:
     driver: str
     jdbc_url: str
     sqlalchemy_url: str
+
+
 database = MappingProxyType(
     {
         Key.DATA_PLATFORM_DATABASE: DatabaseSettings(

@@ -70,11 +70,11 @@ def trim_string_column(df: DataFrame, column: str) -> DataFrame:
 
 
 def divide_columns(
-    df: DataFrame,
-    numerator_field: str,
-    denominator_field: str,
-    alias_field: str,
-    decimal_places: int = 2,
+        df: DataFrame,
+        numerator_field: str,
+        denominator_field: str,
+        alias_field: str,
+        decimal_places: int = 2,
 ) -> DataFrame:
     return df.withColumn(alias_field, sf.round(sf.col(numerator_field) / sf.col(denominator_field), decimal_places))
 
@@ -84,10 +84,10 @@ def average_by_group(df: DataFrame, group_field: str, original_field: str, alias
 
 
 def create_hash_column(
-    df: DataFrame,
-    alias_field: str,
-    source_columns: Sequence[Column],
-    separator: str = "|",
-    bit_length: int = 256,
+        df: DataFrame,
+        alias_field: str,
+        source_columns: Sequence[Column],
+        separator: str = "|",
+        bit_length: int = 256,
 ) -> DataFrame:
     return df.withColumn(alias_field, sf.sha2(sf.concat_ws(separator, *source_columns), bit_length))

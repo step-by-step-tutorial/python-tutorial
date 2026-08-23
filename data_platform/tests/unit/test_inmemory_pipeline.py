@@ -23,7 +23,7 @@ def build_dataset() -> Dataset:
     analyzer = type("Analyzer", (), {"analyze": lambda self, dataframe: {}})()
 
     return Dataset(
-        name="example",
+        name="sale",
         dataframe=DataFrameDefinition(schema=None, required_columns=frozenset()),
         audit=AuditEndpoint(
             database_connection_name="audit.database",
@@ -74,6 +74,7 @@ class TestRun:
         ] 
 
         mocker.patch("data_platform.pipeline.inmemory_pipeline.AuditService", return_value=given_audit_service)
+        mocker.patch("data_platform.pipeline.inmemory_pipeline.ingestor_registry.get_item", return_value=mocker.Mock())
         given_pipeline = InmemoryPipeline(build_dataset())
         mock_ingest_raw_data = mocker.patch.object(given_pipeline, "ingest_raw_data", return_value="raw-data")
         mocker.patch.object(given_pipeline, "store_raw_data", return_value="raw")
@@ -81,11 +82,9 @@ class TestRun:
         mocker.patch.object(given_pipeline, "store_cleaned_data", return_value="clean-path")
         mock_enrich = mocker.patch.object(given_pipeline, "enrich", return_value="enriched")
         mocker.patch.object(given_pipeline, "store_enriched_data", return_value="enriched-path")
-        mocker.patch.object(given_pipeline, "populate_database")
-        mocker.patch.object(given_pipeline, "populate_datawarehouse")
+        mocker.patch.object(given_pipeline, "populate_enriched_data")
         mocker.patch.object(given_pipeline, "show_dataframe")
-        mocker.patch.object(given_pipeline, "analyze_dataframe")
-        mocker.patch.object(given_pipeline, "analyze_data_warehouse")
+        mocker.patch.object(given_pipeline, "analyze_enriched_data")
         mocker.patch("data_platform.pipeline.inmemory_pipeline.log_line")
 
         given_pipeline.run()
@@ -96,8 +95,6 @@ class TestRun:
         assert given_pipeline.store_cleaned_data.call_count == 1
         assert mock_enrich.call_count == 1
         assert given_pipeline.store_enriched_data.call_count == 1
-        assert given_pipeline.populate_database.call_count == 1
-        assert given_pipeline.populate_datawarehouse.call_count == 1
+        assert given_pipeline.populate_enriched_data.call_count == 1
         assert given_pipeline.show_dataframe.call_count == 1
-        assert given_pipeline.analyze_dataframe.call_count == 1
-        assert given_pipeline.analyze_data_warehouse.call_count == 1
+        assert given_pipeline.analyze_enriched_data.call_count == 1

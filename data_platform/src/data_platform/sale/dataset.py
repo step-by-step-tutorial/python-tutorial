@@ -10,16 +10,17 @@ from data_platform.model import (
     MessagingEndpoint,
     RestApiEndpoint,
 )
-from data_platform.model.sale_attribute import SALE_ATTRIBUTE
-from data_platform.registry.endpoint_registry import AUDIT_ENDPOINT, endpoint_registry
-from data_platform.dataset.sale_spark_schema import build_schema
-from data_platform.analyzer.inmemory_sale_analyzer import InmemorySaleAnalyzer
-from data_platform.analyzer.spark_sale_analyzer import SparkSaleAnalyzer
-from data_platform.data_transformer.inmemory_sale_transformer import InmemorySaleTransformer
-from data_platform.data_transformer.spark_sale_transformer import SparkSaleTransformer
+from data_platform.registry.endpoint_registry import audit_endpoint, endpoint_registry
+from data_platform.registry.dataset_registry import dataset_registry
+from data_platform.sale.attribute import SALE_ATTRIBUTE
+from data_platform.sale.inmemory_analyzer import InmemorySaleAnalyzer
+from data_platform.sale.inmemory_transformer import InmemorySaleTransformer
+from data_platform.sale.spark_analyzer import SparkSaleAnalyzer
+from data_platform.sale.spark_schema import build_schema
+from data_platform.sale.spark_transformer import SparkSaleTransformer
 
 SALE_DATASET = Dataset(
-    name="Sale",
+    name="sale",
     dataframe=DataFrameDefinition(
         schema=build_schema(),
         required_columns=frozenset(
@@ -35,7 +36,7 @@ SALE_DATASET = Dataset(
             }
         ),
     ),
-    audit=endpoint_registry.get_item(AUDIT_ENDPOINT.name),
+    audit=endpoint_registry.get_item(audit_endpoint.name),
     endpoints={
         Key.SALE_FILE_CSV: FileEndpoint(
             name=Key.SALE_FILE_CSV,
@@ -118,3 +119,8 @@ SALE_DATASET = Dataset(
         "spark": SparkSaleAnalyzer(),
     },
 )
+
+
+def register_sale_dataset() -> None:
+    if not dataset_registry.contains(SALE_DATASET.name):
+        dataset_registry.register(SALE_DATASET.name, SALE_DATASET)

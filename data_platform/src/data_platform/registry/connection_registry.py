@@ -28,7 +28,7 @@ class ConnectionRegistry(Registry[Any]):
             connection.close()
 
     def close_all(self) -> None:
-        for name in self.names():
+        for name in self.loaded_names():
             self.close(name)
 
 

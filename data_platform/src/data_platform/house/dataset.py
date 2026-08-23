@@ -1,4 +1,11 @@
 from data_platform.config.main_settings import settings as main_settings
+from data_platform.house.attribute import HOUSE_ATTRIBUTE as columns
+from data_platform.house.inmemory_analyzer import InmemoryHouseAnalyzer
+from data_platform.house.inmemory_transformer import InmemoryHouseTransformer
+from data_platform.house.spark_analyzer import SparkHouseAnalyzer
+from data_platform.house.spark_schema import build_schema
+from data_platform.house.spark_transformer import SparkHouseTransformer
+from data_platform.keys import Key
 from data_platform.model import (
     DataLakeEndpoint,
     DataWarehouseEndpoint,
@@ -8,14 +15,8 @@ from data_platform.model import (
     FileEndpoint,
     MessagingEndpoint,
 )
-from data_platform.model.house_attribute import HOUSE_ATTRIBUTE as columns
-from data_platform.registry.endpoint_registry import AUDIT_ENDPOINT, endpoint_registry
-from data_platform.dataset.house_spark_schema import build_schema
-from data_platform.keys import Key
-from data_platform.analyzer.inmemory_house_analyzer import InmemoryHouseAnalyzer
-from data_platform.analyzer.spark_house_analyzer import SparkHouseAnalyzer
-from data_platform.data_transformer.inmemory_house_transformer import InmemoryHouseTransformer
-from data_platform.data_transformer.spark_house_transformer import SparkHouseTransformer
+from data_platform.registry.endpoint_registry import audit_endpoint, endpoint_registry
+from data_platform.registry.dataset_registry import dataset_registry
 
 HOUSE_DATASET = Dataset(
     name="house",
@@ -34,7 +35,7 @@ HOUSE_DATASET = Dataset(
             }
         ),
     ),
-    audit=endpoint_registry.get_item(AUDIT_ENDPOINT.name),
+    audit=endpoint_registry.get_item(audit_endpoint.name),
     endpoints={
         Key.HOUSE_FILE_CSV: FileEndpoint(
             name=Key.HOUSE_FILE_CSV,
@@ -102,3 +103,8 @@ HOUSE_DATASET = Dataset(
         "spark": SparkHouseAnalyzer(),
     },
 )
+
+
+def register_house_dataset() -> None:
+    if not dataset_registry.contains(HOUSE_DATASET.name):
+        dataset_registry.register(HOUSE_DATASET.name, HOUSE_DATASET)

@@ -20,7 +20,7 @@ class SaleAttribute:
         lowered = item.lower()
         try:
             return object.__getattribute__(self, lowered)
-        except AttributeError as error:
+        except Exception as error:
             raise AttributeError(item) from error
 
 

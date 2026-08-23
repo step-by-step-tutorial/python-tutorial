@@ -11,7 +11,7 @@ class EndpointRegistry(Registry[Endpoint]):
 
 endpoint_registry = EndpointRegistry()
 
-AUDIT_ENDPOINT = AuditEndpoint(
+audit_endpoint = AuditEndpoint(
     database_connection_name=Key.AUDIT_DATABASE,
     messaging_connection_name=Key.AUDIT_KAFKA_PRODUCER,
     datalake_connection_name=Key.AUDIT_DATALAKE,
@@ -22,4 +22,4 @@ AUDIT_ENDPOINT = AuditEndpoint(
     write_sql_files={"write": "database/audit/insert_event.sql"},
 )
 
-endpoint_registry.register(AUDIT_ENDPOINT.name, AUDIT_ENDPOINT)
+endpoint_registry.register(audit_endpoint.name, audit_endpoint)

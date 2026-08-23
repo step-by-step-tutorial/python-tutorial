@@ -1,8 +1,7 @@
 import logging
+
 from pandas import DataFrame
 
-from data_platform.model.sale_attribute import SALE_ATTRIBUTE as model
-from data_platform.model import DatasetTransformer
 from data_platform.converter.pandas_converter import (
     remove_duplicates,
     convert_numeric_column,
@@ -11,6 +10,8 @@ from data_platform.converter.pandas_converter import (
     convert_datetime_column,
     reset_index,
 )
+from data_platform.model import DatasetTransformer
+from data_platform.sale.attribute import SALE_ATTRIBUTE as model
 
 logger = logging.getLogger(__name__)
 

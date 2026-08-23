@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import Any
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
-from data_platform.registry.connection_registry import connection_registry
 from data_platform.model import AuditEndpoint
 from data_platform.model.audit_event import AuditEvent
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.path_utils import generate_full_path
 
 

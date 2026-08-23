@@ -1,4 +1,3 @@
-
 import logging
 
 from pyspark.sql import DataFrame, SparkSession

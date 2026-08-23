@@ -1,11 +1,10 @@
-
 import logging
 
 import pandas
 import pyspark
 
-from data_platform.registry.connection_registry import connection_registry
 from data_platform.model import DataWarehouseEndpoint
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.collection_utils import batch_of_list
 from data_platform.util.file_utils import read_text_file
 from data_platform.util.spark_utils import dataframe_to_list

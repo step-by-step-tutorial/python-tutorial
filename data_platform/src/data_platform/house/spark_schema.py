@@ -1,9 +1,7 @@
-
-
 def build_schema():
     from pyspark.sql.types import BooleanType, DoubleType, LongType, StringType, StructField, StructType
 
-    from data_platform.model.house_attribute import HOUSE_ATTRIBUTE
+    from data_platform.house.attribute import HOUSE_ATTRIBUTE
 
     return StructType([
         StructField(HOUSE_ATTRIBUTE.area_raw, DoubleType(), nullable=False),

@@ -17,5 +17,11 @@ class DagPipelineAdapter:
     def enrich(self, cleaned_relative_path: str) -> str:
         return self._pipeline.store_enriched_data(self._pipeline.enrich(cleaned_relative_path))
 
+    def populate_enriched_data(self, enriched_data_path: str) -> None:
+        self._pipeline.populate_enriched_data(enriched_data_path)
+
+    def analyze_enriched_data(self, enriched_data_path: str) -> None:
+        self._pipeline.analyze_enriched_data(enriched_data_path)
+
     def clean_up(self) -> None:
         self._pipeline.after_run()

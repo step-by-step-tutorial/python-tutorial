@@ -3,8 +3,8 @@ from collections.abc import Mapping
 from pyspark.sql import DataFrame
 
 from data_platform.converter.spark_converter import average_by_group
+from data_platform.house.attribute import HOUSE_ATTRIBUTE as model
 from data_platform.model import DatasetAnalyzer
-from data_platform.model.house_attribute import HOUSE_ATTRIBUTE as model
 
 
 class SparkHouseAnalyzer(DatasetAnalyzer[DataFrame]):

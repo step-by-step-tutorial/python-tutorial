@@ -1,4 +1,3 @@
-
 from pyspark.sql import SparkSession
 
 from data_platform.config.main_settings import settings as main_settings
@@ -50,8 +49,10 @@ def create_session() -> SparkSession:
         .config("spark.hadoop.fs.s3a.threads.max", main_settings.spark.threads_max)
         .config("spark.hadoop.fs.s3a.max.total.tasks", main_settings.spark.max_total_tasks)
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config("spark.driver.extraJavaOptions", f"-XX:MaxDirectMemorySize={main_settings.spark.max_direct_memory_size}")
-        .config("spark.executor.extraJavaOptions", f"-XX:MaxDirectMemorySize={main_settings.spark.max_direct_memory_size}")
+        .config("spark.driver.extraJavaOptions",
+                f"-XX:MaxDirectMemorySize={main_settings.spark.max_direct_memory_size}")
+        .config("spark.executor.extraJavaOptions",
+                f"-XX:MaxDirectMemorySize={main_settings.spark.max_direct_memory_size}")
         .getOrCreate()
     )
 

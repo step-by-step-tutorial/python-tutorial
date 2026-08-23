@@ -4,12 +4,15 @@ from types import MappingProxyType
 
 from data_platform.keys import Key
 
+
 @dataclass(frozen=True)
 class MessagingSettings:
     bootstrap_servers: str
     channel_name: str
     audit_channel_name: str
     starting_offsets: str
+
+
 messaging = MappingProxyType(
     {
         Key.SALE_KAFKA_LISTENER: MessagingSettings(

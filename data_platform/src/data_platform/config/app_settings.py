@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+
 @dataclass(frozen=True)
 class AppSettings:
     dataset_name: str
@@ -12,6 +13,8 @@ class AppSettings:
     scripts_dir: Path
     spark_dir: Path
     data_file: str
+
+
 app = AppSettings(
     dataset_name=os.getenv("DATASET_NAME", "Sale"),
     pipeline_type=os.getenv("PIPELINE_TYPE", "inmemory"),

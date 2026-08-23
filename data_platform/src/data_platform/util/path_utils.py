@@ -6,6 +6,7 @@ from data_platform.config.main_settings import settings as main_settings
 from data_platform.keys import Key
 from data_platform.model import DataLakeEndpoint
 
+
 def generate_relative_path(
         env: DataLakeEnvironment,
         ingestion_time: datetime | None = None,

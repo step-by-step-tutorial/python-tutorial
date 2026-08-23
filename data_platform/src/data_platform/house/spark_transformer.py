@@ -1,8 +1,6 @@
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
-from data_platform.model.house_attribute import HOUSE_ATTRIBUTE as schema
-from data_platform.model import DatasetTransformer
 from data_platform.converter.spark_converter import (
     convert_boolean_column,
     convert_numeric_column,
@@ -13,6 +11,8 @@ from data_platform.converter.spark_converter import (
     rename_columns,
     trim_string_column,
 )
+from data_platform.house.attribute import HOUSE_ATTRIBUTE as schema
+from data_platform.model import DatasetTransformer
 
 _RENAME = {
     schema.area_raw: schema.area,

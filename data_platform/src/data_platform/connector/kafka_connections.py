@@ -1,4 +1,3 @@
-
 from confluent_kafka import Consumer, Producer
 
 from data_platform.config.main_settings import settings as main_settings

@@ -1,4 +1,3 @@
-
 from enum import StrEnum
 
 
@@ -33,3 +32,5 @@ class Key(StrEnum):
     SALE_SPARK_CSV = "sale.spark.csv"
     SALE_SPARK_DATALAKE = "sale.spark.datalake"
     SALE_SPARK_KAFKA = "sale.spark.kafka"
+    HOUSE_SPARK_CSV = "house.spark.csv"
+    HOUSE_SPARK_KAFKA = "house.spark.kafka"

@@ -1,0 +1,1 @@
+"""Sale dataset domain."""

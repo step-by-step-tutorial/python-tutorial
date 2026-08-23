@@ -70,7 +70,7 @@ class TestBatchPipeline:
         given_pipeline.run()
 
         assert mock_before_run.call_count == 1
-        assert given_audit_service.emit.call_count == 24
+        assert given_audit_service.emit.call_count == 20
 
     def test_should_record_task_and_pipeline_failure(self, mocker) -> None:
         given_audit_service = mocker.Mock()

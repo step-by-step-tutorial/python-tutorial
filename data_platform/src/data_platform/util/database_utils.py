@@ -1,4 +1,3 @@
-
 from sqlalchemy import text
 
 from data_platform.registry.connection_registry import connection_registry

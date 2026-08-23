@@ -1,4 +1,3 @@
-
 import clickhouse_connect
 
 from data_platform.config.main_settings import settings as main_settings

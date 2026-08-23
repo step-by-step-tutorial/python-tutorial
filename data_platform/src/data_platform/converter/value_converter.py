@@ -1,5 +1,5 @@
-from typing import Any
 from math import isnan
+from typing import Any
 
 
 def _normalize_text(value: Any) -> str:
@@ -57,7 +57,7 @@ def convert_to_optional_float(value: Any) -> float | None:
 
     try:
         return float(normalized_value)
-    except ValueError:
+    except Exception:
         return None
 
 
@@ -77,7 +77,7 @@ def convert_to_float(value: Any) -> float:
 
     try:
         return float(normalized_value)
-    except ValueError as error:
+    except Exception as error:
         raise ValueError(f"Cannot convert value to float: {value}") from error
 
 

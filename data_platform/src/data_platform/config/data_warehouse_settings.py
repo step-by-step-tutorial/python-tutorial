@@ -4,6 +4,7 @@ from types import MappingProxyType
 
 from data_platform.keys import Key
 
+
 @dataclass(frozen=True)
 class DataWarehouseSettings:
     host: str
@@ -12,6 +13,7 @@ class DataWarehouseSettings:
     user: str
     password: str
     jdbc_url: str
+
 
 data_warehouse = MappingProxyType(
     {

@@ -1,1 +1,1 @@
-"""Dataset analysis implementations."""
+"""Reusable analysis components."""

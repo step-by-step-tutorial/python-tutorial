@@ -3,6 +3,7 @@ import sys
 from importlib import import_module
 
 from data_platform.config.main_settings import settings as main_settings
+from data_platform.registry.bootstrap import initialize_registries
 from data_platform.registry.dataset_registry import dataset_registry
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
@@ -12,7 +13,8 @@ logger = logging.getLogger(__name__)
 PIPELINES = {
     "inmemory": lambda dataset: import_module("data_platform.pipeline.inmemory_pipeline").InmemoryPipeline(dataset),
     "spark": lambda dataset: import_module("data_platform.pipeline.spark_pipeline").SparkPipeline(dataset),
-    "spark_streaming": lambda dataset: import_module("data_platform.pipeline.spark_streaming_pipeline").SparkStreamingPipeline(dataset),
+    "spark_streaming": lambda dataset: import_module(
+        "data_platform.pipeline.spark_streaming_pipeline").SparkStreamingPipeline(dataset),
 }
 
 DATASETS = {
@@ -31,15 +33,18 @@ PIPELINE_OPTIONS = [
     ("3", "spark_streaming"),
 ]
 
+initialize_registries()
+
 
 def run_pipeline(pipeline_type: str, dataset_name: str) -> None:
     if pipeline_type not in PIPELINES:
         raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
 
-    if dataset_name not in DATASETS:
+    normalized_dataset_name = dataset_name.lower()
+    if normalized_dataset_name not in DATASETS:
         raise ValueError(f"Unsupported dataset: {dataset_name}")
 
-    pipeline = PIPELINES[pipeline_type](dataset_registry.get_item(dataset_name))
+    pipeline = PIPELINES[pipeline_type](dataset_registry.get_item(normalized_dataset_name))
     pipeline.run()
 
 
@@ -64,7 +69,7 @@ def main() -> None:
 
         dataset_name = dict(DATASET_OPTIONS).get(dataset_command, dataset_command)
 
-        if dataset_name not in DATASETS:
+        if dataset_name.lower() not in DATASETS:
             logger.error("Unsupported dataset: %s", dataset_name)
             continue
 

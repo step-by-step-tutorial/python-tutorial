@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True)
 class SparkSettings:
     application_name: str
@@ -12,6 +13,8 @@ class SparkSettings:
     threads_max: str
     max_total_tasks: str
     max_direct_memory_size: str
+
+
 spark = SparkSettings(
     application_name=os.getenv("SPARK_APPLICATION_NAME", "data_platform"),
     master_url=os.getenv("SPARK_MASTER_URL", "local[*]"),

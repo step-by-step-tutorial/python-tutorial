@@ -1,6 +1,5 @@
-
-from dataclasses import dataclass
 import traceback
+from dataclasses import dataclass
 from typing import Any
 
 from data_platform.model.audit_event import AuditEvent, AuditEventType, AuditStatus

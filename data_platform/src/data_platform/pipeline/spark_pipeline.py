@@ -4,16 +4,18 @@ from pathlib import Path
 from pyspark.sql import DataFrame
 
 from data_platform.audit.audit_service import AuditService
-from data_platform.connector.spark_session_factory import create_session
-from data_platform.model import DataLakeEndpoint, DatabaseEndpoint, Dataset, DataWarehouseEndpoint, FileEndpoint
-from data_platform.registry.ingestor_registry import ingestor_registry
-from data_platform.keys import Key
-from data_platform.persistence.database_repository import DatabaseRepository
-from data_platform.persistence.data_warehouse_repository import DataWarehouseRepository
-from data_platform.pipeline.batch_pipeline import BatchPipeline
-from data_platform.presentation.dataframe_display import show
-from data_platform.service.spark_data_lake_service import SparkDataLakeService
 from data_platform.config.data_lake_environment import DataLakeEnvironment
+from data_platform.connector.spark_session_factory import create_session
+from data_platform.model import DataLakeEndpoint, DatabaseEndpoint, Dataset, DataWarehouseEndpoint, EndpointRole, FileEndpoint
+from data_platform.persistence.data_warehouse_repository import DataWarehouseRepository
+from data_platform.persistence.database_repository import DatabaseRepository
+from data_platform.persistence.repository_data_populator import RepositoryDataPopulator
+from data_platform.pipeline.batch_pipeline import BatchPipeline
+from data_platform.analyzer.dataframe_analyzer import DataFrameAnalyzer
+from data_platform.analyzer.data_warehouse_analyzer import DataWarehouseAnalyzer
+from data_platform.presentation.dataframe_display import show_map_of_dataframe, show_spark_dataframes
+from data_platform.registry.ingestor_registry import ingestor_registry
+from data_platform.service.spark_data_lake_service import SparkDataLakeService
 from data_platform.util.path_utils import generate_relative_path
 
 logger = logging.getLogger(__name__)
@@ -24,23 +26,38 @@ class SparkPipeline(BatchPipeline):
     def __init__(self, ds: Dataset) -> None:
         super().__init__(ds, audit_service=AuditService(ds.audit))
         self.pipeline_name = "spark_pipeline"
-        file_endpoint = self.dataset.get_endpoint(Key.SALE_FILE_CSV, FileEndpoint)
-        database_endpoint = self.dataset.get_endpoint(Key.SALE_DATABASE, DatabaseEndpoint)
-        datawarehouse_endpoint = self.dataset.get_endpoint(Key.SALE_DATAWAREHOUSE, DataWarehouseEndpoint)
-        datalake_endpoint = self.dataset.get_endpoint(Key.SALE_DATALAKE, DataLakeEndpoint)
+        file_endpoint = self.dataset.get_endpoint_by_role(EndpointRole.FILE_CSV, FileEndpoint)
+        database_endpoint = self.dataset.get_endpoint_by_role(EndpointRole.DATABASE, DatabaseEndpoint)
+        datawarehouse_endpoint = self.dataset.get_endpoint_by_role(EndpointRole.DATA_WAREHOUSE, DataWarehouseEndpoint)
+        datalake_endpoint = self.dataset.get_endpoint_by_role(EndpointRole.DATA_LAKE, DataLakeEndpoint)
         self._datalake_endpoint = datalake_endpoint
         self._spark_session = None
         self.spark_data_lake_service: SparkDataLakeService | None = None
         self.database_repository = DatabaseRepository(database_endpoint)
         self.data_warehouse_repository = DataWarehouseRepository(datawarehouse_endpoint)
         self.file_path = Path(file_endpoint.file_path)
+        self.populators = (
+            RepositoryDataPopulator(self.download_enriched_data, self.database_repository.truncate_and_populate_from_spark),
+            RepositoryDataPopulator(self.download_enriched_data, self.data_warehouse_repository.truncate_and_populate_from_spark),
+        )
+        self.analyzers = (
+            DataFrameAnalyzer(self.download_enriched_data, self.dataset.get_analyzer("spark"), show_spark_dataframes),
+            DataWarehouseAnalyzer(
+                self.data_warehouse_repository.select_by_queries,
+                [name for name in self.data_warehouse_repository.datawarehouse.query_sql_files if name != "select_all"],
+                show_map_of_dataframe,
+            ),
+        )
 
     def before_run(self) -> None:
         self._spark_session = create_session()
         self.spark_data_lake_service = SparkDataLakeService(self._spark_session, self._datalake_endpoint)
 
     def ingest_raw_data(self) -> DataFrame:
-        return ingestor_registry.get_item(Key.SALE_SPARK_CSV).ingest(self.file_path, self.dataset.dataframe.schema)
+        return ingestor_registry.get_item(f"{self.dataset.name.lower()}.spark.csv").ingest(
+            self.file_path,
+            self.dataset.dataframe.schema,
+        )
 
     def store_raw_data(self, raw_data: DataFrame) -> str:
         relative_path = generate_relative_path(DataLakeEnvironment.RAW, self.ingestion_time, self.dataset.name.lower())
@@ -52,7 +69,8 @@ class SparkPipeline(BatchPipeline):
         return self.dataset.get_transformer("spark").clean(raw_dataframe)
 
     def store_cleaned_data(self, cleaned_data: DataFrame) -> str:
-        relative_path = generate_relative_path(DataLakeEnvironment.CLEANED, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DataLakeEnvironment.CLEANED, self.ingestion_time,
+                                               self.dataset.name.lower())
         self.spark_data_lake_service.append_to_object_storage(dataframe=cleaned_data, path=relative_path)
         return relative_path
 
@@ -61,37 +79,13 @@ class SparkPipeline(BatchPipeline):
         return self.dataset.get_transformer("spark").enrich(cleaned_dataframe)
 
     def store_enriched_data(self, enriched_data: DataFrame) -> str:
-        relative_path = generate_relative_path(DataLakeEnvironment.ENRICHED, self.ingestion_time, self.dataset.name.lower())
+        relative_path = generate_relative_path(DataLakeEnvironment.ENRICHED, self.ingestion_time,
+                                               self.dataset.name.lower())
         self.spark_data_lake_service.append_to_object_storage(dataframe=enriched_data, path=relative_path)
         return relative_path
 
     def download_enriched_data(self, relative_path: str) -> DataFrame:
         return self.spark_data_lake_service.read_from_object_storage(path=relative_path)
-
-    def populate_database(self, enriched_data_path: str) -> None:
-        enriched_dataframe = self.download_enriched_data(enriched_data_path)
-        logger.info("Populating operational database with enriched data")
-        self.database_repository.truncate_and_populate_from_spark(enriched_dataframe)
-
-    def populate_datawarehouse(self, enriched_data_path: str) -> None:
-        enriched_dataframe = self.download_enriched_data(enriched_data_path)
-        logger.info("Populating data warehouse with enriched data")
-        self.data_warehouse_repository.truncate_and_populate_from_spark(enriched_dataframe)
-
-    def analyze_dataframe(self, enriched_data_path: str) -> None:
-        enriched_dataframe = self.download_enriched_data(enriched_data_path)
-        logger.info("Analyzing enriched data via Spark")
-        results = self.dataset.get_analyzer("spark").analyze(enriched_dataframe)
-        for name, dataframe in results.items():
-            logger.info("Displaying analysis result %s", name)
-            dataframe.show()
-
-    def analyze_data_warehouse(self) -> None:
-        query_names = [name for name in self.data_warehouse_repository.datawarehouse.query_sql_files.keys() if name != "select_all"]
-        results = self.data_warehouse_repository.select_by_queries(query_names)
-        logger.info("Analyzing enriched data via data warehouse")
-        for dataframe in results.values():
-            show(dataframe)
 
     def show_dataframe(self, enriched_data_path: str) -> None:
         enriched_dataframe = self.download_enriched_data(enriched_data_path)
