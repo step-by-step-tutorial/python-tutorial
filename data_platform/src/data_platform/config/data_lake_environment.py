@@ -1,7 +1,7 @@
 ﻿from enum import StrEnum
 
 
-class DataLakeEnvironment(StrEnum):
+class StorageEnvironment(StrEnum):
     RAW = "raw"
     CLEANED = "cleaned"
     ENRICHED = "enriched"

@@ -42,7 +42,7 @@ def test_dataset_registry_resolves_config_path_from_dataset_name(tmp_path: Path,
     importlib.reload(env_config)
     registry = DatasetRegistry()
 
-    assert registry.get_one("sale.json").config.output_name == "sale"
+    assert registry.get_one("sale").config.output_name == "sale"
 
     monkeypatch.delenv("CONFIG_DIR", raising=False)
     importlib.reload(env_config)

@@ -16,5 +16,10 @@ class DataFrameAnalyzer:
         self._present_results = present_results
 
     def analyze(self, enriched_data_path) -> None:
-        self._present_results(self._dataset_analyzer.analyze(self._load_data(enriched_data_path)))
+        data = (
+            self._load_data(enriched_data_path)
+            if isinstance(enriched_data_path, str)
+            else enriched_data_path
+        )
+        self._present_results(self._dataset_analyzer.analyze(data))
 

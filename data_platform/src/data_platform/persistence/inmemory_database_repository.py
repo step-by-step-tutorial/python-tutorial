@@ -1,14 +1,21 @@
 ﻿import pandas
 
 from data_platform.model import DatabaseEndpoint
-from data_platform.persistence.database_repository import DatabaseRepository
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.collection_utils import list_of_values
+from data_platform.util.database_utils import execute_files
 
 
-class InmemoryDatabaseRepository(DatabaseRepository):
+class PandasDatabaseRepository:
     def __init__(self, endpoint: DatabaseEndpoint) -> None:
-        super().__init__(endpoint)
+        self._endpoint = endpoint
+        self._connection_name = endpoint.connection_name
+
+    def truncate_stage_table(self) -> None:
+        execute_files(self._connection_name, list_of_values(self._endpoint.truncate_sql_files))
+
+    def execute_files(self, file_names: list[str]) -> None:
+        execute_files(self._connection_name, file_names)
 
     def save(self, dataframe: pandas.DataFrame) -> None:
         with connection_registry.get_item(self._connection_name).begin() as connection:
@@ -24,4 +31,8 @@ class InmemoryDatabaseRepository(DatabaseRepository):
         self.truncate_stage_table()
         self.save(dataframe)
         self.execute_files(list_of_values(self._endpoint.write_sql_files))
+
+
+# Compatibility for callers that still import the historical module symbol.
+InmemoryDatabaseRepository = PandasDatabaseRepository
 

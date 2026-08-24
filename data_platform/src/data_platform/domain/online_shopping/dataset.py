@@ -1,9 +1,15 @@
 ﻿from data_platform.config.keys import Key
 from data_platform.config.main_settings import settings as main_settings
 
-from data_platform.domain.online_shopping.attribute import ONLINE_SHOPPING_ATTRIBUTE as columns
-from data_platform.domain.online_shopping.inmemory_analyzer import InmemoryOnlineShoppingAnalyzer
-from data_platform.domain.online_shopping.inmemory_transformer import InmemoryOnlineShoppingTransformer
+from data_platform.domain.online_shopping.attribute import (
+    ONLINE_SHOPPING_ATTRIBUTE as columns,
+)
+from data_platform.domain.online_shopping.inmemory_analyzer import (
+    InmemoryOnlineShoppingAnalyzer,
+)
+from data_platform.domain.online_shopping.inmemory_transformer import (
+    InmemoryOnlineShoppingTransformer,
+)
 from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
 from data_platform.model import (
     DataFrameModel,
@@ -15,7 +21,9 @@ from data_platform.model import (
     RestApiEndpoint,
 )
 from data_platform.persistence.data_lake_repository import DataLakeRepository
-from data_platform.persistence.inmemory_database_repository import InmemoryDatabaseRepository
+from data_platform.persistence.inmemory_database_repository import (
+    PandasDatabaseRepository,
+)
 from data_platform.persistence.repository_data_exposer import RepositoryDataExposer
 from data_platform.presentation.dataframe_display import show_map_of_dataframe
 from data_platform.registry.endpoint_registry import audit_endpoint, endpoint_registry
@@ -94,7 +102,18 @@ ONLINE_SHOPPING_DATASET = Dataset(
         ),
     },
     pipeline_steps=PipelineSteps(
-        storages=(),
+        storages=(
+            DataLakeRepository(
+                DataLakeEndpoint(
+                    name=Key.ONLINE_SHOPPING_DATA_LAKE,
+                    connection_name=Key.ONLINE_SHOPPING_DATA_LAKE,
+                    bucket_name=main_settings.data_lake[
+                        Key.PLATFORM_DATA_LAKE
+                    ].bucket_name,
+                    scheme=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].scheme,
+                )
+            ),
+        ),
         ingestors=(
             RestApiCsvIngestor(
                 RestApiEndpoint(
@@ -111,11 +130,13 @@ ONLINE_SHOPPING_DATASET = Dataset(
                     DataLakeEndpoint(
                         name=Key.ONLINE_SHOPPING_DATA_LAKE,
                         connection_name=Key.ONLINE_SHOPPING_DATA_LAKE,
-                        bucket_name=main_settings.data_lake[ Key.PLATFORM_DATA_LAKE].bucket_name,
+                        bucket_name=main_settings.data_lake[
+                            Key.PLATFORM_DATA_LAKE
+                        ].bucket_name,
                         scheme=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].scheme,
                     )
                 ).find,
-                InmemoryDatabaseRepository(
+                PandasDatabaseRepository(
                     DatabaseEndpoint(
                         name=Key.ONLINE_SHOPPING_DATABASE,
                         connection_name=Key.ONLINE_SHOPPING_DATABASE,
@@ -140,7 +161,9 @@ ONLINE_SHOPPING_DATASET = Dataset(
                     DataLakeEndpoint(
                         name=Key.ONLINE_SHOPPING_DATA_LAKE,
                         connection_name=Key.ONLINE_SHOPPING_DATA_LAKE,
-                        bucket_name=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].bucket_name,
+                        bucket_name=main_settings.data_lake[
+                            Key.PLATFORM_DATA_LAKE
+                        ].bucket_name,
                         scheme=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].scheme,
                     )
                 ).find,

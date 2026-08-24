@@ -1,6 +1,6 @@
 ﻿"""Domain models and contracts."""
 
-from data_platform.model.artifact import Artifact
+from data_platform.model.storage_object import StorageObject
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset import Dataset
 from data_platform.model.dataset_analyzer import DatasetAnalyzer

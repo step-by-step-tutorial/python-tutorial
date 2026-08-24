@@ -15,8 +15,39 @@ def run_pipeline(dataset_name: str) -> None:
     ConfiguredPipeline(dataset_registry.get_item(dataset_name.lower())).run()
 
 
+def select_dataset() -> str | None:
+    """Display registered datasets and return the selected dataset name."""
+    names = dataset_registry.names()
+    if not names:
+        raise RuntimeError("No datasets are registered.")
+
+    print("Available datasets:")
+    for index, name in enumerate(names, start=1):
+        print(f"  {index}. {name}")
+    print("  0. Exit")
+
+    while True:
+        selection = input("Select a dataset: ").strip().lower()
+        if selection in {"0", "q", "quit", "exit"}:
+            return None
+        if selection.isdigit() and 1 <= int(selection) <= len(names):
+            return names[int(selection) - 1]
+        print(f"Select a number between 1 and {len(names)}, or 0 to exit.")
+
+
 def main() -> None:
-    run_pipeline(sys.argv[1] if len(sys.argv) > 1 else main_settings.app.dataset_name)
+    if len(sys.argv) > 1:
+        run_pipeline(sys.argv[1])
+        return
+
+    if sys.stdin.isatty():
+        dataset_name = select_dataset()
+        if dataset_name is not None:
+            run_pipeline(dataset_name)
+        return
+
+    # Preserve the configured default for containers and scheduled execution.
+    run_pipeline(main_settings.app.dataset_name)
 
 
 if __name__ == "__main__":

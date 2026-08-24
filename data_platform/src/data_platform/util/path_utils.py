@@ -1,14 +1,15 @@
 ﻿from datetime import UTC
 from datetime import datetime
+from typing import Any
 
-from data_platform.config.data_lake_environment import DataLakeEnvironment
+from data_platform.config.data_lake_environment import StorageEnvironment
 from data_platform.config.keys import Key
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.model import DataLakeEndpoint
+from data_platform.model import DataLakeEndpoint, StorageObject
 
 
 def generate_relative_path(
-        env: DataLakeEnvironment,
+        env: StorageEnvironment,
         ingestion_time: datetime | None = None,
         dataset_name: str | None = None
 ) -> str:
@@ -37,7 +38,12 @@ def generate_data_lake_path(endpoint: DataLakeEndpoint, relative_path: str) -> s
     return f"{endpoint.scheme}://{endpoint.bucket_name.strip()}/{relative_path.strip('/')}"
 
 
-def artifact_name_from_path(path: str) -> str:
-    """Return the final artifact component from a data-lake path."""
+def extract_filename(path: str) -> str:
     return path.rstrip("/").split("/")[-1]
 
+
+def to_paths(storage_objects) -> tuple[Any, ...]:
+    return tuple(storage_object.path for storage_object in storage_objects)
+
+def to_object_storages(paths: tuple[str, ...]) -> tuple[StorageObject, ...]:
+        return tuple[StorageObject](StorageObject("storage", path) for path in paths)

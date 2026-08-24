@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS house.house_stage (
     warehouse BOOLEAN,
     elevator BOOLEAN,
     address VARCHAR(250),
-    price NUMERIC(14, 2) NOT NULL,
-    price_usd NUMERIC(14, 2),
-    price_per_square_meter NUMERIC(14, 4),
-    price_usd_per_square_meter NUMERIC(14, 4)
+    price NUMERIC(20, 2) NOT NULL,
+    price_usd NUMERIC(20, 2),
+    price_per_square_meter NUMERIC(20, 4),
+    price_usd_per_square_meter NUMERIC(20, 4)
 );

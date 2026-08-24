@@ -1,7 +1,7 @@
 ﻿from dataclasses import replace
 from datetime import UTC, datetime
 
-from data_platform.model import Artifact, AuditEndpoint, Dataset, PipelineSteps
+from data_platform.model import AuditEndpoint, Dataset, PipelineSteps
 from data_platform.pipeline.configured_pipeline import ConfiguredPipeline
 
 
@@ -25,9 +25,9 @@ class _Source:
     def ingest(self): return self.value
 
 
-def _ingestor_stage(artifact_name, value, lake):
+def _ingestor_stage(storage_object_name, value, lake):
     class Ingestor:
-        name = artifact_name
+        name = storage_object_name
         def ingest(self): return value
     stage = Ingestor()
     stage.storage_service = lake
@@ -62,7 +62,7 @@ def _dataset(lake, exposer, analyzer) -> Dataset:
         name="example",
         audit=AuditEndpoint("audit.database", "audit.kafka", "audit.datalake"),
         pipeline_steps=PipelineSteps(
-            storages=(("storage", lake),),
+            storages=(lake,),
             ingestors=(_ingestor_stage("first", "one", lake), _ingestor_stage("second", "two", lake)),
             cleaners=(
                 _Transform("clean_one", _Transformer().clean, "cleaned", lake),
@@ -81,17 +81,17 @@ def _dataset(lake, exposer, analyzer) -> Dataset:
 def test_configured_pipeline_executes_explicit_stages_without_merging_ingestors(mocker) -> None:
     lake, exposer, analyzer = _Lake(), _Consumer(), _Consumer()
     audit = mocker.Mock()
-    mocker.patch("data_platform.pipeline.batch_pipeline.AuditService", return_value=audit)
+    mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=audit)
     pipeline = ConfiguredPipeline(_dataset(lake, exposer, analyzer))
     pipeline.ingestion_time = datetime(2026, 1, 2, tzinfo=UTC)
     pipeline.run()
 
     raw_paths = tuple(path for path in lake.data if "/raw/" in path and "/cleaned/" not in path and "/enriched/" not in path)
-    enriched_paths = tuple(path for path in lake.data if "/enriched/enrich_two/" in path)
+    enriched_paths = tuple(path for path in lake.data if "/enriched/step_2/" in path)
     assert [path.rsplit("/", 1)[-1] for path in raw_paths] == ["first", "second"]
-    assert all("/cleaned/clean_one/" in path for path in lake.data if "/cleaned/clean_one/" in path)
-    assert all("/cleaned/clean_two/" in path for path in lake.data if "/cleaned/clean_two/" in path)
-    assert all("/enriched/enrich_one/" in path for path in lake.data if "/enriched/enrich_one/" in path)
+    assert any("/cleaned/step_1/" in path for path in lake.data)
+    assert any("/cleaned/step_2/" in path for path in lake.data)
+    assert any("/enriched/step_1/" in path for path in lake.data)
     assert enriched_paths
     assert lake.data[enriched_paths[0]] == "enrich:enrich:clean:clean:one"
     assert exposer.paths == ["enrich:enrich:clean:clean:one", "enrich:enrich:clean:clean:two"]

@@ -107,15 +107,15 @@ class TestDatasetRegistry:
 
 class TestConcreteDatasetConfiguration:
 
-    @pytest.mark.parametrize("dataset, artifact_name", [
+    @pytest.mark.parametrize("dataset, storage_object_name", [
         (SALE_DATASET, "csv"),
         (HOUSE_DATASET, "csv"),
         (ONLINE_SHOPPING_DATASET, "api"),
     ])
-    def test_each_dataset_declares_the_complete_pipeline_stages(self, dataset, artifact_name) -> None:
+    def test_each_dataset_declares_the_complete_pipeline_stages(self, dataset, storage_object_name) -> None:
         definition = dataset.pipeline_steps
         assert definition is not None
-        assert [stage.name for stage in definition.ingestors] == [artifact_name]
+        assert [stage.name for stage in definition.ingestors] == [storage_object_name]
         assert definition.cleaners
         assert definition.enrichers
         assert definition.exposers

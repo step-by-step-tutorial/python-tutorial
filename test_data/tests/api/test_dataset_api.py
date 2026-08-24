@@ -30,9 +30,9 @@ async def test_download_serves_requested_output_format(project_root: Path) -> No
     config_path.write_text(json.dumps(config), encoding="utf-8")
     DatasetGenerator("demo.json").write()
 
-    csv_response = await get("/datasets/demo.json/download?format=csv")
-    json_response = await get("/datasets/demo.json/download?format=json")
-    xml_response = await get("/datasets/demo.json/download?format=xml")
+    csv_response = await get("/datasets/demo/download?format=csv")
+    json_response = await get("/datasets/demo/download?format=json")
+    xml_response = await get("/datasets/demo/download?format=xml")
 
     assert csv_response.status_code == 200
     assert csv_response.headers["content-type"] == "text/csv; charset=utf-8"
@@ -46,7 +46,7 @@ async def test_download_serves_requested_output_format(project_root: Path) -> No
 
 
 async def test_download_rejects_unconfigured_format(project_root: Path) -> None:
-    response = await get("/datasets/demo.json/download?format=json")
+    response = await get("/datasets/demo/download?format=json")
 
     assert response.status_code == 404
 
@@ -55,7 +55,7 @@ async def test_get_names_lists_dataset_names(project_root: Path) -> None:
     response = await get("/datasets/names")
 
     assert response.status_code == 200
-    assert response.json() == ["demo.json"]
+    assert response.json() == ["demo"]
 
 
 async def test_openapi_documentation_describes_dataset_routes(project_root: Path) -> None:
@@ -87,7 +87,7 @@ async def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -
     try:
         DatasetGenerator("demo.json").write()
 
-        response = await get("/datasets/demo.json/rows?page=2&page_size=2")
+        response = await get("/datasets/demo/rows?page=2&page_size=2")
 
         assert response.status_code == 200
         assert response.json()["page"] == 2

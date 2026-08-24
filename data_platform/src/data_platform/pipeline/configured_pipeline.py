@@ -1,9 +1,9 @@
-﻿from data_platform.model import Artifact, Dataset
-from data_platform.pipeline.batch_pipeline import BatchPipeline
-from data_platform.util.path_utils import artifact_name_from_path
+﻿from data_platform.model import Dataset, StorageObject
+from data_platform.pipeline.pipeline import Pipeline
+from data_platform.util.path_utils import extract_filename
 
 
-class ConfiguredPipeline(BatchPipeline):
+class ConfiguredPipeline(Pipeline):
 
     def __init__(self, dataset: Dataset) -> None:
         super().__init__(dataset)
@@ -12,55 +12,58 @@ class ConfiguredPipeline(BatchPipeline):
     def prepare(self) -> None:
         self.definition.before_pipeline(self)
 
-    def ingest(self) -> tuple[Artifact, ...]:
-        artifacts = []
+    def ingest(self) -> tuple[StorageObject, ...]:
+        storage = self.definition.storages[0]
+        storage_objects = []
         for ingestor in self.definition.ingestors:
             data = ingestor.ingest()
-            path = ingestor.storage_service.save(
-                data, f"{self.path_prefix}/{ingestor.name}"
+            path = storage.save(
+                data, f"{self.storage_relative_path}/{ingestor.name}"
             )
-            artifacts.append(Artifact(ingestor.storage_service_name, path))
-        return tuple(artifacts)
+            storage_objects.append(StorageObject("storage", path))
+        return tuple(storage_objects)
 
-    def clean(self, raw_artifact_paths: tuple[Artifact, ...]) -> tuple[Artifact, ...]:
-        paths = raw_artifact_paths
-        for cleaner in self.definition.cleaners:
+    def clean(self, paths: tuple[StorageObject, ...]) -> tuple[StorageObject, ...]:
+        storage = self.definition.storages[0]
+        for index, cleaner in enumerate(self.definition.cleaners, start=1):
             outputs = []
-            for artifact in paths:
-                data = cleaner.storage_service.find(artifact.path)
+            for storage_object in paths:
+                data = storage.find(storage_object.path)
                 cleaned = cleaner.clean(data)
-                path = cleaner.storage_service.save(
+                path = storage.save(
                     cleaned,
-                    f"{self.path_prefix}/cleaned/{cleaner.name}/{artifact_name_from_path(artifact.path)}",
+                    f"{self.storage_relative_path}/cleaned/step_{index}/{extract_filename(storage_object.path)}",
                 )
-                outputs.append(Artifact(cleaner.storage_service_name, path))
+                outputs.append(StorageObject("storage", path))
             paths = tuple(outputs)
         return paths
 
-    def enrich(self, cleaned_artifact_paths: tuple[Artifact, ...]) -> tuple[Artifact, ...]:
-        paths = cleaned_artifact_paths
-        for enricher in self.definition.enrichers:
+    def enrich(self, paths: tuple[StorageObject, ...]) -> tuple[StorageObject, ...]:
+        storage = self.definition.storages[0]
+        for index, enricher in enumerate(self.definition.enrichers, start=1):
             outputs = []
-            for artifact in paths:
-                data = enricher.storage_service.find(artifact.path)
+            for storage_object in paths:
+                data = storage.find(storage_object.path)
                 enriched = enricher.enrich(data)
-                path = enricher.storage_service.save(
+                path = storage.save(
                     enriched,
-                    f"{self.path_prefix}/enriched/{enricher.name}/{artifact_name_from_path(artifact.path)}",
+                    f"{self.storage_relative_path}/enriched/step_{index}/{extract_filename(storage_object.path)}",
                 )
-                outputs.append(Artifact(enricher.storage_service_name, path))
+                outputs.append(StorageObject("storage", path))
             paths = tuple(outputs)
         return paths
 
-    def expose(self, enriched_artifact_paths: tuple[Artifact, ...]) -> None:
+    def expose(self, paths: tuple[StorageObject, ...]) -> None:
+        storage = self.definition.storages[0]
         for exposer in self.definition.exposers:
-            for artifact in enriched_artifact_paths:
-                exposer.expose(exposer.storage_service.find(artifact.path))
+            for storage_object in paths:
+                exposer.expose(storage.find(storage_object.path))
 
-    def analyze(self, enriched_artifact_paths: tuple[Artifact, ...]) -> None:
+    def analyze(self, paths: tuple[StorageObject, ...]) -> None:
+        storage = self.definition.storages[0]
         for analyzer in self.definition.analyzers:
-            for artifact in enriched_artifact_paths:
-                analyzer.analyze(analyzer.storage_service.find(artifact.path))
+            for storage_object in paths:
+                analyzer.analyze(storage.find(storage_object.path))
 
     def cleanup(self) -> None:
         self.definition.after_pipeline(self)

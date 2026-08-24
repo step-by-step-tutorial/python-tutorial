@@ -3,10 +3,11 @@ from typing import Any
 
 
 class RepositoryDataExposer:
-    def __init__(self, load_data: Callable[[str], Any], persist_data: Callable[[Any], None]) -> None:
-        self._load_data = load_data
-        self._persist_data = persist_data
+    def __init__(self, *callbacks: Callable[[Any], Any]) -> None:
+        # Accept the legacy loader/persist pair while exposing already-loaded data.
+        self._persist_data = callbacks[-1]
 
-    def expose(self, enriched_data_path) -> None:
-        self._persist_data(self._load_data(enriched_data_path))
+    def expose(self, data: Any) -> None:
+        self._persist_data(data)
+
 

@@ -73,7 +73,7 @@ class Dataset:
             columns=list(self.columns),
             destinations=list(self.destinations),
             file=str(Path(env_config.OUTPUT_DIR.name) / output_file_name(self.config.output_name, "csv")),
-            download_url=f"/datasets/{self.name}/download",
+            download_url=f"/datasets/{Path(self.name).stem}/download",
         )
 
 

@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from data_platform.config.main_settings import settings
-from data_platform.config.data_lake_environment import DataLakeEnvironment
+from data_platform.config.data_lake_environment import StorageEnvironment
 from data_platform.util.kafka_utils import handle_kafka_response
 from data_platform.converter.value_converter import (
     convert_to_integer,
@@ -76,7 +76,7 @@ class TestDatalakeUtils:
 
         # When
         actual_relative = datalake_path_utils.generate_relative_path(
-            DataLakeEnvironment.RAW,
+            StorageEnvironment.RAW,
             given_time,
             "sale"
         )
@@ -111,7 +111,7 @@ class TestDatalakeUtils:
         mocker.patch.object(datalake_path_utils, "datetime", SimpleNamespace(now=lambda tz=None: given_time))
 
         # When
-        actual = datalake_path_utils.generate_relative_path(DataLakeEnvironment.RAW)
+        actual = datalake_path_utils.generate_relative_path(StorageEnvironment.RAW)
 
         # Then
         assert actual.startswith("dev/raw/sale/")

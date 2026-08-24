@@ -1,31 +1,34 @@
-﻿from data_platform.model import Artifact
-from data_platform.pipeline.batch_pipeline import BatchPipeline
+﻿from data_platform.pipeline.pipeline import Pipeline
+from data_platform.util.path_utils import to_paths, to_object_storages
 
 
 class DagPipelineAdapter:
 
-    def __init__(self, pipeline: BatchPipeline) -> None:
+    def __init__(self, pipeline: Pipeline) -> None:
         self._pipeline = pipeline
 
     def prepare(self) -> None:
-        self._pipeline.run_stage("prepare", self._pipeline.prepare)
+        self._pipeline.start()
+        self._pipeline.run_step("prepare", self._pipeline.prepare)
 
     def ingest(self) -> tuple[str, ...]:
-        return self._pipeline.run_stage("ingest", self._pipeline.ingest)
+        storage_objects = self._pipeline.run_step("ingest", self._pipeline.ingest)
+        return to_paths(storage_objects)
 
-    def clean(self, raw_artifact_paths: tuple[Artifact, ...]) -> tuple[Artifact, ...]:
-        return self._pipeline.run_stage("clean", lambda: self._pipeline.clean(raw_artifact_paths))
+    def clean(self, paths: tuple[str, ...]) -> tuple[str, ...]:
+        storage_objects = self._pipeline.run_step("clean", lambda: self._pipeline.clean(to_object_storages(paths)))
+        return to_paths(storage_objects)
 
-    def enrich(self, cleaned_artifact_paths: tuple[Artifact, ...]) -> tuple[Artifact, ...]:
-        return self._pipeline.run_stage("enrich", lambda: self._pipeline.enrich(cleaned_artifact_paths))
+    def enrich(self, paths: tuple[str, ...]) -> tuple[str, ...]:
+        storage_objects = self._pipeline.run_step("enrich", lambda: self._pipeline.enrich(to_object_storages(paths)))
+        return to_paths(storage_objects)
 
-    def expose(self, enriched_artifact_paths: tuple[Artifact, ...]) -> None:
-        self._pipeline.run_stage("expose", lambda: self._pipeline.expose(enriched_artifact_paths))
+    def expose(self, paths: tuple[str, ...]) -> None:
+        self._pipeline.run_step("expose", lambda: self._pipeline.expose(to_object_storages(paths)))
 
-    def analyze(self, enriched_artifact_paths: tuple[Artifact, ...]) -> None:
-        self._pipeline.run_stage("analyze", lambda: self._pipeline.analyze(enriched_artifact_paths))
+    def analyze(self, paths: tuple[str, ...]) -> None:
+        self._pipeline.run_step("analyze", lambda: self._pipeline.analyze(to_object_storages(paths)))
         self._pipeline.complete()
 
     def cleanup(self) -> None:
-        self._pipeline.run_stage("cleanup", self._pipeline.cleanup)
-
+        self._pipeline.run_step("cleanup", self._pipeline.cleanup)

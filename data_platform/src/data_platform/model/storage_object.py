@@ -2,7 +2,7 @@
 
 
 @dataclass(frozen=True)
-class Artifact:
+class StorageObject:
     storage: str
     path: str
 
