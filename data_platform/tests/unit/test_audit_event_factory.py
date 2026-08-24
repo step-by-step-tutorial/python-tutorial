@@ -1,4 +1,4 @@
-from data_platform.audit.audit_event_factory import AuditEventFactory
+﻿from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
 from data_platform.audit.audit_event_factory import DatasetWrittenAuditRequest
 from data_platform.audit.audit_event_factory import PipelineCompletedAuditRequest
@@ -55,7 +55,7 @@ class TestAuditEventFactory:
             TaskStartedAuditRequest(
                 pipeline_name="sale_pipeline",
                 pipeline_id="pipeline-001",
-                task_name="populate_database",
+                task_name="expose_database",
                 task_id="task-001",
                 task_attempt=1,
             )
@@ -64,7 +64,7 @@ class TestAuditEventFactory:
             TaskCompletedAuditRequest(
                 pipeline_name="sale_pipeline",
                 pipeline_id="pipeline-001",
-                task_name="populate_database",
+                task_name="expose_database",
                 task_id="task-001",
                 task_attempt=1,
                 duration_ms=42,
@@ -76,7 +76,7 @@ class TestAuditEventFactory:
             TaskFailedAuditRequest(
                 pipeline_name="sale_pipeline",
                 pipeline_id="pipeline-001",
-                task_name="populate_database",
+                task_name="expose_database",
                 task_id="task-001",
                 task_attempt=1,
                 duration_ms=42,
@@ -113,3 +113,5 @@ class TestAuditEventFactory:
         assert given_task_failed.status is AuditStatus.FAILED
         assert given_dataset_read.event_type is AuditEventType.DATASET_READ
         assert given_dataset_written.event_type is AuditEventType.DATASET_WRITTEN
+
+

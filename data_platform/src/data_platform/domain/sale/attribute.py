@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -25,3 +25,4 @@ class SaleAttribute:
 
 
 SALE_ATTRIBUTE = SaleAttribute()
+

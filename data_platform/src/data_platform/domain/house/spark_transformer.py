@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame
+﻿from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
 from data_platform.converter.spark_converter import (
@@ -89,3 +89,4 @@ class SparkHouseTransformer(DatasetTransformer[DataFrame]):
                 ),
             ],
         )
+

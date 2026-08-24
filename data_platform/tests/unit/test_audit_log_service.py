@@ -1,4 +1,4 @@
-from data_platform.audit.audit_event_factory import AuditEventFactory
+﻿from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
 from data_platform.audit.audit_log_service import AuditLogService
 
@@ -18,3 +18,5 @@ class TestAuditLogService:
 
         assert mock_logger_info.call_count == 1
         assert mock_logger_info.call_args.args[0] == "Audit event: %s"
+
+

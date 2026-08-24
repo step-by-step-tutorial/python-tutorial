@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from typing import Any, Mapping
 
 from data_platform.converter.value_converter import (
@@ -11,7 +11,6 @@ from data_platform.converter.value_converter import (
 from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE
 from data_platform.domain.house.event import HouseEvent
 from data_platform.model.mapped_event import MappedEvent
-from data_platform.registry.event_converter_registry import event_converter_registry
 
 
 @dataclass(frozen=True)
@@ -44,7 +43,3 @@ class HouseEventConverter:
 
 house_event_converter = HouseEventConverter()
 
-
-def register_house_event_converter() -> None:
-    if not event_converter_registry.contains("house"):
-        event_converter_registry.register("house", house_event_converter)

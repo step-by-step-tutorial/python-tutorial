@@ -1,6 +1,7 @@
-from pandas import DataFrame
+﻿from pandas import DataFrame
 
-from data_platform.converter.pandas_converter import convert_datetime_column, convert_numeric_column, remove_duplicates, reset_index
+from data_platform.converter.pandas_converter import convert_datetime_column, convert_numeric_column, remove_duplicates, \
+    reset_index
 from data_platform.domain.online_shopping.attribute import ONLINE_SHOPPING_ATTRIBUTE as columns
 from data_platform.model import DatasetTransformer
 
@@ -11,15 +12,15 @@ class InmemoryOnlineShoppingTransformer(DatasetTransformer[DataFrame]):
         data = convert_datetime_column(data, columns.order_date)
         data = convert_datetime_column(data, columns.estimated_delivery_date)
         for column in (
-            columns.customer_id,
-            columns.unit_price,
-            columns.quantity,
-            columns.subtotal,
-            columns.discount_percent,
-            columns.shipping_cost,
-            columns.tax_amount,
-            columns.total_amount,
-            columns.delivery_days,
+                columns.customer_id,
+                columns.unit_price,
+                columns.quantity,
+                columns.subtotal,
+                columns.discount_percent,
+                columns.shipping_cost,
+                columns.tax_amount,
+                columns.total_amount,
+                columns.delivery_days,
         ):
             data = convert_numeric_column(data, column)
 
@@ -41,3 +42,4 @@ class InmemoryOnlineShoppingTransformer(DatasetTransformer[DataFrame]):
         data[columns.year] = data[columns.order_date].dt.year
         data[columns.month] = data[columns.order_date].dt.month
         return data
+

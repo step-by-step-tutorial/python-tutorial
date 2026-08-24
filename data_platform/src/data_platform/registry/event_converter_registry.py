@@ -1,4 +1,4 @@
-from data_platform.model.event_converter import EventConverter
+﻿from data_platform.model.event_converter import EventConverter
 from data_platform.registry.base_registry import Registry
 
 
@@ -8,3 +8,4 @@ class EventConverterRegistry(Registry[EventConverter]):
 
 
 event_converter_registry = EventConverterRegistry()
+

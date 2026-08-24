@@ -1,4 +1,4 @@
-from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
+﻿from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
 from data_platform.model import RestApiEndpoint
 
 
@@ -18,3 +18,5 @@ class TestRestApiCsvIngestor:
         assert actual.to_dict("records") == [{"order_id": 1, "total_amount": 12.5}]
         rest_connection.open.assert_called_once()
         assert rest_connection.open.call_args.args[0].method == "GET"
+
+

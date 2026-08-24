@@ -1,0 +1,1 @@
+TRUNCATE TABLE online_shopping.online_shopping_stage;

@@ -1,4 +1,4 @@
-def build_schema():
+﻿def build_schema():
     from pyspark.sql.types import DoubleType, LongType, StringType, StructField, StructType
 
     from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
@@ -15,3 +15,4 @@ def build_schema():
             StructField(SALE_ATTRIBUTE.country, StringType(), nullable=False),
         ]
     )
+

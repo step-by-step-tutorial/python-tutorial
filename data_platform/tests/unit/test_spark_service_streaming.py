@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame, SparkSession
+﻿from pyspark.sql import DataFrame, SparkSession
 
 from data_platform.model import DataLakeEndpoint, MessagingEndpoint
 from data_platform.domain.sale.dataset import SALE_DATASET
@@ -58,3 +58,5 @@ class TestReadStream:
         assert given_writer.option.call_args.args == ("checkpointLocation", "checkpoint/path")
         assert given_writer.trigger.call_count == 1
         assert given_writer.start.call_count == 1
+
+

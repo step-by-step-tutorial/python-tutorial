@@ -1,7 +1,7 @@
-from confluent_kafka import Consumer, Producer
+﻿from confluent_kafka import Consumer, Producer
 
-from data_platform.config.main_settings import settings as main_settings
 from data_platform.config.keys import Key
+from data_platform.config.main_settings import settings as main_settings
 
 
 def create_sale_publisher_connection() -> Producer:
@@ -74,3 +74,4 @@ def create_audit_listener_connection() -> Consumer:
             "enable.auto.commit": False,
         }
     )
+

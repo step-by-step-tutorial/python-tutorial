@@ -1,6 +1,5 @@
+﻿import json
 import logging
-
-import json
 from urllib.request import Request, build_opener
 
 import pandas as pd
@@ -25,4 +24,4 @@ class RestApiIngestor:
         if isinstance(data, list):
             return pd.json_normalize(data)
         return pd.json_normalize([data])
-import logging
+

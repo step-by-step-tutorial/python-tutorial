@@ -1,4 +1,4 @@
-import hashlib
+﻿import hashlib
 
 import pandas as pd
 from pandas import DataFrame
@@ -114,3 +114,4 @@ class InmemoryHouseTransformer(DatasetTransformer[DataFrame]):
         )
 
         return df
+

@@ -1,4 +1,4 @@
-from data_platform.audit.audit_database_service import AuditDatabaseService
+﻿from data_platform.audit.audit_database_service import AuditDatabaseService
 from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
 from data_platform.model import AuditEndpoint
@@ -50,3 +50,5 @@ class TestAuditDatabaseService:
         assert given_transaction_context.__enter__.call_count == 1
         assert given_transaction_context.__exit__.call_count == 1
         assert given_connection.execute.call_count == 1
+
+

@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame, SparkSession
+﻿from pyspark.sql import DataFrame, SparkSession
 
 from data_platform.model import DataLakeEndpoint
 from data_platform.service import spark_data_lake_service as system_under_test
@@ -34,3 +34,5 @@ class TestAppendBatchToObjectStorage:
         assert mock_append.call_count == 1
         assert mock_append.call_args.kwargs["dataframe"] is given_dataframe.persist.return_value
         assert mock_append.call_args.kwargs["path"] == "cleaned/path"
+
+

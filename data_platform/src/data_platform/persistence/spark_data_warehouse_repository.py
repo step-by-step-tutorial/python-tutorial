@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame
+﻿from pyspark.sql import DataFrame
 
 from data_platform.model import DataWarehouseEndpoint
 from data_platform.persistence.data_warehouse_repository import DataWarehouseRepository
@@ -19,3 +19,4 @@ class SparkDataWarehouseRepository(DataWarehouseRepository):
     def replace(self, dataframe: DataFrame) -> None:
         self.truncate_tables()
         self.save(dataframe)
+

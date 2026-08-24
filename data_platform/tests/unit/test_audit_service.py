@@ -1,4 +1,4 @@
-from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
+﻿from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
 from data_platform.audit.audit_event_factory import DatasetWrittenAuditRequest
 from data_platform.audit.audit_event_factory import PipelineCompletedAuditRequest
 from data_platform.audit.audit_event_factory import PipelineFailedAuditRequest
@@ -63,7 +63,7 @@ class TestAuditService:
                 TaskStartedAuditRequest(
                     pipeline_name="sale_pipeline",
                     pipeline_id="pipeline-001",
-                    task_name="populate_database",
+                    task_name="expose_database",
                     task_id=actual_task_id,
                     task_attempt=1,
                 )
@@ -74,7 +74,7 @@ class TestAuditService:
                 TaskCompletedAuditRequest(
                     pipeline_name="sale_pipeline",
                     pipeline_id="pipeline-001",
-                    task_name="populate_database",
+                    task_name="expose_database",
                     task_id=actual_task_id,
                     task_attempt=1,
                     duration_ms=0,
@@ -86,7 +86,7 @@ class TestAuditService:
                 TaskFailedAuditRequest(
                     pipeline_name="sale_pipeline",
                     pipeline_id="pipeline-001",
-                    task_name="populate_database",
+                    task_name="expose_database",
                     task_id=actual_task_id,
                     task_attempt=1,
                     duration_ms=0,
@@ -187,7 +187,7 @@ class TestAuditService:
                     TaskFailedAuditRequest(
                         pipeline_name="sale_pipeline",
                         pipeline_id="pipeline-001",
-                        task_name="populate_database",
+                        task_name="expose_database",
                         task_id="task-001",
                         task_attempt=1,
                         duration_ms=0,
@@ -210,3 +210,5 @@ class TestAuditService:
         assert given_messaging_service.save.call_count == 3
         assert given_archive_service.save.call_count == 3
         assert given_log_service.save.call_count == 3
+
+

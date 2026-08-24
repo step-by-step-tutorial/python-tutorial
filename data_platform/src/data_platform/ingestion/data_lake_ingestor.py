@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 
 import pandas as pd
 
@@ -15,4 +15,4 @@ class DataLakeIngestor:
     def ingest(self, relative_path: str, file_extension: str = "parquet") -> pd.DataFrame:
         logger.info("Ingesting %s data from data lake path %s", file_extension, relative_path)
         return self._repository.find(relative_path, file_extension)
-import logging
+

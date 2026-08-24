@@ -1,8 +1,9 @@
-import logging
+﻿import logging
 
 from pyspark.sql import DataFrame, SparkSession
 
 from data_platform.model import DataLakeEndpoint
+from data_platform.util.string_utils import should_not_be_none_or_empty
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +14,7 @@ class SparkDataLakeIngestor:
         self._session = session
 
     def ingest(self, relative_path: str) -> DataFrame:
-        if not relative_path:
-            raise ValueError("relative_path is required")
+        should_not_be_none_or_empty(relative_path, "relative_path")
 
         logger.info("Reading data from %s", relative_path)
         return (
@@ -26,3 +26,4 @@ class SparkDataLakeIngestor:
                 f"{relative_path.strip('/')}"
             )
         )
+

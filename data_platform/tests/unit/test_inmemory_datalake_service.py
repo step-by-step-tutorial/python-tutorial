@@ -1,4 +1,4 @@
-from data_platform.persistence import data_lake_repository as system_under_test
+﻿from data_platform.persistence import data_lake_repository as system_under_test
 from data_platform.model import DataLakeEndpoint
 
 
@@ -35,3 +35,5 @@ class TestUploadParquet:
         assert mock_create_connection.call_count == 1
         assert given_client.list_buckets.call_count == 1
         assert given_client.put_object.call_count == 1
+
+

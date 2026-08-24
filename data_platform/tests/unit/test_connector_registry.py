@@ -1,4 +1,4 @@
-from data_platform.registry.connection_registry import connection_registry
+﻿from data_platform.registry.connection_registry import connection_registry
 
 
 class TestConnectionRegistry:
@@ -46,3 +46,5 @@ class TestConnectionRegistry:
 
         assert calls == ["flush", "close"]
         assert not connection_registry.contains(connection_name)
+
+

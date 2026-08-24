@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from io import StringIO
 from urllib.request import Request, build_opener
 
@@ -12,9 +12,12 @@ logger = logging.getLogger(__name__)
 class RestApiCsvIngestor:
     def __init__(self, endpoint: RestApiEndpoint) -> None:
         self._endpoint = endpoint
+        self.name = "api"
 
-    def ingest(self) -> pd.DataFrame:
+    def ingest(self):
         logger.info("Downloading CSV data from %s", self._endpoint.url)
         request = Request(self._endpoint.url, method=self._endpoint.method, headers=self._endpoint.headers)
         with build_opener().open(request) as response:
-            return pd.read_csv(StringIO(response.read().decode("utf-8")))
+            data = pd.read_csv(StringIO(response.read().decode("utf-8")))
+        return data
+

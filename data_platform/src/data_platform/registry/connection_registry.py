@@ -1,4 +1,4 @@
-import atexit
+﻿import atexit
 from typing import Any
 
 import data_platform.connector.data_lake_connections
@@ -43,6 +43,10 @@ connection_registry.register_lazy_item(
     data_platform.connector.database_connections.create_house_connection
 )
 connection_registry.register_lazy_item(
+    Key.ONLINE_SHOPPING_DATABASE,
+    data_platform.connector.database_connections.create_online_shopping_connection
+)
+connection_registry.register_lazy_item(
     Key.AUDIT_DATABASE,
     data_platform.connector.database_connections.create_audit_connection
 )
@@ -69,6 +73,10 @@ connection_registry.register_lazy_item(
 connection_registry.register_lazy_item(
     Key.HOUSE_DATA_WAREHOUSE,
     data_platform.connector.data_warehouse_connections.create_house_connection
+)
+connection_registry.register_lazy_item(
+    Key.ONLINE_SHOPPING_DATA_WAREHOUSE,
+    data_platform.connector.data_warehouse_connections.create_online_shopping_connection
 )
 connection_registry.register_lazy_item(
     Key.AUDIT_DATA_WAREHOUSE,
@@ -100,3 +108,4 @@ connection_registry.register_lazy_item(
 )
 
 atexit.register(connection_registry.close_all)
+

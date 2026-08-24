@@ -1,4 +1,6 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
+
+import pandas
 
 from data_platform.model import DatabaseEndpoint
 from data_platform.util.collection_utils import list_of_values
@@ -17,5 +19,6 @@ class DatabaseRepository(ABC):
         self.execute_files(list_of_values(self._endpoint.truncate_sql_files))
 
     @abstractmethod
-    def replace(self, dataframe: object) -> None:
+    def replace(self, dataframe: pandas.DataFrame) -> None:
         raise NotImplementedError
+

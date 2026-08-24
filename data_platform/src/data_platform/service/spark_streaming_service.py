@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 
 from pyspark.sql import DataFrame, SparkSession
 
@@ -61,3 +61,4 @@ class SparkStreamingService:
             batch_dataframe = dataframe.persist()
             persisted.append(batch_dataframe)
             batch_dataframe.write.mode("append").parquet(generate_data_lake_path(self._data_lake_endpoint, path))
+

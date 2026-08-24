@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 
 from data_platform.domain.online_shopping.inmemory_transformer import InmemoryOnlineShoppingTransformer
 
@@ -32,3 +32,5 @@ class TestInmemoryOnlineShoppingTransformer:
         assert actual.to_dict("records")[0]["discount_amount"] == 2.0
         assert actual.to_dict("records")[0]["net_revenue"] == 25.0
         assert actual.to_dict("records")[0]["year"] == 2026
+
+

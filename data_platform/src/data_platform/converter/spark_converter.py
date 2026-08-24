@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Mapping, Sequence
+﻿from collections.abc import Iterable, Mapping, Sequence
 
 from pyspark.sql import Column, DataFrame, Window, functions as sf
 
@@ -91,3 +91,4 @@ def create_hash_column(
         bit_length: int = 256,
 ) -> DataFrame:
     return df.withColumn(alias_field, sf.sha2(sf.concat_ws(separator, *source_columns), bit_length))
+

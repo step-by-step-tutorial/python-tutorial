@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 import pytest
 
 from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE
@@ -121,3 +121,5 @@ class TestInmemoryHouseTransformer:
         assert list(cleaned[HOUSE_ATTRIBUTE.address]) == ["Main Street", "Oak Avenue"]
         assert HOUSE_ATTRIBUTE.listing_key in enriched.columns
         assert list(enriched[HOUSE_ATTRIBUTE.price_per_square_meter]) == [1.0, 10.0]
+
+

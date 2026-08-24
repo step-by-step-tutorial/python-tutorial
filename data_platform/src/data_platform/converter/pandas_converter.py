@@ -1,4 +1,4 @@
-from collections.abc import Callable, Iterable, Mapping, Sequence
+﻿from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import reduce
 from operator import and_
 
@@ -113,3 +113,4 @@ def average_by_group(df: DataFrame, group_field: str, original_field: str, alias
         .mean()
         .rename(columns={original_field: alias_field})
     )
+

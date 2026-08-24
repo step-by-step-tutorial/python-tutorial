@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 
 from data_platform.registry.endpoint_registry import EndpointRegistry, endpoint_registry
 from data_platform.domain.house.dataset import HOUSE_DATASET
@@ -30,3 +30,5 @@ class TestEndpointRegistry:
         assert endpoint_registry.get_item(audit_endpoint.name) is audit_endpoint
         assert SALE_DATASET.audit is audit_endpoint
         assert HOUSE_DATASET.audit is audit_endpoint
+
+

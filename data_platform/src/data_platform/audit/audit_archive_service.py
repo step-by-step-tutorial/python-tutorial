@@ -1,10 +1,10 @@
-import json
+﻿import json
 from datetime import datetime
 from typing import Any
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
-from data_platform.model import AuditEndpoint
 from data_platform.audit.audit_event import AuditEvent
+from data_platform.model import AuditEndpoint
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.path_utils import generate_full_path
 
@@ -67,3 +67,4 @@ class AuditArchiveService(AbstractAuditService):
         bucket_names = {bucket["Name"] for bucket in buckets.get("Buckets", [])}
         if self._bucket_name not in bucket_names:
             self._client.create_bucket(Bucket=self._bucket_name)
+

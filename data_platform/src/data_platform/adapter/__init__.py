@@ -1,1 +1,2 @@
-"""Adapters between external orchestration and application pipelines."""
+﻿"""Adapters between external orchestration and application pipelines."""
+

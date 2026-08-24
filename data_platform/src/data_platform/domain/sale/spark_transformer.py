@@ -1,4 +1,4 @@
-from pyspark.sql import DataFrame
+﻿from pyspark.sql import DataFrame
 from pyspark.sql import functions as sf
 
 from data_platform.converter.spark_converter import (
@@ -9,8 +9,8 @@ from data_platform.converter.spark_converter import (
     remove_duplicates,
     filter_dataframe,
 )
-from data_platform.model import DatasetTransformer
 from data_platform.domain.sale.attribute import SALE_ATTRIBUTE as schema
+from data_platform.model import DatasetTransformer
 
 
 class SparkSaleTransformer(DatasetTransformer[DataFrame]):
@@ -43,3 +43,4 @@ class SparkSaleTransformer(DatasetTransformer[DataFrame]):
             .withColumn(schema.year, sf.year(schema.order_date))
             .withColumn(schema.month, sf.month(schema.order_date))
         )
+

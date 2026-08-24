@@ -1,5 +1,5 @@
+﻿from data_platform.config.keys import Key
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.config.keys import Key
 from data_platform.model import AuditEndpoint, Endpoint
 from data_platform.registry.base_registry import Registry
 
@@ -23,3 +23,4 @@ audit_endpoint = AuditEndpoint(
 )
 
 endpoint_registry.register(audit_endpoint.name, audit_endpoint)
+

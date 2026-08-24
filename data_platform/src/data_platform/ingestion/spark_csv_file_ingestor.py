@@ -1,4 +1,4 @@
-from typing import Any
+﻿from typing import Any
 
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
@@ -21,3 +21,4 @@ class SparkCsvFileIngestor:
             .schema(schema)
             .csv(file_path)
         )
+

@@ -1,4 +1,4 @@
-from data_platform.util.collection_utils import batch_of_list
+﻿from data_platform.util.collection_utils import batch_of_list
 from data_platform.util.spark_utils import dataframe_to_list
 
 
@@ -30,3 +30,5 @@ class TestBatchRows:
         actual = batch_of_list(rows, batch_size=2)
 
         assert actual == [[(1,), (2,)], [(3,)]]
+
+

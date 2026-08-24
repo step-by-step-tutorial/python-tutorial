@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+﻿from collections.abc import Mapping
 
 from pyspark.sql import DataFrame
 
@@ -18,3 +18,4 @@ class SparkHouseAnalyzer(DatasetAnalyzer[DataFrame]):
                 "average_price_per_square_meter",
             ),
         }
+

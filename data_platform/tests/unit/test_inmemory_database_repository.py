@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 import pytest
 
 from data_platform.model import DatabaseEndpoint
@@ -64,3 +64,5 @@ class TestInmemoryDatabaseRepository:
         truncate.assert_called_once()
         save.assert_called_once()
         execute.assert_called_once_with(["after.sql"])
+
+

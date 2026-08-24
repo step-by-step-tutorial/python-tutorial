@@ -1,4 +1,4 @@
-import pandas
+﻿import pandas
 
 from data_platform.model import DataWarehouseEndpoint
 from data_platform.persistence.data_warehouse_repository import DataWarehouseRepository
@@ -14,3 +14,4 @@ class InmemoryDataWarehouseRepository(DataWarehouseRepository):
     def replace(self, dataframe: pandas.DataFrame) -> None:
         self.truncate_tables()
         self.save(dataframe)
+

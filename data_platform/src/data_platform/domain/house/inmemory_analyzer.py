@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+﻿from collections.abc import Mapping
 
 from pandas import DataFrame
 
@@ -17,3 +17,4 @@ class InmemoryHouseAnalyzer(DatasetAnalyzer[DataFrame]):
                 data, model.room, model.price_per_square_meter, "average_price_by_square_meter"
             ),
         }
+

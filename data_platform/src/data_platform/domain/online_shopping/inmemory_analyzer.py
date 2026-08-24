@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+﻿from collections.abc import Mapping
 
 from pandas import DataFrame
 
@@ -13,3 +13,4 @@ class InmemoryOnlineShoppingAnalyzer(DatasetAnalyzer[DataFrame]):
             "revenue_by_country": sum_by_group(data, columns.country, columns.net_revenue, columns.revenue),
             "revenue_by_sales_channel": sum_by_group(data, columns.sales_channel, columns.net_revenue, columns.revenue),
         }
+

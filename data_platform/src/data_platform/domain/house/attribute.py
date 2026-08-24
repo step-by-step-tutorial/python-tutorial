@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -32,3 +32,4 @@ class HouseAttribute:
 
 
 HOUSE_ATTRIBUTE = HouseAttribute()
+

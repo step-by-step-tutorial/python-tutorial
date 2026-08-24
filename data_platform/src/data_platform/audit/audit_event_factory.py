@@ -1,4 +1,4 @@
-import traceback
+﻿import traceback
 from dataclasses import dataclass
 from typing import Any
 
@@ -242,3 +242,4 @@ class AuditEventFactory:
             output_row_count=request.row_count,
             metadata=request.metadata or {},
         )
+

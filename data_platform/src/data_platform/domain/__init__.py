@@ -1,1 +1,2 @@
-"""Domain-specific data platform components."""
+﻿"""Domain-specific data platform components."""
+

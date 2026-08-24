@@ -1,7 +1,7 @@
-import boto3
+﻿import boto3
 
-from data_platform.config.main_settings import settings as main_settings
 from data_platform.config.keys import Key
+from data_platform.config.main_settings import settings as main_settings
 
 
 def create_sale_connection():
@@ -38,3 +38,4 @@ def create_online_shopping_connection():
         aws_access_key_id=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].access_key,
         aws_secret_access_key=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].secret_key,
     )
+

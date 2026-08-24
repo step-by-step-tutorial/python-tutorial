@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 
 import pandas as pd
 
@@ -20,4 +20,4 @@ class DataWarehouseIngestor:
 
         connection = connection_registry.get_item(self._endpoint.connection_name)
         return connection.query_df(query)
-import logging
+

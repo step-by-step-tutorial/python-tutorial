@@ -1,4 +1,4 @@
-import os
+﻿import os
 from dataclasses import dataclass
 from types import MappingProxyType
 
@@ -59,6 +59,15 @@ data_warehouse = MappingProxyType(
                 f"{os.getenv('DATA_PLATFORM_HOUSE_DATAWAREHOUSE_NAME', 'app_datawarehouse')}",
             ),
         ),
+        Key.ONLINE_SHOPPING_DATA_WAREHOUSE: DataWarehouseSettings(
+            host=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_DATAWAREHOUSE_HOST", "localhost"),
+            port=int(os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_DATAWAREHOUSE_PORT", "8123")),
+            database_name=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_DATAWAREHOUSE_NAME", "app_datawarehouse"),
+            user=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_DATAWAREHOUSE_USER", "admin"),
+            password=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_DATAWAREHOUSE_PASSWORD", "admin"),
+            jdbc_url=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_DATAWAREHOUSE_JDBC_URL",
+                               "jdbc:clickhouse://localhost:8123/app_datawarehouse"),
+        ),
         Key.AUDIT_DATA_WAREHOUSE: DataWarehouseSettings(
             host=os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_HOST", "localhost"),
             port=int(os.getenv("DATA_PLATFORM_AUDIT_DATAWAREHOUSE_PORT", "8123")),
@@ -75,3 +84,4 @@ data_warehouse = MappingProxyType(
         ),
     }
 )
+

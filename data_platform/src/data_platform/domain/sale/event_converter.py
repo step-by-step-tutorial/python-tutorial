@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from typing import Any, Mapping
 
 from data_platform.converter.value_converter import (
@@ -6,10 +6,9 @@ from data_platform.converter.value_converter import (
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.model.mapped_event import MappedEvent
 from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
 from data_platform.domain.sale.event import SaleEvent
-from data_platform.registry.event_converter_registry import event_converter_registry
+from data_platform.model.mapped_event import MappedEvent
 
 
 @dataclass(frozen=True)
@@ -42,7 +41,3 @@ class SaleEventConverter:
 
 sale_event_converter = SaleEventConverter()
 
-
-def register_sale_event_converter() -> None:
-    if not event_converter_registry.contains("sale"):
-        event_converter_registry.register("sale", sale_event_converter)

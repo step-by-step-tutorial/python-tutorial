@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from io import BytesIO
 from uuid import uuid4
 
@@ -61,3 +61,4 @@ class DataLakeRepository:
 
         logger.info(f"Download all {file_extension} files from bucket {self._bucket_name} with path {relative_path}")
         return pd.concat(dataframes, ignore_index=True)
+

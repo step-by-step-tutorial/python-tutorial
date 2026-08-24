@@ -1,4 +1,4 @@
-from data_platform.model import DataWarehouseEndpoint
+﻿from data_platform.model import DataWarehouseEndpoint
 from data_platform.persistence.spark_data_warehouse_repository import SparkDataWarehouseRepository
 
 
@@ -41,3 +41,5 @@ class TestSparkDataWarehouseRepository:
         assert connection.insert.call_args_list[0].kwargs == {
             "table": "warehouse.example", "data": [(1,)], "column_names": ["value"]
         }
+
+

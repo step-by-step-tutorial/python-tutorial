@@ -1,10 +1,10 @@
-import logging
+﻿import logging
 from functools import partial
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
+from data_platform.audit.audit_event import AuditEvent
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.model import AuditEndpoint
-from data_platform.audit.audit_event import AuditEvent
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.kafka_admin import ensure_topic_exists
 from data_platform.util.kafka_utils import handle_kafka_response
@@ -41,3 +41,4 @@ class AuditMessagingService(AbstractAuditService):
         except Exception as error:
             logger.exception("Failed to publish audit event %s due to error: %s", event.event_id, error)
             raise
+

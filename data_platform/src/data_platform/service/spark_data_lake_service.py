@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 
 from pyspark.sql import DataFrame, SparkSession
 
@@ -43,3 +43,4 @@ class SparkDataLakeService:
             batch_dataframe = dataframe.persist()
             persisted.append(batch_dataframe)
             self.save(dataframe=batch_dataframe, path=path)
+

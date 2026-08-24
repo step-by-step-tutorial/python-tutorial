@@ -1,4 +1,4 @@
-import time
+﻿import time
 from datetime import datetime, UTC
 
 
@@ -8,3 +8,4 @@ def elapsed_milliseconds(started_at: float) -> int:
 
 def generate_ingestion_time() -> datetime:
     return datetime.now(UTC)
+

@@ -1,4 +1,4 @@
-from math import isnan
+﻿from math import isnan
 from typing import Any
 
 
@@ -112,3 +112,4 @@ def convert_to_optional_boolean(value: Any) -> bool | None:
         return False
 
     raise ValueError(f"Cannot convert value to boolean: {value}")
+

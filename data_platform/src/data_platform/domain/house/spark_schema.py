@@ -1,4 +1,4 @@
-def build_schema():
+﻿def build_schema():
     from pyspark.sql.types import BooleanType, DoubleType, LongType, StringType, StructField, StructType
 
     from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE
@@ -13,3 +13,4 @@ def build_schema():
         StructField(HOUSE_ATTRIBUTE.price_raw, DoubleType(), nullable=False),
         StructField(HOUSE_ATTRIBUTE.price_usd_raw, DoubleType(), nullable=True),
     ])
+

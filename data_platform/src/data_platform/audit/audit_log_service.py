@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
 from data_platform.audit.audit_event import AuditEvent
@@ -13,3 +13,4 @@ class AuditLogService(AbstractAuditService):
             "Audit event: %s",
             f"Pipeline={event.pipeline_name}, Task={event.task_name}, ID={event.event_id}",
         )
+

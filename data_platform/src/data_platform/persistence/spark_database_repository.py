@@ -1,7 +1,7 @@
-from pyspark.sql import DataFrame
+﻿from pyspark.sql import DataFrame
 
-from data_platform.config.main_settings import settings as main_settings
 from data_platform.config.keys import Key
+from data_platform.config.main_settings import settings as main_settings
 from data_platform.model import DatabaseEndpoint
 from data_platform.persistence.database_repository import DatabaseRepository
 from data_platform.util.collection_utils import list_of_values
@@ -29,3 +29,4 @@ class SparkDatabaseRepository(DatabaseRepository):
         self.truncate_stage_table()
         self.save(dataframe)
         self.execute_files(list_of_values(self._endpoint.write_sql_files))
+

@@ -1,4 +1,4 @@
-import os
+﻿import os
 from dataclasses import dataclass
 
 
@@ -26,3 +26,4 @@ spark = SparkSettings(
     max_total_tasks=os.getenv("SPARK_MAX_TOTAL_TASKS", "4"),
     max_direct_memory_size=os.getenv("MAX_DIRECT_MEMORY_SIZE", "2g"),
 )
+

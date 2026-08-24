@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from collections.abc import Callable
 from typing import Generic, TypeVar
 
@@ -65,3 +65,4 @@ class Registry(Generic[RegistryItem]):
     def clear(self) -> None:
         self._items.clear()
         self._lazy_loading_items.clear()
+

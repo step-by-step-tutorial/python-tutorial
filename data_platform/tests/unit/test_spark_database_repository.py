@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 
 from data_platform.model import DatabaseEndpoint
 from data_platform.persistence.spark_database_repository import SparkDatabaseRepository
@@ -57,3 +57,5 @@ class TestSparkDatabaseRepository:
         truncate.assert_called_once()
         save.assert_called_once()
         execute.assert_called_once_with(["after.sql"])
+
+

@@ -1,7 +1,7 @@
-from pyspark.sql import SparkSession
+﻿from pyspark.sql import SparkSession
 
-from data_platform.config.main_settings import settings as main_settings
 from data_platform.config.keys import Key
+from data_platform.config.main_settings import settings as main_settings
 
 SPARK_JARS = [
     "org.postgresql:postgresql:42.7.7",
@@ -57,3 +57,4 @@ def create_session() -> SparkSession:
     )
 
     return session
+

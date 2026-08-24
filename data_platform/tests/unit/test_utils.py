@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -87,3 +87,5 @@ class TestPandasDataFrameModelUtils:
     def test_should_raise_attribute_error_for_unknown_attribute(self) -> None:
         with pytest.raises(AttributeError):
             _ = SALE_ATTRIBUTE.unknown_column
+
+

@@ -1,6 +1,5 @@
+﻿import json
 import logging
-
-import json
 
 import pandas as pd
 
@@ -36,4 +35,4 @@ class KafkaIngestor:
 
         logger.info("Ingested %s Kafka messages from topic %s", len(records), self._endpoint.channel_name)
         return pd.json_normalize(records)
-import logging
+

@@ -1,4 +1,4 @@
-import pandas
+﻿import pandas
 
 from data_platform.model import DatabaseEndpoint
 from data_platform.persistence.database_repository import DatabaseRepository
@@ -24,3 +24,4 @@ class InmemoryDatabaseRepository(DatabaseRepository):
         self.truncate_stage_table()
         self.save(dataframe)
         self.execute_files(list_of_values(self._endpoint.write_sql_files))
+

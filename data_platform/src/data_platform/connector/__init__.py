@@ -1,1 +1,2 @@
-"""External connection factories and registry."""
+﻿"""External connection factories and registry."""
+

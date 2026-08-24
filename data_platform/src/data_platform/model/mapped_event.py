@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from typing import Any
 
 
@@ -6,3 +6,4 @@ from typing import Any
 class MappedEvent:
     key: str | None
     payload: dict[str, Any]
+

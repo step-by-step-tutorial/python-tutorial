@@ -1,4 +1,4 @@
-from collections.abc import Mapping, MutableMapping
+﻿from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
 from typing import Protocol, TypeVar
 
@@ -90,3 +90,4 @@ class AuditEndpoint:
     channel_name: str = ""
     bucket_name: str = ""
     name: str = field(default="audit", init=False)
+

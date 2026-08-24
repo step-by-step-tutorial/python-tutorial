@@ -1,218 +1,125 @@
-import logging
-import time
+﻿import time
 from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 
-from data_platform.audit.audit_event_factory import AuditEventFactory
-from data_platform.audit.audit_event_factory import PipelineCompletedAuditRequest
-from data_platform.audit.audit_event_factory import PipelineFailedAuditRequest
-from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
-from data_platform.audit.audit_event_factory import TaskCompletedAuditRequest
-from data_platform.audit.audit_event_factory import TaskFailedAuditRequest
-from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
+from data_platform.audit.audit_event_factory import AuditEventFactory, PipelineCompletedAuditRequest, \
+    PipelineFailedAuditRequest, PipelineStartedAuditRequest, TaskCompletedAuditRequest, TaskFailedAuditRequest, \
+    TaskStartedAuditRequest
 from data_platform.audit.audit_service import AuditService
-from data_platform.model import Dataset, PipelineAnalyzer
-from data_platform.service.data_populator import DataPopulator
-from data_platform.util.log_utils import log_line
+from data_platform.config.data_lake_environment import DataLakeEnvironment
+from data_platform.model import Artifact, Dataset
+from data_platform.util.path_utils import generate_relative_path
 from data_platform.util.pipeline_utils import create_pipeline_id
-from data_platform.util.time_utils import elapsed_milliseconds
-from data_platform.util.time_utils import generate_ingestion_time
-
-logger = logging.getLogger(__name__)
+from data_platform.util.time_utils import elapsed_milliseconds, generate_ingestion_time
 
 
 class BatchPipeline(ABC):
-    pipeline_name: str
 
-    def __init__(self, ds: Dataset, audit_service: AuditService | None = None) -> None:
-        self.dataset = ds
+    def __init__(self, dataset: Dataset) -> None:
+        self.dataset = dataset
+        self.pipeline_name = dataset.name
         self.pipeline_id = create_pipeline_id()
-        self.ingestion_time: datetime = generate_ingestion_time()
-        self._audit_service = audit_service or AuditService(ds.audit)
-        self._populators: tuple[DataPopulator, ...] = ()
-        self._analyzers: tuple[PipelineAnalyzer, ...] = ()
+        self.ingestion_time = generate_ingestion_time()
+        self.path_prefix = generate_relative_path(DataLakeEnvironment.RAW, self.ingestion_time, self.dataset.name)
+        self.started_at = None
+        self.terminal = False
+        self._audit_service = AuditService(dataset.audit)
 
     @abstractmethod
-    def ingest_raw_data(self) -> Any:
-        raise NotImplementedError
+    def prepare(self) -> None:
+        ...
 
     @abstractmethod
-    def store_raw_data(self, raw_data: Any) -> str:
-        raise NotImplementedError
+    def ingest(self) -> tuple[Artifact, ...]:
+        ...
 
     @abstractmethod
-    def clean(self, raw_relative_path: str) -> Any:
-        raise NotImplementedError
+    def clean(self, raw_artifact_paths: tuple[Artifact, ...]) -> tuple[Artifact, ...]:
+        ...
 
     @abstractmethod
-    def store_cleaned_data(self, cleaned_data: Any) -> str:
-        raise NotImplementedError
+    def enrich(self, cleaned_artifact_paths: tuple[Artifact, ...]) -> tuple[Artifact, ...]:
+        ...
 
     @abstractmethod
-    def enrich(self, cleaned_relative_path: str) -> Any:
-        raise NotImplementedError
+    def expose(self, enriched_artifact_paths: tuple[Artifact, ...]) -> None:
+        ...
 
     @abstractmethod
-    def store_enriched_data(self, enriched_data: Any) -> str:
-        raise NotImplementedError
+    def analyze(self, enriched_artifact_paths: tuple[Artifact, ...]) -> None:
+        ...
 
     @abstractmethod
-    def download_enriched_data(self, enriched_data_path: str) -> Any:
-        raise NotImplementedError
+    def cleanup(self) -> None:
+        ...
 
-    def populate_enriched_data(self, enriched_data_path: str) -> None:
-        for populator in self._populators:
-            populator.populate(enriched_data_path)
+    def start(self) -> None:
+        if self.started_at is not None:
+            return
+        self.started_at = time.time()
+        self._audit_service.emit(AuditEventFactory.create_pipeline_started_event(PipelineStartedAuditRequest(
+            pipeline_name=self.pipeline_name, pipeline_id=self.pipeline_id,
+            metadata={"dataset": self.dataset.name, "ingestion_time": self.ingestion_time.isoformat()},
+        )))
 
-    @abstractmethod
-    def show_dataframe(self, enriched_data_path: str) -> None:
-        raise NotImplementedError
+    def complete(self) -> None:
+        if self.terminal or self.started_at is None:
+            return
+        self.terminal = True
+        self._audit_service.emit(AuditEventFactory.create_pipeline_completed_event(PipelineCompletedAuditRequest(
+            pipeline_name=self.pipeline_name, pipeline_id=self.pipeline_id,
+            duration_ms=elapsed_milliseconds(self.started_at),
+            metadata={"dataset": self.dataset.name, "ingestion_time": self.ingestion_time.isoformat()},
+        )))
 
-    def analyze_enriched_data(self, enriched_data_path: str) -> None:
-        for analyzer in self._analyzers:
-            analyzer.analyze(enriched_data_path)
+    def fail(self, error: Exception) -> None:
+        if self.terminal or self.started_at is None:
+            return
+        self.terminal = True
+        self._audit_service.emit(AuditEventFactory.create_pipeline_failed_event(PipelineFailedAuditRequest(
+            pipeline_name=self.pipeline_name, pipeline_id=self.pipeline_id,
+            duration_ms=elapsed_milliseconds(self.started_at), error=error,
+            metadata={"dataset": self.dataset.name, "ingestion_time": self.ingestion_time.isoformat()},
+        )))
 
-    def before_run(self) -> None:
-        return None
-
-    def before_task(self) -> None:
-        return None
-
-    def after_run(self) -> None:
-        return None
-
-    def run_task(self, task_name: str, task_callable):
-        self.before_task()
-        task_started_at = time.perf_counter()
-        task_id = f"{self.pipeline_id}-{task_name}"
-        self._audit_service.emit(
-            AuditEventFactory.create_task_started_event(
-                TaskStartedAuditRequest(
-                    pipeline_name=self.pipeline_name,
-                    pipeline_id=self.pipeline_id,
-                    task_name=task_name,
-                    task_id=task_id,
-                    task_attempt=1,
-                )
-            )
-        )
-
+    def run_stage(self, stage_name: str, operation: Callable[[], Any]) -> Any:
+        self.start()
+        self.dataset.pipeline_steps.before_stage(stage_name)
+        task_id = f"{self.pipeline_id}-{stage_name}"
+        started_at = time.perf_counter()
+        self._audit_service.emit(AuditEventFactory.create_task_started_event(TaskStartedAuditRequest(
+            pipeline_name=self.pipeline_name, pipeline_id=self.pipeline_id, task_name=stage_name, task_id=task_id,
+            task_attempt=1,
+        )))
         try:
-            result = task_callable()
+            result = operation()
         except Exception as error:
-            self._audit_service.emit(
-                AuditEventFactory.create_task_failed_event(
-                    TaskFailedAuditRequest(
-                        pipeline_name=self.pipeline_name,
-                        pipeline_id=self.pipeline_id,
-                        task_name=task_name,
-                        task_id=task_id,
-                        task_attempt=1,
-                        duration_ms=elapsed_milliseconds(task_started_at),
-                        error=error,
-                    )
-                )
-            )
+            self._audit_service.emit(AuditEventFactory.create_task_failed_event(TaskFailedAuditRequest(
+                pipeline_name=self.pipeline_name, pipeline_id=self.pipeline_id, task_name=stage_name, task_id=task_id,
+                task_attempt=1, duration_ms=elapsed_milliseconds(started_at), error=error,
+            )))
+            self.fail(error)
             raise
-        else:
-            self._audit_service.emit(
-                AuditEventFactory.create_task_completed_event(
-                    TaskCompletedAuditRequest(
-                        pipeline_name=self.pipeline_name,
-                        pipeline_id=self.pipeline_id,
-                        task_name=task_name,
-                        task_id=task_id,
-                        task_attempt=1,
-                        duration_ms=elapsed_milliseconds(task_started_at),
-                    )
-                )
-            )
-            return result
+        self._audit_service.emit(AuditEventFactory.create_task_completed_event(TaskCompletedAuditRequest(
+            pipeline_name=self.pipeline_name, pipeline_id=self.pipeline_id, task_name=stage_name, task_id=task_id,
+            task_attempt=1, duration_ms=elapsed_milliseconds(started_at),
+        )))
+        self.dataset.pipeline_steps.after_stage(stage_name)
+        return result
 
     def run(self) -> None:
-        logger.info(
-            f"Starting ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
-            f"with dataset {self.dataset.name} "
-            f"at ingestion time {self.ingestion_time.isoformat()}"
-        )
-        pipeline_started_at = None
         try:
-            pipeline_started_at = time.perf_counter()
-            self.before_run()
-            self._audit_service.emit(
-                AuditEventFactory.create_pipeline_started_event(
-                    PipelineStartedAuditRequest(
-                        pipeline_name=self.pipeline_name,
-                        pipeline_id=self.pipeline_id,
-                        metadata={
-                            "dataset": self.dataset.name,
-                            "ingestion_time": self.ingestion_time.isoformat(),
-                        },
-                    )
-                )
-            )
-
-            raw_data = self.run_task("ingest_raw_data", self.ingest_raw_data)
-            log_line()
-
-            raw_relative_path = self.run_task("store_raw_data", lambda: self.store_raw_data(raw_data))
-            log_line()
-
-            cleaned_data = self.run_task("clean", lambda: self.clean(raw_relative_path))
-            log_line()
-
-            cleaned_relative_path = self.run_task("store_cleaned_data", lambda: self.store_cleaned_data(cleaned_data))
-            log_line()
-
-            enriched_data = self.run_task("enrich", lambda: self.enrich(cleaned_relative_path))
-            log_line()
-
-            enriched_relative_path = self.run_task("store_enriched_data",
-                                                   lambda: self.store_enriched_data(enriched_data))
-            log_line()
-            self.run_task("populate_enriched_data", lambda: self.populate_enriched_data(enriched_relative_path))
-            log_line()
-            self.run_task("show_dataframe", lambda: self.show_dataframe(enriched_relative_path))
-            log_line()
-            self.run_task("analyze_enriched_data", lambda: self.analyze_enriched_data(enriched_relative_path))
-            log_line()
+            self.start()
+            self.run_stage("prepare", self.prepare)
+            raw_paths = self.run_stage("ingest", self.ingest)
+            cleaned_paths = self.run_stage("clean", lambda: self.clean(raw_paths))
+            enriched_paths = self.run_stage("enrich", lambda: self.enrich(cleaned_paths))
+            self.run_stage("expose", lambda: self.expose(enriched_paths))
+            self.run_stage("analyze", lambda: self.analyze(enriched_paths))
+            self.complete()
         except Exception as error:
-            if pipeline_started_at is not None:
-                self._audit_service.emit(
-                    AuditEventFactory.create_pipeline_failed_event(
-                        PipelineFailedAuditRequest(
-                            pipeline_name=self.pipeline_name,
-                            pipeline_id=self.pipeline_id,
-                            duration_ms=elapsed_milliseconds(pipeline_started_at),
-                            error=error,
-                            metadata={
-                                "dataset": self.dataset.name,
-                                "ingestion_time": self.ingestion_time.isoformat(),
-                            },
-                        )
-                    )
-                )
+            self.fail(error)
             raise
-        else:
-            if pipeline_started_at is not None:
-                self._audit_service.emit(
-                    AuditEventFactory.create_pipeline_completed_event(
-                        PipelineCompletedAuditRequest(
-                            pipeline_name=self.pipeline_name,
-                            pipeline_id=self.pipeline_id,
-                            duration_ms=elapsed_milliseconds(pipeline_started_at),
-                            metadata={
-                                "dataset": self.dataset.name,
-                                "ingestion_time": self.ingestion_time.isoformat(),
-                            },
-                        )
-                    )
-                )
-                logger.info(
-                    f"Finished ETL pipeline {self.pipeline_name}/{self.pipeline_id} "
-                    f"with dataset {self.dataset.name} "
-                    f"at ingestion time {self.ingestion_time.isoformat()}"
-                )
         finally:
-            self.after_run()
+            self.run_stage("cleanup", self.cleanup)
+

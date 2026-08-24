@@ -1,5 +1,4 @@
-import logging
-
+﻿import logging
 from abc import ABC, abstractmethod
 
 import pandas
@@ -30,7 +29,7 @@ class DataWarehouseRepository(ABC):
         logger.info(f"Truncate tables in {self._connection_name}")
 
     @abstractmethod
-    def replace(self, dataframe: object) -> None:
+    def replace(self, dataframe: pandas.DataFrame) -> None:
         raise NotImplementedError
 
     def find_by_queries(self, query_names: list[str]) -> dict[str, pandas.DataFrame]:
@@ -41,3 +40,4 @@ class DataWarehouseRepository(ABC):
             result[query_name] = self.connection.query_df(query)
 
         return result
+

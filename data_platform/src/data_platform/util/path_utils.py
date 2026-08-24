@@ -1,9 +1,9 @@
-from datetime import UTC
+﻿from datetime import UTC
 from datetime import datetime
 
 from data_platform.config.data_lake_environment import DataLakeEnvironment
-from data_platform.config.main_settings import settings as main_settings
 from data_platform.config.keys import Key
+from data_platform.config.main_settings import settings as main_settings
 from data_platform.model import DataLakeEndpoint
 
 
@@ -35,3 +35,9 @@ def generate_full_path(bucket_name: str, relative_path: str) -> str:
 
 def generate_data_lake_path(endpoint: DataLakeEndpoint, relative_path: str) -> str:
     return f"{endpoint.scheme}://{endpoint.bucket_name.strip()}/{relative_path.strip('/')}"
+
+
+def artifact_name_from_path(path: str) -> str:
+    """Return the final artifact component from a data-lake path."""
+    return path.rstrip("/").split("/")[-1]
+

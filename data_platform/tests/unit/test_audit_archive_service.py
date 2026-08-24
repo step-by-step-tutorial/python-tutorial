@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+﻿from datetime import UTC, datetime
 
 from data_platform.audit.audit_archive_service import AuditArchiveService
 from data_platform.audit.audit_event_factory import AuditEventFactory
@@ -77,3 +77,5 @@ class TestAuditArchiveService:
         assert given_connection.list_buckets.call_count == 1
         assert given_connection.create_bucket.call_count == 1
         assert given_connection.put_object.call_count == 1
+
+

@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 
 from data_platform.model import DataWarehouseEndpoint
 from data_platform.persistence.inmemory_data_warehouse_repository import InmemoryDataWarehouseRepository
@@ -44,3 +44,5 @@ class TestInmemoryDataWarehouseRepository:
 
         connection.query_df.assert_called_once_with("select 1")
         assert actual == {"revenue": connection.query_df.return_value}
+
+

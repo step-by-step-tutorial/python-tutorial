@@ -1,36 +1,31 @@
+﻿from data_platform.model import Artifact
 from data_platform.pipeline.batch_pipeline import BatchPipeline
 
 
 class DagPipelineAdapter:
+
     def __init__(self, pipeline: BatchPipeline) -> None:
         self._pipeline = pipeline
 
     def prepare(self) -> None:
-        self._pipeline.before_run()
+        self._pipeline.run_stage("prepare", self._pipeline.prepare)
 
-    def ingest_raw_data(self) -> str:
-        self._pipeline.before_task()
-        return self._pipeline.store_raw_data(self._pipeline.ingest_raw_data())
+    def ingest(self) -> tuple[str, ...]:
+        return self._pipeline.run_stage("ingest", self._pipeline.ingest)
 
-    def clean(self, raw_relative_path: str) -> str:
-        self._pipeline.before_task()
-        return self._pipeline.store_cleaned_data(self._pipeline.clean(raw_relative_path))
+    def clean(self, raw_artifact_paths: tuple[Artifact, ...]) -> tuple[Artifact, ...]:
+        return self._pipeline.run_stage("clean", lambda: self._pipeline.clean(raw_artifact_paths))
 
-    def enrich(self, cleaned_relative_path: str) -> str:
-        self._pipeline.before_task()
-        return self._pipeline.store_enriched_data(self._pipeline.enrich(cleaned_relative_path))
+    def enrich(self, cleaned_artifact_paths: tuple[Artifact, ...]) -> tuple[Artifact, ...]:
+        return self._pipeline.run_stage("enrich", lambda: self._pipeline.enrich(cleaned_artifact_paths))
 
-    def populate_enriched_data(self, enriched_data_path: str) -> None:
-        self._pipeline.before_task()
-        self._pipeline.populate_enriched_data(enriched_data_path)
+    def expose(self, enriched_artifact_paths: tuple[Artifact, ...]) -> None:
+        self._pipeline.run_stage("expose", lambda: self._pipeline.expose(enriched_artifact_paths))
 
-    def analyze_enriched_data(self, enriched_data_path: str) -> None:
-        self._pipeline.before_task()
-        self._pipeline.analyze_enriched_data(enriched_data_path)
+    def analyze(self, enriched_artifact_paths: tuple[Artifact, ...]) -> None:
+        self._pipeline.run_stage("analyze", lambda: self._pipeline.analyze(enriched_artifact_paths))
+        self._pipeline.complete()
 
-    def show_dataframe(self, enriched_data_path: str) -> None:
-        self._pipeline.before_task()
-        self._pipeline.show_dataframe(enriched_data_path)
+    def cleanup(self) -> None:
+        self._pipeline.run_stage("cleanup", self._pipeline.cleanup)
 
-    def clean_up(self) -> None:
-        self._pipeline.after_run()

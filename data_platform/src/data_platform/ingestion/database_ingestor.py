@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 
 from data_platform.model import DatabaseEndpoint
 from data_platform.util.database_utils import execute_sql
@@ -16,4 +16,4 @@ class DatabaseIngestor:
         query_file = self._endpoint.query_sql_files["select_all"]
         query = read_text_file(query_file).format(table_name=table_name)
         return execute_sql(self._endpoint.connection_name, query)
-import logging
+

@@ -1,20 +1,19 @@
-def initialize_registries() -> None:
-    from data_platform.domain.house.dataset import register_house_dataset
-    from data_platform.domain.house.event_converter import register_house_event_converter
-    from data_platform.domain.house.ingestors import register_house_ingestors, register_house_lazy_ingestors
-    from data_platform.domain.sale.dataset import register_sale_dataset
-    from data_platform.domain.sale.event_converter import register_sale_event_converter
-    from data_platform.domain.sale.ingestors import register_sale_ingestors, register_sale_lazy_ingestors
-    from data_platform.domain.online_shopping.dataset import register_online_shopping_dataset
-    from data_platform.domain.online_shopping.ingestors import register_online_shopping_ingestors
+﻿from data_platform.registry.dataset_registry import dataset_registry
+from data_platform.registry.event_converter_registry import event_converter_registry
 
-    register_sale_dataset()
-    register_house_dataset()
-    register_online_shopping_dataset()
-    register_sale_event_converter()
-    register_house_event_converter()
-    register_sale_ingestors()
-    register_house_ingestors()
-    register_online_shopping_ingestors()
-    register_sale_lazy_ingestors()
-    register_house_lazy_ingestors()
+
+def initialize_registries() -> None:
+    from data_platform.domain.house.dataset import HOUSE_DATASET
+    from data_platform.domain.house.event_converter import house_event_converter
+    from data_platform.domain.sale.dataset import SALE_DATASET
+    from data_platform.domain.sale.event_converter import sale_event_converter
+    from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
+
+    dataset_registry.clear()
+    event_converter_registry.clear()
+    dataset_registry.register(SALE_DATASET.name, SALE_DATASET)
+    dataset_registry.register(HOUSE_DATASET.name, HOUSE_DATASET)
+    dataset_registry.register(ONLINE_SHOPPING_DATASET.name, ONLINE_SHOPPING_DATASET)
+    event_converter_registry.register("sale", sale_event_converter)
+    event_converter_registry.register("house", house_event_converter)
+

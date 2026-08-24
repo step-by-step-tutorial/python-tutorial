@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+﻿from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
@@ -290,3 +290,5 @@ class TestLoggingAndStreaming:
         # Then
         assert mock_logger_info.call_count == 1
         assert mock_logger_error.call_count == 1
+
+

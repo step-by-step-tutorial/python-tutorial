@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 import sys
 
 logger = logging.getLogger(__name__)
@@ -15,3 +15,4 @@ def configure_logging() -> None:
 
 def log_line() -> None:
     logger.info(100 * "=")
+

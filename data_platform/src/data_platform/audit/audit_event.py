@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+﻿from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
@@ -52,3 +52,4 @@ class AuditEvent(BaseModel):
     error_message: str | None = None
     error_stacktrace: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+

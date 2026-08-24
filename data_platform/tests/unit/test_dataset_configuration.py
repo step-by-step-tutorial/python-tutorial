@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pytest
 
@@ -19,6 +19,7 @@ from data_platform.registry.bootstrap import initialize_registries
 from data_platform.registry.endpoint_registry import audit_endpoint
 from data_platform.config.main_settings import settings
 from data_platform.domain.sale.dataset import SALE_DATASET
+from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
 
 initialize_registries()
 
@@ -38,7 +39,6 @@ class TestDataset:
                 bucket_name="example-audit-bucket",
                 write_sql_files={"write": "database/audit/insert_event.sql"},
             ),
-            transformers={},
             endpoints={
                 "sale.file.csv": FileEndpoint(file_name="sale.csv", file_path="/tmp/example.csv"),
                 "sale.kafka.listener": MessagingEndpoint(connection_name="sale.kafka.listener",
@@ -107,6 +107,20 @@ class TestDatasetRegistry:
 
 class TestConcreteDatasetConfiguration:
 
+    @pytest.mark.parametrize("dataset, artifact_name", [
+        (SALE_DATASET, "csv"),
+        (HOUSE_DATASET, "csv"),
+        (ONLINE_SHOPPING_DATASET, "api"),
+    ])
+    def test_each_dataset_declares_the_complete_pipeline_stages(self, dataset, artifact_name) -> None:
+        definition = dataset.pipeline_steps
+        assert definition is not None
+        assert [stage.name for stage in definition.ingestors] == [artifact_name]
+        assert definition.cleaners
+        assert definition.enrichers
+        assert definition.exposers
+        assert definition.analyzers
+
     def test_sale_dataset_should_expose_logical_endpoints(self) -> None:
         for endpoint_name, endpoint in SALE_DATASET.endpoints.items():
             assert endpoint.name == endpoint_name
@@ -132,7 +146,7 @@ class TestConcreteDatasetConfiguration:
                                          DataWarehouseEndpoint).connection_name == "sale.datawarehouse"
         assert SALE_DATASET.get_endpoint("sale.datawarehouse",
                                          DataWarehouseEndpoint).full_table_name == "app_datawarehouse.sale_table"
-        assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).url == settings.test_data.download_url
+        assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).url.endswith("/datasets/sale.json/download?format=json")
         assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).method == "GET"
         assert SALE_DATASET.audit.database_connection_name == "audit.database"
         assert SALE_DATASET.audit.messaging_connection_name == "audit.kafka.producer"
@@ -168,8 +182,21 @@ class TestConcreteDatasetConfiguration:
         assert HOUSE_DATASET.audit.channel_name == "sale.audit.event.v1"
         assert HOUSE_DATASET.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
 
-    def test_dataset_transformers_and_analyzers_should_be_configured(self) -> None:
-        assert SALE_DATASET.transformers["spark"] is not None
-        assert HOUSE_DATASET.transformers["spark"] is not None
-        assert SALE_DATASET.analyzers["spark"] is not None
-        assert HOUSE_DATASET.analyzers["spark"] is not None
+    def test_pipeline_steps_is_the_only_pipeline_stage_configuration(self) -> None:
+        for dataset in (SALE_DATASET, HOUSE_DATASET, ONLINE_SHOPPING_DATASET):
+            assert not hasattr(dataset, "transformers")
+            assert not hasattr(dataset, "analyzers")
+            assert not hasattr(dataset, "get_transformer")
+            assert not hasattr(dataset, "get_analyzer")
+            assert dataset.pipeline_steps is not None
+
+    def test_online_shopping_should_use_the_complete_standard_flow(self) -> None:
+        definition = ONLINE_SHOPPING_DATASET.pipeline_steps
+        assert definition is not None
+        assert [stage.name for stage in definition.ingestors] == ["api"]
+        assert definition.cleaners
+        assert definition.enrichers
+        assert definition.exposers
+        assert definition.analyzers
+
+

@@ -1,4 +1,4 @@
-import os
+﻿import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -6,7 +6,6 @@ from pathlib import Path
 @dataclass(frozen=True)
 class AppSettings:
     dataset_name: str
-    pipeline_type: str
     root: Path
     resources_dir: str
     output_dir: Path
@@ -17,7 +16,6 @@ class AppSettings:
 
 app = AppSettings(
     dataset_name=os.getenv("DATASET_NAME", "Sale"),
-    pipeline_type=os.getenv("PIPELINE_TYPE", "inmemory"),
     root=Path(os.getenv("ROOT", Path(__file__).resolve().parents[3])),
     resources_dir=os.getenv("RESOURCES_DIR", "resources"),
     output_dir=Path(os.getenv("OUTPUT_DIR", "output")),
@@ -25,3 +23,4 @@ app = AppSettings(
     spark_dir=Path(os.getenv("SPARK_DIR", "spark")),
     data_file=os.getenv("DATA_FILE", "sale.csv"),
 )
+

@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+﻿from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
@@ -30,3 +30,4 @@ def persisted_dataframes() -> Iterator[list[Any]]:
     finally:
         for dataframe in reversed(dataframes):
             dataframe.unpersist()
+

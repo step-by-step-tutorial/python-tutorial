@@ -1,4 +1,4 @@
-import json
+﻿import json
 import logging
 from typing import Any
 
@@ -44,3 +44,4 @@ class CsvKafkaPublisher:
             key=key,
             value=value,
         )
+

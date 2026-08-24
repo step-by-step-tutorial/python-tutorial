@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 
 from data_platform.registry.event_converter_registry import event_converter_registry
 from data_platform.registry.bootstrap import initialize_registries
@@ -111,3 +111,5 @@ class TestEventConverter:
     def test_should_raise_for_unknown_dataset(self) -> None:
         with pytest.raises(ValueError):
             event_converter_registry.get_item("missing")
+
+
