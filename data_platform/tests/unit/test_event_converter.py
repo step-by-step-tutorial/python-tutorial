@@ -28,8 +28,8 @@ class TestEventConverter:
         )
 
         assert actual.key == "1"
-        assert actual.payload[attribute.ORDER_ID] == 1
-        assert actual.payload[attribute.CUSTOMER_NAME] == "Alex Johnson"
+        assert actual.payload[sale_attribute.ORDER_ID] == 1
+        assert actual.payload[sale_attribute.CUSTOMER_NAME] == "Alex Johnson"
 
     def test_should_map_sale_rows_with_pandas_typed_values(self) -> None:
         mapper = sale_event_converter
@@ -48,8 +48,8 @@ class TestEventConverter:
         )
 
         assert actual.key == "1"
-        assert actual.payload[attribute.ORDER_ID] == 1
-        assert actual.payload[attribute.QUANTITY] == 2.0
+        assert actual.payload[sale_attribute.ORDER_ID] == 1
+        assert actual.payload[sale_attribute.QUANTITY] == 2.0
 
     def test_should_map_house_rows_to_prepared_events(self) -> None:
         mapper = house_event_converter
@@ -57,56 +57,55 @@ class TestEventConverter:
         actual = mapper.map(
             {
                 house_attribute.area_raw: "100",
-                attribute.room_raw: "2",
-                attribute.parking_raw: True,
-                attribute.warehouse_raw: False,
-                attribute.elevator_raw: True,
-                attribute.address_raw: "Austin",
-                attribute.price_raw: "1000",
-                attribute.price_usd_raw: "25",
+                house_attribute.room_raw: "2",
+                house_attribute.parking_raw: True,
+                house_attribute.warehouse_raw: False,
+                house_attribute.elevator_raw: True,
+                house_attribute.address_raw: "Austin",
+                house_attribute.price_raw: "1000",
+                house_attribute.price_usd_raw: "25",
             }
         )
 
         assert actual.key == "Austin"
-        assert actual.payload[attribute.address_raw] == "Austin"
-        assert actual.payload[attribute.price_raw] == 1000.0
+        assert actual.payload[house_attribute.address_raw] == "Austin"
+        assert actual.payload[house_attribute.price_raw] == 1000.0
 
     def test_should_map_house_rows_with_missing_address_to_optional_key(self) -> None:
         mapper = house_event_converter
 
         actual = mapper.map(
             {
-                attribute.area_raw: 100,
-                attribute.room_raw: 2,
-                attribute.parking_raw: True,
-                attribute.warehouse_raw: False,
-                attribute.elevator_raw: True,
-                attribute.address_raw: None,
-                attribute.price_raw: 1000,
-                attribute.price_usd_raw: 25,
+                house_attribute.area_raw: 100,
+                house_attribute.room_raw: 2,
+                house_attribute.parking_raw: True,
+                house_attribute.warehouse_raw: False,
+                house_attribute.elevator_raw: True,
+                house_attribute.address_raw: None,
+                house_attribute.price_raw: 1000,
+                house_attribute.price_usd_raw: 25,
             }
         )
 
         assert actual.key is None
-        assert actual.payload[attribute.address_raw] is None
+        assert actual.payload[house_attribute.address_raw] is None
 
     def test_should_map_house_rows_with_comma_formatted_numbers(self) -> None:
         mapper = house_event_converter
 
         actual = mapper.map(
             {
-                attribute.area_raw: " 3,310,000,000 ",
-                attribute.room_raw: "2",
-                attribute.parking_raw: True,
-                attribute.warehouse_raw: True,
-                attribute.elevator_raw: True,
-                attribute.address_raw: "Maple Avenue",
-                attribute.price_raw: "3310000000.0",
-                attribute.price_usd_raw: "110333.33",
+                house_attribute.area_raw: " 3,310,000,000 ",
+                house_attribute.room_raw: "2",
+                house_attribute.parking_raw: True,
+                house_attribute.warehouse_raw: True,
+                house_attribute.elevator_raw: True,
+                house_attribute.address_raw: "Maple Avenue",
+                house_attribute.price_raw: "3310000000.0",
+                house_attribute.price_usd_raw: "110333.33",
             }
         )
 
-        assert actual.payload[attribute.area_raw] == 3310000000.0
-        assert actual.payload[attribute.price_raw] == 3310000000.0
-
+        assert actual.payload[house_attribute.area_raw] == 3310000000.0
+        assert actual.payload[house_attribute.price_raw] == 3310000000.0
 

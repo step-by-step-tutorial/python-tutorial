@@ -1,5 +1,5 @@
 ﻿from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
-from data_platform.model import RestApiEndpoint
+from data_platform.model.endpoints import RestApiEndpoint
 
 
 class TestRestApiCsvIngestor:

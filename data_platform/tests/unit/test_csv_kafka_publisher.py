@@ -1,4 +1,4 @@
-﻿from data_platform.model import FileEndpoint, MessagingEndpoint
+﻿from data_platform.model.endpoints import FileEndpoint, MessagingEndpoint
 from data_platform.service.csv_kafka_publisher import CsvKafkaPublisher
 
 
@@ -36,4 +36,3 @@ class TestCsvKafkaPublisher:
         assert given_producer.produce.call_args_list[0].kwargs["topic"] == "sale-events"
         assert given_producer.poll.call_count == 1
         assert given_producer.flush.call_count == 1
-

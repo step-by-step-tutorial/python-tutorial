@@ -12,4 +12,4 @@ def to_batches(rows: list[tuple[object, ...]], batch_size: int = 1000) -> list[l
 
 
 def find_missing_columns(dataframe: Any, columns: Iterable[str]) -> tuple[str, ...]:
-    return tuple(column for column in columns if column not in dataframe.attribute)
+    return tuple(column for column in columns if column not in dataframe.columns)

@@ -1,7 +1,7 @@
 ﻿from data_platform.audit.audit_database_service import AuditDatabaseService
 from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
-from data_platform.model import AuditEndpoint
+from data_platform.model.endpoints import AuditEndpoint
 
 
 class TestAuditDatabaseService:

@@ -3,7 +3,7 @@
 from data_platform.audit.audit_archive_service import AuditArchiveService
 from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
-from data_platform.model import AuditEndpoint
+from data_platform.model.endpoints import AuditEndpoint
 
 
 class TestAuditArchiveService:

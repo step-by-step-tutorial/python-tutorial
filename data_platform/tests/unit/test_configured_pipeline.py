@@ -3,11 +3,14 @@ from datetime import UTC, datetime
 
 import pandas as pd
 
-from data_platform.model import AuditEndpoint, Dataset, PipelineFlow
-from data_platform.validators import Assessment, Violation
-from data_platform.cleaners import CleanerChain
-from data_platform.enrichers import EnricherChain
-from data_platform.validators import ValidatorChain
+from data_platform.model.endpoints import AuditEndpoint
+from data_platform.model.dataset import Dataset
+from data_platform.model.pipeline_flow import PipelineFlow
+from data_platform.validators.assessment import Assessment
+from data_platform.validators.violation import Violation
+from data_platform.cleaners.cleaner_impl import CleanerChain
+from data_platform.enrichers.enricher_impl import EnricherChain
+from data_platform.validators.validator_chain import ValidatorChain
 from data_platform.pipeline.data_pipeline import DataPipeline
 
 
@@ -17,8 +20,8 @@ def _factory(service):
 
 class _Lake:
     def __init__(self): self.data = {}
-    def save(self, data, path): self.data[path] = data; return path
-    def find(self, path): return self.data[path]
+    def write(self, data, path): self.data[path] = data; return path
+    def read(self, path): return self.data[path]
 
 
 class _Transformer:

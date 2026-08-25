@@ -2,7 +2,7 @@
 
 from pyspark.sql import SparkSession
 
-from data_platform.model import (
+from data_platform.model.endpoints import (
     DataLakeEndpoint,
     WarehouseEndpoint,
     DatabaseEndpoint,
@@ -60,7 +60,7 @@ class TestDataLakeIngestor:
         given_client = mocker.Mock()
         given_client.list_objects_v2.return_value = {"Contents": [{"Key": "raw/part-001.parquet"}]}
         given_client.download_fileobj.side_effect = lambda bucket, key, buffer: buffer.write(b"parquet")
-        mocker.patch("data_platform.persistence.data_lake_repository.connection_registry.get_item", return_value=given_client)
+        mocker.patch("data_platform.repository.inmemory_datalake_repository.connection_registry.get_item", return_value=given_client)
         mocker.patch("data_platform.ingestion.data_lake_ingestor.pd.read_parquet", return_value=given_dataframe)
         mocker.patch("data_platform.ingestion.data_lake_ingestor.pd.concat", return_value=given_dataframe)
 
@@ -143,14 +143,14 @@ class TestDatabaseIngestor:
         given_engine.connect.return_value = given_context
         mocker.patch("data_platform.ingestion.database_ingestor.read_text_file", return_value="select * from {table_name}")
         expected = pd.DataFrame({"id": [1]})
-        mock_execute = mocker.patch("data_platform.ingestion.database_ingestor.execute_sql", return_value=expected)
+        mock_execute = mocker.patch("data_platform.ingestion.database_ingestor.execute_query_strings", return_value=expected)
 
         actual = DatabaseIngestor(endpoint=given_dataset).ingest(given_dataset.full_stage_table_name)
 
         assert actual is expected
         assert mock_execute.call_count == 1
         assert mock_execute.call_args.args[0] == "sale.database"
-        assert mock_execute.call_args.args[1] == "select * from sale.example_stage"
+        assert mock_execute.call_args.args[1] == ("select * from sale.example_stage",)
 
 
 class TestWarehouseIngestor:

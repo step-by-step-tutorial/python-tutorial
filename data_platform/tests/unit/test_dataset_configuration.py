@@ -2,17 +2,17 @@
 
 import pytest
 
-from data_platform.model import (
+from data_platform.model.endpoints import (
     AuditEndpoint,
     DataLakeEndpoint,
     WarehouseEndpoint,
-    DataFrameModel,
     DatabaseEndpoint,
-    Dataset,
     FileEndpoint,
     MessagingEndpoint,
     RestApiEndpoint,
 )
+from data_platform.model.dataframe_model import DataFrameModel
+from data_platform.model.dataset import Dataset
 from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.registry.bootstrap import initialize_registries
 from data_platform.registry.endpoint_registry import endpoint_registry
@@ -115,7 +115,7 @@ class TestConcreteDatasetConfiguration:
     def test_each_dataset_declares_the_complete_pipeline_stages(self, dataset, storage_object_name) -> None:
         definition = dataset.flow
         assert definition is not None
-        assert [stage.pipeline_name for stage in definition.ingestors] == [storage_object_name]
+        assert [stage.name for stage in definition.ingestors] == [storage_object_name]
         assert definition.cleaners
         assert definition.validators
         assert definition.enrichers
@@ -124,7 +124,7 @@ class TestConcreteDatasetConfiguration:
 
     def test_sale_dataset_should_expose_logical_endpoints(self) -> None:
         for endpoint_name, endpoint in sale_dataset.endpoints.items():
-            assert endpoint.pipeline_name == endpoint_name
+            assert endpoint.name == endpoint_name
 
         assert Path(sale_dataset.get_endpoint("sale.file.csv", FileEndpoint).file_path).name == "sale.csv"
         assert sale_dataset.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name == "sale-events"
@@ -158,7 +158,7 @@ class TestConcreteDatasetConfiguration:
 
     def test_house_dataset_should_expose_logical_endpoints(self) -> None:
         for endpoint_name, endpoint in house_dataset.endpoints.items():
-            assert endpoint.pipeline_name == endpoint_name
+            assert endpoint.name == endpoint_name
 
         assert Path(house_dataset.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
         assert house_dataset.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house-events"
@@ -194,7 +194,7 @@ class TestConcreteDatasetConfiguration:
     def test_online_shopping_should_use_the_complete_standard_flow(self) -> None:
         definition = ONLINE_SHOPPING_DATASET.flow
         assert definition is not None
-        assert [stage.pipeline_name for stage in definition.ingestors] == ["api"]
+        assert [stage.name for stage in definition.ingestors] == ["api"]
         assert definition.cleaners
         assert definition.validators
         assert definition.enrichers

@@ -1,6 +1,5 @@
 ﻿from pyspark.sql import DataFrame, SparkSession
 
-from data_platform.domain.sale.dataset import sale_dataset
 from data_platform.model.endpoints import MessagingEndpoint, DataLakeEndpoint
 from data_platform.service import spark_streaming_service as system_under_test
 
@@ -20,7 +19,7 @@ class TestReadStream:
         actual = system_under_test.SparkStreamingService(
             session=given_session,
             messaging_endpoint=MessagingEndpoint(
-                channel_name=sale_dataset.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name,
+                channel_name="sale-topic",
                 bootstrap_servers="localhost:9092",
                 starting_offsets="earliest",
             ),
@@ -42,13 +41,13 @@ class TestReadStream:
         given_writer = given_stream_writer.foreachBatch.return_value
         given_writer.option.return_value = given_writer
         given_writer.trigger.return_value = given_writer
-        given_writer.start_pipeline.return_value = mocker.Mock()
+        given_writer.start.return_value = mocker.Mock()
         service = system_under_test.SparkStreamingService(
             session=mocker.MagicMock(spec=SparkSession),
             messaging_endpoint=MessagingEndpoint(channel_name="topic", bootstrap_servers="localhost:9092"),
             data_lake_endpoint=DataLakeEndpoint(bucket_name="bucket"),
         )
-        mock_append_batch = mocker.patch.object(service, "save_batch")
+        mock_append_batch = mocker.patch.object(service, "write_batch")
 
         service.write(given_dataframe, "raw/path", "checkpoint/path")
 
@@ -57,6 +56,4 @@ class TestReadStream:
         assert mock_append_batch.call_args.args == (given_batch, "raw/path")
         assert given_writer.option.call_args.args == ("checkpointLocation", "checkpoint/path")
         assert given_writer.trigger.call_count == 1
-        assert given_writer.start_pipeline.call_count == 1
-
-
+        assert given_writer.start.call_count == 1

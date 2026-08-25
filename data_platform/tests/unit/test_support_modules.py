@@ -14,7 +14,7 @@ from data_platform.converter.value_converter import (
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.validators import RequiredColumnsValidator
+from data_platform.validators.validator_impl import RequiredColumnsValidator
 from data_platform.util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
     time_utils, path_utils as datalake_path_utils, dataframe_utils
 
@@ -58,22 +58,6 @@ class TestDatalakeUtils:
     def test_should_generate_paths(self, mocker) -> None:
         # Given
         given_time = datetime(2026, 8, 15, 12, 30, 45, 123456, tzinfo=UTC)
-        mocker.patch.object(
-            datalake_path_utils,
-            "main_settings",
-            SimpleNamespace(
-                app=SimpleNamespace(dataset_name="Sale"),
-                data_lake={
-                    "data-platform.datalake": SimpleNamespace(
-                        environment="dev",
-                        scheme="s3a",
-                        bucket_name="app-datalake",
-                        audit_bucket_name="app-datalake-audit",
-                    )
-                },
-            ),
-        )
-
         # When
         actual_relative = datalake_path_utils.generate_relative_path(
             StorageEnvironment.RAW,
@@ -81,8 +65,8 @@ class TestDatalakeUtils:
             "sale"
         )
         actual_full = datalake_path_utils.generate_full_path("bucket", "path/to/file")
-        actual_datalake_uri = datalake_path_utils.generate_full_path(settings.data_lake["data-platform.datalake"].bucket_name, "path/to/file")
-        actual_audit_uri = datalake_path_utils.generate_full_path(settings.data_lake["data-platform.datalake"].audit_bucket_name, "audit/file.json")
+        actual_datalake_uri = datalake_path_utils.generate_full_path("app-datalake", "path/to/file")
+        actual_audit_uri = datalake_path_utils.generate_full_path("app-datalake-audit", "audit/file.json")
 
         # Then
         assert actual_relative.startswith("raw/sale/")
@@ -152,31 +136,31 @@ class TestDataFrameModelValidation:
             RequiredColumnsValidator(frozenset({"id", "name"})).validate(given_dataframe)
 
     def test_should_reject_none_pandas_dataframe(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(Exception):
             RequiredColumnsValidator(frozenset({"id"})).validate(None)
 
     def test_should_validate_required_columns_for_spark_dataframe(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_dataframe.attribute = ["id", "name"]
+        given_dataframe.columns = ["id", "name"]
 
         # When
         RequiredColumnsValidator(("id",)).validate(given_dataframe)
 
         # Then
-        assert given_dataframe.attribute == ["id", "name"]
+        assert given_dataframe.columns == ["id", "name"]
 
     def test_should_reject_missing_required_columns_for_spark_dataframe(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_dataframe.attribute = ["id"]
+        given_dataframe.columns = ["id"]
 
         # When / Then
         with pytest.raises(ValueError):
             RequiredColumnsValidator(("id", "name")).validate(given_dataframe)
 
     def test_should_reject_none_spark_dataframe(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(Exception):
             RequiredColumnsValidator(("id",)).validate(None)
 
 

@@ -1,11 +1,11 @@
 ﻿from data_platform.repository import inmemory_datalake_repository as system_under_test
-from data_platform.model import DataLakeEndpoint
+from data_platform.model.endpoints import DataLakeEndpoint
 
 
 def create_connection_context(mocker):
     given_client = mocker.Mock()
     mock_create_connection = mocker.patch(
-        "data_platform.persistence.data_lake_repository.connection_registry.get_item",
+        "data_platform.repository.inmemory_datalake_repository.connection_registry.get_item",
         return_value=given_client,
     )
 
@@ -20,7 +20,6 @@ class TestUploadParquet:
         repository = system_under_test.DataLakeRepository(
             DataLakeEndpoint(connection_name="sale.datalake", bucket_name="app_datalake")
         )
-        given_client.list_buckets.return_value = {"Buckets": []}
         given_client.put_object.return_value = None
 
         # When
@@ -33,7 +32,5 @@ class TestUploadParquet:
         assert actual is not None
         assert given_dataframe.to_parquet.call_count == 1
         assert mock_create_connection.call_count == 1
-        assert given_client.list_buckets.call_count == 1
+        assert given_client.list_buckets.call_count == 0
         assert given_client.put_object.call_count == 1
-
-

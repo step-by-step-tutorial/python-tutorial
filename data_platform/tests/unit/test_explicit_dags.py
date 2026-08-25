@@ -10,7 +10,8 @@ import pytest
 ])
 def test_dag_declares_its_dataset_pipeline_adapter_and_standard_chain(dag_file, dataset_name) -> None:
     source = (Path(__file__).resolve().parents[2] / "dags" / dag_file).read_text(encoding="utf-8")
-    assert f"DataPipeline({dataset_name})" in source
+    dataset_variable = {"SALE_DATASET": "sale_dataset", "HOUSE_DATASET": "house_dataset", "ONLINE_SHOPPING_DATASET": "ONLINE_SHOPPING_DATASET"}[dataset_name]
+    assert f"DataPipeline({dataset_variable})" in source
     assert "DagPipelineAdapter(pipeline)" in source
     assert 'prepare >> ingest >> clean >> validate >> enrich >> expose >> analyze >> cleanup >> verify' in source
 

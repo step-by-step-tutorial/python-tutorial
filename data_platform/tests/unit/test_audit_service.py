@@ -8,7 +8,7 @@ from data_platform.audit.audit_event_factory import TaskFailedAuditRequest
 from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
 from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_service import AuditService
-from data_platform.model import AuditEndpoint
+from data_platform.model.endpoints import AuditEndpoint
 from data_platform.audit.audit_event import AuditEventType
 
 
@@ -143,10 +143,10 @@ class TestAuditService:
         assert mock_archive_service_ctor.call_args.args[0].datalake_connection_name == "audit.datalake"
         assert mock_archive_service_ctor.call_args.args[0].bucket_name == "app-datalake-audit"
         assert given_service.emit.call_count == 8
-        assert given_log_service.write.call_count == 8
-        assert given_database_service.write.call_count == 8
-        assert given_messaging_service.write.call_count == 8
-        assert given_archive_service.write.call_count == 8
+        assert given_log_service.save.call_count == 8
+        assert given_database_service.save.call_count == 8
+        assert given_messaging_service.save.call_count == 8
+        assert given_archive_service.save.call_count == 8
 
     def test_should_write_to_archive_when_bucket_is_empty(self, mocker) -> None:
         given_database_service = mocker.Mock()
@@ -206,9 +206,7 @@ class TestAuditService:
                 )
             )
 
-        assert given_database_service.write.call_count == 3
-        assert given_messaging_service.write.call_count == 3
-        assert given_archive_service.write.call_count == 3
-        assert given_log_service.write.call_count == 3
-
-
+        assert given_database_service.save.call_count == 3
+        assert given_messaging_service.save.call_count == 3
+        assert given_archive_service.save.call_count == 3
+        assert given_log_service.save.call_count == 3

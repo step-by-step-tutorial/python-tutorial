@@ -10,7 +10,7 @@ from data_platform.converter.value_converter import (
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.validators import RequiredColumnsValidator
+from data_platform.validators.validator_impl import RequiredColumnsValidator
 from data_platform.util import file_utils
 
 
@@ -83,4 +83,3 @@ class TestPandasDataFrameModelUtils:
     def test_should_raise_attribute_error_for_unknown_attribute(self) -> None:
         with pytest.raises(AttributeError):
             _ = attribute.unknown_column
-

@@ -2,7 +2,7 @@
 
 import pytest
 
-from data_platform.model import PipelineFlow
+from data_platform.model.pipeline_flow import PipelineFlow
 
 
 class _Stage:
@@ -48,7 +48,7 @@ def test_pipeline_steps_allows_empty_defaults() -> None:
 @pytest.mark.parametrize("module_path", ["domain/sale/dataset.py", "domain/house/dataset.py", "domain/online_shopping/dataset.py"])
 def test_dataset_module_constructs_its_dataset_once_without_self_reference(module_path) -> None:
     source = (Path(__file__).resolve().parents[2] / "src" / "data_platform" / module_path).read_text(encoding="utf-8")
-    dataset_name = {"domain/sale/dataset.py": "SALE_DATASET", "domain/house/dataset.py": "HOUSE_DATASET", "domain/online_shopping/dataset.py": "ONLINE_SHOPPING_DATASET"}[module_path]
+    dataset_name = {"domain/sale/dataset.py": "sale_dataset", "domain/house/dataset.py": "house_dataset", "domain/online_shopping/dataset.py": "ONLINE_SHOPPING_DATASET"}[module_path]
     assert source.count(f"{dataset_name} = Dataset(") == 1
     assert "replace(" not in source
     assert f"{dataset_name}.get_endpoint(" not in source

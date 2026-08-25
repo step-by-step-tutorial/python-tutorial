@@ -1,7 +1,7 @@
 ﻿import pandas as pd
 import pytest
 
-from data_platform.model import DatabaseEndpoint
+from data_platform.model.endpoints import DatabaseEndpoint
 from data_platform.repository.inmemory_database_repository import InmemoryDataframeRepository
 
 
@@ -28,7 +28,7 @@ class TestPandasDatabaseRepository:
         transaction.__enter__.return_value = connection
         engine.begin.return_value = transaction
         get_item = mocker.patch(
-            "data_platform.persistence.inmemory_database_repository.connection_registry.get_item",
+            "data_platform.repository.inmemory_database_repository.connection_registry.get_item",
             return_value=engine,
         )
 
@@ -46,7 +46,7 @@ class TestPandasDatabaseRepository:
         engine.begin.return_value = transaction
         dataframe.to_sql.side_effect = RuntimeError("Pandas save failed")
         mocker.patch(
-            "data_platform.persistence.inmemory_database_repository.connection_registry.get_item",
+            "data_platform.repository.inmemory_database_repository.connection_registry.get_item",
             return_value=engine,
         )
 
@@ -56,13 +56,11 @@ class TestPandasDatabaseRepository:
     def test_should_replace_dataframe(self, mocker) -> None:
         repository = InmemoryDataframeRepository(build_endpoint())
         truncate = mocker.patch.object(repository, "truncate_stage_table")
-        save = mocker.patch.object(repository, "save")
-        execute = mocker.patch.object(repository, "execute_files")
+        write = mocker.patch.object(repository, "write")
+        execute = mocker.patch("data_platform.repository.inmemory_database_repository.execute_query_files")
 
         repository.overwrite(mocker.Mock(spec=pd.DataFrame))
 
         truncate.assert_called_once()
-        save.assert_called_once()
-        execute.assert_called_once_with(["after.sql"])
-
-
+        write.assert_called_once()
+        execute.assert_called_once_with("sale.database", ("after.sql",))

@@ -14,7 +14,7 @@ class TestCollectRows:
                 return {"value": self.value, "name": self.name}
 
         dataframe = mocker.Mock()
-        dataframe.attribute = ["name", "value"]
+        dataframe.columns = ["name", "value"]
         dataframe.collect.return_value = [_Row(1, "A"), _Row(2, "B")]
 
         actual = dataframe_to_list(dataframe)
@@ -30,5 +30,4 @@ class TestBatchRows:
         actual = to_batches(rows, batch_size=2)
 
         assert actual == [[(1,), (2,)], [(3,)]]
-
 

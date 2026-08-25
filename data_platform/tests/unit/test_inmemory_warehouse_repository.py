@@ -1,6 +1,6 @@
 ﻿import pandas as pd
 
-from data_platform.model import WarehouseEndpoint
+from data_platform.model.endpoints import WarehouseEndpoint
 from data_platform.repository.inmemory_warehouse_repository import InmemoryWarehouseRepository
 
 
@@ -21,15 +21,14 @@ class TestPandasWarehouseRepository:
     def test_should_replace_dataframe(self, mocker) -> None:
         connection = mocker.Mock()
         get_item = mocker.patch(
-            "data_platform.persistence.warehouse_repository.connection_registry.get_item",
+            "data_platform.repository.inmemory_warehouse_repository.connection_registry.get_item",
             return_value=connection,
         )
-        mocker.patch("data_platform.persistence.warehouse_repository.read_text_file", return_value="truncate table warehouse.example")
+        mocker.patch("data_platform.repository.inmemory_warehouse_repository.read_text_file", return_value="truncate table warehouse.example")
 
         InmemoryWarehouseRepository(build_endpoint()).overwrite(pd.DataFrame({"id": [1]}))
 
-        get_item.assert_called_once_with("sale.warehouse")
+        assert get_item.call_count == 2
+        get_item.assert_any_call("sale.warehouse")
         connection.command.assert_called_once()
         connection.insert_df.assert_called_once()
-
-
