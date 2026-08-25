@@ -67,12 +67,12 @@ class Dataset:
     def get_metadata(self) -> "DatasetMetadata":
         return DatasetMetadata(
             name=self.name,
-            config_file=f"{env_config.CONFIG_DIR.name}/{self.name}",
+            config_file=f"{env_config.CONFIG_DIR.pipeline_name}/{self.name}",
             row_count=self.config.row_count,
             column_count=len(self.columns),
             columns=list(self.columns),
             destinations=list(self.destinations),
-            file=str(Path(env_config.OUTPUT_DIR.name) / output_file_name(self.config.output_name, "csv")),
+            file=str(Path(env_config.OUTPUT_DIR.pipeline_name) / output_file_name(self.config.output_name, "csv")),
             download_url=f"/datasets/{Path(self.name).stem}/download",
         )
 

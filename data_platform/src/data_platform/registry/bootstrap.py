@@ -11,9 +11,9 @@ def initialize_registries() -> None:
 
     dataset_registry.clear()
     event_converter_registry.clear()
-    dataset_registry.register(SALE_DATASET.name, SALE_DATASET)
-    dataset_registry.register(HOUSE_DATASET.name, HOUSE_DATASET)
-    dataset_registry.register(ONLINE_SHOPPING_DATASET.name, ONLINE_SHOPPING_DATASET)
+    dataset_registry.register(SALE_DATASET.pipeline_name, SALE_DATASET)
+    dataset_registry.register(HOUSE_DATASET.pipeline_name, HOUSE_DATASET)
+    dataset_registry.register(ONLINE_SHOPPING_DATASET.pipeline_name, ONLINE_SHOPPING_DATASET)
     event_converter_registry.register("sale", sale_event_converter)
     event_converter_registry.register("house", house_event_converter)
 

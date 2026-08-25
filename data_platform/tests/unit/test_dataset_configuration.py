@@ -113,9 +113,9 @@ class TestConcreteDatasetConfiguration:
         (ONLINE_SHOPPING_DATASET, "api"),
     ])
     def test_each_dataset_declares_the_complete_pipeline_stages(self, dataset, storage_object_name) -> None:
-        definition = dataset.pipeline_steps
+        definition = dataset.flow
         assert definition is not None
-        assert [stage.name for stage in definition.ingestors] == [storage_object_name]
+        assert [stage.pipeline_name for stage in definition.ingestors] == [storage_object_name]
         assert definition.cleaners
         assert definition.enrichers
         assert definition.exposers
@@ -123,7 +123,7 @@ class TestConcreteDatasetConfiguration:
 
     def test_sale_dataset_should_expose_logical_endpoints(self) -> None:
         for endpoint_name, endpoint in SALE_DATASET.endpoints.items():
-            assert endpoint.name == endpoint_name
+            assert endpoint.pipeline_name == endpoint_name
 
         assert Path(SALE_DATASET.get_endpoint("sale.file.csv", FileEndpoint).file_path).name == "sale.csv"
         assert SALE_DATASET.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name == "sale-events"
@@ -157,7 +157,7 @@ class TestConcreteDatasetConfiguration:
 
     def test_house_dataset_should_expose_logical_endpoints(self) -> None:
         for endpoint_name, endpoint in HOUSE_DATASET.endpoints.items():
-            assert endpoint.name == endpoint_name
+            assert endpoint.pipeline_name == endpoint_name
 
         assert Path(HOUSE_DATASET.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
         assert HOUSE_DATASET.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house-events"
@@ -188,12 +188,12 @@ class TestConcreteDatasetConfiguration:
             assert not hasattr(dataset, "analyzers")
             assert not hasattr(dataset, "get_transformer")
             assert not hasattr(dataset, "get_analyzer")
-            assert dataset.pipeline_steps is not None
+            assert dataset.flow is not None
 
     def test_online_shopping_should_use_the_complete_standard_flow(self) -> None:
-        definition = ONLINE_SHOPPING_DATASET.pipeline_steps
+        definition = ONLINE_SHOPPING_DATASET.flow
         assert definition is not None
-        assert [stage.name for stage in definition.ingestors] == ["api"]
+        assert [stage.pipeline_name for stage in definition.ingestors] == ["api"]
         assert definition.cleaners
         assert definition.enrichers
         assert definition.exposers

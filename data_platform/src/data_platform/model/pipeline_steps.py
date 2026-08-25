@@ -8,7 +8,7 @@ def _empty_hook(*_: Any) -> None:
 
 
 @dataclass(frozen=True)
-class PipelineSteps:
+class PipelineFlow:
     storages: tuple[Any, ...] = ()
     ingestors: tuple[Any, ...] = ()
     cleaners: tuple[Any, ...] = ()
@@ -17,6 +17,6 @@ class PipelineSteps:
     analyzers: tuple[Any, ...] = ()
     before_pipeline: Callable[..., Any] = _empty_hook
     after_pipeline: Callable[..., Any] = _empty_hook
-    before_stage: Callable[..., Any] = _empty_hook
+    before_step: Callable[..., Any] = _empty_hook
     after_stage: Callable[..., Any] = _empty_hook
 

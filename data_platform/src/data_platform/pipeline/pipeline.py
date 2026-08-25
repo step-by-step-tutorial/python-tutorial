@@ -17,8 +17,8 @@ class Pipeline(ABC):
 
     def __init__(self, dataset: Dataset) -> None:
         self.dataset = dataset
-        self.name = dataset.name
-        self.id = create_pipeline_id()
+        self.pipeline_name = dataset.name
+        self.pipeline_id = create_pipeline_id()
         self.ingestion_time = generate_ingestion_time()
         self.storage_relative_path = generate_relative_path(StorageEnvironment.RAW, self.ingestion_time, self.dataset.name)
         self._started_at = None
@@ -55,47 +55,89 @@ class Pipeline(ABC):
     def start(self) -> None:
         self._started_at = time.perf_counter()
         event = AuditEventFactory.create_pipeline_started_event(
-            PipelineStartedAuditRequest(pipeline_name=self.name, pipeline_id=self.id,
-                                        metadata={"dataset": self.dataset.name,
-                                                  "ingestion_time": self.ingestion_time.isoformat()}, ))
+            PipelineStartedAuditRequest(
+                pipeline_name=self.pipeline_name,
+                pipeline_id=self.pipeline_id,
+                metadata={
+                    "dataset": self.dataset.name,
+                    "ingestion_time": self.ingestion_time.isoformat()
+                }
+            )
+        )
         self._audit_service.emit(event)
 
     def complete(self) -> None:
-        self._audit_service.emit(AuditEventFactory.create_pipeline_completed_event(PipelineCompletedAuditRequest(
-            pipeline_name=self.name, pipeline_id=self.id,
-            duration_ms=elapsed_milliseconds(self._started_at),
-            metadata={"dataset": self.dataset.name, "ingestion_time": self.ingestion_time.isoformat()},
-        )))
+        event = AuditEventFactory.create_pipeline_completed_event(
+            PipelineCompletedAuditRequest(
+                pipeline_name=self.pipeline_name,
+                pipeline_id=self.pipeline_id,
+                duration_ms=elapsed_milliseconds(self._started_at),
+                metadata={
+                    "dataset": self.dataset.name,
+                    "ingestion_time": self.ingestion_time.isoformat()
+                }
+            )
+        )
+        self._audit_service.emit(event)
 
     def fail(self, error: Exception) -> None:
-        self._audit_service.emit(AuditEventFactory.create_pipeline_failed_event(PipelineFailedAuditRequest(
-            pipeline_name=self.name, pipeline_id=self.id,
-            duration_ms=elapsed_milliseconds(self._started_at), error=error,
-            metadata={"dataset": self.dataset.name, "ingestion_time": self.ingestion_time.isoformat()},
-        )))
+        event = AuditEventFactory.create_pipeline_failed_event(
+            PipelineFailedAuditRequest(
+                pipeline_name=self.pipeline_name,
+                pipeline_id=self.pipeline_id,
+                duration_ms=elapsed_milliseconds(self._started_at),
+                error=error,
+                metadata={
+                    "dataset": self.dataset.name,
+                    "ingestion_time": self.ingestion_time.isoformat()
+                }
+            )
+        )
+        self._audit_service.emit(event)
 
-    def run_step(self, stage_name: str, operation: Callable[[], Any]) -> Any:
-        self.dataset.pipeline_steps.before_stage(stage_name)
-        task_id = f"{self.id}-{stage_name}"
+    def run_step(self, name: str, action: Callable[[], Any]) -> Any:
+        self.dataset.flow.before_step(name)
+        id = f"{self.pipeline_id}-{name}"
         started_at = time.perf_counter()
-        self._audit_service.emit(AuditEventFactory.create_task_started_event(TaskStartedAuditRequest(
-            pipeline_name=self.name, pipeline_id=self.id, task_name=stage_name, task_id=task_id,
-            task_attempt=1,
-        )))
+        start_event = AuditEventFactory.create_task_started_event(
+            TaskStartedAuditRequest(
+                pipeline_name=self.pipeline_name,
+                pipeline_id=self.pipeline_id,
+                task_name=name,
+                task_id=id,
+                task_attempt=1
+            )
+        )
+        self._audit_service.emit(start_event)
         try:
-            result = operation()
+            result = action()
         except Exception as error:
-            self._audit_service.emit(AuditEventFactory.create_task_failed_event(TaskFailedAuditRequest(
-                pipeline_name=self.name, pipeline_id=self.id, task_name=stage_name, task_id=task_id,
-                task_attempt=1, duration_ms=elapsed_milliseconds(started_at), error=error,
-            )))
+            failed_event = AuditEventFactory.create_task_failed_event(
+                TaskFailedAuditRequest(
+                    pipeline_name=self.pipeline_name,
+                    pipeline_id=self.pipeline_id,
+                    task_name=name,
+                    task_id=id,
+                    task_attempt=1,
+                    duration_ms=elapsed_milliseconds(started_at),
+                    error=error
+                )
+            )
+            self._audit_service.emit(failed_event)
             self.fail(error)
             raise
-        self._audit_service.emit(AuditEventFactory.create_task_completed_event(TaskCompletedAuditRequest(
-            pipeline_name=self.name, pipeline_id=self.id, task_name=stage_name, task_id=task_id,
-            task_attempt=1, duration_ms=elapsed_milliseconds(started_at),
-        )))
-        self.dataset.pipeline_steps.after_stage(stage_name)
+        completed_event = AuditEventFactory.create_task_completed_event(
+            TaskCompletedAuditRequest(
+                pipeline_name=self.pipeline_name,
+                pipeline_id=self.pipeline_id,
+                task_name=name,
+                task_id=id,
+                task_attempt=1,
+                duration_ms=elapsed_milliseconds(started_at)
+            )
+        )
+        self._audit_service.emit(completed_event)
+        self.dataset.flow.after_stage(name)
         return result
 
     def run(self) -> None:

@@ -1,8 +1,8 @@
 ﻿from dataclasses import replace
 from datetime import UTC, datetime
 
-from data_platform.model import AuditEndpoint, Dataset, PipelineSteps
-from data_platform.pipeline.configured_pipeline import ConfiguredPipeline
+from data_platform.model import AuditEndpoint, Dataset, PipelineFlow
+from data_platform.pipeline.configured_pipeline import DataPipeline
 
 
 def _factory(service):
@@ -61,7 +61,7 @@ def _dataset(lake, exposer, analyzer) -> Dataset:
     return Dataset(
         name="example",
         audit=AuditEndpoint("audit.database", "audit.kafka", "audit.datalake"),
-        pipeline_steps=PipelineSteps(
+        flow=PipelineFlow(
             storages=(lake,),
             ingestors=(_ingestor_stage("first", "one", lake), _ingestor_stage("second", "two", lake)),
             cleaners=(
@@ -82,21 +82,18 @@ def test_configured_pipeline_executes_explicit_stages_without_merging_ingestors(
     lake, exposer, analyzer = _Lake(), _Consumer(), _Consumer()
     audit = mocker.Mock()
     mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=audit)
-    pipeline = ConfiguredPipeline(_dataset(lake, exposer, analyzer))
+    pipeline = DataPipeline(_dataset(lake, exposer, analyzer))
     pipeline.ingestion_time = datetime(2026, 1, 2, tzinfo=UTC)
     pipeline.run()
 
-    raw_paths = tuple(path for path in lake.data if "/raw/" in path and "/cleaned/" not in path and "/enriched/" not in path)
-    enriched_paths = tuple(path for path in lake.data if "/enriched/step_2/" in path)
+    raw_paths = tuple(path for path in lake.data if path.startswith("raw/") and "/cleaned/" not in path and "/enriched/" not in path)
+    enriched_paths = tuple(path for path in lake.data if path.startswith("enriched/"))
     assert [path.rsplit("/", 1)[-1] for path in raw_paths] == ["first", "second"]
-    assert any("/cleaned/step_1/" in path for path in lake.data)
-    assert any("/cleaned/step_2/" in path for path in lake.data)
-    assert any("/enriched/step_1/" in path for path in lake.data)
+    assert any(path.startswith("cleaned/") for path in lake.data)
+    assert not any("/step_" in path for path in lake.data)
     assert enriched_paths
     assert lake.data[enriched_paths[0]] == "enrich:enrich:clean:clean:one"
     assert exposer.paths == ["enrich:enrich:clean:clean:one", "enrich:enrich:clean:clean:two"]
     assert analyzer.paths == exposer.paths
     assert audit.emit.call_count == 16
-
-
 

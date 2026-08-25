@@ -29,7 +29,7 @@ def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
 def config_with_headers(**kwargs) -> ConfigModel:
     return ConfigModel(
         name=kwargs.pop("name", "test_config.json"),
-        column_names=tuple(column.name for column in kwargs["columns"]),
+        column_names=tuple(column.pipeline_name for column in kwargs["columns"]),
         kafka_topic=kwargs.pop("kafka_topic", "test-events"),
         kafka_key_column=kwargs.pop("kafka_key_column", "id"),
         **kwargs,

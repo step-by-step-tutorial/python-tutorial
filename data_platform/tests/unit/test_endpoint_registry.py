@@ -27,7 +27,7 @@ class TestEndpointRegistry:
             registry.get_item("missing")
 
     def test_should_share_audit_endpoint_between_datasets(self) -> None:
-        assert endpoint_registry.get_item(audit_endpoint.name) is audit_endpoint
+        assert endpoint_registry.get_item(audit_endpoint.pipeline_name) is audit_endpoint
         assert SALE_DATASET.audit is audit_endpoint
         assert HOUSE_DATASET.audit is audit_endpoint
 

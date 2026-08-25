@@ -16,7 +16,7 @@ from data_platform.model import (
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
-    PipelineSteps,
+    PipelineFlow,
 )
 from data_platform.persistence.data_lake_repository import DataLakeRepository
 from data_platform.persistence.inmemory_data_warehouse_repository import (
@@ -48,7 +48,7 @@ HOUSE_DATASET = Dataset(
             }
         ),
     ),
-    audit=endpoint_registry.get_item(audit_endpoint.name),
+    audit=endpoint_registry.get_item(audit_endpoint.pipeline_name),
     endpoints={
         Key.HOUSE_CSV_FILE: FileEndpoint(
             name=Key.HOUSE_CSV_FILE,
@@ -113,7 +113,7 @@ HOUSE_DATASET = Dataset(
             },
         ),
     },
-    pipeline_steps=PipelineSteps(
+    flow=PipelineFlow(
         storages=(
             DataLakeRepository(
                 DataLakeEndpoint(

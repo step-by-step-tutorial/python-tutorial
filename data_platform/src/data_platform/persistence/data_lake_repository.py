@@ -42,12 +42,12 @@ class DataLakeRepository:
         client = connection_registry.get_item(self._connection_name)
         client.create_bucket(Bucket=bucket_name)
 
-    def find(self, relative_path: str, file_extension: str = "parquet") -> pd.DataFrame:
+    def find(self, path: str, file_extension: str = "parquet") -> pd.DataFrame:
 
         dataframes: list[pd.DataFrame] = []
         client = connection_registry.get_item(self._connection_name)
 
-        for object_key in self.find_keys(relative_path):
+        for object_key in self.find_keys(path):
             if not object_key.endswith(f".{file_extension}"):
                 continue
 
@@ -57,8 +57,8 @@ class DataLakeRepository:
             dataframes.append(pd.read_parquet(parquet_buffer))
 
         if not dataframes:
-            raise FileNotFoundError(f"No {file_extension} files found under path: {relative_path}")
+            raise FileNotFoundError(f"No {file_extension} files found under path: {path}")
 
-        logger.info(f"Download all {file_extension} files from bucket {self._bucket_name} with path {relative_path}")
+        logger.info(f"Download all {file_extension} files from bucket {self._bucket_name} with path {path}")
         return pd.concat(dataframes, ignore_index=True)
 

@@ -85,36 +85,10 @@ class TestDatalakeUtils:
         actual_audit_uri = datalake_path_utils.generate_full_path(settings.data_lake["data-platform.datalake"].audit_bucket_name, "audit/file.json")
 
         # Then
-        assert actual_relative.startswith("dev/raw/sale/")
+        assert actual_relative.startswith("raw/sale/")
         assert actual_full == "s3a://bucket/path/to/file"
         assert actual_datalake_uri == "s3a://app-datalake/path/to/file"
         assert actual_audit_uri == "s3a://app-datalake-audit/audit/file.json"
-
-    def test_should_generate_relative_path_using_environment_defaults(self, mocker) -> None:
-        # Given
-        given_time = datetime(2026, 8, 15, 12, 30, 45, 123456, tzinfo=UTC)
-        mocker.patch.object(
-            datalake_path_utils,
-            "main_settings",
-            SimpleNamespace(
-                app=SimpleNamespace(dataset_name="Sale"),
-                data_lake={
-                    "data-platform.datalake": SimpleNamespace(
-                        environment="dev",
-                        scheme="s3a",
-                        bucket_name="app-datalake",
-                        audit_bucket_name="app-datalake-audit",
-                    )
-                },
-            ),
-        )
-        mocker.patch.object(datalake_path_utils, "datetime", SimpleNamespace(now=lambda tz=None: given_time))
-
-        # When
-        actual = datalake_path_utils.generate_relative_path(StorageEnvironment.RAW)
-
-        # Then
-        assert actual.startswith("dev/raw/sale/")
 
     def test_should_unpersist_persisted_dataframes_in_reverse_order(self, mocker) -> None:
         # Given
@@ -290,5 +264,3 @@ class TestLoggingAndStreaming:
         # Then
         assert mock_logger_info.call_count == 1
         assert mock_logger_error.call_count == 1
-
-

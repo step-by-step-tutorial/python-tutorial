@@ -2,7 +2,7 @@
 import sys
 
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.pipeline.configured_pipeline import ConfiguredPipeline
+from data_platform.pipeline.configured_pipeline import DataPipeline
 from data_platform.registry.bootstrap import initialize_registries
 from data_platform.registry.dataset_registry import dataset_registry
 
@@ -12,7 +12,7 @@ initialize_registries()
 
 
 def run_pipeline(dataset_name: str) -> None:
-    ConfiguredPipeline(dataset_registry.get_item(dataset_name.lower())).run()
+    DataPipeline(dataset_registry.get_item(dataset_name.lower())).run()
 
 
 def select_dataset() -> str | None:

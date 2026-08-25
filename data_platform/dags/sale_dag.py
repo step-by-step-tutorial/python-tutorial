@@ -6,12 +6,12 @@ from airflow.task.trigger_rule import TriggerRule
 
 from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
 from data_platform.domain.sale.dataset import SALE_DATASET
-from data_platform.pipeline.configured_pipeline import ConfiguredPipeline
+from data_platform.pipeline.configured_pipeline import DataPipeline
 from data_platform.registry.bootstrap import initialize_registries
 from data_platform.util.airflow_utils import ensure_pipeline_success
 
 initialize_registries()
-pipeline = ConfiguredPipeline(SALE_DATASET)
+pipeline = DataPipeline(SALE_DATASET)
 adapter = DagPipelineAdapter(pipeline)
 
 with DAG(dag_id="sale", start_date=datetime(2026, 1, 1, tzinfo=UTC), schedule=None, catchup=False, tags={"sale", "etl", "datalake"}) as dag:

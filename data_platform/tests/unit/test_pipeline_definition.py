@@ -2,7 +2,7 @@
 
 import pytest
 
-from data_platform.model import PipelineSteps
+from data_platform.model import PipelineFlow
 
 
 class _Stage:
@@ -19,22 +19,22 @@ def _factory(service):
 
 
 def test_pipeline_steps_owns_explicit_stage_factories_in_declared_order() -> None:
-    definition = PipelineSteps(
+    definition = PipelineFlow(
         storages=(_factory(object()),),
         ingestors=(_Stage("one"), _Stage("two")),
         cleaners=(_Stage("clean"),),
         enrichers=(_Stage("enrich"),),
         exposers=(_Stage("expose"),),
     )
-    assert [stage.name for stage in definition.ingestors] == ["one", "two"]
+    assert [stage.pipeline_name for stage in definition.ingestors] == ["one", "two"]
 
 
 def test_pipeline_steps_accepts_declared_ingestors() -> None:
-    PipelineSteps((object(),), (_Stage("same"), _Stage("same")), (_Stage("clean"),), (_Stage("enrich"),))
+    PipelineFlow((object(),), (_Stage("same"), _Stage("same")), (_Stage("clean"),), (_Stage("enrich"),))
 
 
 def test_pipeline_steps_allows_empty_defaults() -> None:
-    assert PipelineSteps().cleaners == ()
+    assert PipelineFlow().cleaners == ()
 
 
 @pytest.mark.parametrize("module_path", ["domain/sale/dataset.py", "domain/house/dataset.py", "domain/online_shopping/dataset.py"])

@@ -14,7 +14,7 @@ from data_platform.model import (
     Dataset,
     FileEndpoint,
     MessagingEndpoint,
-    PipelineSteps,
+    PipelineFlow,
     RestApiEndpoint,
 )
 from data_platform.persistence.data_lake_repository import DataLakeRepository
@@ -47,7 +47,7 @@ SALE_DATASET = Dataset(
             }
         ),
     ),
-    audit=endpoint_registry.get_item(audit_endpoint.name),
+    audit=endpoint_registry.get_item(audit_endpoint.pipeline_name),
     endpoints={
         Key.SALE_CSV_FILE: (
             FileEndpoint(
@@ -150,7 +150,7 @@ SALE_DATASET = Dataset(
             )
         ),
     },
-    pipeline_steps=PipelineSteps(
+    flow=PipelineFlow(
         storages=(
             DataLakeRepository(
                 DataLakeEndpoint(

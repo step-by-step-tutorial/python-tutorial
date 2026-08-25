@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.endpoints import AuditEndpoint, Endpoint, EndpointType
-from data_platform.model.pipeline_steps import PipelineSteps
+from data_platform.model.pipeline_steps import PipelineFlow
 
 
 @dataclass(frozen=True)
@@ -13,7 +13,7 @@ class Dataset:
     audit: AuditEndpoint
     dataframe: DataFrameModel = field(default_factory=DataFrameModel)
     endpoints: Mapping[str, Endpoint] = field(default_factory=dict)
-    pipeline_steps: PipelineSteps = field(default_factory=PipelineSteps)
+    flow: PipelineFlow = field(default_factory=PipelineFlow)
 
     def get_endpoint(self, name: str, endpoint_type: type[EndpointType]) -> EndpointType:
         endpoint = self.endpoints[name]

@@ -17,7 +17,7 @@ from data_platform.model import (
     DataWarehouseEndpoint,
     DatabaseEndpoint,
     Dataset,
-    PipelineSteps,
+    PipelineFlow,
     RestApiEndpoint,
 )
 from data_platform.persistence.data_lake_repository import DataLakeRepository
@@ -45,7 +45,7 @@ ONLINE_SHOPPING_DATASET = Dataset(
             }
         )
     ),
-    audit=endpoint_registry.get_item(audit_endpoint.name),
+    audit=endpoint_registry.get_item(audit_endpoint.pipeline_name),
     endpoints={
         Key.ONLINE_SHOPPING_REST_API: (
             RestApiEndpoint(
@@ -101,7 +101,7 @@ ONLINE_SHOPPING_DATASET = Dataset(
             )
         ),
     },
-    pipeline_steps=PipelineSteps(
+    flow=PipelineFlow(
         storages=(
             DataLakeRepository(
                 DataLakeEndpoint(

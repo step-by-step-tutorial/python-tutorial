@@ -19,5 +19,5 @@ from data_platform.model.endpoints import (
 from data_platform.model.event_converter import EventConverter
 from data_platform.model.mapped_event import MappedEvent
 from data_platform.model.pipeline_analyzer import PipelineAnalyzer
-from data_platform.model.pipeline_steps import PipelineSteps
+from data_platform.model.pipeline_steps import PipelineFlow
 
