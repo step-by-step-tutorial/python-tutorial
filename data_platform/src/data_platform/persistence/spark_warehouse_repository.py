@@ -3,7 +3,7 @@
 from data_platform.model import WarehouseEndpoint
 from data_platform.persistence import warehouse_repository as warehouse_sql
 from data_platform.util.collection_utils import batch_of_list
-from data_platform.util.spark_utils import dataframe_to_list
+from data_platform.util.dataframe_utils import dataframe_to_list
 
 
 class SparkWarehouseRepository:

@@ -17,7 +17,7 @@ def build_endpoint() -> WarehouseEndpoint:
 class TestSparkWarehouseRepository:
     def test_should_replace_dataframe(self, mocker) -> None:
         dataframe = mocker.Mock()
-        dataframe.columns = ["value"]
+        dataframe.attribute = ["value"]
         connection = mocker.Mock()
         get_item = mocker.patch(
             "data_platform.persistence.warehouse_repository.connection_registry.get_item",

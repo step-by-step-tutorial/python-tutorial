@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 from typing import Any
 
+import pandas as pd
 import pyspark
 
 
@@ -21,6 +22,10 @@ def dataframe_to_list(dataframe: pyspark.sql.DataFrame) -> list[tuple[Any, ...]]
     return rows
 
 
+def empty_compatible_dataframe(dataframe) -> Any:
+    return dataframe.limit(0) if isinstance(dataframe, pyspark.sql.DataFrame) else pd.DataFrame()
+
+
 @contextmanager
 def persisted_dataframes() -> Iterator[list[Any]]:
     dataframes: list[Any] = []
@@ -30,4 +35,3 @@ def persisted_dataframes() -> Iterator[list[Any]]:
     finally:
         for dataframe in reversed(dataframes):
             dataframe.unpersist()
-

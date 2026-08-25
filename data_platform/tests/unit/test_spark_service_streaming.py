@@ -42,7 +42,7 @@ class TestReadStream:
         given_writer = given_stream_writer.foreachBatch.return_value
         given_writer.option.return_value = given_writer
         given_writer.trigger.return_value = given_writer
-        given_writer.start.return_value = mocker.Mock()
+        given_writer.start_pipeline.return_value = mocker.Mock()
         service = system_under_test.SparkStreamingService(
             session=mocker.MagicMock(spec=SparkSession),
             messaging_endpoint=MessagingEndpoint(channel_name="topic", bootstrap_servers="localhost:9092"),
@@ -57,6 +57,6 @@ class TestReadStream:
         assert mock_append_batch.call_args.args == (given_batch, "raw/path")
         assert given_writer.option.call_args.args == ("checkpointLocation", "checkpoint/path")
         assert given_writer.trigger.call_count == 1
-        assert given_writer.start.call_count == 1
+        assert given_writer.start_pipeline.call_count == 1
 
 

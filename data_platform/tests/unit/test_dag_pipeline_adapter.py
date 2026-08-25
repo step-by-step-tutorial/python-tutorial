@@ -25,5 +25,5 @@ def test_adapter_delegates_explicit_dag_stages_through_the_pipeline_wrapper(mock
     adapter.cleanup()
 
     assert pipeline.run_step.call_count == 8
-    pipeline.start.assert_called_once()
-    pipeline.complete.assert_called_once()
+    pipeline.start_pipeline.assert_called_once()
+    pipeline.complete_pipeline.assert_called_once()

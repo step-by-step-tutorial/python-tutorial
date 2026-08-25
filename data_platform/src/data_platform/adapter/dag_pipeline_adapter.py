@@ -7,7 +7,7 @@ class DagPipelineAdapter:
         self._pipeline = pipeline
 
     def prepare(self) -> None:
-        self._pipeline.start()
+        self._pipeline.start_pipeline()
         self._pipeline.run_step("prepare", self._pipeline.prepare)
 
     def ingest(self) -> str:
@@ -27,7 +27,7 @@ class DagPipelineAdapter:
 
     def analyze(self, path: str) -> None:
         self._pipeline.run_step("analyze", lambda: self._pipeline.analyze(path))
-        self._pipeline.complete()
+        self._pipeline.complete_pipeline()
 
     def cleanup(self) -> None:
         self._pipeline.run_step("cleanup", self._pipeline.cleanup)

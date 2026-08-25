@@ -3,9 +3,11 @@ from datetime import UTC, datetime
 
 import pandas as pd
 
-from data_platform.model import AuditEndpoint, Dataset, PipelineFlow, ValidationError, ValidationResult
+from data_platform.model import AuditEndpoint, Dataset, PipelineFlow
+from data_platform.validators import Assessment, Violation
 from data_platform.cleaners import CleanerChain
 from data_platform.enrichers import EnricherChain
+from data_platform.validators import ValidatorChain
 from data_platform.pipeline.data_pipeline import DataPipeline
 
 
@@ -26,10 +28,10 @@ class _Transformer:
 
 class _Validator:
     def validate(self, frame):
-        return ValidationResult(
-            valid=frame.iloc[1:],
-            invalid=frame.iloc[:1],
-            errors=(ValidationError("first_row", "The first row is invalid"),),
+        return Assessment(
+            accepted=frame.iloc[1:],
+            rejected=frame.iloc[:1],
+            errors=(Violation("first_row", "The first row is invalid"),),
         )
 
 
@@ -77,16 +79,16 @@ def _dataset(lake, exposer, analyzer) -> Dataset:
         flow=PipelineFlow(
             repository=lake,
             ingestors=(_ingestor_stage("first", "one", lake), _ingestor_stage("second", "two", lake)),
-            cleaner=CleanerChain((
+            cleaners=CleanerChain((
                 _Transform("transform_one", _Transformer().clean, _Transformer().enrich, lake),
                 _Transform("transform_two", _Transformer().clean, _Transformer().enrich, lake),
             )),
-            enricher=EnricherChain((
+            enrichers=EnricherChain((
                 _Transform("transform_one", _Transformer().clean, _Transformer().enrich, lake),
                 _Transform("transform_two", _Transformer().clean, _Transformer().enrich, lake),
             )),
             exposers=(_Exposer(exposer, lake),),
-            analyzers=(_Analyzer(analyzer, lake),),
+            analyzers=_Analyzer(analyzer, lake),
         ),
     )
 
@@ -115,7 +117,7 @@ def test_configured_pipeline_persists_invalid_rows_and_logs_validation_errors(mo
     lake, exposer, analyzer = _Lake(), _Consumer(), _Consumer()
     mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=mocker.Mock())
     dataset = _dataset(lake, exposer, analyzer)
-    dataset = replace(dataset, flow=replace(dataset.flow, validator=_Validator()))
+    dataset = replace(dataset, flow=replace(dataset.flow, validators=ValidatorChain((_Validator(),))))
     pipeline = DataPipeline(dataset)
     lake.data["raw/input"] = pd.DataFrame({"value": ["invalid", "valid"]})
 

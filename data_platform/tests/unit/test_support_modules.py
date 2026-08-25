@@ -14,9 +14,9 @@ from data_platform.converter.value_converter import (
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.validation.dataframe_validator import validate_required_columns, validate_required_columns
+from data_platform.validators import RequiredColumnsValidator
 from data_platform.util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
-    time_utils, path_utils as datalake_path_utils, spark_utils
+    time_utils, path_utils as datalake_path_utils, dataframe_utils
 
 
 class TestStringUtils:
@@ -96,7 +96,7 @@ class TestDatalakeUtils:
         given_second = mocker.Mock()
 
         # When
-        with spark_utils.persisted_dataframes() as actual:
+        with dataframe_utils.persisted_dataframes() as actual:
             actual.extend([given_first, given_second])
 
         # Then
@@ -138,7 +138,7 @@ class TestDataFrameModelValidation:
         given_dataframe = pd.DataFrame({"id": [1], "name": ["sale"]})
 
         # When
-        validate_required_columns(given_dataframe, frozenset({"id"}))
+        RequiredColumnsValidator(frozenset({"id"})).validate(given_dataframe)
 
         # Then
         assert list(given_dataframe.columns) == ["id", "name"]
@@ -149,35 +149,35 @@ class TestDataFrameModelValidation:
 
         # When / Then
         with pytest.raises(ValueError):
-            validate_required_columns(given_dataframe, frozenset({"id", "name"}))
+            RequiredColumnsValidator(frozenset({"id", "name"})).validate(given_dataframe)
 
     def test_should_reject_none_pandas_dataframe(self) -> None:
         with pytest.raises(ValueError):
-            validate_required_columns(None, frozenset({"id"}))
+            RequiredColumnsValidator(frozenset({"id"})).validate(None)
 
     def test_should_validate_required_columns_for_spark_dataframe(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_dataframe.columns = ["id", "name"]
+        given_dataframe.attribute = ["id", "name"]
 
         # When
-        validate_required_columns(given_dataframe, ["id"])
+        RequiredColumnsValidator(("id",)).validate(given_dataframe)
 
         # Then
-        assert given_dataframe.columns == ["id", "name"]
+        assert given_dataframe.attribute == ["id", "name"]
 
     def test_should_reject_missing_required_columns_for_spark_dataframe(self, mocker) -> None:
         # Given
         given_dataframe = mocker.Mock()
-        given_dataframe.columns = ["id"]
+        given_dataframe.attribute = ["id"]
 
         # When / Then
         with pytest.raises(ValueError):
-            validate_required_columns(given_dataframe, ["id", "name"])
+            RequiredColumnsValidator(("id", "name")).validate(given_dataframe)
 
     def test_should_reject_none_spark_dataframe(self) -> None:
         with pytest.raises(ValueError):
-            validate_required_columns(None, ["id"])
+            RequiredColumnsValidator(("id",)).validate(None)
 
 
 class TestCsvUtils:

@@ -4,6 +4,6 @@
 class StorageEnvironment(StrEnum):
     RAW = "raw"
     CLEANED = "cleaned"
-    VALIDATED = "validated"
-    INVALID = "invalid"
+    ACCEPTED = "validated"
+    REJECTED = "invalid"
     ENRICHED = "enriched"

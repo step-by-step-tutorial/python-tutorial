@@ -5,7 +5,7 @@ from typing import Any
 
 
 class EnricherChain:
-    def __init__(self, enrichers: tuple[Any, ...]) -> None:
+    def __init__(self, enrichers: tuple[Any, ...] = ()) -> None:
         self.enrichers = enrichers
 
     def enrich(self, dataframe: Any) -> Any:

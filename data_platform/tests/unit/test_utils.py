@@ -10,8 +10,8 @@ from data_platform.converter.value_converter import (
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.validation.dataframe_validator import validate_required_columns
-from data_platform.util import csv_utils, file_utils
+from data_platform.validators import RequiredColumnsValidator
+from data_platform.util import file_utils
 
 
 class TestFileUtils:
@@ -60,7 +60,7 @@ class TestPandasDataFrameModelUtils:
 
         # When / Then
         with pytest.raises(ValueError):
-            validate_required_columns(dataframe, frozenset({SALE_ATTRIBUTE.ORDER_ID, SALE_ATTRIBUTE.CATEGORY}))
+            RequiredColumnsValidator(frozenset({SALE_ATTRIBUTE.ORDER_ID, SALE_ATTRIBUTE.CATEGORY})).validate(dataframe)
 
     def test_should_sum_by_group(self) -> None:
         # Given
@@ -83,5 +83,4 @@ class TestPandasDataFrameModelUtils:
     def test_should_raise_attribute_error_for_unknown_attribute(self) -> None:
         with pytest.raises(AttributeError):
             _ = SALE_ATTRIBUTE.unknown_column
-
 

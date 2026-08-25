@@ -1,10 +1,7 @@
-﻿from data_platform.config.keys import Key
+from data_platform.config.keys import Key
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE as columns
-from data_platform.domain.house.warehouse_analyzer import (
-    WarehouseHouseAnalyzer,
-)
-from data_platform.domain.house.inmemory_analyzer import InmemoryHouseAnalyzer
+from data_platform.analyzers import AnalyzerChain, GroupAggregateAnalyzer
 from data_platform.cleaners import (
     BooleanColumnCleaner,
     CleanerChain,
@@ -25,12 +22,7 @@ from data_platform.domain.house.spark_schema import build_schema
 from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
 from data_platform.model import (
     DataFrameModel,
-    DataLakeEndpoint,
-    WarehouseEndpoint,
-    DatabaseEndpoint,
     Dataset,
-    FileEndpoint,
-    MessagingEndpoint,
     PipelineFlow,
 )
 from data_platform.persistence.data_lake_repository import DataLakeRepository
@@ -41,10 +33,7 @@ from data_platform.persistence.inmemory_database_repository import (
     PandasDatabaseRepository,
 )
 from data_platform.persistence.repository_data_exposer import RepositoryDataExposer
-from data_platform.presentation.dataframe_display import show_map_of_dataframe
-from data_platform.registry.endpoint_registry import audit_endpoint, endpoint_registry
-from data_platform.service.warehouse_analysis_service import WarehouseAnalyzer
-from data_platform.service.dataframe_analysis_service import DataFrameAnalyzer
+from data_platform.registry.endpoint_registry import endpoint_registry
 
 HOUSE_DATASET = Dataset(
     name="house",
@@ -63,96 +52,25 @@ HOUSE_DATASET = Dataset(
             }
         ),
     ),
-    audit=endpoint_registry.get_item(audit_endpoint.pipeline_name),
+    audit=endpoint_registry.get_item("audit"),
     endpoints={
-        Key.HOUSE_CSV_FILE: FileEndpoint(
-            name=Key.HOUSE_CSV_FILE,
-            file_name="house.csv",
-            file_path=str(
-                main_settings.app.root / main_settings.app.resources_dir / "house.csv"
-            ),
-        ),
-        Key.HOUSE_KAFKA_CONSUMER: MessagingEndpoint(
-            name=Key.HOUSE_KAFKA_CONSUMER,
-            connection_name=Key.HOUSE_KAFKA_CONSUMER,
-            channel_name=main_settings.messaging[Key.HOUSE_KAFKA_CONSUMER].channel_name,
-            bootstrap_servers=main_settings.messaging[
-                Key.HOUSE_KAFKA_CONSUMER
-            ].bootstrap_servers,
-            starting_offsets=main_settings.messaging[
-                Key.HOUSE_KAFKA_CONSUMER
-            ].starting_offsets,
-        ),
-        Key.HOUSE_KAFKA_PRODUCER: MessagingEndpoint(
-            name=Key.HOUSE_KAFKA_PRODUCER,
-            connection_name=Key.HOUSE_KAFKA_PRODUCER,
-            channel_name=main_settings.messaging[Key.HOUSE_KAFKA_CONSUMER].channel_name,
-            bootstrap_servers=main_settings.messaging[
-                Key.HOUSE_KAFKA_PRODUCER
-            ].bootstrap_servers,
-        ),
-        Key.HOUSE_DATA_LAKE: DataLakeEndpoint(
-            name=Key.HOUSE_DATA_LAKE,
-            connection_name=Key.HOUSE_DATA_LAKE,
-            bucket_name=main_settings.data_lake[Key.HOUSE_DATA_LAKE].bucket_name,
-            scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
-        ),
-        Key.HOUSE_DATABASE: DatabaseEndpoint(
-            name=Key.HOUSE_DATABASE,
-            connection_name=Key.HOUSE_DATABASE,
-            schema="house",
-            stage_table_name="house_stage",
-            full_stage_table_name="house.house_stage",
-            table_names=["house.house_stage"],
-            create_sql_files={"create": "database/house/create_tables.sql"},
-            truncate_sql_files={"truncate": "database/house/truncate_stage.sql"},
-            query_sql_files={"select_all": "database/select_all.sql"},
-        ),
-        Key.HOUSE_WAREHOUSE: WarehouseEndpoint(
-            name=Key.HOUSE_WAREHOUSE,
-            connection_name=Key.HOUSE_WAREHOUSE,
-            schema=main_settings.warehouse[Key.HOUSE_WAREHOUSE].database_name,
-            table_name="house_table",
-            full_table_name=f"{main_settings.warehouse[Key.HOUSE_WAREHOUSE].database_name}.house_table",
-            create_sql_files={
-                "create_database": "warehouse/house/create_database.sql",
-                "create_table": "warehouse/house/create_table.sql",
-            },
-            truncate_sql_files={
-                "truncate": "warehouse/house/truncate_warehouse.sql"
-            },
-            query_sql_files={
-                "select_all": "warehouse/select_all.sql",
-                "average_price_by_address": "warehouse/house/select_average_price_by_address.sql",
-                "average_price_per_square_meter_by_room": "warehouse/house/select_average_price_per_square_meter_by_room.sql",
-            },
-        ),
+        Key.HOUSE_CSV_FILE: endpoint_registry.get_item(Key.HOUSE_CSV_FILE),
+        Key.HOUSE_KAFKA_CONSUMER: endpoint_registry.get_item(Key.HOUSE_KAFKA_CONSUMER),
+        Key.HOUSE_KAFKA_PRODUCER: endpoint_registry.get_item(Key.HOUSE_KAFKA_PRODUCER),
+        Key.HOUSE_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_DATA_LAKE),
+        Key.HOUSE_DATABASE: endpoint_registry.get_item(Key.HOUSE_DATABASE),
+        Key.HOUSE_WAREHOUSE: endpoint_registry.get_item(Key.HOUSE_WAREHOUSE),
     },
     flow=PipelineFlow(
         repository=DataLakeRepository(
-            DataLakeEndpoint(
-                name=Key.HOUSE_DATA_LAKE,
-                connection_name=Key.HOUSE_DATA_LAKE,
-                bucket_name=main_settings.data_lake[
-                    Key.HOUSE_DATA_LAKE
-                ].bucket_name,
-                scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
-            )
+            endpoint_registry.get_item(Key.HOUSE_DATA_LAKE)
         ),
         ingestors=(
             CsvFileIngestor(
-                FileEndpoint(
-                    name=Key.HOUSE_CSV_FILE,
-                    file_name="house.csv",
-                    file_path=str(
-                        main_settings.app.root
-                        / main_settings.app.resources_dir
-                        / "house.csv"
-                    ),
-                )
+                endpoint_registry.get_item(Key.HOUSE_CSV_FILE)
             ),
         ),
-        cleaner=CleanerChain((
+        cleaners=CleanerChain((
             RenameColumnsCleaner({
                 columns.area_raw: columns.area, columns.room_raw: columns.room,
                 columns.parking_raw: columns.parking, columns.warehouse_raw: columns.warehouse,
@@ -169,13 +87,13 @@ HOUSE_DATASET = Dataset(
             StripColumnCleaner(columns.address),
             DropDuplicatesCleaner(),
         )),
-        validator=ValidatorChain((
+        validators=ValidatorChain((
             RequiredColumnsValidator((columns.area, columns.room, columns.price)),
             NotNullValidator(columns.area), NotNullValidator(columns.room),
             NotNullValidator(columns.price), PositiveValidator(columns.area),
             NonNegativeValidator(columns.room), PositiveValidator(columns.price),
         )),
-        enricher=EnricherChain((
+        enrichers=EnricherChain((
             DivideColumnsEnricher(columns.price, columns.area, columns.price_per_square_meter),
             DivideColumnsEnricher(columns.price_usd, columns.area, columns.price_usd_per_square_meter),
             HashColumnsEnricher((
@@ -186,89 +104,18 @@ HOUSE_DATASET = Dataset(
         exposers=(
             RepositoryDataExposer((
                 PandasDatabaseRepository(
-                    DatabaseEndpoint(
-                        name=Key.HOUSE_DATABASE,
-                        connection_name=Key.HOUSE_DATABASE,
-                        schema="house",
-                        stage_table_name="house_stage",
-                        full_stage_table_name="house.house_stage",
-                        table_names=["house.house_stage"],
-                        create_sql_files={"create": "database/house/create_tables.sql"},
-                        truncate_sql_files={
-                            "truncate": "database/house/truncate_stage.sql"
-                        },
-                        query_sql_files={"select_all": "database/select_all.sql"},
-                    )
+                    endpoint_registry.get_item(Key.HOUSE_DATABASE)
                 ).replace,
             )),
             RepositoryDataExposer((
                 PandasWarehouseRepository(
-                    WarehouseEndpoint(
-                        name=Key.HOUSE_WAREHOUSE,
-                        connection_name=Key.HOUSE_WAREHOUSE,
-                        schema=main_settings.warehouse[
-                            Key.HOUSE_WAREHOUSE
-                        ].database_name,
-                        table_name="house_table",
-                        full_table_name=f"{main_settings.warehouse[Key.HOUSE_WAREHOUSE].database_name}.house_table",
-                        create_sql_files={
-                            "create_database": "warehouse/house/create_database.sql",
-                            "create_table": "warehouse/house/create_table.sql",
-                        },
-                        truncate_sql_files={
-                            "truncate": "warehouse/house/truncate_warehouse.sql"
-                        },
-                        query_sql_files={
-                            "select_all": "warehouse/select_all.sql",
-                            "average_price_by_address": "warehouse/house/select_average_price_by_address.sql",
-                            "average_price_per_square_meter_by_room": "warehouse/house/select_average_price_per_square_meter_by_room.sql",
-                        },
-                    )
+                    endpoint_registry.get_item(Key.HOUSE_WAREHOUSE)
                 ).replace,
             )),
         ),
-        analyzers=(
-            DataFrameAnalyzer(
-                DataLakeRepository(
-                    DataLakeEndpoint(
-                        name=Key.HOUSE_DATA_LAKE,
-                        connection_name=Key.HOUSE_DATA_LAKE,
-                        bucket_name=main_settings.data_lake[
-                            Key.HOUSE_DATA_LAKE
-                        ].bucket_name,
-                        scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
-                    )
-                ).find,
-                InmemoryHouseAnalyzer(),
-                show_map_of_dataframe,
-            ),
-            WarehouseAnalyzer(
-                PandasWarehouseRepository(
-                    WarehouseEndpoint(
-                        name=Key.HOUSE_WAREHOUSE,
-                        connection_name=Key.HOUSE_WAREHOUSE,
-                        schema=main_settings.warehouse[
-                            Key.HOUSE_WAREHOUSE
-                        ].database_name,
-                        table_name="house_table",
-                        full_table_name=f"{main_settings.warehouse[Key.HOUSE_WAREHOUSE].database_name}.house_table",
-                        create_sql_files={
-                            "create_database": "warehouse/house/create_database.sql",
-                            "create_table": "warehouse/house/create_table.sql",
-                        },
-                        truncate_sql_files={
-                            "truncate": "warehouse/house/truncate_warehouse.sql"
-                        },
-                        query_sql_files={
-                            "select_all": "warehouse/select_all.sql",
-                            "average_price_by_address": "warehouse/house/select_average_price_by_address.sql",
-                            "average_price_per_square_meter_by_room": "warehouse/house/select_average_price_per_square_meter_by_room.sql",
-                        },
-                    )
-                ),
-                WarehouseHouseAnalyzer(),
-                show_map_of_dataframe,
-            ),
-        ),
+        analyzers=AnalyzerChain((
+            GroupAggregateAnalyzer("average_price_by_address", columns.address, columns.price, "mean", "average_price"),
+            GroupAggregateAnalyzer("average_price_per_square_meter_by_room", columns.room, columns.price_per_square_meter, "mean", "average_price_per_square_meter"),
+        )),
     ),
 )

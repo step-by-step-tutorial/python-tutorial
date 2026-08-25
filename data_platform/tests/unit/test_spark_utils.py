@@ -1,5 +1,5 @@
 ﻿from data_platform.util.collection_utils import batch_of_list
-from data_platform.util.spark_utils import dataframe_to_list
+from data_platform.util.dataframe_utils import dataframe_to_list
 
 
 class TestCollectRows:
@@ -14,7 +14,7 @@ class TestCollectRows:
                 return {"value": self.value, "name": self.name}
 
         dataframe = mocker.Mock()
-        dataframe.columns = ["name", "value"]
+        dataframe.attribute = ["name", "value"]
         dataframe.collect.return_value = [_Row(1, "A"), _Row(2, "B")]
 
         actual = dataframe_to_list(dataframe)

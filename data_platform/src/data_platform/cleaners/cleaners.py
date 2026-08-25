@@ -5,7 +5,7 @@ import pandas as pd
 
 
 class CleanerChain:
-    def __init__(self, cleaners: tuple[Any, ...]) -> None:
+    def __init__(self, cleaners: tuple[Any, ...] = ()) -> None:
         self.cleaners = cleaners
 
     def clean(self, dataframe: Any) -> Any:

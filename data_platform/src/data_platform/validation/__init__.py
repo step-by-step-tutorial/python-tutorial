@@ -1,2 +1,0 @@
-﻿"""Data validation routines."""
-

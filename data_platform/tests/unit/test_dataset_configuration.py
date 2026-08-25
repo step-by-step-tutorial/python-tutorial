@@ -13,15 +13,15 @@ from data_platform.model import (
     MessagingEndpoint,
     RestApiEndpoint,
 )
-from data_platform.domain.house.dataset import HOUSE_DATASET
 from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.registry.bootstrap import initialize_registries
-from data_platform.registry.endpoint_registry import audit_endpoint
+from data_platform.registry.endpoint_registry import endpoint_registry
 from data_platform.config.main_settings import settings
+initialize_registries()
+
+from data_platform.domain.house.dataset import HOUSE_DATASET
 from data_platform.domain.sale.dataset import SALE_DATASET
 from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
-
-initialize_registries()
 
 
 class TestDataset:
@@ -84,7 +84,7 @@ class TestDataset:
             given_dataset.get_endpoint("sale.file.csv", DatabaseEndpoint)
 
     def test_should_raise_error_for_missing_endpoint(self) -> None:
-        given_dataset = Dataset(name="example", audit=audit_endpoint)
+        given_dataset = Dataset(name="example", audit=endpoint_registry.get_item("audit"))
 
         with pytest.raises(KeyError):
             given_dataset.get_endpoint("missing", FileEndpoint)
@@ -116,9 +116,9 @@ class TestConcreteDatasetConfiguration:
         definition = dataset.flow
         assert definition is not None
         assert [stage.pipeline_name for stage in definition.ingestors] == [storage_object_name]
-        assert definition.cleaner
-        assert definition.validator
-        assert definition.enricher
+        assert definition.cleaners
+        assert definition.validators
+        assert definition.enrichers
         assert definition.exposers
         assert definition.analyzers
 
@@ -195,8 +195,8 @@ class TestConcreteDatasetConfiguration:
         definition = ONLINE_SHOPPING_DATASET.flow
         assert definition is not None
         assert [stage.pipeline_name for stage in definition.ingestors] == ["api"]
-        assert definition.cleaner
-        assert definition.validator
-        assert definition.enricher
+        assert definition.cleaners
+        assert definition.validators
+        assert definition.enrichers
         assert definition.exposers
         assert definition.analyzers

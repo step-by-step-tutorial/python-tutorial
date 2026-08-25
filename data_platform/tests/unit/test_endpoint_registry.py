@@ -1,9 +1,12 @@
 ﻿import pytest
 
 from data_platform.registry.endpoint_registry import EndpointRegistry, endpoint_registry
+from data_platform.registry.bootstrap import initialize_registries
+
+initialize_registries()
+
 from data_platform.domain.house.dataset import HOUSE_DATASET
 from data_platform.domain.sale.dataset import SALE_DATASET
-from data_platform.registry.endpoint_registry import audit_endpoint
 from data_platform.model import FileEndpoint
 
 
@@ -27,8 +30,8 @@ class TestEndpointRegistry:
             registry.get_item("missing")
 
     def test_should_share_audit_endpoint_between_datasets(self) -> None:
-        assert endpoint_registry.get_item(audit_endpoint.pipeline_name) is audit_endpoint
+        audit_endpoint = endpoint_registry.get_item("audit")
+        assert endpoint_registry.get_item("audit") is audit_endpoint
         assert SALE_DATASET.audit is audit_endpoint
         assert HOUSE_DATASET.audit is audit_endpoint
-
 

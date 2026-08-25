@@ -39,5 +39,5 @@ class OnlineShoppingAttribute:
     revenue: str = "revenue"
 
 
-ONLINE_SHOPPING_ATTRIBUTE = OnlineShoppingAttribute()
+attribute = OnlineShoppingAttribute()
 

@@ -22,9 +22,9 @@ def test_pipeline_steps_owns_explicit_stage_factories_in_declared_order() -> Non
     definition = PipelineFlow(
         repository=_factory(object()),
         ingestors=(_Stage("one"), _Stage("two")),
-        cleaner=_Stage("clean"),
-        validator=None,
-        enricher=_Stage("enrich"),
+        cleaners=_Stage("clean"),
+        validators=None,
+        enrichers=_Stage("enrich"),
         exposers=(_Stage("expose"),),
     )
     assert [stage.name for stage in definition.ingestors] == ["one", "two"]
@@ -39,9 +39,10 @@ def test_pipeline_steps_accepts_declared_ingestors() -> None:
 
 
 def test_pipeline_steps_allows_empty_defaults() -> None:
-    assert PipelineFlow().cleaner is None
-    assert PipelineFlow().validator is None
-    assert PipelineFlow().enricher is None
+    assert PipelineFlow().cleaners.clean(None) is None
+    assert PipelineFlow().validators.validators == ()
+    assert PipelineFlow().enrichers.enrich(None) is None
+    assert PipelineFlow().analyzers.analyze(None) == ()
 
 
 @pytest.mark.parametrize("module_path", ["domain/sale/dataset.py", "domain/house/dataset.py", "domain/online_shopping/dataset.py"])
