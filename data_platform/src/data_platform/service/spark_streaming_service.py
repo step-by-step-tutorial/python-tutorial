@@ -2,7 +2,7 @@
 
 from pyspark.sql import DataFrame, SparkSession
 
-from data_platform.model import DataLakeEndpoint, MessagingEndpoint
+from data_platform.model.endpoints import MessagingEndpoint, DataLakeEndpoint
 from data_platform.util.kafka_admin import ensure_topic_exists
 from data_platform.util.path_utils import generate_data_lake_path
 from data_platform.util.dataframe_utils import persisted_dataframes

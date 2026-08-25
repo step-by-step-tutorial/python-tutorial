@@ -3,7 +3,7 @@
 import pandas as pd
 
 from data_platform.config.data_lake_environment import StorageEnvironment
-from data_platform.model import Dataset
+from data_platform.model.dataset import Dataset
 from data_platform.pipeline.pipeline import Pipeline
 from data_platform.util.path_utils import generate_relative_path
 from data_platform.validators.data_validator_utils import is_not_blank

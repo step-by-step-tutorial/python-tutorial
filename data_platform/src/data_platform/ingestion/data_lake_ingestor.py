@@ -2,8 +2,8 @@
 
 import pandas as pd
 
-from data_platform.model import DataLakeEndpoint
-from data_platform.persistence.data_lake_repository import DataLakeRepository
+from data_platform.model.endpoints import DataLakeEndpoint
+from data_platform.repository.data_lake_repository import DataLakeRepository
 
 logger = logging.getLogger(__name__)
 

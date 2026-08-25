@@ -1,7 +1,7 @@
 ﻿import pytest
 
 from data_platform.model import DatabaseEndpoint
-from data_platform.persistence.spark_database_repository import SparkDatabaseRepository
+from data_platform.repository.spark_database_repository import SparkDatabaseRepository
 
 
 def build_endpoint() -> DatabaseEndpoint:

@@ -1,18 +1,18 @@
 ﻿def build_schema():
     from pyspark.sql.types import DoubleType, LongType, StringType, StructField, StructType
 
-    from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
+    from data_platform.domain.sale.attribute import attribute
 
     return StructType(
         [
-            StructField(SALE_ATTRIBUTE.order_id, LongType(), nullable=False),
-            StructField(SALE_ATTRIBUTE.customer_name, StringType(), nullable=False),
-            StructField(SALE_ATTRIBUTE.product_name, StringType(), nullable=False),
-            StructField(SALE_ATTRIBUTE.category, StringType(), nullable=False),
-            StructField(SALE_ATTRIBUTE.quantity, DoubleType(), nullable=True),
-            StructField(SALE_ATTRIBUTE.unit_price, DoubleType(), nullable=True),
-            StructField(SALE_ATTRIBUTE.order_date, StringType(), nullable=True),
-            StructField(SALE_ATTRIBUTE.country, StringType(), nullable=False),
+            StructField(attribute.order_id, LongType(), nullable=False),
+            StructField(attribute.customer_name, StringType(), nullable=False),
+            StructField(attribute.product_name, StringType(), nullable=False),
+            StructField(attribute.category, StringType(), nullable=False),
+            StructField(attribute.quantity, DoubleType(), nullable=True),
+            StructField(attribute.unit_price, DoubleType(), nullable=True),
+            StructField(attribute.order_date, StringType(), nullable=True),
+            StructField(attribute.country, StringType(), nullable=False),
         ]
     )
 

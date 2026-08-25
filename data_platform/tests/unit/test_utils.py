@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
+from data_platform.domain.sale.attribute import attribute
 from data_platform.converter.value_converter import (
     convert_to_integer,
     convert_to_float,
@@ -56,31 +56,31 @@ class TestPandasDataFrameModelUtils:
 
     def test_should_validate_required_columns(self) -> None:
         # Given
-        dataframe = pd.DataFrame({SALE_ATTRIBUTE.ORDER_ID: [1]})
+        dataframe = pd.DataFrame({attribute.ORDER_ID: [1]})
 
         # When / Then
         with pytest.raises(ValueError):
-            RequiredColumnsValidator(frozenset({SALE_ATTRIBUTE.ORDER_ID, SALE_ATTRIBUTE.CATEGORY})).validate(dataframe)
+            RequiredColumnsValidator(frozenset({attribute.ORDER_ID, attribute.CATEGORY})).validate(dataframe)
 
     def test_should_sum_by_group(self) -> None:
         # Given
         dataframe = pd.DataFrame(
             {
-                SALE_ATTRIBUTE.CATEGORY: ["A", "A", "B"],
-                SALE_ATTRIBUTE.TOTAL_PRICE: [10.0, 20.0, 5.0],
+                attribute.CATEGORY: ["A", "A", "B"],
+                attribute.TOTAL_PRICE: [10.0, 20.0, 5.0],
             }
         )
 
         # When
-        actual = dataframe.groupby(SALE_ATTRIBUTE.CATEGORY, as_index=False)[SALE_ATTRIBUTE.TOTAL_PRICE].sum()
-        actual = actual.rename(columns={SALE_ATTRIBUTE.TOTAL_PRICE: SALE_ATTRIBUTE.REVENUE})
-        actual = actual.sort_values(SALE_ATTRIBUTE.REVENUE, ascending=False).reset_index(drop=True)
+        actual = dataframe.groupby(attribute.CATEGORY, as_index=False)[attribute.TOTAL_PRICE].sum()
+        actual = actual.rename(columns={attribute.TOTAL_PRICE: attribute.REVENUE})
+        actual = actual.sort_values(attribute.REVENUE, ascending=False).reset_index(drop=True)
 
         # Then
-        assert actual.iloc[0][SALE_ATTRIBUTE.CATEGORY] == "A"
-        assert actual.iloc[0][SALE_ATTRIBUTE.REVENUE] == 30.0
+        assert actual.iloc[0][attribute.CATEGORY] == "A"
+        assert actual.iloc[0][attribute.REVENUE] == 30.0
 
     def test_should_raise_attribute_error_for_unknown_attribute(self) -> None:
         with pytest.raises(AttributeError):
-            _ = SALE_ATTRIBUTE.unknown_column
+            _ = attribute.unknown_column
 

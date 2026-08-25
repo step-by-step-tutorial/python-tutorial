@@ -4,12 +4,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from data_platform.analyzers import AnalyzerChain
-from data_platform.cleaners import CleanerChain
-from data_platform.enrichers import EnricherChain
+from data_platform.analyzers.analyzer_chain import AnalyzerChain
+from data_platform.cleaners.cleaners import CleanerChain
+from data_platform.enrichers.enrichers import EnricherChain
 from data_platform.model.dataset_ingestor import DatasetIngestor
-from data_platform.persistence.storage_repository import StorageRepository
-from data_platform.validators import ValidatorChain
+from data_platform.repository.storage_repository import StorageRepository
+from data_platform.validators.validator_chain import ValidatorChain
 
 
 @dataclass(frozen=True)

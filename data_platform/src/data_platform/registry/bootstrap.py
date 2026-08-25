@@ -1,6 +1,6 @@
 from data_platform.config.keys import Key
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.model import (
+from data_platform.model.endpoints import  (
     AuditEndpoint, DataLakeEndpoint, DatabaseEndpoint, FileEndpoint,
     MessagingEndpoint, RestApiEndpoint, WarehouseEndpoint,
 )

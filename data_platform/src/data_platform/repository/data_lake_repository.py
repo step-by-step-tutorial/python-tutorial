@@ -4,8 +4,8 @@ from uuid import uuid4
 
 import pandas as pd
 
-from data_platform.model import DataLakeEndpoint
-from data_platform.persistence.storage_repository import StorageRepository
+from data_platform.model.endpoints import DataLakeEndpoint
+from data_platform.repository.storage_repository import StorageRepository
 from data_platform.registry.connection_registry import connection_registry
 
 logger = logging.getLogger(__name__)

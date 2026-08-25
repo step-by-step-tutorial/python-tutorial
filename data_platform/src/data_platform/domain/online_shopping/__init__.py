@@ -1,2 +1,1 @@
-﻿"""Online-shopping dataset domain."""
-
+﻿

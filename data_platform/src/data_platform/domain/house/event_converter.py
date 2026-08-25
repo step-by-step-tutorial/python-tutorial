@@ -8,7 +8,7 @@ from data_platform.converter.value_converter import (
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE
+from data_platform.domain.house.attribute import attribute
 from data_platform.domain.house.event import HouseEvent
 from data_platform.model.mapped_event import MappedEvent
 
@@ -17,26 +17,26 @@ from data_platform.model.mapped_event import MappedEvent
 class HouseEventConverter:
     def map(self, row: Mapping[str, Any]) -> MappedEvent:
         event = HouseEvent(
-            area=convert_to_float(row.get(HOUSE_ATTRIBUTE.area_raw)),
-            room=convert_to_integer(row.get(HOUSE_ATTRIBUTE.room_raw)),
-            parking=convert_to_optional_boolean(row.get(HOUSE_ATTRIBUTE.parking_raw)),
-            warehouse=convert_to_optional_boolean(row.get(HOUSE_ATTRIBUTE.warehouse_raw)),
-            elevator=convert_to_optional_boolean(row.get(HOUSE_ATTRIBUTE.elevator_raw)),
-            address=normalize_optional_text(row.get(HOUSE_ATTRIBUTE.address_raw)),
-            price=convert_to_float(row.get(HOUSE_ATTRIBUTE.price_raw)),
-            price_usd=convert_to_optional_float(row.get(HOUSE_ATTRIBUTE.price_usd_raw)),
+            area=convert_to_float(row.get(attribute.area_raw)),
+            room=convert_to_integer(row.get(attribute.room_raw)),
+            parking=convert_to_optional_boolean(row.get(attribute.parking_raw)),
+            warehouse=convert_to_optional_boolean(row.get(attribute.warehouse_raw)),
+            elevator=convert_to_optional_boolean(row.get(attribute.elevator_raw)),
+            address=normalize_optional_text(row.get(attribute.address_raw)),
+            price=convert_to_float(row.get(attribute.price_raw)),
+            price_usd=convert_to_optional_float(row.get(attribute.price_usd_raw)),
         )
         return MappedEvent(
             key=event.address,
             payload={
-                HOUSE_ATTRIBUTE.area_raw: event.area,
-                HOUSE_ATTRIBUTE.room_raw: event.room,
-                HOUSE_ATTRIBUTE.parking_raw: event.parking,
-                HOUSE_ATTRIBUTE.warehouse_raw: event.warehouse,
-                HOUSE_ATTRIBUTE.elevator_raw: event.elevator,
-                HOUSE_ATTRIBUTE.address_raw: event.address,
-                HOUSE_ATTRIBUTE.price_raw: event.price,
-                HOUSE_ATTRIBUTE.price_usd_raw: event.price_usd,
+                attribute.area_raw: event.area,
+                attribute.room_raw: event.room,
+                attribute.parking_raw: event.parking,
+                attribute.warehouse_raw: event.warehouse,
+                attribute.elevator_raw: event.elevator,
+                attribute.address_raw: event.address,
+                attribute.price_raw: event.price,
+                attribute.price_usd_raw: event.price_usd,
             },
         )
 

@@ -4,7 +4,8 @@ from typing import Any
 
 from confluent_kafka import Producer
 
-from data_platform.model import EventConverter, FileEndpoint, MessagingEndpoint
+from data_platform.model.endpoints import FileEndpoint, MessagingEndpoint
+from data_platform.model.event_converter import EventConverter
 from data_platform.util.file_utils import read_csv_file
 from data_platform.util.kafka_admin import ensure_topic_exists
 

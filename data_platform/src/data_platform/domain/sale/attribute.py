@@ -24,5 +24,5 @@ class SaleAttribute:
             raise AttributeError(item) from error
 
 
-SALE_ATTRIBUTE = SaleAttribute()
+attribute = SaleAttribute()
 

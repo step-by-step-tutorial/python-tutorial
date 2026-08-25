@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from data_platform.model import WarehouseEndpoint
+from data_platform.model.endpoints import WarehouseEndpoint
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.file_utils import read_text_file
 

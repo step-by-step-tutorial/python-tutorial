@@ -1,5 +1,5 @@
 ﻿from data_platform.model import WarehouseEndpoint
-from data_platform.persistence.spark_warehouse_repository import SparkWarehouseRepository
+from data_platform.repository.spark_warehouse_repository import SparkWarehouseRepository
 
 
 def build_endpoint() -> WarehouseEndpoint:

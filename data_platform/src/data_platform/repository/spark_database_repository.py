@@ -2,7 +2,7 @@
 
 from data_platform.config.keys import Key
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.model import DatabaseEndpoint
+from data_platform.model.endpoints import DatabaseEndpoint
 from data_platform.util.collection_utils import list_of_values
 from data_platform.util.database_utils import execute_files
 

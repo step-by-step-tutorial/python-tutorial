@@ -1,12 +1,12 @@
 ﻿import pandas
 
-from data_platform.model import DatabaseEndpoint
+from data_platform.model.endpoints import DatabaseEndpoint
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.collection_utils import list_of_values
 from data_platform.util.database_utils import execute_files
 
 
-class PandasDatabaseRepository:
+class InmemoryDatabaseRepository:
     def __init__(self, endpoint: DatabaseEndpoint) -> None:
         self._endpoint = endpoint
         self._connection_name = endpoint.connection_name

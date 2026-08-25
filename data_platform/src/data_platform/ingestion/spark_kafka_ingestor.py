@@ -4,7 +4,7 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
 from pyspark.sql.types import StructType
 
-from data_platform.model import MessagingEndpoint
+from data_platform.model.endpoints import MessagingEndpoint
 from data_platform.util.kafka_admin import ensure_topic_exists
 
 logger = logging.getLogger(__name__)

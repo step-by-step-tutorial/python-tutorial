@@ -11,7 +11,7 @@ from data_platform.audit.audit_event_factory import (
     TaskStartedAuditRequest,
 )
 from data_platform.audit.audit_service import AuditService
-from data_platform.model import Dataset
+from data_platform.model.dataset import Dataset
 from data_platform.util.pipeline_utils import create_pipeline_id
 from data_platform.util.time_utils import elapsed_milliseconds, generate_ingestion_time
 

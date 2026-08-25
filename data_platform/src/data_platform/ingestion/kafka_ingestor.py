@@ -3,7 +3,7 @@ import logging
 
 import pandas as pd
 
-from data_platform.model import MessagingEndpoint
+from data_platform.model.endpoints import MessagingEndpoint
 from data_platform.registry.connection_registry import connection_registry
 
 logger = logging.getLogger(__name__)

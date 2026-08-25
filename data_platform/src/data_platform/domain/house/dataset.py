@@ -1,16 +1,25 @@
+from data_platform.analyzers.aggregate_model import AggregateSpecification
+from data_platform.analyzers.analyzer_chain import AnalyzerChain
+from data_platform.analyzers.analyzer_impl import GroupAggregateAnalyzer
+from data_platform.cleaners.cleaners import CleanerChain, RenameColumnsCleaner, NumericColumnCleaner, \
+    BooleanColumnCleaner, StripColumnCleaner, DropDuplicatesCleaner
 from data_platform.config.keys import Key
-from data_platform.config.main_settings import settings as main_settings
-from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE as columns
-from data_platform.analyzers import AnalyzerChain, GroupAggregateAnalyzer
-from data_platform.cleaners import (
-    BooleanColumnCleaner,
-    CleanerChain,
-    DropDuplicatesCleaner,
-    NumericColumnCleaner,
-    RenameColumnsCleaner,
-    StripColumnCleaner,
-)
+from data_platform.domain.house.attribute import attribute
+from data_platform.domain.house.spark_schema import build_schema
 from data_platform.enrichers import DivideColumnsEnricher, EnricherChain, HashColumnsEnricher
+from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
+from data_platform.model.dataframe_model import DataFrameModel
+from data_platform.model.dataset import Dataset
+from data_platform.model.pipeline_flow import PipelineFlow
+from data_platform.registry.endpoint_registry import endpoint_registry
+from data_platform.repository.data_lake_repository import DataLakeRepository
+from data_platform.repository.inmemory_database_repository import (
+    InmemoryDatabaseRepository,
+)
+from data_platform.repository.inmemory_warehouse_repository import (
+    PandasWarehouseRepository,
+)
+from data_platform.repository.repository_data_exposer import RepositoryDataExposer
 from data_platform.validators import (
     NonNegativeValidator,
     NotNullValidator,
@@ -18,22 +27,6 @@ from data_platform.validators import (
     RequiredColumnsValidator,
     ValidatorChain,
 )
-from data_platform.domain.house.spark_schema import build_schema
-from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
-from data_platform.model import (
-    DataFrameModel,
-    Dataset,
-    PipelineFlow,
-)
-from data_platform.persistence.data_lake_repository import DataLakeRepository
-from data_platform.persistence.inmemory_warehouse_repository import (
-    PandasWarehouseRepository,
-)
-from data_platform.persistence.inmemory_database_repository import (
-    PandasDatabaseRepository,
-)
-from data_platform.persistence.repository_data_exposer import RepositoryDataExposer
-from data_platform.registry.endpoint_registry import endpoint_registry
 
 HOUSE_DATASET = Dataset(
     name="house",
@@ -41,14 +34,14 @@ HOUSE_DATASET = Dataset(
         schema=build_schema(),
         required_columns=frozenset(
             {
-                columns.area_raw,
-                columns.room_raw,
-                columns.parking_raw,
-                columns.warehouse_raw,
-                columns.elevator_raw,
-                columns.address_raw,
-                columns.price_raw,
-                columns.price_usd_raw,
+                attribute.area_raw,
+                attribute.room_raw,
+                attribute.parking_raw,
+                attribute.warehouse_raw,
+                attribute.elevator_raw,
+                attribute.address_raw,
+                attribute.price_raw,
+                attribute.price_usd_raw,
             }
         ),
     ),
@@ -72,38 +65,38 @@ HOUSE_DATASET = Dataset(
         ),
         cleaners=CleanerChain((
             RenameColumnsCleaner({
-                columns.area_raw: columns.area, columns.room_raw: columns.room,
-                columns.parking_raw: columns.parking, columns.warehouse_raw: columns.warehouse,
-                columns.elevator_raw: columns.elevator, columns.address_raw: columns.address,
-                columns.price_raw: columns.price, columns.price_usd_raw: columns.price_usd,
+                attribute.area_raw: attribute.area, attribute.room_raw: attribute.room,
+                attribute.parking_raw: attribute.parking, attribute.warehouse_raw: attribute.warehouse,
+                attribute.elevator_raw: attribute.elevator, attribute.address_raw: attribute.address,
+                attribute.price_raw: attribute.price, attribute.price_usd_raw: attribute.price_usd,
             }),
-            NumericColumnCleaner(columns.area),
-            NumericColumnCleaner(columns.room),
-            NumericColumnCleaner(columns.price),
-            NumericColumnCleaner(columns.price_usd),
-            BooleanColumnCleaner(columns.parking),
-            BooleanColumnCleaner(columns.warehouse),
-            BooleanColumnCleaner(columns.elevator),
-            StripColumnCleaner(columns.address),
+            NumericColumnCleaner(attribute.area),
+            NumericColumnCleaner(attribute.room),
+            NumericColumnCleaner(attribute.price),
+            NumericColumnCleaner(attribute.price_usd),
+            BooleanColumnCleaner(attribute.parking),
+            BooleanColumnCleaner(attribute.warehouse),
+            BooleanColumnCleaner(attribute.elevator),
+            StripColumnCleaner(attribute.address),
             DropDuplicatesCleaner(),
         )),
         validators=ValidatorChain((
-            RequiredColumnsValidator((columns.area, columns.room, columns.price)),
-            NotNullValidator(columns.area), NotNullValidator(columns.room),
-            NotNullValidator(columns.price), PositiveValidator(columns.area),
-            NonNegativeValidator(columns.room), PositiveValidator(columns.price),
+            RequiredColumnsValidator((attribute.area, attribute.room, attribute.price)),
+            NotNullValidator(attribute.area), NotNullValidator(attribute.room),
+            NotNullValidator(attribute.price), PositiveValidator(attribute.area),
+            NonNegativeValidator(attribute.room), PositiveValidator(attribute.price),
         )),
         enrichers=EnricherChain((
-            DivideColumnsEnricher(columns.price, columns.area, columns.price_per_square_meter),
-            DivideColumnsEnricher(columns.price_usd, columns.area, columns.price_usd_per_square_meter),
+            DivideColumnsEnricher(attribute.price, attribute.area, attribute.price_per_square_meter),
+            DivideColumnsEnricher(attribute.price_usd, attribute.area, attribute.price_usd_per_square_meter),
             HashColumnsEnricher((
-                columns.area, columns.room, columns.parking, columns.warehouse,
-                columns.elevator, columns.address, columns.price, columns.price_usd,
-            ), columns.listing_key),
+                attribute.area, attribute.room, attribute.parking, attribute.warehouse,
+                attribute.elevator, attribute.address, attribute.price, attribute.price_usd,
+            ), attribute.listing_key),
         )),
         exposers=(
             RepositoryDataExposer((
-                PandasDatabaseRepository(
+                InmemoryDatabaseRepository(
                     endpoint_registry.get_item(Key.HOUSE_DATABASE)
                 ).replace,
             )),
@@ -114,8 +107,11 @@ HOUSE_DATASET = Dataset(
             )),
         ),
         analyzers=AnalyzerChain((
-            GroupAggregateAnalyzer("average_price_by_address", columns.address, columns.price, "mean", "average_price"),
-            GroupAggregateAnalyzer("average_price_per_square_meter_by_room", columns.room, columns.price_per_square_meter, "mean", "average_price_per_square_meter"),
+            GroupAggregateAnalyzer("average_price_by_address",
+                                   AggregateSpecification(attribute.address, attribute.price, "mean", "average_price")),
+            GroupAggregateAnalyzer("average_price_per_square_meter_by_room",
+                                   AggregateSpecification(attribute.room, attribute.price_per_square_meter, "mean",
+                                                          "average_price_per_square_meter")),
         )),
     ),
 )

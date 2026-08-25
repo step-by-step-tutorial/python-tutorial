@@ -1,20 +1,20 @@
 from data_platform.analyzers.analyzer_chain import AnalyzerChain
 from data_platform.analyzers.analyzer_impl import GroupAggregateAnalyzer
-from data_platform.cleaners import CleanerChain, DropDuplicatesCleaner, NumericColumnCleaner, ToDatetimeCleaner
+from data_platform.analyzers.aggregate_model import AggregateSpecification
+from data_platform.cleaners.cleaners import CleanerChain, DropDuplicatesCleaner, ToDatetimeCleaner, NumericColumnCleaner
 from data_platform.config.keys import Key
 from data_platform.domain.online_shopping.attribute import attribute
 from data_platform.enrichers import CopyColumnEnricher, DatetimePartEnricher, EnricherChain, PercentageEnricher
 from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
-from data_platform.model import (
-    DataFrameModel,
-    Dataset,
-    PipelineFlow,
+from data_platform.model.dataframe_model import DataFrameModel
+from data_platform.model.dataset import Dataset
+from data_platform.model.pipeline_flow import PipelineFlow
+
+from data_platform.repository.data_lake_repository import DataLakeRepository
+from data_platform.repository.inmemory_database_repository import (
+    InmemoryDatabaseRepository,
 )
-from data_platform.persistence.data_lake_repository import DataLakeRepository
-from data_platform.persistence.inmemory_database_repository import (
-    PandasDatabaseRepository,
-)
-from data_platform.persistence.repository_data_exposer import RepositoryDataExposer
+from data_platform.repository.repository_data_exposer import RepositoryDataExposer
 from data_platform.registry.endpoint_registry import endpoint_registry
 from data_platform.validators import NonNegativeValidator, NotNullValidator, PositiveValidator, \
     RequiredColumnsValidator, ValidatorChain
@@ -85,24 +85,22 @@ ONLINE_SHOPPING_DATASET = Dataset(
         )),
         exposers=(
             RepositoryDataExposer((
-                PandasDatabaseRepository(endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATABASE)).replace,
+                InmemoryDatabaseRepository(endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATABASE)).replace,
             )),
         ),
         analyzers=AnalyzerChain((
-            GroupAggregateAnalyzer(
-                "revenue_by_country",
+            GroupAggregateAnalyzer("revenue_by_country", AggregateSpecification(
                 attribute.country,
                 attribute.net_revenue,
                 "sum",
                 attribute.revenue
-            ),
-            GroupAggregateAnalyzer(
-                "revenue_by_sales_channel",
+            )),
+            GroupAggregateAnalyzer("revenue_by_sales_channel", AggregateSpecification(
                 attribute.sales_channel,
                 attribute.net_revenue,
                 "sum",
                 attribute.revenue
-            ),
+            )),
         )),
     ),
 )

@@ -1,4 +1,4 @@
-﻿from data_platform.persistence import data_lake_repository as system_under_test
+﻿from data_platform.repository import data_lake_repository as system_under_test
 from data_platform.model import DataLakeEndpoint
 
 

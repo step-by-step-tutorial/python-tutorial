@@ -2,7 +2,7 @@
 
 from pyspark.sql import DataFrame, SparkSession
 
-from data_platform.model import DataLakeEndpoint
+from data_platform.model.endpoints import DataLakeEndpoint
 from data_platform.util.path_utils import generate_data_lake_path
 from data_platform.util.dataframe_utils import persisted_dataframes
 from data_platform.util.string_utils import should_not_be_none, should_not_be_none_or_empty

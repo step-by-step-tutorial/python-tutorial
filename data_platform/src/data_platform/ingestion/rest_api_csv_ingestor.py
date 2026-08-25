@@ -4,7 +4,8 @@ from urllib.request import Request, build_opener
 
 import pandas as pd
 
-from data_platform.model import DatasetIngestor, RestApiEndpoint
+from data_platform.model.dataset_ingestor import DatasetIngestor
+from data_platform.model.endpoints import RestApiEndpoint
 
 logger = logging.getLogger(__name__)
 

@@ -31,5 +31,5 @@ class HouseAttribute:
             raise AttributeError(item) from error
 
 
-HOUSE_ATTRIBUTE = HouseAttribute()
+attribute = HouseAttribute()
 

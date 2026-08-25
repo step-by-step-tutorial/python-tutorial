@@ -1,4 +1,4 @@
-from data_platform.model import Endpoint
+from data_platform.model.endpoints import Endpoint
 from data_platform.registry.base_registry import Registry
 
 

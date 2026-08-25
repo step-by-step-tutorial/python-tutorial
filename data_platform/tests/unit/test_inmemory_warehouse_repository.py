@@ -1,7 +1,7 @@
 ﻿import pandas as pd
 
 from data_platform.model import WarehouseEndpoint
-from data_platform.persistence.inmemory_warehouse_repository import PandasWarehouseRepository
+from data_platform.repository.inmemory_warehouse_repository import PandasWarehouseRepository
 
 
 def build_endpoint() -> WarehouseEndpoint:

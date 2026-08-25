@@ -2,7 +2,8 @@
 
 import pandas as pd
 
-from data_platform.model import DatasetIngestor, FileEndpoint
+from data_platform.model.dataset_ingestor import DatasetIngestor
+from data_platform.model.endpoints import FileEndpoint
 from data_platform.util.csv_utils import csv_to_dataframe
 
 logger = logging.getLogger(__name__)
