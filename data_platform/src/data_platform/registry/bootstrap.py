@@ -1,4 +1,4 @@
-import data_platform.connector.data_lake_connections
+import data_platform.connector.datalake_connections
 import data_platform.connector.database_connections
 import data_platform.connector.kafka_connections
 import data_platform.connector.warehouse_connections
@@ -20,10 +20,10 @@ def initialize_registries() -> None:
     connection_registry.register_lazy_item(Key.HOUSE_DATABASE, data_platform.connector.database_connections.create_house_connection)
     connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_DATABASE, data_platform.connector.database_connections.create_online_shopping_connection)
     connection_registry.register_lazy_item(Key.AUDIT_DATABASE, data_platform.connector.database_connections.create_audit_connection)
-    connection_registry.register_lazy_item(Key.SALE_DATA_LAKE, data_platform.connector.data_lake_connections.create_sale_connection)
-    connection_registry.register_lazy_item(Key.HOUSE_DATA_LAKE, data_platform.connector.data_lake_connections.create_house_connection)
-    connection_registry.register_lazy_item(Key.AUDIT_DATA_LAKE, data_platform.connector.data_lake_connections.create_audit_connection)
-    connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_DATA_LAKE, data_platform.connector.data_lake_connections.create_online_shopping_connection)
+    connection_registry.register_lazy_item(Key.SALE_DATA_LAKE, data_platform.connector.datalake_connections.create_sale_connection)
+    connection_registry.register_lazy_item(Key.HOUSE_DATA_LAKE, data_platform.connector.datalake_connections.create_house_connection)
+    connection_registry.register_lazy_item(Key.AUDIT_DATA_LAKE, data_platform.connector.datalake_connections.create_audit_connection)
+    connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_DATA_LAKE, data_platform.connector.datalake_connections.create_online_shopping_connection)
     connection_registry.register_lazy_item(Key.SALE_WAREHOUSE, data_platform.connector.warehouse_connections.create_sale_connection)
     connection_registry.register_lazy_item(Key.HOUSE_WAREHOUSE, data_platform.connector.warehouse_connections.create_house_connection)
     connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_WAREHOUSE, data_platform.connector.warehouse_connections.create_online_shopping_connection)

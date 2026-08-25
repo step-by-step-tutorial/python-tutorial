@@ -1,6 +1,6 @@
 ﻿from pyspark.sql import DataFrame, SparkSession
 
-from data_platform.model import DataLakeEndpoint
+from data_platform.model.endpoints import DataLakeEndpoint
 from data_platform.service import spark_data_lake_service as system_under_test
 
 
