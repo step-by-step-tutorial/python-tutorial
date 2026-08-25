@@ -13,14 +13,14 @@ from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset import Dataset
 from data_platform.model.pipeline_flow import PipelineFlow
 
-from data_platform.repository.data_lake_repository import DataLakeRepository
+from data_platform.repository.inmemory_datalake_repository import DataLakeRepository
 from data_platform.repository.inmemory_database_repository import (
-    InmemoryDatabaseRepository,
+    InmemoryDataframeRepository,
 )
 from data_platform.repository.inmemory_warehouse_repository import (
-    PandasWarehouseRepository,
+    InmemoryWarehouseRepository,
 )
-from data_platform.repository.repository_data_exposer import RepositoryDataExposer
+from data_platform.repository.data_exposer import DataExposer
 from data_platform.registry.endpoint_registry import endpoint_registry
 from data_platform.validators import (
     NonNegativeValidator,
@@ -30,7 +30,7 @@ from data_platform.validators import (
     ValidatorChain,
 )
 
-SALE_DATASET = Dataset(
+sale_dataset = Dataset(
     name="sale",
     dataframe=DataFrameModel(
         schema=build_schema(),
@@ -106,19 +106,19 @@ SALE_DATASET = Dataset(
             DatetimePartEnricher(attribute.order_date, "month", attribute.month),
         )),
         exposers=(
-            RepositoryDataExposer((
-                InmemoryDatabaseRepository(
+            DataExposer((
+                InmemoryDataframeRepository(
                     (
                         endpoint_registry.get_item(Key.SALE_DATABASE)
                     )
-                ).replace,
+                ).overwrite,
             )),
-            RepositoryDataExposer((
-                PandasWarehouseRepository(
+            DataExposer((
+                InmemoryWarehouseRepository(
                     (
                         endpoint_registry.get_item(Key.SALE_WAREHOUSE)
                     )
-                ).replace,
+                ).overwrite,
             )),
         ),
         analyzers=AnalyzerChain((

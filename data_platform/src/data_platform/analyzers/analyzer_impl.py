@@ -30,5 +30,5 @@ class RepositoryQueryAnalyzer(Analyzer):
         self._repository = repository
 
     def analyze(self, source: str) -> Report:
-        result_set = self._repository.execute_query(source)
+        result_set = self._repository.find_by_query(source)
         return Report(self.name, result_set)

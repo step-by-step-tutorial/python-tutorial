@@ -122,7 +122,7 @@ class TestDatabaseUtils:
         )
 
         # When
-        database_utils.execute_queries("sale.database", "select 1", "select 2")
+        database_utils.execute_query_strings("sale.database", ("select 1", "select 2"))
 
         # Then
         assert mock_create_connection.call_count == 1

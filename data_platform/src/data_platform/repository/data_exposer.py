@@ -2,7 +2,7 @@
 from typing import Any
 
 
-class RepositoryDataExposer:
+class DataExposer:
     def __init__(self, persist_callbacks: tuple[Callable[[Any], Any], ...]) -> None:
         self._persist_callbacks = persist_callbacks
 

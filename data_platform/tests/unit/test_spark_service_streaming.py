@@ -1,7 +1,7 @@
 ﻿from pyspark.sql import DataFrame, SparkSession
 
 from data_platform.model import DataLakeEndpoint, MessagingEndpoint
-from data_platform.domain.sale.dataset import SALE_DATASET
+from data_platform.domain.sale.dataset import sale_dataset
 from data_platform.service import spark_streaming_service as system_under_test
 
 
@@ -20,7 +20,7 @@ class TestReadStream:
         actual = system_under_test.SparkStreamingService(
             session=given_session,
             messaging_endpoint=MessagingEndpoint(
-                channel_name=SALE_DATASET.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name,
+                channel_name=sale_dataset.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name,
                 bootstrap_servers="localhost:9092",
                 starting_offsets="earliest",
             ),

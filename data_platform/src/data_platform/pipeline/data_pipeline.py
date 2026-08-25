@@ -22,16 +22,16 @@ class DataPipeline(Pipeline):
     def ingest(self) -> str:
         raw_path = generate_relative_path(StorageEnvironment.RAW, self.ingestion_time, self.dataset.name)
         data = pd.concat([ingestor.ingest() for ingestor in self.flow.ingestors], ignore_index=True)
-        return self.flow.repository.save(data, raw_path)
+        return self.flow.repository.write(data, raw_path)
 
     def clean(self, path: str) -> str:
         cleaned_path = generate_relative_path(StorageEnvironment.CLEANED, self.ingestion_time, self.dataset.name)
-        data = self.flow.repository.find(path)
+        data = self.flow.repository.read(path)
         data = self.flow.cleaners.clean(data)
-        return self.flow.repository.save(data, cleaned_path)
+        return self.flow.repository.write(data, cleaned_path)
 
     def validate(self, path: str) -> str:
-        cleaned_data = self.flow.repository.find(path)
+        cleaned_data = self.flow.repository.read(path)
         assessment = self.flow.validators.validate(cleaned_data)
 
         accepted_path = generate_relative_path(StorageEnvironment.ACCEPTED, self.ingestion_time, self.dataset.name)
@@ -40,23 +40,24 @@ class DataPipeline(Pipeline):
         rejected_data = assessment.rejected
         errors = assessment.errors
         if is_not_blank(rejected_data):
-            self.flow.repository.save(rejected_data, rejected_path)
+            self.flow.repository.write(rejected_data, rejected_path)
             logger.error(f"Validation failed for dataset {self.dataset.name}: {errors}")
 
-        return self.flow.repository.save(accepted_data, accepted_path)
+        return self.flow.repository.write(accepted_data, accepted_path)
 
     def enrich(self, path: str) -> str:
         enriched_path = generate_relative_path(StorageEnvironment.ENRICHED, self.ingestion_time, self.dataset.name)
-        data = self.flow.repository.find(path)
+        data = self.flow.repository.read(path)
         data = self.flow.enrichers.enrich(data)
-        return self.flow.repository.save(data, enriched_path)
+        return self.flow.repository.write(data, enriched_path)
 
     def expose(self, path: str) -> None:
+        data = self.flow.repository.read(path)
         for exposer in self.flow.exposers:
-            exposer.expose(self.flow.repository.find(path))
+            exposer.expose(data)
 
     def analyze(self, path: str) -> None:
-        results = self.flow.analyzers.analyze(self.flow.repository.find(path))
+        results = self.flow.analyzers.analyze(self.flow.repository.read(path))
         for result in results or ():
             logger.info("Analysis result %s", result.name)
 

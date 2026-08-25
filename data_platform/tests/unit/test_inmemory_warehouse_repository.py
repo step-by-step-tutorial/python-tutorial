@@ -1,7 +1,7 @@
 ﻿import pandas as pd
 
 from data_platform.model import WarehouseEndpoint
-from data_platform.repository.inmemory_warehouse_repository import PandasWarehouseRepository
+from data_platform.repository.inmemory_warehouse_repository import InmemoryWarehouseRepository
 
 
 def build_endpoint() -> WarehouseEndpoint:
@@ -26,23 +26,10 @@ class TestPandasWarehouseRepository:
         )
         mocker.patch("data_platform.persistence.warehouse_repository.read_text_file", return_value="truncate table warehouse.example")
 
-        PandasWarehouseRepository(build_endpoint()).replace(pd.DataFrame({"id": [1]}))
+        InmemoryWarehouseRepository(build_endpoint()).overwrite(pd.DataFrame({"id": [1]}))
 
         get_item.assert_called_once_with("sale.warehouse")
         connection.command.assert_called_once()
         connection.insert_df.assert_called_once()
-
-    def test_should_find_query_results(self, mocker) -> None:
-        connection = mocker.Mock()
-        mocker.patch(
-            "data_platform.persistence.warehouse_repository.connection_registry.get_item",
-            return_value=connection,
-        )
-        mocker.patch("data_platform.persistence.warehouse_repository.read_text_file", return_value="select 1")
-
-        actual = PandasWarehouseRepository(build_endpoint()).find_by_queries(["revenue"])
-
-        connection.query_df.assert_called_once_with("select 1")
-        assert actual == {"revenue": connection.query_df.return_value}
 
 

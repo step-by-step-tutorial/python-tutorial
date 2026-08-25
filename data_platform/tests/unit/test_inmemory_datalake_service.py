@@ -1,4 +1,4 @@
-﻿from data_platform.repository import data_lake_repository as system_under_test
+﻿from data_platform.repository import inmemory_datalake_repository as system_under_test
 from data_platform.model import DataLakeEndpoint
 
 
@@ -24,7 +24,7 @@ class TestUploadParquet:
         given_client.put_object.return_value = None
 
         # When
-        actual = repository.save(
+        actual = repository.write(
             data=given_dataframe,
             path="raw",
         )

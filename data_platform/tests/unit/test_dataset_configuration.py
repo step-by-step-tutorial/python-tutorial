@@ -19,8 +19,8 @@ from data_platform.registry.endpoint_registry import endpoint_registry
 from data_platform.config.main_settings import settings
 initialize_registries()
 
-from data_platform.domain.house.dataset import HOUSE_DATASET
-from data_platform.domain.sale.dataset import SALE_DATASET
+from data_platform.domain.house.dataset import house_dataset
+from data_platform.domain.sale.dataset import sale_dataset
 from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
 
 
@@ -95,10 +95,10 @@ class TestDataset:
 
 class TestDatasetRegistry:
     def test_should_return_sale_dataset(self) -> None:
-        assert dataset_registry.get_item("sale") is SALE_DATASET
+        assert dataset_registry.get_item("sale") is sale_dataset
 
     def test_should_return_house_dataset(self) -> None:
-        assert dataset_registry.get_item("house") is HOUSE_DATASET
+        assert dataset_registry.get_item("house") is house_dataset
 
     def test_should_raise_error_for_unsupported_dataset(self) -> None:
         with pytest.raises(ValueError):
@@ -108,8 +108,8 @@ class TestDatasetRegistry:
 class TestConcreteDatasetConfiguration:
 
     @pytest.mark.parametrize("dataset, storage_object_name", [
-        (SALE_DATASET, "csv"),
-        (HOUSE_DATASET, "csv"),
+        (sale_dataset, "csv"),
+        (house_dataset, "csv"),
         (ONLINE_SHOPPING_DATASET, "api"),
     ])
     def test_each_dataset_declares_the_complete_pipeline_stages(self, dataset, storage_object_name) -> None:
@@ -123,68 +123,68 @@ class TestConcreteDatasetConfiguration:
         assert definition.analyzers
 
     def test_sale_dataset_should_expose_logical_endpoints(self) -> None:
-        for endpoint_name, endpoint in SALE_DATASET.endpoints.items():
+        for endpoint_name, endpoint in sale_dataset.endpoints.items():
             assert endpoint.pipeline_name == endpoint_name
 
-        assert Path(SALE_DATASET.get_endpoint("sale.file.csv", FileEndpoint).file_path).name == "sale.csv"
-        assert SALE_DATASET.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name == "sale-events"
-        assert SALE_DATASET.get_endpoint("sale.kafka.listener",
+        assert Path(sale_dataset.get_endpoint("sale.file.csv", FileEndpoint).file_path).name == "sale.csv"
+        assert sale_dataset.get_endpoint("sale.kafka.listener", MessagingEndpoint).channel_name == "sale-events"
+        assert sale_dataset.get_endpoint("sale.kafka.listener",
                                          MessagingEndpoint).connection_name == "sale.kafka.listener"
-        assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).schema == "sale"
-        assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).stage_table_name == "sale_stage"
-        assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).full_stage_table_name == "sale.sale_stage"
-        assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).table_names == [
+        assert sale_dataset.get_endpoint("sale.database", DatabaseEndpoint).schema == "sale"
+        assert sale_dataset.get_endpoint("sale.database", DatabaseEndpoint).stage_table_name == "sale_stage"
+        assert sale_dataset.get_endpoint("sale.database", DatabaseEndpoint).full_stage_table_name == "sale.sale_stage"
+        assert sale_dataset.get_endpoint("sale.database", DatabaseEndpoint).table_names == [
             "sale.sale_stage",
             "sale.customer",
             "sale.product",
             "sale.order",
             "sale.order_item",
         ]
-        assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).connection_name == "sale.database"
-        assert SALE_DATASET.get_endpoint("sale.datalake", DataLakeEndpoint).connection_name == "sale.datalake"
-        assert SALE_DATASET.get_endpoint("sale.warehouse", WarehouseEndpoint).schema == "app_warehouse"
-        assert SALE_DATASET.get_endpoint("sale.warehouse",
+        assert sale_dataset.get_endpoint("sale.database", DatabaseEndpoint).connection_name == "sale.database"
+        assert sale_dataset.get_endpoint("sale.datalake", DataLakeEndpoint).connection_name == "sale.datalake"
+        assert sale_dataset.get_endpoint("sale.warehouse", WarehouseEndpoint).schema == "app_warehouse"
+        assert sale_dataset.get_endpoint("sale.warehouse",
                                          WarehouseEndpoint).connection_name == "sale.warehouse"
-        assert SALE_DATASET.get_endpoint("sale.warehouse",
+        assert sale_dataset.get_endpoint("sale.warehouse",
                                          WarehouseEndpoint).full_table_name == "app_warehouse.sale_table"
-        assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).url.endswith("/datasets/sale.json/download?format=json")
-        assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).method == "GET"
-        assert SALE_DATASET.audit.database_connection_name == "audit.database"
-        assert SALE_DATASET.audit.messaging_connection_name == "audit.kafka.producer"
-        assert SALE_DATASET.audit.datalake_connection_name == "audit.datalake"
-        assert SALE_DATASET.audit.create_sql_files == {"create": "database/audit/create_tables.sql"}
-        assert SALE_DATASET.audit.channel_name == "sale.audit.event.v1"
-        assert SALE_DATASET.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
+        assert sale_dataset.get_endpoint("sale.rest", RestApiEndpoint).url.endswith("/datasets/sale.json/download?format=json")
+        assert sale_dataset.get_endpoint("sale.rest", RestApiEndpoint).method == "GET"
+        assert sale_dataset.audit.database_connection_name == "audit.database"
+        assert sale_dataset.audit.messaging_connection_name == "audit.kafka.producer"
+        assert sale_dataset.audit.datalake_connection_name == "audit.datalake"
+        assert sale_dataset.audit.create_sql_files == {"create": "database/audit/create_tables.sql"}
+        assert sale_dataset.audit.channel_name == "sale.audit.event.v1"
+        assert sale_dataset.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
 
     def test_house_dataset_should_expose_logical_endpoints(self) -> None:
-        for endpoint_name, endpoint in HOUSE_DATASET.endpoints.items():
+        for endpoint_name, endpoint in house_dataset.endpoints.items():
             assert endpoint.pipeline_name == endpoint_name
 
-        assert Path(HOUSE_DATASET.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
-        assert HOUSE_DATASET.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house-events"
-        assert HOUSE_DATASET.get_endpoint("house.kafka.listener",
+        assert Path(house_dataset.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
+        assert house_dataset.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house-events"
+        assert house_dataset.get_endpoint("house.kafka.listener",
                                           MessagingEndpoint).connection_name == "house.kafka.listener"
-        assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).schema == "house"
-        assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).stage_table_name == "house_stage"
-        assert HOUSE_DATASET.get_endpoint("house.database",
+        assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).schema == "house"
+        assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).stage_table_name == "house_stage"
+        assert house_dataset.get_endpoint("house.database",
                                           DatabaseEndpoint).full_stage_table_name == "house.house_stage"
-        assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).table_names == ["house.house_stage"]
-        assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).connection_name == "house.database"
-        assert HOUSE_DATASET.get_endpoint("house.datalake", DataLakeEndpoint).connection_name == "house.datalake"
-        assert HOUSE_DATASET.get_endpoint("house.warehouse", WarehouseEndpoint).schema == "app_warehouse"
-        assert HOUSE_DATASET.get_endpoint("house.warehouse",
+        assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).table_names == ["house.house_stage"]
+        assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).connection_name == "house.database"
+        assert house_dataset.get_endpoint("house.datalake", DataLakeEndpoint).connection_name == "house.datalake"
+        assert house_dataset.get_endpoint("house.warehouse", WarehouseEndpoint).schema == "app_warehouse"
+        assert house_dataset.get_endpoint("house.warehouse",
                                           WarehouseEndpoint).connection_name == "house.warehouse"
-        assert HOUSE_DATASET.get_endpoint("house.warehouse",
+        assert house_dataset.get_endpoint("house.warehouse",
                                           WarehouseEndpoint).full_table_name == "app_warehouse.house_table"
-        assert HOUSE_DATASET.audit.database_connection_name == "audit.database"
-        assert HOUSE_DATASET.audit.messaging_connection_name == "audit.kafka.producer"
-        assert HOUSE_DATASET.audit.datalake_connection_name == "audit.datalake"
-        assert HOUSE_DATASET.audit.create_sql_files == {"create": "database/audit/create_tables.sql"}
-        assert HOUSE_DATASET.audit.channel_name == "sale.audit.event.v1"
-        assert HOUSE_DATASET.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
+        assert house_dataset.audit.database_connection_name == "audit.database"
+        assert house_dataset.audit.messaging_connection_name == "audit.kafka.producer"
+        assert house_dataset.audit.datalake_connection_name == "audit.datalake"
+        assert house_dataset.audit.create_sql_files == {"create": "database/audit/create_tables.sql"}
+        assert house_dataset.audit.channel_name == "sale.audit.event.v1"
+        assert house_dataset.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
 
     def test_pipeline_steps_is_the_only_pipeline_stage_configuration(self) -> None:
-        for dataset in (SALE_DATASET, HOUSE_DATASET, ONLINE_SHOPPING_DATASET):
+        for dataset in (sale_dataset, house_dataset, ONLINE_SHOPPING_DATASET):
             assert not hasattr(dataset, "transformers")
             assert not hasattr(dataset, "analyzers")
             assert not hasattr(dataset, "get_transformer")

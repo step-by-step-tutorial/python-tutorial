@@ -27,12 +27,12 @@ class TestSparkDatabaseRepository:
         writer.option.return_value = writer
         writer.mode.return_value = writer
 
-        SparkDatabaseRepository(build_endpoint()).save(dataframe)
+        SparkDatabaseRepository(build_endpoint()).write(dataframe)
 
         writer.format.assert_called_once_with("jdbc")
         assert writer.option.call_count == 5
         writer.mode.assert_called_once_with("append")
-        writer.save.assert_called_once()
+        writer.write.assert_called_once()
 
     def test_should_propagate_save_error(self, mocker) -> None:
         dataframe = mocker.Mock()
@@ -41,10 +41,10 @@ class TestSparkDatabaseRepository:
         writer.format.return_value = writer
         writer.option.return_value = writer
         writer.mode.return_value = writer
-        writer.save.side_effect = RuntimeError("Spark save failed")
+        writer.write.side_effect = RuntimeError("Spark save failed")
 
         with pytest.raises(RuntimeError, match="Spark save failed"):
-            SparkDatabaseRepository(build_endpoint()).save(dataframe)
+            SparkDatabaseRepository(build_endpoint()).write(dataframe)
 
     def test_should_replace_dataframe(self, mocker) -> None:
         repository = SparkDatabaseRepository(build_endpoint())
@@ -52,7 +52,7 @@ class TestSparkDatabaseRepository:
         save = mocker.patch.object(repository, "save")
         execute = mocker.patch.object(repository, "execute_files")
 
-        repository.replace(mocker.Mock())
+        repository.overwrite(mocker.Mock())
 
         truncate.assert_called_once()
         save.assert_called_once()

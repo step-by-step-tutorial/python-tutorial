@@ -1,10 +1,10 @@
 ﻿from pyspark.sql import DataFrame
 
 from data_platform.config.keys import Key
-from data_platform.config.main_settings import settings as main_settings
+from data_platform.config.main_settings import settings
 from data_platform.model.endpoints import DatabaseEndpoint
-from data_platform.util.collection_utils import list_of_values
-from data_platform.util.database_utils import execute_files
+from data_platform.util.collection_utils import to_values
+from data_platform.util.database_utils import execute_query_files
 
 
 class SparkDatabaseRepository:
@@ -13,27 +13,26 @@ class SparkDatabaseRepository:
         self._connection_name = endpoint.connection_name
 
     def truncate_stage_table(self) -> None:
-        execute_files(self._connection_name, list_of_values(self._endpoint.truncate_sql_files))
+        execute_query_files(self._connection_name, tuple(self._endpoint.truncate_sql_files.values()))
 
-    def execute_files(self, file_names: list[str]) -> None:
-        execute_files(self._connection_name, file_names)
+    def execute_query_files(self, file_names: tuple[str, ...]) -> None:
+        execute_query_files(self._connection_name, file_names)
 
-    def save(self, dataframe: DataFrame) -> None:
-        connection_settings = main_settings.database[Key(self._connection_name)]
+    def write(self, dataframe: DataFrame) -> None:
+        database_settings = settings.database[Key(self._connection_name)]
         (
             dataframe.write
             .format("jdbc")
-            .option("url", connection_settings.jdbc_url)
+            .option("url", database_settings.jdbc_url)
             .option("dbtable", self._endpoint.full_stage_table_name)
-            .option("user", connection_settings.user)
-            .option("password", connection_settings.password)
-            .option("driver", connection_settings.driver)
+            .option("user", database_settings.user)
+            .option("password", database_settings.password)
+            .option("driver", database_settings.driver)
             .mode("append")
             .save()
         )
 
-    def replace(self, dataframe: DataFrame) -> None:
+    def overwrite(self, dataframe: DataFrame) -> None:
         self.truncate_stage_table()
-        self.save(dataframe)
-        self.execute_files(list_of_values(self._endpoint.write_sql_files))
-
+        self.write(dataframe)
+        self.execute_query_files(tuple(to_values(self._endpoint.write_sql_files)))

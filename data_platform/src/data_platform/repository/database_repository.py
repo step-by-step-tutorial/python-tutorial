@@ -1,10 +1,7 @@
 ﻿from typing import Any
 
-import pandas
-
 from data_platform.model.endpoints import DatabaseEndpoint
-from data_platform.util.collection_utils import list_of_values
-from data_platform.util.database_utils import execute_files, execute_query
+from data_platform.util.database_utils import execute_query_files, execute_select_query
 
 
 class DatabaseRepository:
@@ -12,14 +9,8 @@ class DatabaseRepository:
         self._endpoint = endpoint
         self._connection_name = endpoint.connection_name
 
-    def execute_files(self, file_names: list[str]) -> None:
-        execute_files(self._connection_name, file_names)
+    def find_by_query(self, query: str) -> tuple[dict[Any, Any], ...]:
+        return execute_select_query(self._connection_name, query)
 
-    def execute_query(self, query: str) -> list[dict[Any, Any]]:
-        return execute_query(self._connection_name, query)
-
-    def truncate_stage_table(self) -> None:
-        self.execute_files(list_of_values(self._endpoint.truncate_sql_files))
-
-    def replace(self, dataframe: pandas.DataFrame) -> None:
-        raise NotImplementedError
+    def execute_query_files(self, file_names: tuple[str, ...]) -> None:
+        execute_query_files(self._connection_name, file_names)

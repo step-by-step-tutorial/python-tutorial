@@ -27,7 +27,7 @@ class NumericColumnCleaner:
         self.column, self.default_value = column, default_value
 
     def clean(self, dataframe: Any) -> Any:
-        converted = pd.to_numeric(dataframe[self.column].astype("string").str.replace(",", "", regex=False).str.strip(), errors="coerce")
+        converted = pd.to_numeric(dataframe[self.column].astype("string").str.overwrite(",", "", regex=False).str.strip(), errors="coerce")
         dataframe[self.column] = converted if self.default_value is None else converted.fillna(self.default_value)
         return dataframe
 

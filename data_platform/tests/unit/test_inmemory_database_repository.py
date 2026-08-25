@@ -2,7 +2,7 @@
 import pytest
 
 from data_platform.model import DatabaseEndpoint
-from data_platform.repository.inmemory_database_repository import InmemoryDatabaseRepository
+from data_platform.repository.inmemory_database_repository import InmemoryDataframeRepository
 
 
 def build_endpoint() -> DatabaseEndpoint:
@@ -32,7 +32,7 @@ class TestPandasDatabaseRepository:
             return_value=engine,
         )
 
-        InmemoryDatabaseRepository(build_endpoint()).save(dataframe)
+        InmemoryDataframeRepository(build_endpoint()).write(dataframe)
 
         get_item.assert_called_once_with("sale.database")
         dataframe.to_sql.assert_called_once_with(
@@ -51,15 +51,15 @@ class TestPandasDatabaseRepository:
         )
 
         with pytest.raises(RuntimeError, match="Pandas save failed"):
-            InmemoryDatabaseRepository(build_endpoint()).save(dataframe)
+            InmemoryDataframeRepository(build_endpoint()).write(dataframe)
 
     def test_should_replace_dataframe(self, mocker) -> None:
-        repository = InmemoryDatabaseRepository(build_endpoint())
+        repository = InmemoryDataframeRepository(build_endpoint())
         truncate = mocker.patch.object(repository, "truncate_stage_table")
         save = mocker.patch.object(repository, "save")
         execute = mocker.patch.object(repository, "execute_files")
 
-        repository.replace(mocker.Mock(spec=pd.DataFrame))
+        repository.overwrite(mocker.Mock(spec=pd.DataFrame))
 
         truncate.assert_called_once()
         save.assert_called_once()

@@ -33,12 +33,12 @@ class TestSparkWarehouseRepository:
             return_value=[[(1,)], [(2,)]],
         )
 
-        SparkWarehouseRepository(build_endpoint()).replace(dataframe)
+        SparkWarehouseRepository(build_endpoint()).overwrite(dataframe)
 
         get_item.assert_called_once_with("sale.warehouse")
         connection.command.assert_called_once()
-        assert connection.insert.call_count == 2
-        assert connection.insert.call_args_list[0].kwargs == {
+        assert connection.write.call_count == 2
+        assert connection.write.call_args_list[0].kwargs == {
             "table": "warehouse.example", "data": [(1,)], "column_names": ["value"]
         }
 
