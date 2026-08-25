@@ -2,7 +2,7 @@
 from typing import Any
 
 import data_platform.connector.data_lake_connections
-import data_platform.connector.data_warehouse_connections
+import data_platform.connector.warehouse_connections
 import data_platform.connector.database_connections
 import data_platform.connector.kafka_connections
 from data_platform.config.keys import Key
@@ -67,20 +67,20 @@ connection_registry.register_lazy_item(
     data_platform.connector.data_lake_connections.create_online_shopping_connection
 )
 connection_registry.register_lazy_item(
-    Key.SALE_DATA_WAREHOUSE,
-    data_platform.connector.data_warehouse_connections.create_sale_connection
+    Key.SALE_WAREHOUSE,
+    data_platform.connector.warehouse_connections.create_sale_connection
 )
 connection_registry.register_lazy_item(
-    Key.HOUSE_DATA_WAREHOUSE,
-    data_platform.connector.data_warehouse_connections.create_house_connection
+    Key.HOUSE_WAREHOUSE,
+    data_platform.connector.warehouse_connections.create_house_connection
 )
 connection_registry.register_lazy_item(
-    Key.ONLINE_SHOPPING_DATA_WAREHOUSE,
-    data_platform.connector.data_warehouse_connections.create_online_shopping_connection
+    Key.ONLINE_SHOPPING_WAREHOUSE,
+    data_platform.connector.warehouse_connections.create_online_shopping_connection
 )
 connection_registry.register_lazy_item(
-    Key.AUDIT_DATA_WAREHOUSE,
-    data_platform.connector.data_warehouse_connections.create_audit_connection
+    Key.AUDIT_WAREHOUSE,
+    data_platform.connector.warehouse_connections.create_audit_connection
 )
 connection_registry.register_lazy_item(
     Key.SALE_KAFKA_PRODUCER,

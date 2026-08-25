@@ -1,8 +1,6 @@
 ﻿from datetime import datetime
-from typing import Any
-
 from data_platform.config.data_lake_environment import StorageEnvironment
-from data_platform.model import DataLakeEndpoint, StorageObject
+from data_platform.model import DataLakeEndpoint
 
 
 def generate_relative_path(
@@ -31,11 +29,3 @@ def generate_data_lake_path(endpoint: DataLakeEndpoint, relative_path: str) -> s
 
 def extract_filename(path: str) -> str:
     return path.rstrip("/").split("/")[-1]
-
-
-def to_paths(storage_objects) -> tuple[Any, ...]:
-    return tuple(storage_object.path for storage_object in storage_objects)
-
-
-def to_object_storages(paths: tuple[str, ...]) -> tuple[StorageObject, ...]:
-    return tuple[StorageObject](StorageObject("storage", path) for path in paths)

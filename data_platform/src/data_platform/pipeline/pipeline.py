@@ -6,9 +6,7 @@ from data_platform.audit.audit_event_factory import AuditEventFactory, PipelineC
     PipelineFailedAuditRequest, PipelineStartedAuditRequest, TaskCompletedAuditRequest, TaskFailedAuditRequest, \
     TaskStartedAuditRequest
 from data_platform.audit.audit_service import AuditService
-from data_platform.config.data_lake_environment import StorageEnvironment
-from data_platform.model import Dataset, StorageObject
-from data_platform.util.path_utils import generate_relative_path
+from data_platform.model import Dataset
 from data_platform.util.pipeline_utils import create_pipeline_id
 from data_platform.util.time_utils import elapsed_milliseconds, generate_ingestion_time
 
@@ -20,7 +18,6 @@ class Pipeline(ABC):
         self.pipeline_name = dataset.name
         self.pipeline_id = create_pipeline_id()
         self.ingestion_time = generate_ingestion_time()
-        self.storage_relative_path = generate_relative_path(StorageEnvironment.RAW, self.ingestion_time, self.dataset.name)
         self._started_at = None
         self._audit_service = AuditService(dataset.audit)
 
@@ -29,23 +26,27 @@ class Pipeline(ABC):
         ...
 
     @abstractmethod
-    def ingest(self) -> tuple[StorageObject, ...]:
+    def ingest(self) -> str:
         ...
 
     @abstractmethod
-    def clean(self, paths: tuple[StorageObject, ...]) -> tuple[StorageObject, ...]:
+    def clean(self, path: str) -> str:
         ...
 
     @abstractmethod
-    def enrich(self, paths: tuple[StorageObject, ...]) -> tuple[StorageObject, ...]:
+    def validate(self, path: str) -> str:
         ...
 
     @abstractmethod
-    def expose(self, paths: tuple[StorageObject, ...]) -> None:
+    def enrich(self, path: str) -> str:
         ...
 
     @abstractmethod
-    def analyze(self, paths: tuple[StorageObject, ...]) -> None:
+    def expose(self, path: str) -> None:
+        ...
+
+    @abstractmethod
+    def analyze(self, path: str) -> None:
         ...
 
     @abstractmethod
@@ -146,7 +147,8 @@ class Pipeline(ABC):
             self.run_step("prepare", self.prepare)
             raw_paths = self.run_step("ingest", self.ingest)
             cleaned_paths = self.run_step("clean", lambda: self.clean(raw_paths))
-            enriched_paths = self.run_step("enrich", lambda: self.enrich(cleaned_paths))
+            validated_path = self.run_step("validate", lambda: self.validate(cleaned_paths))
+            enriched_paths = self.run_step("enrich", lambda: self.enrich(validated_path))
             self.run_step("expose", lambda: self.expose(enriched_paths))
             self.run_step("analyze", lambda: self.analyze(enriched_paths))
             self.complete()

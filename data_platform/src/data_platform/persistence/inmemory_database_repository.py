@@ -32,7 +32,3 @@ class PandasDatabaseRepository:
         self.save(dataframe)
         self.execute_files(list_of_values(self._endpoint.write_sql_files))
 
-
-# Compatibility for callers that still import the historical module symbol.
-InmemoryDatabaseRepository = PandasDatabaseRepository
-

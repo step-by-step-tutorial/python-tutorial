@@ -20,21 +20,28 @@ def _factory(service):
 
 def test_pipeline_steps_owns_explicit_stage_factories_in_declared_order() -> None:
     definition = PipelineFlow(
-        storages=(_factory(object()),),
+        repository=_factory(object()),
         ingestors=(_Stage("one"), _Stage("two")),
-        cleaners=(_Stage("clean"),),
-        enrichers=(_Stage("enrich"),),
+        cleaner=_Stage("clean"),
+        validator=None,
+        enricher=_Stage("enrich"),
         exposers=(_Stage("expose"),),
     )
-    assert [stage.pipeline_name for stage in definition.ingestors] == ["one", "two"]
+    assert [stage.name for stage in definition.ingestors] == ["one", "two"]
 
 
 def test_pipeline_steps_accepts_declared_ingestors() -> None:
-    PipelineFlow((object(),), (_Stage("same"), _Stage("same")), (_Stage("clean"),), (_Stage("enrich"),))
+    class StorageDouble:
+        def save(self, data, path): return path
+        def find(self, path): return None
+
+    PipelineFlow(StorageDouble(), (_Stage("same"), _Stage("same")), (_Stage("clean"),), (_Stage("enrich"),))
 
 
 def test_pipeline_steps_allows_empty_defaults() -> None:
-    assert PipelineFlow().cleaners == ()
+    assert PipelineFlow().cleaner is None
+    assert PipelineFlow().validator is None
+    assert PipelineFlow().enricher is None
 
 
 @pytest.mark.parametrize("module_path", ["domain/sale/dataset.py", "domain/house/dataset.py", "domain/online_shopping/dataset.py"])
@@ -49,6 +56,3 @@ def test_dataset_module_constructs_its_dataset_once_without_self_reference(modul
 def test_removed_vague_stage_factory_helpers_do_not_exist() -> None:
     source_root = Path(__file__).resolve().parents[2] / "src" / "data_platform"
     assert not (source_root / "pipeline" / "stage_factories.py").exists()
-
-
-

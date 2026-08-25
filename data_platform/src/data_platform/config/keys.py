@@ -14,11 +14,11 @@ class Key(StrEnum):
     HOUSE_DATA_LAKE = "house.datalake"
     AUDIT_DATA_LAKE = "audit.datalake"
 
-    PLATFORM_DATA_WAREHOUSE = "data-platform.datawarehouse"
-    SALE_DATA_WAREHOUSE = "sale.datawarehouse"
-    HOUSE_DATA_WAREHOUSE = "house.datawarehouse"
-    ONLINE_SHOPPING_DATA_WAREHOUSE = "online_shopping.datawarehouse"
-    AUDIT_DATA_WAREHOUSE = "audit.datawarehouse"
+    PLATFORM_WAREHOUSE = "data-platform.warehouse"
+    SALE_WAREHOUSE = "sale.warehouse"
+    HOUSE_WAREHOUSE = "house.warehouse"
+    ONLINE_SHOPPING_WAREHOUSE = "online_shopping.warehouse"
+    AUDIT_WAREHOUSE = "audit.warehouse"
 
     SALE_CSV_FILE = "sale.file.csv"
     HOUSE_CSV_FILE = "house.file.csv"

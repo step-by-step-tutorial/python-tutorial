@@ -53,5 +53,5 @@ markers = [
     "spark: tests that exercise Spark-specific behavior",
     "kafka: tests that exercise Kafka-specific behavior",
     "database: tests that exercise database behavior",
-    "datawarehouse: tests that exercise data warehouse behavior",
+    "warehouse: tests that exercise warehouse behavior",
 ]

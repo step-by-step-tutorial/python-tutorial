@@ -36,8 +36,8 @@ class DatabaseEndpoint:
 
 
 @dataclass(frozen=True)
-class DataWarehouseEndpoint:
-    name: str = "datawarehouse"
+class WarehouseEndpoint:
+    name: str = "warehouse"
     connection_name: str = ""
     schema: str = ""
     table_name: str = ""

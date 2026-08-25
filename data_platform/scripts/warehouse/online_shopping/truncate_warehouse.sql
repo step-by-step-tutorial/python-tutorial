@@ -1,0 +1,1 @@
+TRUNCATE TABLE app_warehouse.online_shopping_table;

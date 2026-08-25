@@ -10,9 +10,9 @@ import pytest
 ])
 def test_dag_declares_its_dataset_pipeline_adapter_and_standard_chain(dag_file, dataset_name) -> None:
     source = (Path(__file__).resolve().parents[2] / "dags" / dag_file).read_text(encoding="utf-8")
-    assert f"ConfiguredPipeline({dataset_name})" in source
+    assert f"DataPipeline({dataset_name})" in source
     assert "DagPipelineAdapter(pipeline)" in source
-    assert 'prepare >> ingest >> clean >> enrich >> expose >> analyze >> cleanup >> verify' in source
+    assert 'prepare >> ingest >> clean >> validate >> enrich >> expose >> analyze >> cleanup >> verify' in source
 
 
 def test_dag_factory_and_task_runner_are_removed() -> None:

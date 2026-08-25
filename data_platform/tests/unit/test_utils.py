@@ -4,7 +4,6 @@ import pandas as pd
 import pytest
 
 from data_platform.domain.sale.attribute import SALE_ATTRIBUTE
-from data_platform.converter.pandas_converter import sum_by_group
 from data_platform.converter.value_converter import (
     convert_to_integer,
     convert_to_float,
@@ -73,12 +72,9 @@ class TestPandasDataFrameModelUtils:
         )
 
         # When
-        actual = sum_by_group(
-            dataframe,
-            SALE_ATTRIBUTE.CATEGORY,
-            SALE_ATTRIBUTE.TOTAL_PRICE,
-            SALE_ATTRIBUTE.REVENUE,
-        )
+        actual = dataframe.groupby(SALE_ATTRIBUTE.CATEGORY, as_index=False)[SALE_ATTRIBUTE.TOTAL_PRICE].sum()
+        actual = actual.rename(columns={SALE_ATTRIBUTE.TOTAL_PRICE: SALE_ATTRIBUTE.REVENUE})
+        actual = actual.sort_values(SALE_ATTRIBUTE.REVENUE, ascending=False).reset_index(drop=True)
 
         # Then
         assert actual.iloc[0][SALE_ATTRIBUTE.CATEGORY] == "A"

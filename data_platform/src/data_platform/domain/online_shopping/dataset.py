@@ -7,14 +7,14 @@ from data_platform.domain.online_shopping.attribute import (
 from data_platform.domain.online_shopping.inmemory_analyzer import (
     InmemoryOnlineShoppingAnalyzer,
 )
-from data_platform.domain.online_shopping.inmemory_transformer import (
-    InmemoryOnlineShoppingTransformer,
-)
+from data_platform.cleaners import CleanerChain, DropDuplicatesCleaner, NumericColumnCleaner, ToDatetimeCleaner
+from data_platform.enrichers import CopyColumnEnricher, DatetimePartEnricher, EnricherChain, PercentageEnricher
+from data_platform.validators import NonNegativeValidator, NotNullValidator, PositiveValidator, RequiredColumnsValidator, ValidatorChain
 from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
 from data_platform.model import (
     DataFrameModel,
     DataLakeEndpoint,
-    DataWarehouseEndpoint,
+    WarehouseEndpoint,
     DatabaseEndpoint,
     Dataset,
     PipelineFlow,
@@ -78,41 +78,39 @@ ONLINE_SHOPPING_DATASET = Dataset(
                 query_sql_files={"select_all": "database/select_all.sql"},
             )
         ),
-        Key.ONLINE_SHOPPING_DATA_WAREHOUSE: (
-            DataWarehouseEndpoint(
-                name=Key.ONLINE_SHOPPING_DATA_WAREHOUSE,
-                connection_name=Key.ONLINE_SHOPPING_DATA_WAREHOUSE,
-                schema=main_settings.data_warehouse[
-                    Key.ONLINE_SHOPPING_DATA_WAREHOUSE
+        Key.ONLINE_SHOPPING_WAREHOUSE: (
+            WarehouseEndpoint(
+                name=Key.ONLINE_SHOPPING_WAREHOUSE,
+                connection_name=Key.ONLINE_SHOPPING_WAREHOUSE,
+                schema=main_settings.warehouse[
+                    Key.ONLINE_SHOPPING_WAREHOUSE
                 ].database_name,
                 table_name="online_shopping_table",
-                full_table_name=f"{main_settings.data_warehouse[Key.ONLINE_SHOPPING_DATA_WAREHOUSE].database_name}.online_shopping_table",
+                full_table_name=f"{main_settings.warehouse[Key.ONLINE_SHOPPING_WAREHOUSE].database_name}.online_shopping_table",
                 create_sql_files={
-                    "create_database": "datawarehouse/online_shopping/create_database.sql",
-                    "create_table": "datawarehouse/online_shopping/create_table.sql",
+                    "create_database": "warehouse/online_shopping/create_database.sql",
+                    "create_table": "warehouse/online_shopping/create_table.sql",
                 },
                 truncate_sql_files={
-                    "truncate": "datawarehouse/online_shopping/truncate_datawarehouse.sql"
+                    "truncate": "warehouse/online_shopping/truncate_warehouse.sql"
                 },
                 query_sql_files={
-                    "select_all": "datawarehouse/select_all.sql",
-                    "revenue_by_country": "datawarehouse/online_shopping/select_revenue_by_country.sql",
+                    "select_all": "warehouse/select_all.sql",
+                    "revenue_by_country": "warehouse/online_shopping/select_revenue_by_country.sql",
                 },
             )
         ),
     },
     flow=PipelineFlow(
-        storages=(
-            DataLakeRepository(
-                DataLakeEndpoint(
-                    name=Key.ONLINE_SHOPPING_DATA_LAKE,
-                    connection_name=Key.ONLINE_SHOPPING_DATA_LAKE,
-                    bucket_name=main_settings.data_lake[
-                        Key.PLATFORM_DATA_LAKE
-                    ].bucket_name,
-                    scheme=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].scheme,
-                )
-            ),
+        repository=DataLakeRepository(
+            DataLakeEndpoint(
+                name=Key.ONLINE_SHOPPING_DATA_LAKE,
+                connection_name=Key.ONLINE_SHOPPING_DATA_LAKE,
+                bucket_name=main_settings.data_lake[
+                    Key.PLATFORM_DATA_LAKE
+                ].bucket_name,
+                scheme=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].scheme,
+            )
         ),
         ingestors=(
             RestApiCsvIngestor(
@@ -122,20 +120,36 @@ ONLINE_SHOPPING_DATASET = Dataset(
                 )
             ),
         ),
-        cleaners=(InmemoryOnlineShoppingTransformer(),),
-        enrichers=(InmemoryOnlineShoppingTransformer(),),
+        cleaner=CleanerChain((
+            DropDuplicatesCleaner(columns.order_id),
+            ToDatetimeCleaner(columns.order_date),
+            ToDatetimeCleaner(columns.estimated_delivery_date),
+            NumericColumnCleaner(columns.customer_id),
+            NumericColumnCleaner(columns.unit_price),
+            NumericColumnCleaner(columns.quantity),
+            NumericColumnCleaner(columns.subtotal),
+            NumericColumnCleaner(columns.discount_percent),
+            NumericColumnCleaner(columns.shipping_cost),
+            NumericColumnCleaner(columns.tax_amount),
+            NumericColumnCleaner(columns.total_amount),
+            NumericColumnCleaner(columns.delivery_days),
+        )),
+        validator=ValidatorChain((
+            RequiredColumnsValidator((columns.order_id, columns.order_date, columns.quantity, columns.unit_price, columns.total_amount)),
+            NotNullValidator(columns.order_id),
+            NotNullValidator(columns.order_date),
+            PositiveValidator(columns.quantity),
+            NonNegativeValidator(columns.unit_price),
+            NonNegativeValidator(columns.total_amount),
+        )),
+        enricher=EnricherChain((
+            PercentageEnricher(columns.subtotal, columns.discount_percent, columns.discount_amount),
+            CopyColumnEnricher(columns.total_amount, columns.net_revenue, decimals=2),
+            DatetimePartEnricher(columns.order_date, "year", columns.year),
+            DatetimePartEnricher(columns.order_date, "month", columns.month),
+        )),
         exposers=(
-            RepositoryDataExposer(
-                DataLakeRepository(
-                    DataLakeEndpoint(
-                        name=Key.ONLINE_SHOPPING_DATA_LAKE,
-                        connection_name=Key.ONLINE_SHOPPING_DATA_LAKE,
-                        bucket_name=main_settings.data_lake[
-                            Key.PLATFORM_DATA_LAKE
-                        ].bucket_name,
-                        scheme=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].scheme,
-                    )
-                ).find,
+            RepositoryDataExposer((
                 PandasDatabaseRepository(
                     DatabaseEndpoint(
                         name=Key.ONLINE_SHOPPING_DATABASE,
@@ -153,7 +167,7 @@ ONLINE_SHOPPING_DATASET = Dataset(
                         query_sql_files={"select_all": "database/select_all.sql"},
                     )
                 ).replace,
-            ),
+            )),
         ),
         analyzers=(
             DataFrameAnalyzer(

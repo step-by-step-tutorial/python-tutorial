@@ -1,5 +1,4 @@
 ﻿from data_platform.pipeline.pipeline import Pipeline
-from data_platform.util.path_utils import to_paths, to_object_storages
 
 
 class DagPipelineAdapter:
@@ -11,23 +10,23 @@ class DagPipelineAdapter:
         self._pipeline.start()
         self._pipeline.run_step("prepare", self._pipeline.prepare)
 
-    def ingest(self) -> tuple[str, ...]:
-        storage_objects = self._pipeline.run_step("ingest", self._pipeline.ingest)
-        return to_paths(storage_objects)
+    def ingest(self) -> str:
+        return self._pipeline.run_step("ingest", self._pipeline.ingest)
 
-    def clean(self, paths: tuple[str, ...]) -> tuple[str, ...]:
-        storage_objects = self._pipeline.run_step("clean", lambda: self._pipeline.clean(to_object_storages(paths)))
-        return to_paths(storage_objects)
+    def clean(self, path: str) -> str:
+        return self._pipeline.run_step("clean", lambda: self._pipeline.clean(path))
 
-    def enrich(self, paths: tuple[str, ...]) -> tuple[str, ...]:
-        storage_objects = self._pipeline.run_step("enrich", lambda: self._pipeline.enrich(to_object_storages(paths)))
-        return to_paths(storage_objects)
+    def validate(self, path: str) -> str:
+        return self._pipeline.run_step("validate", lambda: self._pipeline.validate(path))
 
-    def expose(self, paths: tuple[str, ...]) -> None:
-        self._pipeline.run_step("expose", lambda: self._pipeline.expose(to_object_storages(paths)))
+    def enrich(self, path: str) -> str:
+        return self._pipeline.run_step("enrich", lambda: self._pipeline.enrich(path))
 
-    def analyze(self, paths: tuple[str, ...]) -> None:
-        self._pipeline.run_step("analyze", lambda: self._pipeline.analyze(to_object_storages(paths)))
+    def expose(self, path: str) -> None:
+        self._pipeline.run_step("expose", lambda: self._pipeline.expose(path))
+
+    def analyze(self, path: str) -> None:
+        self._pipeline.run_step("analyze", lambda: self._pipeline.analyze(path))
         self._pipeline.complete()
 
     def cleanup(self) -> None:

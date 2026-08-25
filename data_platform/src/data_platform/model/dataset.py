@@ -4,7 +4,7 @@ from typing import Any, cast
 
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.endpoints import AuditEndpoint, Endpoint, EndpointType
-from data_platform.model.pipeline_steps import PipelineFlow
+from data_platform.model.pipeline_flow import PipelineFlow
 
 
 @dataclass(frozen=True)

@@ -84,28 +84,28 @@ services:
         mc mb --ignore-existing \
           "local/$${MINIO_AUDIT_BUCKET_NAME}"
 
-  datawarehouse:
-    image: ${DATAWAREHOUSE_IMAGE}
-    hostname: ${DATA_PLATFORM_DATAWAREHOUSE_HOST}
-    container_name: ${DATAWAREHOUSE_CONTAINER_NAME}
+  warehouse:
+    image: ${WAREHOUSE_IMAGE}
+    hostname: ${DATA_PLATFORM_WAREHOUSE_HOST}
+    container_name: ${WAREHOUSE_CONTAINER_NAME}
     environment:
-      CLICKHOUSE_DB: ${DATA_PLATFORM_DATAWAREHOUSE_NAME}
-      CLICKHOUSE_USER: ${DATA_PLATFORM_DATAWAREHOUSE_USER}
-      CLICKHOUSE_PASSWORD: ${DATA_PLATFORM_DATAWAREHOUSE_PASSWORD}
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${DATAWAREHOUSE_DEFAULT_ACCESS_MANAGEMENT}
+      CLICKHOUSE_DB: ${DATA_PLATFORM_WAREHOUSE_NAME}
+      CLICKHOUSE_USER: ${DATA_PLATFORM_WAREHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${DATA_PLATFORM_WAREHOUSE_PASSWORD}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${WAREHOUSE_DEFAULT_ACCESS_MANAGEMENT}
     ports:
-      - "${DATA_PLATFORM_DATAWAREHOUSE_PORT}:8123"
+      - "${DATA_PLATFORM_WAREHOUSE_PORT}:8123"
     volumes:
-      - ${DATAWAREHOUSE_VOLUME}:/var/lib/clickhouse
-      - ./scripts/datawarehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
-      - ./scripts/datawarehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
-      - ./scripts/datawarehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
-      - ./scripts/datawarehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
+      - ${WAREHOUSE_VOLUME}:/var/lib/clickhouse
+      - ./scripts/warehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
+      - ./scripts/warehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
+      - ./scripts/warehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
+      - ./scripts/warehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "clickhouse-client --user ${DATA_PLATFORM_DATAWAREHOUSE_USER} --password ${DATA_PLATFORM_DATAWAREHOUSE_PASSWORD} --query 'SELECT 1'"
+          "clickhouse-client --user ${DATA_PLATFORM_WAREHOUSE_USER} --password ${DATA_PLATFORM_WAREHOUSE_PASSWORD} --query 'SELECT 1'"
         ]
       interval: 5s
       timeout: 5s
@@ -147,7 +147,7 @@ volumes:
     name: ${DATABASE_VOLUME}
   datalake_data:
     name: ${DATALAKE_VOLUME}
-  datawarehouse_data:
-    name: ${DATAWAREHOUSE_VOLUME}
+  warehouse_data:
+    name: ${WAREHOUSE_VOLUME}
 
 

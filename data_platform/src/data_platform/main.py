@@ -2,7 +2,7 @@
 import sys
 
 from data_platform.config.main_settings import settings as main_settings
-from data_platform.pipeline.configured_pipeline import DataPipeline
+from data_platform.pipeline.data_pipeline import DataPipeline
 from data_platform.registry.bootstrap import initialize_registries
 from data_platform.registry.dataset_registry import dataset_registry
 

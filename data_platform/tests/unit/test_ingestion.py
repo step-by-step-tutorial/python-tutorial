@@ -4,7 +4,7 @@ from pyspark.sql import SparkSession
 
 from data_platform.model import (
     DataLakeEndpoint,
-    DataWarehouseEndpoint,
+    WarehouseEndpoint,
     DatabaseEndpoint,
     FileEndpoint,
     MessagingEndpoint,
@@ -13,7 +13,7 @@ from data_platform.model import (
 from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
 from data_platform.ingestion.database_ingestor import DatabaseIngestor
 from data_platform.ingestion.data_lake_ingestor import DataLakeIngestor
-from data_platform.ingestion.data_warehouse_ingestor import DataWarehouseIngestor
+from data_platform.ingestion.warehouse_ingestor import WarehouseIngestor
 from data_platform.ingestion.kafka_ingestor import KafkaIngestor
 from data_platform.ingestion.rest_api_ingestor import RestApiIngestor
 from data_platform.ingestion.spark_kafka_ingestor import SparkKafkaIngestor
@@ -153,23 +153,23 @@ class TestDatabaseIngestor:
         assert mock_execute.call_args.args[1] == "select * from sale.example_stage"
 
 
-class TestDataWarehouseIngestor:
+class TestWarehouseIngestor:
 
     def test_should_query_full_table(self, mocker) -> None:
-        given_endpoint = DataWarehouseEndpoint(
-            connection_name="sale.datawarehouse",
+        given_endpoint = WarehouseEndpoint(
+            connection_name="sale.warehouse",
             schema="warehouse",
             table_name="example",
             full_table_name="warehouse.example",
-            query_sql_files={"select_all": "datawarehouse/select_all.sql"},
+            query_sql_files={"select_all": "warehouse/select_all.sql"},
         )
         given_connection = mocker.Mock()
-        mocker.patch("data_platform.ingestion.data_warehouse_ingestor.connection_registry.get_item", return_value=given_connection)
-        mocker.patch("data_platform.ingestion.data_warehouse_ingestor.read_text_file", return_value="select * from {table_name}")
+        mocker.patch("data_platform.ingestion.warehouse_ingestor.connection_registry.get_item", return_value=given_connection)
+        mocker.patch("data_platform.ingestion.warehouse_ingestor.read_text_file", return_value="select * from {table_name}")
         expected = pd.DataFrame({"id": [1]})
         given_connection.query_df.return_value = expected
 
-        actual = DataWarehouseIngestor(endpoint=given_endpoint).ingest(given_endpoint.full_table_name)
+        actual = WarehouseIngestor(endpoint=given_endpoint).ingest(given_endpoint.full_table_name)
 
         assert actual is expected
         assert given_connection.query_df.call_count == 1

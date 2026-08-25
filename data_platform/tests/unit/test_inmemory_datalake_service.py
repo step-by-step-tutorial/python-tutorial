@@ -25,8 +25,8 @@ class TestUploadParquet:
 
         # When
         actual = repository.save(
-            df=given_dataframe,
-            relative_path="raw",
+            data=given_dataframe,
+            path="raw",
         )
 
         # Then

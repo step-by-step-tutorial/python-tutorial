@@ -7,7 +7,7 @@ class TestMainSettings:
         assert settings.app.dataset_name == "Sale"
         assert set(settings.database) == {"data-platform.database", "sale.database", "house.database", "online_shopping.database", "audit.database"}
         assert set(settings.data_lake) == {"data-platform.datalake", "sale.datalake", "house.datalake", "audit.datalake"}
-        assert set(settings.data_warehouse) == {"data-platform.datawarehouse", "sale.datawarehouse", "house.datawarehouse", "online_shopping.datawarehouse", "audit.datawarehouse"}
+        assert set(settings.warehouse) == {"data-platform.warehouse", "sale.warehouse", "house.warehouse", "online_shopping.warehouse", "audit.warehouse"}
         assert set(settings.messaging) == {
             "sale.kafka.listener",
             "sale.kafka.producer",

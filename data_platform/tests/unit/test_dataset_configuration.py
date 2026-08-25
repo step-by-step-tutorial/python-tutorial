@@ -5,7 +5,7 @@ import pytest
 from data_platform.model import (
     AuditEndpoint,
     DataLakeEndpoint,
-    DataWarehouseEndpoint,
+    WarehouseEndpoint,
     DataFrameModel,
     DatabaseEndpoint,
     Dataset,
@@ -51,11 +51,11 @@ class TestDataset:
                     full_stage_table_name="sale.example_stage",
                     table_names=["sale.example_stage"],
                 ),
-                "sale.datawarehouse": DataWarehouseEndpoint(
-                    connection_name="sale.datawarehouse",
-                    schema="app_datawarehouse",
+                "sale.warehouse": WarehouseEndpoint(
+                    connection_name="sale.warehouse",
+                    schema="app_warehouse",
                     table_name="example_table",
-                    full_table_name="app_datawarehouse.example_table",
+                    full_table_name="app_warehouse.example_table",
                 ),
             },
         )
@@ -67,8 +67,8 @@ class TestDataset:
         assert given_dataset.get_endpoint("sale.database",
                                           DatabaseEndpoint).full_stage_table_name == "sale.example_stage"
         assert given_dataset.get_endpoint("sale.database", DatabaseEndpoint).table_names == ["sale.example_stage"]
-        assert given_dataset.get_endpoint("sale.datawarehouse",
-                                          DataWarehouseEndpoint).full_table_name == "app_datawarehouse.example_table"
+        assert given_dataset.get_endpoint("sale.warehouse",
+                                          WarehouseEndpoint).full_table_name == "app_warehouse.example_table"
         assert given_dataset.dataframe.schema is None
         assert given_dataset.dataframe.required_columns == frozenset({"id"})
         assert given_dataset.audit.database_connection_name == "audit.database"
@@ -116,8 +116,9 @@ class TestConcreteDatasetConfiguration:
         definition = dataset.flow
         assert definition is not None
         assert [stage.pipeline_name for stage in definition.ingestors] == [storage_object_name]
-        assert definition.cleaners
-        assert definition.enrichers
+        assert definition.cleaner
+        assert definition.validator
+        assert definition.enricher
         assert definition.exposers
         assert definition.analyzers
 
@@ -141,11 +142,11 @@ class TestConcreteDatasetConfiguration:
         ]
         assert SALE_DATASET.get_endpoint("sale.database", DatabaseEndpoint).connection_name == "sale.database"
         assert SALE_DATASET.get_endpoint("sale.datalake", DataLakeEndpoint).connection_name == "sale.datalake"
-        assert SALE_DATASET.get_endpoint("sale.datawarehouse", DataWarehouseEndpoint).schema == "app_datawarehouse"
-        assert SALE_DATASET.get_endpoint("sale.datawarehouse",
-                                         DataWarehouseEndpoint).connection_name == "sale.datawarehouse"
-        assert SALE_DATASET.get_endpoint("sale.datawarehouse",
-                                         DataWarehouseEndpoint).full_table_name == "app_datawarehouse.sale_table"
+        assert SALE_DATASET.get_endpoint("sale.warehouse", WarehouseEndpoint).schema == "app_warehouse"
+        assert SALE_DATASET.get_endpoint("sale.warehouse",
+                                         WarehouseEndpoint).connection_name == "sale.warehouse"
+        assert SALE_DATASET.get_endpoint("sale.warehouse",
+                                         WarehouseEndpoint).full_table_name == "app_warehouse.sale_table"
         assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).url.endswith("/datasets/sale.json/download?format=json")
         assert SALE_DATASET.get_endpoint("sale.rest", RestApiEndpoint).method == "GET"
         assert SALE_DATASET.audit.database_connection_name == "audit.database"
@@ -170,11 +171,11 @@ class TestConcreteDatasetConfiguration:
         assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).table_names == ["house.house_stage"]
         assert HOUSE_DATASET.get_endpoint("house.database", DatabaseEndpoint).connection_name == "house.database"
         assert HOUSE_DATASET.get_endpoint("house.datalake", DataLakeEndpoint).connection_name == "house.datalake"
-        assert HOUSE_DATASET.get_endpoint("house.datawarehouse", DataWarehouseEndpoint).schema == "app_datawarehouse"
-        assert HOUSE_DATASET.get_endpoint("house.datawarehouse",
-                                          DataWarehouseEndpoint).connection_name == "house.datawarehouse"
-        assert HOUSE_DATASET.get_endpoint("house.datawarehouse",
-                                          DataWarehouseEndpoint).full_table_name == "app_datawarehouse.house_table"
+        assert HOUSE_DATASET.get_endpoint("house.warehouse", WarehouseEndpoint).schema == "app_warehouse"
+        assert HOUSE_DATASET.get_endpoint("house.warehouse",
+                                          WarehouseEndpoint).connection_name == "house.warehouse"
+        assert HOUSE_DATASET.get_endpoint("house.warehouse",
+                                          WarehouseEndpoint).full_table_name == "app_warehouse.house_table"
         assert HOUSE_DATASET.audit.database_connection_name == "audit.database"
         assert HOUSE_DATASET.audit.messaging_connection_name == "audit.kafka.producer"
         assert HOUSE_DATASET.audit.datalake_connection_name == "audit.datalake"
@@ -194,9 +195,8 @@ class TestConcreteDatasetConfiguration:
         definition = ONLINE_SHOPPING_DATASET.flow
         assert definition is not None
         assert [stage.pipeline_name for stage in definition.ingestors] == ["api"]
-        assert definition.cleaners
-        assert definition.enrichers
+        assert definition.cleaner
+        assert definition.validator
+        assert definition.enricher
         assert definition.exposers
         assert definition.analyzers
-
-

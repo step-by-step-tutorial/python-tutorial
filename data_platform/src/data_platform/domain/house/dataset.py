@@ -1,17 +1,32 @@
 ﻿from data_platform.config.keys import Key
 from data_platform.config.main_settings import settings as main_settings
 from data_platform.domain.house.attribute import HOUSE_ATTRIBUTE as columns
-from data_platform.domain.house.data_warehouse_analyzer import (
-    DataWarehouseHouseAnalyzer,
+from data_platform.domain.house.warehouse_analyzer import (
+    WarehouseHouseAnalyzer,
 )
 from data_platform.domain.house.inmemory_analyzer import InmemoryHouseAnalyzer
-from data_platform.domain.house.inmemory_transformer import InmemoryHouseTransformer
+from data_platform.cleaners import (
+    BooleanColumnCleaner,
+    CleanerChain,
+    DropDuplicatesCleaner,
+    NumericColumnCleaner,
+    RenameColumnsCleaner,
+    StripColumnCleaner,
+)
+from data_platform.enrichers import DivideColumnsEnricher, EnricherChain, HashColumnsEnricher
+from data_platform.validators import (
+    NonNegativeValidator,
+    NotNullValidator,
+    PositiveValidator,
+    RequiredColumnsValidator,
+    ValidatorChain,
+)
 from data_platform.domain.house.spark_schema import build_schema
 from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
 from data_platform.model import (
     DataFrameModel,
     DataLakeEndpoint,
-    DataWarehouseEndpoint,
+    WarehouseEndpoint,
     DatabaseEndpoint,
     Dataset,
     FileEndpoint,
@@ -19,8 +34,8 @@ from data_platform.model import (
     PipelineFlow,
 )
 from data_platform.persistence.data_lake_repository import DataLakeRepository
-from data_platform.persistence.inmemory_data_warehouse_repository import (
-    PandasDataWarehouseRepository,
+from data_platform.persistence.inmemory_warehouse_repository import (
+    PandasWarehouseRepository,
 )
 from data_platform.persistence.inmemory_database_repository import (
     PandasDatabaseRepository,
@@ -28,7 +43,7 @@ from data_platform.persistence.inmemory_database_repository import (
 from data_platform.persistence.repository_data_exposer import RepositoryDataExposer
 from data_platform.presentation.dataframe_display import show_map_of_dataframe
 from data_platform.registry.endpoint_registry import audit_endpoint, endpoint_registry
-from data_platform.service.data_warehouse_analysis_service import DataWarehouseAnalyzer
+from data_platform.service.warehouse_analysis_service import WarehouseAnalyzer
 from data_platform.service.dataframe_analysis_service import DataFrameAnalyzer
 
 HOUSE_DATASET = Dataset(
@@ -93,38 +108,36 @@ HOUSE_DATASET = Dataset(
             truncate_sql_files={"truncate": "database/house/truncate_stage.sql"},
             query_sql_files={"select_all": "database/select_all.sql"},
         ),
-        Key.HOUSE_DATA_WAREHOUSE: DataWarehouseEndpoint(
-            name=Key.HOUSE_DATA_WAREHOUSE,
-            connection_name=Key.HOUSE_DATA_WAREHOUSE,
-            schema=main_settings.data_warehouse[Key.HOUSE_DATA_WAREHOUSE].database_name,
+        Key.HOUSE_WAREHOUSE: WarehouseEndpoint(
+            name=Key.HOUSE_WAREHOUSE,
+            connection_name=Key.HOUSE_WAREHOUSE,
+            schema=main_settings.warehouse[Key.HOUSE_WAREHOUSE].database_name,
             table_name="house_table",
-            full_table_name=f"{main_settings.data_warehouse[Key.HOUSE_DATA_WAREHOUSE].database_name}.house_table",
+            full_table_name=f"{main_settings.warehouse[Key.HOUSE_WAREHOUSE].database_name}.house_table",
             create_sql_files={
-                "create_database": "datawarehouse/house/create_database.sql",
-                "create_table": "datawarehouse/house/create_table.sql",
+                "create_database": "warehouse/house/create_database.sql",
+                "create_table": "warehouse/house/create_table.sql",
             },
             truncate_sql_files={
-                "truncate": "datawarehouse/house/truncate_datawarehouse.sql"
+                "truncate": "warehouse/house/truncate_warehouse.sql"
             },
             query_sql_files={
-                "select_all": "datawarehouse/select_all.sql",
-                "average_price_by_address": "datawarehouse/house/select_average_price_by_address.sql",
-                "average_price_per_square_meter_by_room": "datawarehouse/house/select_average_price_per_square_meter_by_room.sql",
+                "select_all": "warehouse/select_all.sql",
+                "average_price_by_address": "warehouse/house/select_average_price_by_address.sql",
+                "average_price_per_square_meter_by_room": "warehouse/house/select_average_price_per_square_meter_by_room.sql",
             },
         ),
     },
     flow=PipelineFlow(
-        storages=(
-            DataLakeRepository(
-                DataLakeEndpoint(
-                    name=Key.HOUSE_DATA_LAKE,
-                    connection_name=Key.HOUSE_DATA_LAKE,
-                    bucket_name=main_settings.data_lake[
-                        Key.HOUSE_DATA_LAKE
-                    ].bucket_name,
-                    scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
-                )
-            ),
+        repository=DataLakeRepository(
+            DataLakeEndpoint(
+                name=Key.HOUSE_DATA_LAKE,
+                connection_name=Key.HOUSE_DATA_LAKE,
+                bucket_name=main_settings.data_lake[
+                    Key.HOUSE_DATA_LAKE
+                ].bucket_name,
+                scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
+            )
         ),
         ingestors=(
             CsvFileIngestor(
@@ -139,20 +152,39 @@ HOUSE_DATASET = Dataset(
                 )
             ),
         ),
-        cleaners=(InmemoryHouseTransformer(),),
-        enrichers=(InmemoryHouseTransformer(),),
+        cleaner=CleanerChain((
+            RenameColumnsCleaner({
+                columns.area_raw: columns.area, columns.room_raw: columns.room,
+                columns.parking_raw: columns.parking, columns.warehouse_raw: columns.warehouse,
+                columns.elevator_raw: columns.elevator, columns.address_raw: columns.address,
+                columns.price_raw: columns.price, columns.price_usd_raw: columns.price_usd,
+            }),
+            NumericColumnCleaner(columns.area),
+            NumericColumnCleaner(columns.room),
+            NumericColumnCleaner(columns.price),
+            NumericColumnCleaner(columns.price_usd),
+            BooleanColumnCleaner(columns.parking),
+            BooleanColumnCleaner(columns.warehouse),
+            BooleanColumnCleaner(columns.elevator),
+            StripColumnCleaner(columns.address),
+            DropDuplicatesCleaner(),
+        )),
+        validator=ValidatorChain((
+            RequiredColumnsValidator((columns.area, columns.room, columns.price)),
+            NotNullValidator(columns.area), NotNullValidator(columns.room),
+            NotNullValidator(columns.price), PositiveValidator(columns.area),
+            NonNegativeValidator(columns.room), PositiveValidator(columns.price),
+        )),
+        enricher=EnricherChain((
+            DivideColumnsEnricher(columns.price, columns.area, columns.price_per_square_meter),
+            DivideColumnsEnricher(columns.price_usd, columns.area, columns.price_usd_per_square_meter),
+            HashColumnsEnricher((
+                columns.area, columns.room, columns.parking, columns.warehouse,
+                columns.elevator, columns.address, columns.price, columns.price_usd,
+            ), columns.listing_key),
+        )),
         exposers=(
-            RepositoryDataExposer(
-                DataLakeRepository(
-                    DataLakeEndpoint(
-                        name=Key.HOUSE_DATA_LAKE,
-                        connection_name=Key.HOUSE_DATA_LAKE,
-                        bucket_name=main_settings.data_lake[
-                            Key.HOUSE_DATA_LAKE
-                        ].bucket_name,
-                        scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
-                    )
-                ).find,
+            RepositoryDataExposer((
                 PandasDatabaseRepository(
                     DatabaseEndpoint(
                         name=Key.HOUSE_DATABASE,
@@ -168,42 +200,32 @@ HOUSE_DATASET = Dataset(
                         query_sql_files={"select_all": "database/select_all.sql"},
                     )
                 ).replace,
-            ),
-            RepositoryDataExposer(
-                DataLakeRepository(
-                    DataLakeEndpoint(
-                        name=Key.HOUSE_DATA_LAKE,
-                        connection_name=Key.HOUSE_DATA_LAKE,
-                        bucket_name=main_settings.data_lake[
-                            Key.HOUSE_DATA_LAKE
-                        ].bucket_name,
-                        scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
-                    )
-                ).find,
-                PandasDataWarehouseRepository(
-                    DataWarehouseEndpoint(
-                        name=Key.HOUSE_DATA_WAREHOUSE,
-                        connection_name=Key.HOUSE_DATA_WAREHOUSE,
-                        schema=main_settings.data_warehouse[
-                            Key.HOUSE_DATA_WAREHOUSE
+            )),
+            RepositoryDataExposer((
+                PandasWarehouseRepository(
+                    WarehouseEndpoint(
+                        name=Key.HOUSE_WAREHOUSE,
+                        connection_name=Key.HOUSE_WAREHOUSE,
+                        schema=main_settings.warehouse[
+                            Key.HOUSE_WAREHOUSE
                         ].database_name,
                         table_name="house_table",
-                        full_table_name=f"{main_settings.data_warehouse[Key.HOUSE_DATA_WAREHOUSE].database_name}.house_table",
+                        full_table_name=f"{main_settings.warehouse[Key.HOUSE_WAREHOUSE].database_name}.house_table",
                         create_sql_files={
-                            "create_database": "datawarehouse/house/create_database.sql",
-                            "create_table": "datawarehouse/house/create_table.sql",
+                            "create_database": "warehouse/house/create_database.sql",
+                            "create_table": "warehouse/house/create_table.sql",
                         },
                         truncate_sql_files={
-                            "truncate": "datawarehouse/house/truncate_datawarehouse.sql"
+                            "truncate": "warehouse/house/truncate_warehouse.sql"
                         },
                         query_sql_files={
-                            "select_all": "datawarehouse/select_all.sql",
-                            "average_price_by_address": "datawarehouse/house/select_average_price_by_address.sql",
-                            "average_price_per_square_meter_by_room": "datawarehouse/house/select_average_price_per_square_meter_by_room.sql",
+                            "select_all": "warehouse/select_all.sql",
+                            "average_price_by_address": "warehouse/house/select_average_price_by_address.sql",
+                            "average_price_per_square_meter_by_room": "warehouse/house/select_average_price_per_square_meter_by_room.sql",
                         },
                     )
                 ).replace,
-            ),
+            )),
         ),
         analyzers=(
             DataFrameAnalyzer(
@@ -220,31 +242,31 @@ HOUSE_DATASET = Dataset(
                 InmemoryHouseAnalyzer(),
                 show_map_of_dataframe,
             ),
-            DataWarehouseAnalyzer(
-                PandasDataWarehouseRepository(
-                    DataWarehouseEndpoint(
-                        name=Key.HOUSE_DATA_WAREHOUSE,
-                        connection_name=Key.HOUSE_DATA_WAREHOUSE,
-                        schema=main_settings.data_warehouse[
-                            Key.HOUSE_DATA_WAREHOUSE
+            WarehouseAnalyzer(
+                PandasWarehouseRepository(
+                    WarehouseEndpoint(
+                        name=Key.HOUSE_WAREHOUSE,
+                        connection_name=Key.HOUSE_WAREHOUSE,
+                        schema=main_settings.warehouse[
+                            Key.HOUSE_WAREHOUSE
                         ].database_name,
                         table_name="house_table",
-                        full_table_name=f"{main_settings.data_warehouse[Key.HOUSE_DATA_WAREHOUSE].database_name}.house_table",
+                        full_table_name=f"{main_settings.warehouse[Key.HOUSE_WAREHOUSE].database_name}.house_table",
                         create_sql_files={
-                            "create_database": "datawarehouse/house/create_database.sql",
-                            "create_table": "datawarehouse/house/create_table.sql",
+                            "create_database": "warehouse/house/create_database.sql",
+                            "create_table": "warehouse/house/create_table.sql",
                         },
                         truncate_sql_files={
-                            "truncate": "datawarehouse/house/truncate_datawarehouse.sql"
+                            "truncate": "warehouse/house/truncate_warehouse.sql"
                         },
                         query_sql_files={
-                            "select_all": "datawarehouse/select_all.sql",
-                            "average_price_by_address": "datawarehouse/house/select_average_price_by_address.sql",
-                            "average_price_per_square_meter_by_room": "datawarehouse/house/select_average_price_per_square_meter_by_room.sql",
+                            "select_all": "warehouse/select_all.sql",
+                            "average_price_by_address": "warehouse/house/select_average_price_by_address.sql",
+                            "average_price_per_square_meter_by_room": "warehouse/house/select_average_price_per_square_meter_by_room.sql",
                         },
                     )
                 ),
-                DataWarehouseHouseAnalyzer(),
+                WarehouseHouseAnalyzer(),
                 show_map_of_dataframe,
             ),
         ),

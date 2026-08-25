@@ -5,12 +5,13 @@ from uuid import uuid4
 import pandas as pd
 
 from data_platform.model import DataLakeEndpoint
+from data_platform.persistence.storage_repository import StorageRepository
 from data_platform.registry.connection_registry import connection_registry
 
 logger = logging.getLogger(__name__)
 
 
-class DataLakeRepository:
+class DataLakeRepository(StorageRepository):
     def __init__(self, endpoint: DataLakeEndpoint) -> None:
         self._endpoint = endpoint
         self._connection_name = endpoint.connection_name
@@ -22,12 +23,12 @@ class DataLakeRepository:
 
         return [object_metadata["Key"] for object_metadata in response.get("Contents", [])]
 
-    def save(self, df: pd.DataFrame, relative_path: str, file_extension: str = "parquet") -> str:
+    def save(self, data: pd.DataFrame, path: str, file_extension: str = "parquet") -> str:
         parquet_buffer = BytesIO()
-        df.to_parquet(parquet_buffer, index=False)
+        data.to_parquet(parquet_buffer, index=False)
         parquet_buffer.seek(0)
 
-        object_key = f"{relative_path.strip('/')}/part-{uuid4()}.{file_extension}"
+        object_key = f"{path.strip('/')}/part-{uuid4()}.{file_extension}"
         client = connection_registry.get_item(self._connection_name)
         buckets = client.list_buckets()
         bucket_names = {bucket["Name"] for bucket in buckets.get("Buckets", [])}
