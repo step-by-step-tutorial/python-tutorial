@@ -25,7 +25,7 @@ class TestAppendBatchToObjectStorage:
         )
         mock_append = mocker.patch.object(service, "save")
 
-        service.save_batch(given_dataframe, "cleaned/path")
+        service.write_batch(given_dataframe, "cleaned/path")
 
         assert mock_persisted_dataframes.call_count == 1
         assert given_dataframe.persist.call_count == 1

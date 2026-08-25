@@ -25,7 +25,7 @@ class TestReadStream:
                 starting_offsets="earliest",
             ),
             data_lake_endpoint=DataLakeEndpoint(bucket_name="bucket"),
-        ).find()
+        ).read()
 
         assert actual is given_dataframe
         assert given_session.readStream.format.call_count == 1
@@ -50,7 +50,7 @@ class TestReadStream:
         )
         mock_append_batch = mocker.patch.object(service, "save_batch")
 
-        service.save_stream(given_dataframe, "raw/path", "checkpoint/path")
+        service.write(given_dataframe, "raw/path", "checkpoint/path")
 
         batch_handler = given_stream_writer.foreachBatch.call_args.args[0]
         batch_handler(given_batch, 0)

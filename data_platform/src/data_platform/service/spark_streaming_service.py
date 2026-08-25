@@ -22,7 +22,7 @@ class SparkStreamingService:
         self._messaging_endpoint = messaging_endpoint
         self._data_lake_endpoint = data_lake_endpoint
 
-    def find(self) -> DataFrame:
+    def read(self) -> DataFrame:
         ensure_topic_exists(self._messaging_endpoint.bootstrap_servers, self._messaging_endpoint.channel_name)
         logger.info("Reading data from Kafka topic %s", self._messaging_endpoint.channel_name)
         return (
@@ -35,7 +35,7 @@ class SparkStreamingService:
             .load()
         )
 
-    def save_stream(self, dataframe: DataFrame, path: str, checkpoint_path: str) -> None:
+    def write(self, dataframe: DataFrame, path: str, checkpoint_path: str) -> None:
         should_not_be_none(dataframe, "dataframe")
         should_not_be_none_or_empty(path, "path")
         should_not_be_none_or_empty(checkpoint_path, "checkpoint_path")
@@ -43,14 +43,14 @@ class SparkStreamingService:
 
         query = (
             dataframe.writeStream
-            .foreachBatch(lambda batch, _: self.save_batch(batch, path))
+            .foreachBatch(lambda batch, _: self.write_batch(batch, path))
             .option("checkpointLocation", checkpoint_path)
             .trigger(availableNow=True)
             .start()
         )
         query.awaitTermination()
 
-    def save_batch(self, dataframe: DataFrame, path: str) -> None:
+    def write_batch(self, dataframe: DataFrame, path: str) -> None:
         should_not_be_none(dataframe, "dataframe")
         should_not_be_none_or_empty(path, "path")
         logger.info("Appending batch data to %s", path)
