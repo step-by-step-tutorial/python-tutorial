@@ -1,12 +1,12 @@
 from data_platform.analyzers.aggregate_model import AggregateSpecification
 from data_platform.analyzers.analyzer_chain import AnalyzerChain
 from data_platform.analyzers.analyzer_impl import GroupAggregateAnalyzer
-from data_platform.cleaners.cleaners import CleanerChain, RenameColumnsCleaner, NumericColumnCleaner, \
+from data_platform.cleaners.cleaner_impl import CleanerChain, RenameColumnsCleaner, NumericColumnCleaner, \
     BooleanColumnCleaner, StripColumnCleaner, DropDuplicatesCleaner
 from data_platform.config.keys import Key
 from data_platform.domain.house.attribute import attribute
 from data_platform.domain.house.spark_schema import build_schema
-from data_platform.enrichers import DivideColumnsEnricher, EnricherChain, HashColumnsEnricher
+from data_platform.enrichers.enricher_impl import DivideColumnsEnricher, EnricherChain, HashColumnsEnricher
 from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset import Dataset
@@ -20,13 +20,13 @@ from data_platform.repository.inmemory_warehouse_repository import (
     InmemoryWarehouseRepository,
 )
 from data_platform.repository.data_exposer import DataExposer
-from data_platform.validators import (
+from data_platform.validators.validator_impl import (
     NonNegativeValidator,
     NotNullValidator,
     PositiveValidator,
     RequiredColumnsValidator,
-    ValidatorChain,
 )
+from data_platform.validators.validator_chain import ValidatorChain
 
 house_dataset = Dataset(
     name="house",

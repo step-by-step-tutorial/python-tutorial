@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from data_platform.analyzers.analyzer_chain import AnalyzerChain
-from data_platform.cleaners.cleaners import CleanerChain
-from data_platform.enrichers.enrichers import EnricherChain
+from data_platform.cleaners.cleaner_impl import CleanerChain
+from data_platform.enrichers.enricher_impl import EnricherChain
 from data_platform.model.dataset_ingestor import DatasetIngestor
 from data_platform.repository.storage_repository import StorageRepository
 from data_platform.validators.validator_chain import ValidatorChain

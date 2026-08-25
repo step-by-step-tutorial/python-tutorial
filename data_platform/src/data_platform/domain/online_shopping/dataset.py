@@ -1,10 +1,10 @@
 from data_platform.analyzers.analyzer_chain import AnalyzerChain
 from data_platform.analyzers.analyzer_impl import GroupAggregateAnalyzer
 from data_platform.analyzers.aggregate_model import AggregateSpecification
-from data_platform.cleaners.cleaners import CleanerChain, DropDuplicatesCleaner, ToDatetimeCleaner, NumericColumnCleaner
+from data_platform.cleaners.cleaner_impl import CleanerChain, DropDuplicatesCleaner, ToDatetimeCleaner, NumericColumnCleaner
 from data_platform.config.keys import Key
 from data_platform.domain.online_shopping.attribute import attribute
-from data_platform.enrichers import CopyColumnEnricher, DatetimePartEnricher, EnricherChain, PercentageEnricher
+from data_platform.enrichers.enricher_impl import CopyColumnEnricher, DatetimePartEnricher, EnricherChain, PercentageEnricher
 from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset import Dataset
@@ -16,8 +16,9 @@ from data_platform.repository.inmemory_database_repository import (
 )
 from data_platform.repository.data_exposer import DataExposer
 from data_platform.registry.endpoint_registry import endpoint_registry
-from data_platform.validators import NonNegativeValidator, NotNullValidator, PositiveValidator, \
-    RequiredColumnsValidator, ValidatorChain
+from data_platform.validators.validator_impl import NonNegativeValidator, NotNullValidator, PositiveValidator, \
+    RequiredColumnsValidator
+from data_platform.validators.validator_chain import ValidatorChain
 
 ONLINE_SHOPPING_DATASET = Dataset(
     name="online_shopping",

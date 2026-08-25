@@ -1,13 +1,13 @@
 from data_platform.analyzers.analyzer_chain import AnalyzerChain
 from data_platform.analyzers.analyzer_impl import GroupAggregateAnalyzer
 from data_platform.analyzers.aggregate_model import AggregateSpecification
-from data_platform.cleaners.cleaners import CleanerChain, DropDuplicatesCleaner, NumericColumnCleaner, \
+from data_platform.cleaners.cleaner_impl import CleanerChain, DropDuplicatesCleaner, NumericColumnCleaner, \
     FillMissingByGroupAverageCleaner, ToDatetimeCleaner, FillMissingByColumnAverageCleaner, CastColumnCleaner
 
 from data_platform.config.keys import Key
 from data_platform.domain.sale.attribute import attribute
 from data_platform.domain.sale.spark_schema import build_schema
-from data_platform.enrichers import DatetimePartEnricher, EnricherChain, MultiplyColumnsEnricher
+from data_platform.enrichers.enricher_impl import DatetimePartEnricher, EnricherChain, MultiplyColumnsEnricher
 from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset import Dataset
@@ -22,13 +22,13 @@ from data_platform.repository.inmemory_warehouse_repository import (
 )
 from data_platform.repository.data_exposer import DataExposer
 from data_platform.registry.endpoint_registry import endpoint_registry
-from data_platform.validators import (
+from data_platform.validators.validator_impl import (
     NonNegativeValidator,
     NotNullValidator,
     PositiveValidator,
     RequiredColumnsValidator,
-    ValidatorChain,
 )
+from data_platform.validators.validator_chain import ValidatorChain
 
 sale_dataset = Dataset(
     name="sale",

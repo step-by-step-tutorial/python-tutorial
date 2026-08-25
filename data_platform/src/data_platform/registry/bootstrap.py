@@ -11,7 +11,6 @@ from data_platform.model.endpoints import (
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.registry.endpoint_registry import endpoint_registry
-from data_platform.registry.event_converter_registry import event_converter_registry
 
 
 def initialize_registries() -> None:
@@ -253,15 +252,10 @@ def initialize_registries() -> None:
         ))
 
     from data_platform.domain.house.dataset import house_dataset
-    from data_platform.domain.house.event_converter import house_event_converter
     from data_platform.domain.sale.dataset import sale_dataset
-    from data_platform.domain.sale.event_converter import sale_event_converter
     from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
 
     dataset_registry.clear()
-    event_converter_registry.clear()
     dataset_registry.register(sale_dataset.name, sale_dataset)
     dataset_registry.register(house_dataset.name, house_dataset)
     dataset_registry.register(ONLINE_SHOPPING_DATASET.name, ONLINE_SHOPPING_DATASET)
-    event_converter_registry.register("sale", sale_event_converter)
-    event_converter_registry.register("house", house_event_converter)

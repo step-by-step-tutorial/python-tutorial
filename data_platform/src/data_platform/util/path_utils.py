@@ -1,6 +1,6 @@
 ﻿from datetime import datetime
 from data_platform.config.data_lake_environment import StorageEnvironment
-from data_platform.model import DataLakeEndpoint
+from data_platform.model.endpoints import DataLakeEndpoint
 
 
 def generate_relative_path(
