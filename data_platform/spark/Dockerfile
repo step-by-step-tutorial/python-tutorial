@@ -34,7 +34,8 @@ RUN mkdir -p /opt/spark-ivy \
       --conf spark.jars.ivy=/opt/spark-ivy \
       --conf spark.jars.excludes=org.slf4j:slf4j-api \
       --version \
-  && chmod -R a+rX /opt/spark-ivy
+  && find /opt/spark-ivy -type f -name '*.jar' -exec cp -f {} /opt/spark/jars/ \; \
+  && chmod -R a+rX /opt/spark-ivy /opt/spark/jars
 
 ENV PATH="/opt/venv/bin:/usr/local/bin:${PATH}" \
     PYSPARK_PYTHON="/usr/local/bin/python" \
