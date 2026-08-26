@@ -38,6 +38,8 @@ consistent: a German customer gets a German first name, a German phone number, a
 * Sequential identifiers
 * Random integer generation
 * Random date generation
+* Random floating-point, boolean, and timestamp generation
+* Nullable columns represented as blank CSV cells
 * Automatic dependency resolution between columns, independent of column order
 * Reproducible output through a project-wide random seed
 * JSON-based configuration, one file per dataset
@@ -56,9 +58,9 @@ The database and Kafka destinations have runtime dependencies declared in `pypro
 ```text
 test_data/
   config/
-    sale.json                       dataset config: minimal order sample
+    house.json                      dataset config: property records
+    house_los_angeles.json          dataset config: Los Angeles property records
     online_shopping.json            dataset config: online shopping orders
-    hr.json                         dataset config: HR employee records
   pyproject.toml
   data/                             source values, organised by kind of data
   output/                           generated CSV files (git-ignored)
@@ -143,6 +145,8 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ```shell
 cd ./test_data
 python -m test_data --config ./config/online_shopping.json
+python -m test_data --config ./config/house.json
+python -m test_data --config ./config/house_los_angeles.json
 python -m test_data --help
 ```
 
@@ -204,11 +208,17 @@ Every column needs a `name` and a `type`. The remaining keys depend on the type.
 |---------------------------|-------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
 | `random_from_file`        | `file`                                                                              | Random line from a `.txt` file                                                  |
 | `random_from_mapped_file` | `source_field`, `mapping_file`, `key`, `file_column` or `file_columns`, `separator` | Random line from the file that the mapping CSV lists for another column's value |
+| `random_from_mapped_csv`  | `source_field`, `mapping_file`, `key_column`, `value_column`                       | Selects one record for the source key and returns a field from that same record |
 | `derived`                 | `method` plus the method's own keys                                                 | Value computed from other columns in the same row                               |
 | `fixed`                   | `value`                                                                             | The same literal in every row                                                   |
 | `sequence`                | `start`, `step`                                                                     | Incrementing integer; both default to `1`                                       |
 | `random_int`              | `min`, `max`                                                                        | Random integer, both bounds inclusive                                           |
-| `random_date_between`     | `date_start`, `date_end`                                                            | Random ISO date, both bounds inclusive                                          |
+| `random_float`            | `min`, `max`                                                                        | Random floating-point value between both bounds                                 |
+| `random_bool`             |                                                                                     | Random `True` or `False` value                                                   |
+| `random_date`             | `date_start`, `date_end`                                                            | Random ISO date, both bounds inclusive                                          |
+| `random_timestamp`        | `date_start`, `date_end`                                                            | Random ISO timestamp between the date bounds                                    |
+
+Any column may set `"nullable": true`; null values are emitted as blank cells. The default null probability is 20%.
 
 `derived` supports two methods:
 

@@ -1,0 +1,5 @@
+state,city_file
+California,data/property_cities/california.txt
+New York,data/property_cities/new_york.txt
+Nevada,data/property_cities/nevada.txt
+Texas,data/property_cities/texas.txt

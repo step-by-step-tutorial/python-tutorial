@@ -30,6 +30,8 @@ class ColumnModel:
     file_column: str | None = None
     file_columns: tuple[str, ...] | None = None
     separator: str | None = None
+    nullable: bool = False
+    null_probability: float | None = None
 
 
 @dataclass(frozen=True)

@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from test_data.generator.column_generator import (
     ColumnGenerator,
+    ConcatFromSourceFieldsColumn,
     DateWithRandomDayOffsetColumn,
     EmailFromSourceFieldsColumn,
     FixedColumn,
@@ -9,7 +10,11 @@ from test_data.generator.column_generator import (
     LookupFromCsvColumn,
     ProductColumn,
     RandomDateColumn,
+    RandomFloatColumn,
+    RandomBooleanColumn,
+    RandomTimestampColumn,
     RandomFromFileColumn,
+    RandomFromMappedCsvColumn,
     RandomFromMappedFileColumn,
     RandomIntColumn,
     SequenceColumn,
@@ -23,10 +28,15 @@ class ColumnGeneratorRegistry:
         "sequence": SequenceColumn,
         "fixed": FixedColumn,
         "random_int": RandomIntColumn,
+        "random_float": RandomFloatColumn,
+        "random_bool": RandomBooleanColumn,
         "random_date": RandomDateColumn,
+        "random_timestamp": RandomTimestampColumn,
         "random_from_file": RandomFromFileColumn,
+        "random_from_mapped_csv": RandomFromMappedCsvColumn,
         "random_from_mapped_file": RandomFromMappedFileColumn,
         "email_from_source_fields": EmailFromSourceFieldsColumn,
+        "concat_from_source_fields": ConcatFromSourceFieldsColumn,
         "lookup_from_csv": LookupFromCsvColumn,
         "product_of_source_fields": ProductColumn,
         "formula": FormulaColumn,
@@ -39,7 +49,10 @@ class ColumnGeneratorRegistry:
         generator_type = cls.generator_types.get(generator_name)
         require_not_blank(generator_type, f"Unsupported column generator: {generator_name}")
 
-        return generator_type(column)
+        generator = generator_type(column)
+        if not column.nullable:
+            return generator
+        return NullableColumnGenerator(generator, column.null_probability)
 
     @classmethod
     def get_all(cls, columns: Sequence[ColumnModel]) -> dict[str, ColumnGenerator]:
@@ -51,3 +64,19 @@ class ColumnGeneratorRegistry:
             column.name: cls.get_one(column).dependencies
             for column in columns
         }
+
+
+class NullableColumnGenerator(ColumnGenerator):
+    def __init__(self, delegate: ColumnGenerator, probability: float | None):
+        self.delegate = delegate
+        self.probability = 0.2 if probability is None else probability
+        super().__init__(delegate.model)
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return self.delegate.dependencies
+
+    def generate(self, row: dict[str, str], row_index: int) -> str:
+        if self.rand.random() < self.probability:
+            return ""
+        return self.delegate.generate(row, row_index)

@@ -1,0 +1,12 @@
+apartment
+condominium
+single_family_home
+townhouse
+duplex
+triplex
+bungalow
+loft
+studio
+penthouse
+mobile_home
+villa

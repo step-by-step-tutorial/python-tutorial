@@ -1,0 +1,146 @@
+{
+  "row_count": 50000,
+  "output_name": "house",
+  "kafka_topic": "house-events",
+  "kafka_key_column": "property_id",
+  "destinations": ["csv", "json", "database", "kafka"],
+  "columns": [
+    { "name": "property_id", "type": "sequence", "start": 100000, "step": 1 },
+    { "name": "property_type", "type": "random_from_file", "file": "data/property_types.txt" },
+    {
+      "name": "address",
+      "type": "derived",
+      "method": "concat_from_source_fields",
+      "source_fields": ["street", "house_number"],
+      "separator": " "
+    },
+    {
+      "name": "street",
+      "type": "random_from_mapped_csv",
+      "source_field": "city",
+      "mapping_file": "data/city_address_records.csv",
+      "key_column": "city",
+      "value_column": "street"
+    },
+    {
+      "name": "house_number",
+      "type": "random_from_mapped_csv",
+      "source_field": "city",
+      "mapping_file": "data/city_address_records.csv",
+      "key_column": "city",
+      "value_column": "house_number"
+    },
+    {
+      "name": "postal_code",
+      "type": "random_from_mapped_csv",
+      "source_field": "city",
+      "mapping_file": "data/city_address_records.csv",
+      "key_column": "city",
+      "value_column": "postal_code"
+    },
+    {
+      "name": "city",
+      "type": "random_from_mapped_file",
+      "source_field": "state",
+      "mapping_file": "data/state_city_map.csv",
+      "key_column": "state",
+      "file_column": "city_file"
+    },
+    {
+      "name": "state",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_state_map.csv",
+      "key_column": "country",
+      "file_column": "state_file"
+    },
+    { "name": "country", "type": "random_from_file", "file": "data/property_countries.txt" },
+    {
+      "name": "latitude",
+      "type": "random_from_mapped_csv",
+      "source_field": "city",
+      "mapping_file": "data/city_address_records.csv",
+      "key_column": "city",
+      "value_column": "latitude"
+    },
+    {
+      "name": "longitude",
+      "type": "random_from_mapped_csv",
+      "source_field": "city",
+      "mapping_file": "data/city_address_records.csv",
+      "key_column": "city",
+      "value_column": "longitude"
+    },
+
+    { "name": "construction_year", "type": "random_int", "min": 1900, "max": 2024 },
+    { "name": "renovation_year", "type": "random_int", "min": 1990, "max": 2025, "nullable": true },
+
+    { "name": "area_sqm", "type": "random_float", "min": 35, "max": 250 },
+    { "name": "living_area_sqm", "type": "random_float", "min": 30, "max": 220 },
+    { "name": "land_area_sqm", "type": "random_float", "min": 0, "max": 1200, "nullable": true },
+
+    { "name": "room_count", "type": "random_int", "min": 1, "max": 8 },
+    { "name": "bedroom_count", "type": "random_int", "min": 0, "max": 5 },
+    { "name": "bathroom_count", "type": "random_int", "min": 1, "max": 3 },
+    { "name": "toilet_count", "type": "random_int", "min": 1, "max": 3 },
+
+    { "name": "floor_number", "type": "random_int", "min": 0, "max": 8, "nullable": true },
+    { "name": "total_floors", "type": "random_int", "min": 1, "max": 12 },
+
+    { "name": "resident_count", "type": "random_int", "min": 1, "max": 6 },
+    { "name": "adult_count", "type": "random_int", "min": 1, "max": 4 },
+    { "name": "child_count", "type": "random_int", "min": 0, "max": 3 },
+
+    { "name": "owner_id", "type": "sequence", "start": 50000, "step": 1 },
+    { "name": "owner_name", "type": "fixed", "value": "Max Mustermann" },
+    { "name": "owner_type", "type": "fixed", "value": "private" },
+    { "name": "owner_occupied", "type": "random_bool" },
+
+    { "name": "occupancy_status", "type": "fixed", "value": "occupied" },
+    { "name": "ownership_status", "type": "fixed", "value": "owned" },
+
+    { "name": "purchase_date", "type": "random_date", "date_start": "2010-01-01", "date_end": "2026-06-30", "nullable": true },
+    { "name": "purchase_price", "type": "random_float", "min": 150000, "max": 1500000, "nullable": true },
+    { "name": "price_per_sqm", "type": "random_float", "min": 2500, "max": 12000 },
+    { "name": "total_price", "type": "random_float", "min": 150000, "max": 2000000 },
+    { "name": "estimated_market_value", "type": "random_float", "min": 180000, "max": 2200000 },
+    { "name": "monthly_rent", "type": "random_float", "min": 600, "max": 4500, "nullable": true },
+    { "name": "monthly_service_cost", "type": "random_float", "min": 100, "max": 800, "nullable": true },
+    { "name": "annual_property_tax", "type": "random_float", "min": 300, "max": 4000, "nullable": true },
+    { "name": "currency", "type": "fixed", "value": "EUR" },
+
+    { "name": "has_balcony", "type": "random_bool" },
+    { "name": "balcony_area_sqm", "type": "random_float", "min": 3, "max": 30, "nullable": true },
+    { "name": "has_garden", "type": "random_bool" },
+    { "name": "garden_area_sqm", "type": "random_float", "min": 20, "max": 1000, "nullable": true },
+    { "name": "has_garage", "type": "random_bool" },
+    { "name": "garage_capacity", "type": "random_int", "min": 0, "max": 3 },
+    { "name": "parking_spaces", "type": "random_int", "min": 0, "max": 3 },
+    { "name": "has_basement", "type": "random_bool" },
+    { "name": "basement_area_sqm", "type": "random_float", "min": 10, "max": 100, "nullable": true },
+    { "name": "has_elevator", "type": "random_bool" },
+    { "name": "has_storage_room", "type": "random_bool" },
+    { "name": "has_fireplace", "type": "random_bool" },
+    { "name": "has_swimming_pool", "type": "random_bool" },
+    { "name": "has_solar_panels", "type": "random_bool" },
+
+    { "name": "heating_type", "type": "fixed", "value": "district_heating" },
+    { "name": "energy_source", "type": "fixed", "value": "electricity" },
+    { "name": "energy_efficiency_class", "type": "fixed", "value": "B" },
+    { "name": "annual_energy_consumption_kwh", "type": "random_float", "min": 1500, "max": 30000 },
+
+    { "name": "condition", "type": "fixed", "value": "good" },
+    { "name": "furnished", "type": "random_bool" },
+
+    { "name": "internet_available", "type": "random_bool" },
+    { "name": "internet_speed_mbps", "type": "random_int", "min": 50, "max": 1000, "nullable": true },
+
+    { "name": "distance_to_city_center_km", "type": "random_float", "min": 0.5, "max": 20 },
+    { "name": "distance_to_school_km", "type": "random_float", "min": 0.1, "max": 10 },
+    { "name": "distance_to_supermarket_km", "type": "random_float", "min": 0.1, "max": 8 },
+    { "name": "distance_to_public_transport_km", "type": "random_float", "min": 0.05, "max": 5 },
+
+    { "name": "created_at", "type": "random_timestamp", "date_start": "2026-01-01", "date_end": "2026-06-30" },
+    { "name": "updated_at", "type": "random_timestamp", "date_start": "2026-01-01", "date_end": "2026-06-30" }
+  ]
+}

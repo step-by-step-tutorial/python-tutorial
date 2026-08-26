@@ -44,6 +44,39 @@ def test_random_int_stays_within_bounds() -> None:
     assert all(1 <= int(generator.generate({}, index)) <= 5 for index in range(50))
 
 
+def test_random_float_stays_within_bounds() -> None:
+    generator = build(ColumnModel(name="latitude", type="random_float", min=10, max=20))
+
+    assert all(10 <= float(generator.generate({}, index)) <= 20 for index in range(50))
+
+
+def test_random_bool_generates_boolean_literals() -> None:
+    generator = build(ColumnModel(name="enabled", type="random_bool"))
+
+    assert {generator.generate({}, index) for index in range(50)} <= {"True", "False"}
+
+
+def test_nullable_column_can_generate_blank_values() -> None:
+    generator = build(
+        ColumnModel(name="floor", type="random_int", min=1, max=5, nullable=True, null_probability=1)
+    )
+
+    assert generator.generate({}, 0) == ""
+
+
+def test_random_timestamp_uses_iso_timestamp_format() -> None:
+    generator = build(
+        ColumnModel(
+            name="created_at",
+            type="random_timestamp",
+            date_start="2026-01-01",
+            date_end="2026-01-01",
+        )
+    )
+
+    assert generator.generate({}, 0).startswith("2026-01-01T")
+
+
 def test_random_date_rejects_inverted_range() -> None:
     with pytest.raises(Exception):
         build(
@@ -227,6 +260,19 @@ def test_email_uses_configured_domain() -> None:
     assert generator.generate({"given": "Lea", "family": "Bauer"}, 0) == (
         "lea.bauer@example-corp.com"
     )
+
+
+def test_concat_from_source_fields_joins_values() -> None:
+    generator = build(
+        ColumnModel(
+            name="address",
+            type="derived",
+            method="concat_from_source_fields",
+            source_fields=("street", "house_number"),
+        )
+    )
+
+    assert generator.generate({"street": "Sunset Boulevard", "house_number": "101"}, 0) == "Sunset Boulevard 101"
 
 
 def test_email_reports_empty_name() -> None:

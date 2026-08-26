@@ -83,6 +83,51 @@ class RandomIntColumn(ColumnGenerator):
         return str(self.rand.randint(self.model.min, self.model.max))  # type: ignore[arg-type]
 
 
+class RandomFloatColumn(ColumnGenerator):
+
+    def validate(self) -> None:
+        self.require("min", "max")
+        check_min_max(
+            minimum=self.model.min,
+            maximum=self.model.max,
+            error_message=f"Column {self.model.name}: 'min' must not be greater than 'max'.",
+        )
+
+    def generate(self, row: Row, row_index: int) -> str:
+        return f"{self.rand.uniform(self.model.min, self.model.max):.6f}"  # type: ignore[arg-type]
+
+
+class RandomBooleanColumn(ColumnGenerator):
+
+    def generate(self, row: Row, row_index: int) -> str:
+        return str(self.rand.choice((True, False)))
+
+
+class RandomTimestampColumn(ColumnGenerator):
+
+    def __init__(self, model: ColumnModel):
+        self.start = None
+        self.end = None
+        super().__init__(model)
+
+    def validate(self) -> None:
+        self.require("date_start", "date_end")
+        self.start = require_iso_date(self.model.date_start)
+        self.end = require_iso_date(self.model.date_end)
+        check_negative_days(
+            require_not_blank(self.start),
+            require_not_blank(self.end),
+            error_message=f"date_start must be earlier than or equal to date_end: {self.model.name}",
+        )
+
+    def generate(self, row: Row, row_index: int) -> str:
+        day = random_date_between(self.start, self.end, self.rand)
+        hour = self.rand.randrange(24)
+        minute = self.rand.randrange(60)
+        second = self.rand.randrange(60)
+        return f"{day}T{hour:02d}:{minute:02d}:{second:02d}"
+
+
 class RandomDateColumn(ColumnGenerator):
 
     def __init__(self, model: ColumnModel):
@@ -148,6 +193,35 @@ class RandomFromMappedFileColumn(ColumnGenerator):
             parts.append(self.rand.choice(self.source_repository.read_text_file(source_file)))
 
         return self.separator.join(parts)
+
+
+class RandomFromMappedCsvColumn(ColumnGenerator):
+    _selected_rows: dict[tuple[str, str, str, int], Mapping[str, str]] = {}
+
+    def validate(self) -> None:
+        self.require("source_field", "mapping_file", "key_column", "value_column")
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return (require_not_blank(self.model.source_field),)
+
+    def generate(self, row: Row, row_index: int) -> str:
+        source_value = self.get_by_source(row)
+        mapping_file = require_not_blank(self.model.mapping_file)
+        key_column = require_not_blank(self.model.key_column)
+        cache_key = (mapping_file, source_value, key_column, row_index)
+        selected = self._selected_rows.get(cache_key)
+        if selected is None:
+            rows = self.source_repository.read_csv_rows(mapping_file, key_column, source_value)
+            if not rows:
+                raise Exception(f"No rows found for '{source_value}' in mapping for column {self.model.name}.")
+            selected = self.rand.choice(rows)
+            self._selected_rows[cache_key] = selected
+        return require_or_raise_map(
+            selected,
+            require_not_blank(self.model.value_column),
+            f"Column {self.model.name} has no value in the selected address record.",
+        )
 
 
 class LookupFromCsvColumn(ColumnGenerator):
@@ -263,3 +337,17 @@ class EmailFromSourceFieldsColumn(ColumnGenerator):
         except ValueError as error:
             raise Exception(f"Column {self.model.name}: {error}") from error
         return f"{local_part}@{domain}"
+
+
+class ConcatFromSourceFieldsColumn(ColumnGenerator):
+
+    def validate(self) -> None:
+        self.require("source_fields")
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return require_not_blank(self.model.source_fields)
+
+    def generate(self, row: Row, row_index: int) -> str:
+        separator = self.model.separator or " "
+        return separator.join(require_not_blank(row.get(field)) for field in self.dependencies)
