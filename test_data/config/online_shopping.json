@@ -1,5 +1,5 @@
 {
-  "row_count": 5000,
+  "row_count": 500,
   "output_name": "online_shopping",
   "kafka_topic": "online-shopping.events.v1",
   "kafka_key_column": "order_id",

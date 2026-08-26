@@ -1,5 +1,5 @@
 {
-  "row_count": 5000,
+  "row_count": 500,
   "output_name": "house_los_angeles",
   "kafka_topic": "house.events.v1",
   "kafka_key_column": "property_id",
