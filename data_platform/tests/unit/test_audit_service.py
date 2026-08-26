@@ -43,7 +43,7 @@ class TestAuditService:
                 datalake_connection_name="audit.datalake",
                 create_sql_files={"create": "database/audit/create_tables.sql"},
                 channel_name="audit-topic",
-                bucket_name="app-datalake-audit",
+                bucket_name="audit",
                 write_sql_files={"write": "database/audit/insert_event.sql"},
             )
         )
@@ -141,7 +141,7 @@ class TestAuditService:
         assert mock_messaging_service_ctor.call_args.args[0].messaging_connection_name == "audit.kafka.producer"
         assert mock_messaging_service_ctor.call_args.args[0].channel_name == "audit-topic"
         assert mock_archive_service_ctor.call_args.args[0].datalake_connection_name == "audit.datalake"
-        assert mock_archive_service_ctor.call_args.args[0].bucket_name == "app-datalake-audit"
+        assert mock_archive_service_ctor.call_args.args[0].bucket_name == "audit"
         assert given_service.emit.call_count == 8
         assert given_log_service.save.call_count == 8
         assert given_database_service.save.call_count == 8

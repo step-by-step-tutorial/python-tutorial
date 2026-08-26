@@ -1,7 +1,13 @@
 from data_platform.analyzers.analyzer_chain import AnalyzerChain
 from data_platform.analyzers.analyzer_impl import GroupAggregateAnalyzer
 from data_platform.analyzers.aggregate_model import AggregateSpecification
-from data_platform.cleaners.cleaner_impl import CleanerChain, DropDuplicatesCleaner, ToDatetimeCleaner, NumericColumnCleaner
+from data_platform.cleaners.cleaner_impl import (
+    CleanerChain,
+    DropDuplicatesCleaner,
+    NumericColumnCleaner,
+    StripColumnCleaner,
+    ToDatetimeCleaner,
+)
 from data_platform.config.keys import Key
 from data_platform.domain.online_shopping.attribute import attribute
 from data_platform.enrichers.enricher_impl import CopyColumnEnricher, DatetimePartEnricher, EnricherChain, PercentageEnricher
@@ -53,6 +59,7 @@ ONLINE_SHOPPING_DATASET = Dataset(
             DropDuplicatesCleaner(attribute.order_id),
             ToDatetimeCleaner(attribute.order_date),
             ToDatetimeCleaner(attribute.estimated_delivery_date),
+            StripColumnCleaner(attribute.phone),
             NumericColumnCleaner(attribute.customer_id),
             NumericColumnCleaner(attribute.unit_price),
             NumericColumnCleaner(attribute.quantity),

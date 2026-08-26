@@ -30,7 +30,7 @@ class TestAuditArchiveService:
             messaging_connection_name="audit.kafka.producer",
             datalake_connection_name="audit.datalake",
             create_sql_files={"create": "database/audit/create_tables.sql"},
-            bucket_name="app-datalake-audit",
+            bucket_name="audit",
             write_sql_files={"write": "database/audit/insert_event.sql"},
         )
 
@@ -59,7 +59,7 @@ class TestAuditArchiveService:
             messaging_connection_name="audit.kafka.producer",
             datalake_connection_name="audit.datalake",
             create_sql_files={"create": "database/audit/create_tables.sql"},
-            bucket_name="app-datalake-audit",
+            bucket_name="audit",
             write_sql_files={"write": "database/audit/insert_event.sql"},
         )
 
@@ -71,7 +71,7 @@ class TestAuditArchiveService:
         )
 
         # Then
-        assert actual.startswith("s3a://app-datalake-audit/manifests/event_date=2026-08-15")
+        assert actual.startswith("s3a://audit/manifests/event_date=2026-08-15")
         assert mock_create_connection.call_count == 1
         assert mock_create_connection.call_args.args[0] == "audit.datalake"
         assert given_connection.list_buckets.call_count == 1
