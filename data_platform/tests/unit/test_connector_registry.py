@@ -27,6 +27,8 @@ class TestConnectionRegistry:
         assert third is not first
         assert created == [first, third]
 
+        connection_registry.close(connection_name)
+
     def test_should_flush_before_close_when_available(self) -> None:
         calls: list[str] = []
 
