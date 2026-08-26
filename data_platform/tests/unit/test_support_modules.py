@@ -67,12 +67,16 @@ class TestDatalakeUtils:
         actual_full = datalake_path_utils.generate_full_path("bucket", "path/to/file")
         actual_datalake_uri = datalake_path_utils.generate_full_path("app-datalake", "path/to/file")
         actual_audit_uri = datalake_path_utils.generate_full_path("app-datalake-audit", "audit/file.json")
+        actual_object_key = datalake_path_utils.generate_object_key("/raw/house/", "/part-001.parquet")
+        actual_checkpoint = datalake_path_utils.generate_checkpoint_path("app-datalake", "house-events")
 
         # Then
         assert actual_relative.startswith("raw/house/")
         assert actual_full == "s3a://bucket/path/to/file"
         assert actual_datalake_uri == "s3a://app-datalake/path/to/file"
         assert actual_audit_uri == "s3a://app-datalake-audit/audit/file.json"
+        assert actual_object_key == "raw/house/part-001.parquet"
+        assert actual_checkpoint == "s3a://app-datalake/checkpoints/house-events"
 
     def test_should_unpersist_persisted_dataframes_in_reverse_order(self, mocker) -> None:
         # Given

@@ -1,12 +1,12 @@
 ﻿import logging
 from io import BytesIO
-from uuid import uuid4
 
 import pandas as pd
 
 from data_platform.model.endpoints import DataLakeEndpoint
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.repository.storage_repository import StorageRepository
+from data_platform.util.path_utils import generate_data_object_key, normalize_relative_path
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class DataLakeRepository(StorageRepository):
         data.to_parquet(parquet_buffer, index=False)
         parquet_buffer.seek(0)
 
-        object_key = f"{path.strip('/')}/part-{uuid4()}.{file_extension}"
+        object_key = generate_data_object_key(path, file_extension)
         client = connection_registry.get_item(self._connection_name)
         client.put_object(Bucket=self._bucket_name, Key=object_key, Body=parquet_buffer)
 
@@ -45,7 +45,7 @@ class DataLakeRepository(StorageRepository):
 
     def find_keys(self, path: str) -> list[str]:
         client = connection_registry.get_item(self._connection_name)
-        response = client.list_objects_v2(Bucket=self._bucket_name, Prefix=path.strip("/"))
+        response = client.list_objects_v2(Bucket=self._bucket_name, Prefix=normalize_relative_path(path))
 
         return [object_metadata["Key"] for object_metadata in response.get("Contents", [])]
 

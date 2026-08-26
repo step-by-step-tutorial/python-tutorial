@@ -6,7 +6,11 @@ from data_platform.audit.abstract_audit_service import AbstractAuditService
 from data_platform.audit.audit_event import AuditEvent
 from data_platform.model.endpoints import AuditEndpoint
 from data_platform.registry.connection_registry import connection_registry
-from data_platform.util.path_utils import generate_full_path
+from data_platform.util.path_utils import (
+    generate_audit_event_key,
+    generate_audit_manifest_key,
+    generate_full_path,
+)
 
 
 class AuditArchiveService(AbstractAuditService):
@@ -17,11 +21,8 @@ class AuditArchiveService(AbstractAuditService):
 
     def save(self, event: AuditEvent) -> None:
         self._ensure_bucket_exists()
-        object_key = (
-            f"events/event_date={event.event_time.date().isoformat()}"
-            f"/pipeline_name={event.pipeline_name}"
-            f"/pipeline_id={event.pipeline_id}"
-            f"/{event.event_id}.json"
+        object_key = generate_audit_event_key(
+            event.event_time, event.pipeline_name, event.pipeline_id, event.event_id
         )
         content = event.model_dump_json(indent=2).encode("utf-8")
         self._client.put_object(
@@ -45,12 +46,7 @@ class AuditArchiveService(AbstractAuditService):
             manifest: dict[str, Any],
             event_time: datetime
     ) -> str:
-        object_key = (
-            f"manifests/event_date={event_time.date().isoformat()}"
-            f"/pipeline_name={pipeline_name}"
-            f"/pipeline_id={pipeline_id}"
-            f"/pipeline_manifest.json"
-        )
+        object_key = generate_audit_manifest_key(event_time, pipeline_name, pipeline_id)
         content = json.dumps(manifest, indent=2, default=str).encode("utf-8")
         self._ensure_bucket_exists()
         self._client.put_object(
@@ -67,4 +63,3 @@ class AuditArchiveService(AbstractAuditService):
         bucket_names = {bucket["Name"] for bucket in buckets.get("Buckets", [])}
         if self._bucket_name not in bucket_names:
             self._client.create_bucket(Bucket=self._bucket_name)
-

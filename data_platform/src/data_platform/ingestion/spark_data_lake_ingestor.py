@@ -3,6 +3,7 @@
 from pyspark.sql import DataFrame, SparkSession
 
 from data_platform.model.endpoints import DataLakeEndpoint
+from data_platform.util.path_utils import generate_data_lake_path
 from data_platform.util.string_utils import should_not_be_none_or_empty
 
 logger = logging.getLogger(__name__)
@@ -20,10 +21,6 @@ class SparkDataLakeIngestor:
         return (
             self._session
             .read
-            .parquet(
-                f"{self._endpoint.scheme}://"
-                f"{self._endpoint.bucket_name.strip()}/"
-                f"{relative_path.strip('/')}"
-            )
+            .parquet(generate_data_lake_path(self._endpoint, relative_path))
         )
 
