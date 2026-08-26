@@ -12,9 +12,9 @@ from data_platform.converter.value_converter import (
     convert_to_optional_boolean,
     convert_to_optional_float,
 )
-from data_platform.ingestion.spark_data_lake_ingestor import SparkDataLakeIngestor
+from data_platform.ingestion.spark_datalake_ingestor import SparkDatalakeIngestor
 from data_platform.pipeline.data_pipeline import DataPipeline
-from data_platform.service.spark_data_lake_service import SparkDataLakeService
+from data_platform.repository.spark_datalake_repository import SparkDatalakeRepository
 from data_platform.util import database_utils, dataframe_utils
 from data_platform.util.airflow_utils import ensure_pipeline_success
 from data_platform.util.dataframe_utils import empty_compatible_dataframe
@@ -108,11 +108,11 @@ def test_spark_data_lake_components_use_canonical_uri(mocker) -> None:
     session = mocker.MagicMock()
     expected = object()
     session.read.parquet.return_value = expected
-    assert SparkDataLakeIngestor(endpoint, session).ingest("/raw/data/") is expected
+    assert SparkDatalakeIngestor(endpoint, session).ingest("/raw/data/") is expected
     assert session.read.parquet.call_args.args[0] == "s3a://bucket/raw/data"
 
     dataframe = mocker.MagicMock()
-    service = SparkDataLakeService(session, endpoint)
+    service = SparkDatalakeRepository(session, endpoint)
     service.write(dataframe, "/raw/data/")
     assert dataframe.write.mode.return_value.parquet.call_args.args[0] == "s3a://bucket/raw/data"
     service.overwrite(dataframe, "raw/data")

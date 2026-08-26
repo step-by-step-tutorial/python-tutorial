@@ -11,7 +11,7 @@ from data_platform.cleaners.cleaner_impl import (
 )
 from data_platform.config.keys import Key
 from data_platform.domain.house.attribute import attribute
-from data_platform.domain.house.spark_schema import build_schema
+from data_platform.domain.house.spark_schema import HOUSE_SCHEMA
 from data_platform.enrichers.enricher_impl import EnricherChain
 from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
 from data_platform.model.dataframe_model import DataFrameModel
@@ -66,7 +66,7 @@ text_columns = (
 house_dataset = Dataset(
     name="house",
     dataframe=DataFrameModel(
-        schema=build_schema(),
+        schema=HOUSE_SCHEMA,
         required_columns=frozenset(attribute.columns),
     ),
     audit=endpoint_registry.get_item("audit"),

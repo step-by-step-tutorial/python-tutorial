@@ -8,7 +8,7 @@ from data_platform.connector import spark_session_factory
 from data_platform.presentation import dataframe_display
 from data_platform.repository.inmemory_database_repository import InmemoryDatabaseRepository
 from data_platform.repository.spark_database_repository import SparkDatabaseRepository
-from data_platform.service.spark_data_lake_service import SparkDataLakeService
+from data_platform.repository.spark_datalake_repository import SparkDatalakeRepository
 from data_platform.util import csv_utils
 
 
@@ -104,7 +104,7 @@ def test_database_repositories_delegate_query_and_write_operations(mocker) -> No
 
 
 def test_spark_data_lake_batch_write_skips_empty_data(mocker) -> None:
-    service = SparkDataLakeService(mocker.Mock(), type("Endpoint", (), {"scheme": "s3a", "bucket_name": "bucket"})())
+    service = SparkDatalakeRepository(mocker.Mock(), type("Endpoint", (), {"scheme": "s3a", "bucket_name": "bucket"})())
     empty = mocker.Mock()
     empty.isEmpty.return_value = True
 

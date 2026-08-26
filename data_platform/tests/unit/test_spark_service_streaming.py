@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrame, SparkSession
 
 from data_platform.model.endpoints import MessagingEndpoint, DataLakeEndpoint
-from data_platform.service import spark_streaming_service as system_under_test
+from data_platform.repository import spark_streaming_repository as system_under_test
 
 
 class TestReadStream:
@@ -16,7 +16,7 @@ class TestReadStream:
         given_option_four = given_option_three.option.return_value
         given_option_four.load.return_value = given_dataframe
 
-        actual = system_under_test.SparkStreamingService(
+        actual = system_under_test.SparkStreamingRepository(
             session=given_session,
             messaging_endpoint=MessagingEndpoint(
                 channel_name="house-topic",
@@ -42,7 +42,7 @@ class TestReadStream:
         given_writer.option.return_value = given_writer
         given_writer.trigger.return_value = given_writer
         given_writer.start.return_value = mocker.Mock()
-        service = system_under_test.SparkStreamingService(
+        service = system_under_test.SparkStreamingRepository(
             session=mocker.MagicMock(spec=SparkSession),
             messaging_endpoint=MessagingEndpoint(channel_name="topic", bootstrap_servers="localhost:9092"),
             data_lake_endpoint=DataLakeEndpoint(bucket_name="bucket"),

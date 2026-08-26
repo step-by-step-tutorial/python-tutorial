@@ -10,6 +10,7 @@ from data_platform.cleaners.cleaner_impl import (
 )
 from data_platform.config.keys import Key
 from data_platform.domain.online_shopping.attribute import attribute
+from data_platform.domain.online_shopping.spark_schema import ONLINE_SHOPPING_SCHEMA
 from data_platform.enrichers.enricher_impl import CopyColumnEnricher, DatetimePartEnricher, EnricherChain, PercentageEnricher
 from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
 from data_platform.model.dataframe_model import DataFrameModel
@@ -28,6 +29,7 @@ from data_platform.validators.validator_chain import ValidatorChain
 ONLINE_SHOPPING_DATASET = Dataset(
     name="online_shopping",
     dataframe=DataFrameModel(
+        schema=ONLINE_SHOPPING_SCHEMA,
         required_columns=frozenset(
             {
                 attribute.order_id,

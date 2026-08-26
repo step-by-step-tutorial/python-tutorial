@@ -76,7 +76,7 @@ def generate_full_path(bucket_name: str, relative_path: str, scheme: str = "s3a"
     return f"{scheme}://{join_path(bucket_name, relative_path)}"
 
 
-def generate_data_lake_path(endpoint: DataLakeEndpoint, relative_path: str) -> str:
+def generate_datalake_path(endpoint: DataLakeEndpoint, relative_path: str) -> str:
     return generate_full_path(endpoint.bucket_name, relative_path, endpoint.scheme)
 
 

@@ -3,7 +3,6 @@ import hashlib
 from typing import Any
 
 
-
 class EnricherChain:
     def __init__(self, enrichers: tuple[Any, ...] = ()) -> None:
         self.enrichers = enrichers
@@ -77,6 +76,5 @@ class HashColumnsEnricher:
         def digest(row: Any) -> str:
             values = ["" if row[column] is None else str(row[column]) for column in self.columns]
             return hashlib.sha256(self.separator.join(values).encode("utf-8")).hexdigest()
-
         dataframe[self.target] = dataframe.apply(digest, axis=1)
         return dataframe
