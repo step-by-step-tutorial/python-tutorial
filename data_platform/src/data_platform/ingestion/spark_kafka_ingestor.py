@@ -1,5 +1,7 @@
 ﻿import logging
 
+from collections.abc import Callable
+
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
 from pyspark.sql.types import StructType
@@ -11,21 +13,29 @@ logger = logging.getLogger(__name__)
 
 
 class SparkKafkaIngestor:
-    def __init__(self, endpoint: MessagingEndpoint, session: SparkSession, schema: StructType) -> None:
+    def __init__(self, endpoint: MessagingEndpoint, session: SparkSession | Callable[[], SparkSession], schema: StructType) -> None:
         self._endpoint = endpoint
         self._session = session
         self._schema = schema
 
+    @property
+    def session(self) -> SparkSession:
+        if hasattr(self._session, "readStream"):
+            return self._session
+        self._session = self._session()
+        return self._session
+
     def ingest(self) -> DataFrame:
         ensure_topic_exists(self._endpoint.bootstrap_servers, self._endpoint.channel_name)
-        logger.info("Reading data from Kafka topic %s", self._endpoint.channel_name)
+        logger.info("Reading batch data from Kafka topic %s", self._endpoint.channel_name)
         return (
-            self._session
-            .readStream
+            self.session
+            .read
             .format("kafka")
             .option("kafka.bootstrap.servers", self._endpoint.bootstrap_servers)
             .option("subscribe", self._endpoint.channel_name)
             .option("startingOffsets", self._endpoint.starting_offsets)
+            .option("endingOffsets", "latest")
             .option("failOnDataLoss", "false")
             .load()
             .select(

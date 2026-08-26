@@ -18,6 +18,7 @@ class TestMainSettings:
         assert set(settings.messaging) == {
             "house.kafka.listener",
             "house.kafka.producer",
+            "online_shopping.kafka.listener",
             "audit.kafka.producer",
             "audit.kafka.listener",
         }

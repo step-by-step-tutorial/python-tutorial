@@ -147,6 +147,15 @@ def initialize_registries() -> None:
             url=generate_dataset_download_url(main_settings.api["data_simulator"].url, "online_shopping"),
         ))
     endpoint_registry.register(
+        Key.ONLINE_SHOPPING_KAFKA_CONSUMER,
+        MessagingEndpoint(
+            name=Key.ONLINE_SHOPPING_KAFKA_CONSUMER,
+            connection_name=Key.ONLINE_SHOPPING_KAFKA_CONSUMER,
+            channel_name=main_settings.messaging[Key.ONLINE_SHOPPING_KAFKA_CONSUMER].channel_name,
+            bootstrap_servers=main_settings.messaging[Key.ONLINE_SHOPPING_KAFKA_CONSUMER].bootstrap_servers,
+            starting_offsets=main_settings.messaging[Key.ONLINE_SHOPPING_KAFKA_CONSUMER].starting_offsets,
+        ))
+    endpoint_registry.register(
         Key.ONLINE_SHOPPING_DATA_LAKE,
         DataLakeEndpoint(
             name=Key.ONLINE_SHOPPING_DATA_LAKE,

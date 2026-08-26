@@ -22,6 +22,7 @@ class Key(StrEnum):
     HOUSE_CSV_FILE = "house.file.csv"
     HOUSE_REST_API = "house.rest.api"
     ONLINE_SHOPPING_REST_API = "online_shopping.rest.api"
+    ONLINE_SHOPPING_KAFKA_CONSUMER = "online_shopping.kafka.listener"
     ONLINE_SHOPPING_DATA_LAKE = "online_shopping.datalake"
     ONLINE_SHOPPING_BACKUP_DATA_LAKE = "online_shopping.backup.datalake"
 

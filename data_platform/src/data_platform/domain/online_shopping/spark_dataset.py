@@ -10,7 +10,7 @@ from data_platform.domain.online_shopping.attribute import attribute
 from data_platform.domain.online_shopping.spark_schema import ONLINE_SHOPPING_SCHEMA
 from data_platform.enrichers.spark_enricher_chain import SparkEnricherChain
 from data_platform.enrichers.spark_enricher_impl import CopyColumnEnricher, DatetimePartEnricher, PercentageEnricher
-from data_platform.ingestion.spark_rest_api_csv_ingestor import SparkRestApiCsvIngestor
+from data_platform.ingestion.spark_kafka_ingestor import SparkKafkaIngestor
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset import Dataset
 from data_platform.model.spark_pipeline_flow import SparkPipelineFlow
@@ -24,7 +24,7 @@ from data_platform.validators.spark_validator_impl import NonNegativeValidator, 
     RequiredColumnsValidator
 
 online_shopping_spark_endpoints = {
-    Key.ONLINE_SHOPPING_REST_API: endpoint_registry.get_item(Key.ONLINE_SHOPPING_REST_API),
+    Key.ONLINE_SHOPPING_KAFKA_CONSUMER: endpoint_registry.get_item(Key.ONLINE_SHOPPING_KAFKA_CONSUMER),
     Key.ONLINE_SHOPPING_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATA_LAKE),
     Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE),
     Key.ONLINE_SHOPPING_DATABASE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATABASE),
@@ -47,8 +47,8 @@ spark_online_shopping_dataset = Dataset(
         backup_repository=SparkDatalakeRepository(create_session, online_shopping_spark_endpoints[
             Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE]),
         ingestors=(
-            SparkRestApiCsvIngestor(online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_REST_API], create_session,
-                                    ONLINE_SHOPPING_SCHEMA),),
+            SparkKafkaIngestor(online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_KAFKA_CONSUMER], create_session,
+                               ONLINE_SHOPPING_SCHEMA),),
         cleaners=SparkCleanerChain((DropDuplicatesCleaner(attribute.order_id), ToDatetimeCleaner(attribute.order_date),
                                     ToDatetimeCleaner(attribute.estimated_delivery_date),
                                     StripColumnCleaner(attribute.phone), *(NumericColumnCleaner(column) for column in

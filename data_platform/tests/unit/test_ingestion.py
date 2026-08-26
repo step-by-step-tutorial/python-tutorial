@@ -181,12 +181,13 @@ class TestStreamingChannelIngestor:
     def test_should_read_stream_from_topic(self, mocker) -> None:
         given_spark = mocker.Mock()
         given_dataframe = mocker.Mock()
-        given_stream_reader = given_spark.readStream.format.return_value
+        given_stream_reader = given_spark.read.format.return_value
         given_option_one = given_stream_reader.option.return_value
         given_option_two = given_option_one.option.return_value
         given_option_three = given_option_two.option.return_value
         given_option_four = given_option_three.option.return_value
-        given_option_four.load.return_value = given_dataframe
+        given_option_five = given_option_four.option.return_value
+        given_option_five.load.return_value = given_dataframe
         given_dataframe.select.return_value = given_dataframe
         given_column = mocker.Mock()
         given_column.cast.return_value = "value-as-string"
@@ -210,12 +211,12 @@ class TestStreamingChannelIngestor:
         assert actual is given_dataframe
         assert mock_col.call_count == 1
         assert mock_from_json.call_count == 1
-        assert given_spark.readStream.format.call_count == 1
+        assert given_spark.read.format.call_count == 1
         assert given_stream_reader.option.call_count == 1
         assert given_option_one.option.call_count == 1
         assert given_option_two.option.call_count == 1
         assert given_option_three.option.call_count == 1
-        assert given_option_four.load.call_count == 1
+        assert given_option_five.load.call_count == 1
         assert given_dataframe.select.call_count == 2
 
 

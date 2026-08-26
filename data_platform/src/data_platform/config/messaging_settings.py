@@ -27,6 +27,12 @@ messaging = MappingProxyType(
             audit_channel_name=os.getenv("DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.events.v1"),
             starting_offsets=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
+        Key.ONLINE_SHOPPING_KAFKA_CONSUMER: MessagingSettings(
+            bootstrap_servers=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
+            channel_name=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_CHANNEL_NAME", "online-shopping.events.v1"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_AUDIT_CHANNEL_NAME", "online-shopping.audit.events.v1"),
+            starting_offsets=os.getenv("DATA_PLATFORM_ONLINE_SHOPPING_STREAMING_STARTING_OFFSETS", "earliest"),
+        ),
         Key.AUDIT_KAFKA_PRODUCER: MessagingSettings(
             bootstrap_servers=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit.events.v1"),
