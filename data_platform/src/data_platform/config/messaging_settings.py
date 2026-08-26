@@ -15,18 +15,6 @@ class MessagingSettings:
 
 messaging = MappingProxyType(
     {
-        Key.SALE_KAFKA_CONSUMER: MessagingSettings(
-            bootstrap_servers=os.getenv("DATA_PLATFORM_SALE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("DATA_PLATFORM_SALE_CHANNEL_NAME", "sale-events"),
-            audit_channel_name=os.getenv("DATA_PLATFORM_SALE_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
-            starting_offsets=os.getenv("DATA_PLATFORM_SALE_STREAMING_STARTING_OFFSETS", "earliest"),
-        ),
-        Key.SALE_KAFKA_PRODUCER: MessagingSettings(
-            bootstrap_servers=os.getenv("DATA_PLATFORM_SALE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("DATA_PLATFORM_SALE_CHANNEL_NAME", "sale-events"),
-            audit_channel_name=os.getenv("DATA_PLATFORM_SALE_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
-            starting_offsets=os.getenv("DATA_PLATFORM_SALE_STREAMING_STARTING_OFFSETS", "earliest"),
-        ),
         Key.HOUSE_KAFKA_CONSUMER: MessagingSettings(
             bootstrap_servers=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("DATA_PLATFORM_HOUSE_CHANNEL_NAME", "house-events"),
@@ -42,13 +30,13 @@ messaging = MappingProxyType(
         Key.AUDIT_KAFKA_PRODUCER: MessagingSettings(
             bootstrap_servers=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
-            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "audit.audit.event.v1"),
             starting_offsets=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.AUDIT_KAFKA_CONSUMER: MessagingSettings(
             bootstrap_servers=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
             channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
-            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "sale.audit.event.v1"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "audit.audit.event.v1"),
             starting_offsets=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
     }

@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import UUID
@@ -62,14 +62,14 @@ class TestDatalakeUtils:
         actual_relative = datalake_path_utils.generate_relative_path(
             StorageEnvironment.RAW,
             given_time,
-            "sale"
+            "house"
         )
         actual_full = datalake_path_utils.generate_full_path("bucket", "path/to/file")
         actual_datalake_uri = datalake_path_utils.generate_full_path("app-datalake", "path/to/file")
         actual_audit_uri = datalake_path_utils.generate_full_path("app-datalake-audit", "audit/file.json")
 
         # Then
-        assert actual_relative.startswith("raw/sale/")
+        assert actual_relative.startswith("raw/house/")
         assert actual_full == "s3a://bucket/path/to/file"
         assert actual_datalake_uri == "s3a://app-datalake/path/to/file"
         assert actual_audit_uri == "s3a://app-datalake-audit/audit/file.json"
@@ -106,7 +106,7 @@ class TestDatabaseUtils:
         )
 
         # When
-        database_utils.execute_query_strings("sale.database", ("select 1", "select 2"))
+        database_utils.execute_query_strings("house.database", ("select 1", "select 2"))
 
         # Then
         assert mock_create_connection.call_count == 1
@@ -119,7 +119,7 @@ class TestDataFrameModelValidation:
 
     def test_should_validate_required_columns_for_pandas_dataframe(self) -> None:
         # Given
-        given_dataframe = pd.DataFrame({"id": [1], "name": ["sale"]})
+        given_dataframe = pd.DataFrame({"id": [1], "name": ["sample"]})
 
         # When
         RequiredColumnsValidator(frozenset({"id"})).validate(given_dataframe)
@@ -237,7 +237,7 @@ class TestLoggingAndStreaming:
     def test_should_log_delivery_success_and_failure(self, mocker) -> None:
         # Given
         given_message = mocker.Mock()
-        given_message.topic.return_value = "sale-events"
+        given_message.topic.return_value = "house-events"
         mock_logger_info = mocker.patch.object(handle_kafka_response.__globals__["logger"], "info")
         mock_logger_error = mocker.patch.object(handle_kafka_response.__globals__["logger"], "error")
 

@@ -1,4 +1,4 @@
-﻿from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
+from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
 from data_platform.audit.audit_event_factory import DatasetWrittenAuditRequest
 from data_platform.audit.audit_event_factory import PipelineCompletedAuditRequest
 from data_platform.audit.audit_event_factory import PipelineFailedAuditRequest
@@ -52,7 +52,7 @@ class TestAuditService:
         given_service.emit(
             AuditEventFactory.create_pipeline_started_event(
                 PipelineStartedAuditRequest(
-                    pipeline_name="sale_pipeline",
+                    pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                 )
             )
@@ -61,7 +61,7 @@ class TestAuditService:
         given_service.emit(
             AuditEventFactory.create_task_started_event(
                 TaskStartedAuditRequest(
-                    pipeline_name="sale_pipeline",
+                    pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     task_name="expose_database",
                     task_id=actual_task_id,
@@ -72,7 +72,7 @@ class TestAuditService:
         given_service.emit(
             AuditEventFactory.create_task_completed_event(
                 TaskCompletedAuditRequest(
-                    pipeline_name="sale_pipeline",
+                    pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     task_name="expose_database",
                     task_id=actual_task_id,
@@ -84,7 +84,7 @@ class TestAuditService:
         given_service.emit(
             AuditEventFactory.create_task_failed_event(
                 TaskFailedAuditRequest(
-                    pipeline_name="sale_pipeline",
+                    pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     task_name="expose_database",
                     task_id=actual_task_id,
@@ -97,7 +97,7 @@ class TestAuditService:
         given_service.emit(
             AuditEventFactory.create_pipeline_completed_event(
                 PipelineCompletedAuditRequest(
-                    pipeline_name="sale_pipeline",
+                    pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     duration_ms=0,
                 )
@@ -106,7 +106,7 @@ class TestAuditService:
         given_service.emit(
             AuditEventFactory.create_pipeline_failed_event(
                 PipelineFailedAuditRequest(
-                    pipeline_name="sale_pipeline",
+                    pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     duration_ms=0,
                     error=RuntimeError("boom"),
@@ -128,7 +128,7 @@ class TestAuditService:
                     source_system="datalake",
                     source_uri="s3://bucket/path",
                     destination_system="database",
-                    destination_uri="jdbc:postgresql://db/sale",
+                    destination_uri="jdbc:postgresql://db/house",
                     row_count=9,
                 )
             )
@@ -173,7 +173,7 @@ class TestAuditService:
         given_service.emit(
             AuditEventFactory.create_pipeline_started_event(
                 PipelineStartedAuditRequest(
-                    pipeline_name="sale_pipeline",
+                    pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                 )
             )
@@ -185,7 +185,7 @@ class TestAuditService:
             given_service.emit(
                 AuditEventFactory.create_task_failed_event(
                     TaskFailedAuditRequest(
-                        pipeline_name="sale_pipeline",
+                        pipeline_name="house_pipeline",
                         pipeline_id="pipeline-001",
                         task_name="expose_database",
                         task_id="task-001",
@@ -198,7 +198,7 @@ class TestAuditService:
             given_service.emit(
                 AuditEventFactory.create_pipeline_failed_event(
                     PipelineFailedAuditRequest(
-                        pipeline_name="sale_pipeline",
+                        pipeline_name="house_pipeline",
                         pipeline_id="pipeline-001",
                         duration_ms=0,
                         error=error,

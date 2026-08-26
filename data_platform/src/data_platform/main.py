@@ -1,7 +1,6 @@
 ﻿import logging
 import sys
 
-from data_platform.config.main_settings import settings as main_settings
 from data_platform.pipeline.data_pipeline import DataPipeline
 from data_platform.registry.bootstrap import initialize_registries
 from data_platform.registry.dataset_registry import dataset_registry
@@ -46,10 +45,8 @@ def main() -> None:
             run_pipeline(dataset_name)
         return
 
-    # Preserve the configured default for containers and scheduled execution.
-    run_pipeline(main_settings.app.dataset_name)
+    raise RuntimeError("A dataset name is required when standard input is not interactive.")
 
 
 if __name__ == "__main__":
     main()
-

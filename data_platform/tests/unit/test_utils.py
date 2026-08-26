@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from data_platform.domain.sale.attribute import attribute
+from data_platform.domain.online_shopping.attribute import attribute
 from data_platform.converter.value_converter import (
     convert_to_integer,
     convert_to_float,
@@ -31,7 +31,7 @@ class TestFileUtils:
 
     def test_should_read_text_file(self) -> None:
         # When
-        actual = file_utils.read_text_file("database/sale/truncate_stage.sql")
+        actual = file_utils.read_text_file("database/house/truncate_stage.sql")
 
         # Then
         assert "TRUNCATE" in actual.upper()
@@ -56,29 +56,29 @@ class TestPandasDataFrameModelUtils:
 
     def test_should_validate_required_columns(self) -> None:
         # Given
-        dataframe = pd.DataFrame({attribute.ORDER_ID: [1]})
+        dataframe = pd.DataFrame({attribute.order_id: [1]})
 
         # When / Then
         with pytest.raises(ValueError):
-            RequiredColumnsValidator(frozenset({attribute.ORDER_ID, attribute.CATEGORY})).validate(dataframe)
+            RequiredColumnsValidator(frozenset({attribute.order_id, attribute.category})).validate(dataframe)
 
     def test_should_sum_by_group(self) -> None:
         # Given
         dataframe = pd.DataFrame(
             {
-                attribute.CATEGORY: ["A", "A", "B"],
-                attribute.TOTAL_PRICE: [10.0, 20.0, 5.0],
+                attribute.category: ["A", "A", "B"],
+                attribute.total_amount: [10.0, 20.0, 5.0],
             }
         )
 
         # When
-        actual = dataframe.groupby(attribute.CATEGORY, as_index=False)[attribute.TOTAL_PRICE].sum()
-        actual = actual.rename(columns={attribute.TOTAL_PRICE: attribute.REVENUE})
-        actual = actual.sort_values(attribute.REVENUE, ascending=False).reset_index(drop=True)
+        actual = dataframe.groupby(attribute.category, as_index=False)[attribute.total_amount].sum()
+        actual = actual.rename(columns={attribute.total_amount: "revenue"})
+        actual = actual.sort_values("revenue", ascending=False).reset_index(drop=True)
 
         # Then
-        assert actual.iloc[0][attribute.CATEGORY] == "A"
-        assert actual.iloc[0][attribute.REVENUE] == 30.0
+        assert actual.iloc[0][attribute.category] == "A"
+        assert actual.iloc[0]["revenue"] == 30.0
 
     def test_should_raise_attribute_error_for_unknown_attribute(self) -> None:
         with pytest.raises(AttributeError):

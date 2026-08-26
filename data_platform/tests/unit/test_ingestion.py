@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 
 from pyspark.sql import SparkSession
 
@@ -66,7 +66,7 @@ class TestDataLakeIngestor:
 
         actual = DataLakeIngestor(
             endpoint=DataLakeEndpoint(
-                connection_name="sale.datalake",
+                connection_name="house.datalake",
                 bucket_name="bucket",
             )
         ).ingest("raw/example")
@@ -113,7 +113,7 @@ class TestMessageQueueIngestor:
 
         actual = KafkaIngestor(
             endpoint=MessagingEndpoint(
-                connection_name="sale.kafka.listener",
+                connection_name="house.kafka.listener",
                 channel_name="queue",
                 timeout_ms=1000,
                 max_messages=1000,
@@ -129,11 +129,11 @@ class TestDatabaseIngestor:
 
     def test_should_read_table_via_sql_connection(self, mocker) -> None:
         given_dataset = DatabaseEndpoint(
-            connection_name="sale.database",
-            schema="sale",
+            connection_name="house.database",
+            schema="house",
             stage_table_name="example_stage",
-            full_stage_table_name="sale.example_stage",
-            table_names=["sale.example_stage"],
+            full_stage_table_name="house.example_stage",
+            table_names=["house.example_stage"],
             query_sql_files={"select_all": "database/select_all.sql"},
         )
         given_engine = mocker.Mock()
@@ -149,15 +149,15 @@ class TestDatabaseIngestor:
 
         assert actual is expected
         assert mock_execute.call_count == 1
-        assert mock_execute.call_args.args[0] == "sale.database"
-        assert mock_execute.call_args.args[1] == ("select * from sale.example_stage",)
+        assert mock_execute.call_args.args[0] == "house.database"
+        assert mock_execute.call_args.args[1] == ("select * from house.example_stage",)
 
 
 class TestWarehouseIngestor:
 
     def test_should_query_full_table(self, mocker) -> None:
         given_endpoint = WarehouseEndpoint(
-            connection_name="sale.warehouse",
+            connection_name="house.warehouse",
             schema="warehouse",
             table_name="example",
             full_table_name="warehouse.example",
@@ -196,7 +196,7 @@ class TestStreamingChannelIngestor:
 
         ingestor = SparkKafkaIngestor(
             endpoint=MessagingEndpoint(
-                connection_name="sale.kafka.listener",
+                connection_name="house.kafka.listener",
                 channel_name="example-events",
                 bootstrap_servers="localhost:9092",
                 starting_offsets="earliest",

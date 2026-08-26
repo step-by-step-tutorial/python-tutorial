@@ -4,16 +4,6 @@ from data_platform.config.keys import Key
 from data_platform.config.main_settings import settings as main_settings
 
 
-def create_sale_connection():
-    return clickhouse_connect.get_client(
-        host=main_settings.warehouse[Key.SALE_WAREHOUSE].host,
-        port=main_settings.warehouse[Key.SALE_WAREHOUSE].port,
-        database=main_settings.warehouse[Key.SALE_WAREHOUSE].database_name,
-        username=main_settings.warehouse[Key.SALE_WAREHOUSE].user,
-        password=main_settings.warehouse[Key.SALE_WAREHOUSE].password,
-    )
-
-
 def create_house_connection():
     return clickhouse_connect.get_client(
         host=main_settings.warehouse[Key.HOUSE_WAREHOUSE].host,

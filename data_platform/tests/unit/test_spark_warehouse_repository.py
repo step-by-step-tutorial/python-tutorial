@@ -1,10 +1,10 @@
-﻿from data_platform.model.endpoints import WarehouseEndpoint
+from data_platform.model.endpoints import WarehouseEndpoint
 from data_platform.repository.spark_warehouse_repository import SparkWarehouseRepository
 
 
 def build_endpoint() -> WarehouseEndpoint:
     return WarehouseEndpoint(
-        connection_name="sale.warehouse",
+        connection_name="house.warehouse",
         schema="warehouse",
         table_name="example",
         full_table_name="warehouse.example",
@@ -36,7 +36,7 @@ class TestSparkWarehouseRepository:
         SparkWarehouseRepository(build_endpoint()).overwrite(dataframe)
 
         assert get_item.call_count == 3
-        get_item.assert_any_call("sale.warehouse")
+        get_item.assert_any_call("house.warehouse")
         connection.command.assert_called_once()
         assert connection.insert.call_count == 2
         assert connection.insert.call_args_list[0].kwargs == {

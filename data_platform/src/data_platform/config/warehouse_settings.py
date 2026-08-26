@@ -31,20 +31,6 @@ warehouse = MappingProxyType(
                 f"{os.getenv('DATA_PLATFORM_WAREHOUSE_NAME', 'app_warehouse')}",
             ),
         ),
-        Key.SALE_WAREHOUSE: WarehouseSettings(
-            host=os.getenv("DATA_PLATFORM_SALE_WAREHOUSE_HOST", "localhost"),
-            port=int(os.getenv("DATA_PLATFORM_SALE_WAREHOUSE_PORT", "8123")),
-            database_name=os.getenv("DATA_PLATFORM_SALE_WAREHOUSE_NAME", "app_warehouse"),
-            user=os.getenv("DATA_PLATFORM_SALE_WAREHOUSE_USER", "admin"),
-            password=os.getenv("DATA_PLATFORM_SALE_WAREHOUSE_PASSWORD", "admin"),
-            jdbc_url=os.getenv(
-                "DATA_PLATFORM_SALE_WAREHOUSE_JDBC_URL",
-                "jdbc:clickhouse://"
-                f"{os.getenv('DATA_PLATFORM_SALE_WAREHOUSE_HOST', 'localhost')}:"
-                f"{os.getenv('DATA_PLATFORM_SALE_WAREHOUSE_PORT', '8123')}/"
-                f"{os.getenv('DATA_PLATFORM_SALE_WAREHOUSE_NAME', 'app_warehouse')}",
-            ),
-        ),
         Key.HOUSE_WAREHOUSE: WarehouseSettings(
             host=os.getenv("DATA_PLATFORM_HOUSE_WAREHOUSE_HOST", "localhost"),
             port=int(os.getenv("DATA_PLATFORM_HOUSE_WAREHOUSE_PORT", "8123")),

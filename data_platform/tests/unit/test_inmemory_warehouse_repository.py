@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 
 from data_platform.model.endpoints import WarehouseEndpoint
 from data_platform.repository.inmemory_warehouse_repository import InmemoryWarehouseRepository
@@ -6,7 +6,7 @@ from data_platform.repository.inmemory_warehouse_repository import InmemoryWareh
 
 def build_endpoint() -> WarehouseEndpoint:
     return WarehouseEndpoint(
-        connection_name="sale.warehouse",
+        connection_name="house.warehouse",
         schema="warehouse",
         table_name="example",
         full_table_name="warehouse.example",
@@ -29,6 +29,6 @@ class TestPandasWarehouseRepository:
         InmemoryWarehouseRepository(build_endpoint()).overwrite(pd.DataFrame({"id": [1]}))
 
         assert get_item.call_count == 2
-        get_item.assert_any_call("sale.warehouse")
+        get_item.assert_any_call("house.warehouse")
         connection.command.assert_called_once()
         connection.insert_df.assert_called_once()

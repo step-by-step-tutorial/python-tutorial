@@ -43,30 +43,6 @@ database = MappingProxyType(
                 f"{os.getenv('PLATFORM_DATABASE_NAME', 'app_database')}",
             ),
         ),
-        Key.SALE_DATABASE: DatabaseSettings(
-            host=os.getenv("DATA_PLATFORM_SALE_DATABASE_HOST", "localhost"),
-            port=int(os.getenv("DATA_PLATFORM_SALE_DATABASE_PORT", "5432")),
-            database_name=os.getenv("DATA_PLATFORM_SALE_DATABASE_NAME", "app_database"),
-            user=os.getenv("DATA_PLATFORM_SALE_DATABASE_USER", "admin"),
-            password=os.getenv("DATA_PLATFORM_SALE_DATABASE_PASSWORD", "admin"),
-            driver=os.getenv("DATA_PLATFORM_SALE_DATABASE_DRIVER", "org.postgresql.Driver"),
-            jdbc_url=os.getenv(
-                "DATA_PLATFORM_SALE_DATABASE_JDBC_URL",
-                "jdbc:postgresql://"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_NAME', 'app_database')}",
-            ),
-            sqlalchemy_url=os.getenv(
-                "DATA_PLATFORM_SALE_DATABASE_SQLALCHEMY_URL",
-                "postgresql+psycopg2://"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_USER', 'admin')}:"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_PASSWORD', 'admin')}@"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_HOST', 'localhost')}:"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_PORT', '5432')}/"
-                f"{os.getenv('DATA_PLATFORM_SALE_DATABASE_NAME', 'app_database')}",
-            ),
-        ),
         Key.HOUSE_DATABASE: DatabaseSettings(
             host=os.getenv("DATA_PLATFORM_HOUSE_DATABASE_HOST", "localhost"),
             port=int(os.getenv("DATA_PLATFORM_HOUSE_DATABASE_PORT", "5432")),

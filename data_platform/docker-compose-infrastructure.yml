@@ -13,7 +13,6 @@ services:
     volumes:
       - ${DATABASE_VOLUME}:/var/lib/postgresql/data
       - ./scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
-      - ./scripts/database/sale/create_tables.sql:/docker-entrypoint-initdb.d/20_sale_create_tables.sql
       - ./scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
       - ./scripts/database/online_shopping/create_tables.sql:/docker-entrypoint-initdb.d/40_online_shopping_create_tables.sql
     healthcheck:
@@ -97,8 +96,6 @@ services:
       - "${DATA_PLATFORM_WAREHOUSE_PORT}:8123"
     volumes:
       - ${WAREHOUSE_VOLUME}:/var/lib/clickhouse
-      - ./scripts/warehouse/sale/create_database.sql:/docker-entrypoint-initdb.d/10_sale_create_database.sql
-      - ./scripts/warehouse/sale/create_table.sql:/docker-entrypoint-initdb.d/20_sale_create_table.sql
       - ./scripts/warehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
       - ./scripts/warehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
     healthcheck:

@@ -11,7 +11,7 @@ def test_should_initialize_domain_registries_in_a_clean_process() -> None:
             "-c",
             (
                 "from data_platform.main import dataset_registry; "
-                "assert dataset_registry.names() == ('sale', 'house', 'online_shopping')"
+                "assert dataset_registry.names() == ('house', 'online_shopping')"
             ),
         ],
         capture_output=True,

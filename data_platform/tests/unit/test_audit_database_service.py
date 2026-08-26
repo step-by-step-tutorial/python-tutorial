@@ -1,4 +1,4 @@
-﻿from data_platform.audit.audit_database_service import AuditDatabaseService
+from data_platform.audit.audit_database_service import AuditDatabaseService
 from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
 from data_platform.model.endpoints import AuditEndpoint
@@ -10,7 +10,7 @@ class TestAuditDatabaseService:
         # Given
         given_event = AuditEventFactory.create_pipeline_started_event(
             PipelineStartedAuditRequest(
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
                 metadata={"airflow_dag_id": "dag-001"},
             )

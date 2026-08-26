@@ -1,14 +1,14 @@
-﻿from data_platform.model.endpoints import FileEndpoint, MessagingEndpoint
+from data_platform.model.endpoints import FileEndpoint, MessagingEndpoint
 from data_platform.service.csv_kafka_publisher import CsvKafkaPublisher
 
 
 class TestCsvKafkaPublisher:
 
     def test_should_read_csv_rows_and_publish_them_to_kafka(self, mocker) -> None:
-        given_file_endpoint = FileEndpoint(name="sale.file.csv", file_path="/tmp/sale.csv")
+        given_file_endpoint = FileEndpoint(name="house.file.csv", file_path="/tmp/house.csv")
         given_messaging_endpoint = MessagingEndpoint(
-            connection_name="sale.kafka.producer",
-            channel_name="sale-events",
+            connection_name="house.kafka.producer",
+            channel_name="house-events",
             bootstrap_servers="localhost:9092",
         )
 
@@ -29,10 +29,10 @@ class TestCsvKafkaPublisher:
 
         assert actual == 2
         assert mock_read_csv.call_count == 1
-        assert mock_read_csv.call_args.args[0] == "/tmp/sale.csv"
+        assert mock_read_csv.call_args.args[0] == "/tmp/house.csv"
         assert mock_ensure_topic.call_count == 1
-        assert mock_ensure_topic.call_args.args == ("localhost:9092", "sale-events")
+        assert mock_ensure_topic.call_args.args == ("localhost:9092", "house-events")
         assert given_producer.produce.call_count == 2
-        assert given_producer.produce.call_args_list[0].kwargs["topic"] == "sale-events"
+        assert given_producer.produce.call_args_list[0].kwargs["topic"] == "house-events"
         assert given_producer.poll.call_count == 1
         assert given_producer.flush.call_count == 1

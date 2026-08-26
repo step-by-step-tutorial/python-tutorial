@@ -1,3 +1,3 @@
-SELECT room, AVG(price_per_square_meter) AS average_price_per_square_meter
+SELECT property_type, AVG(price_per_sqm) AS average_price_per_sqm
 FROM app_warehouse.house_table
-GROUP BY room;
+GROUP BY property_type;

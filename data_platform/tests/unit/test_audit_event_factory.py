@@ -1,4 +1,4 @@
-﻿from data_platform.audit.audit_event_factory import AuditEventFactory
+from data_platform.audit.audit_event_factory import AuditEventFactory
 from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
 from data_platform.audit.audit_event_factory import DatasetWrittenAuditRequest
 from data_platform.audit.audit_event_factory import PipelineCompletedAuditRequest
@@ -16,14 +16,14 @@ class TestAuditEventFactory:
         # When
         given_started = AuditEventFactory.create_pipeline_started_event(
             PipelineStartedAuditRequest(
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
                 metadata={"dag_id": "dag-001"},
             )
         )
         given_completed = AuditEventFactory.create_pipeline_completed_event(
             PipelineCompletedAuditRequest(
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
                 duration_ms=42,
                 input_row_count=10,
@@ -34,7 +34,7 @@ class TestAuditEventFactory:
         )
         given_failed = AuditEventFactory.create_pipeline_failed_event(
             PipelineFailedAuditRequest(
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
                 duration_ms=42,
                 error=RuntimeError("boom"),
@@ -53,7 +53,7 @@ class TestAuditEventFactory:
         # When
         given_task_started = AuditEventFactory.create_task_started_event(
             TaskStartedAuditRequest(
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
                 task_name="expose_database",
                 task_id="task-001",
@@ -62,7 +62,7 @@ class TestAuditEventFactory:
         )
         given_task_completed = AuditEventFactory.create_task_completed_event(
             TaskCompletedAuditRequest(
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
                 task_name="expose_database",
                 task_id="task-001",
@@ -74,7 +74,7 @@ class TestAuditEventFactory:
         )
         given_task_failed = AuditEventFactory.create_task_failed_event(
             TaskFailedAuditRequest(
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
                 task_name="expose_database",
                 task_id="task-001",
@@ -88,7 +88,7 @@ class TestAuditEventFactory:
                 source_system="datalake",
                 source_uri="s3://bucket/path",
                 row_count=10,
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
             )
         )
@@ -97,9 +97,9 @@ class TestAuditEventFactory:
                 source_system="datalake",
                 source_uri="s3://bucket/path",
                 destination_system="database",
-                destination_uri="jdbc:postgresql://db/sale",
+                destination_uri="jdbc:postgresql://db/house",
                 row_count=9,
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
             )
         )

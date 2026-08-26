@@ -1,35 +1,80 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class HouseAttribute:
-    area_raw: str = "Area"
-    room_raw: str = "Room"
-    parking_raw: str = "Parking"
-    warehouse_raw: str = "Warehouse"
-    elevator_raw: str = "Elevator"
-    address_raw: str = "Address"
-    price_raw: str = "Price"
-    price_usd_raw: str = "Price(USD)"
-    area: str = "area"
-    room: str = "room"
-    parking: str = "parking"
-    warehouse: str = "warehouse"
-    elevator: str = "elevator"
+    property_id: str = "property_id"
+    property_type: str = "property_type"
     address: str = "address"
-    price: str = "price"
-    price_usd: str = "price_usd"
-    listing_key: str = "listing_key"
-    price_per_square_meter: str = "price_per_square_meter"
-    price_usd_per_square_meter: str = "price_usd_per_square_meter"
+    street: str = "street"
+    house_number: str = "house_number"
+    postal_code: str = "postal_code"
+    city: str = "city"
+    state: str = "state"
+    country: str = "country"
+    latitude: str = "latitude"
+    longitude: str = "longitude"
+    construction_year: str = "construction_year"
+    renovation_year: str = "renovation_year"
+    area_sqm: str = "area_sqm"
+    living_area_sqm: str = "living_area_sqm"
+    land_area_sqm: str = "land_area_sqm"
+    room_count: str = "room_count"
+    bedroom_count: str = "bedroom_count"
+    bathroom_count: str = "bathroom_count"
+    toilet_count: str = "toilet_count"
+    floor_number: str = "floor_number"
+    total_floors: str = "total_floors"
+    resident_count: str = "resident_count"
+    adult_count: str = "adult_count"
+    child_count: str = "child_count"
+    owner_id: str = "owner_id"
+    owner_name: str = "owner_name"
+    owner_type: str = "owner_type"
+    owner_occupied: str = "owner_occupied"
+    occupancy_status: str = "occupancy_status"
+    ownership_status: str = "ownership_status"
+    purchase_date: str = "purchase_date"
+    purchase_price: str = "purchase_price"
+    price_per_sqm: str = "price_per_sqm"
+    total_price: str = "total_price"
+    estimated_market_value: str = "estimated_market_value"
+    monthly_rent: str = "monthly_rent"
+    monthly_service_cost: str = "monthly_service_cost"
+    annual_property_tax: str = "annual_property_tax"
+    currency: str = "currency"
+    has_balcony: str = "has_balcony"
+    balcony_area_sqm: str = "balcony_area_sqm"
+    has_garden: str = "has_garden"
+    garden_area_sqm: str = "garden_area_sqm"
+    has_garage: str = "has_garage"
+    garage_capacity: str = "garage_capacity"
+    parking_spaces: str = "parking_spaces"
+    has_basement: str = "has_basement"
+    basement_area_sqm: str = "basement_area_sqm"
+    has_elevator: str = "has_elevator"
+    has_storage_room: str = "has_storage_room"
+    has_fireplace: str = "has_fireplace"
+    has_swimming_pool: str = "has_swimming_pool"
+    has_solar_panels: str = "has_solar_panels"
+    heating_type: str = "heating_type"
+    energy_source: str = "energy_source"
+    energy_efficiency_class: str = "energy_efficiency_class"
+    annual_energy_consumption_kwh: str = "annual_energy_consumption_kwh"
+    condition: str = "condition"
+    furnished: str = "furnished"
+    internet_available: str = "internet_available"
+    internet_speed_mbps: str = "internet_speed_mbps"
+    distance_to_city_center_km: str = "distance_to_city_center_km"
+    distance_to_school_km: str = "distance_to_school_km"
+    distance_to_supermarket_km: str = "distance_to_supermarket_km"
+    distance_to_public_transport_km: str = "distance_to_public_transport_km"
+    created_at: str = "created_at"
+    updated_at: str = "updated_at"
 
-    def __getattr__(self, item: str) -> str:
-        lowered = item.lower()
-        try:
-            return object.__getattribute__(self, lowered)
-        except Exception as error:
-            raise AttributeError(item) from error
+    @property
+    def columns(self) -> tuple[str, ...]:
+        return tuple(self.__dataclass_fields__)
 
 
 attribute = HouseAttribute()
-

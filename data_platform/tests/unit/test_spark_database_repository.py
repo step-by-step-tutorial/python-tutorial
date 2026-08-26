@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from data_platform.model.endpoints import DatabaseEndpoint
 from data_platform.repository.spark_database_repository import SparkDatabaseRepository
@@ -6,11 +6,11 @@ from data_platform.repository.spark_database_repository import SparkDatabaseRepo
 
 def build_endpoint() -> DatabaseEndpoint:
     return DatabaseEndpoint(
-        connection_name="sale.database",
-        schema="sale",
+        connection_name="house.database",
+        schema="house",
         stage_table_name="example_stage",
-        full_stage_table_name="sale.example_stage",
-        table_names=["sale.example_stage"],
+        full_stage_table_name="house.example_stage",
+        table_names=["house.example_stage"],
         create_sql_files={},
         truncate_sql_files={"truncate": "before.sql"},
         write_sql_files={"after": "after.sql"},

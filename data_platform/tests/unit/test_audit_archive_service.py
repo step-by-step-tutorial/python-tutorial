@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 
 from data_platform.audit.audit_archive_service import AuditArchiveService
 from data_platform.audit.audit_event_factory import AuditEventFactory
@@ -12,7 +12,7 @@ class TestAuditArchiveService:
         # Given
         given_event = AuditEventFactory.create_pipeline_started_event(
             PipelineStartedAuditRequest(
-                pipeline_name="sale_pipeline",
+                pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
             )
         )
@@ -64,7 +64,7 @@ class TestAuditArchiveService:
         )
 
         actual = AuditArchiveService(given_endpoint).write_manifest(
-            pipeline_name="sale_pipeline",
+            pipeline_name="house_pipeline",
             pipeline_id="pipeline-001",
             manifest={"rows": 10},
             event_time=datetime(2026, 8, 15, 12, 0, tzinfo=UTC),

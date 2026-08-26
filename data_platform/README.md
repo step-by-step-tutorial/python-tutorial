@@ -46,7 +46,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ```shell
 cd ./data_platform
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
-python -m data_platform.main
+python -m data_platform.main house
 ```
 
 
@@ -89,7 +89,7 @@ docker rmi samanalishiri/data-platform:latest
     * Server: airflow-database:5432
     * Username: admin
     * Password: admin
-    * Database: sale_airflow
+    * Database: airflow
 
 ## Clean Directory
 
