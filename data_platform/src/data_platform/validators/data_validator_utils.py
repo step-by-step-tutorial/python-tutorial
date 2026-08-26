@@ -19,6 +19,7 @@ def is_none(obj: Any) -> bool:
 def is_blank(obj: Any) -> bool:
     return is_none(obj) or is_empty_collection(obj) or is_empty_text(obj)
 
+
 def is_not_blank(obj: Any) -> bool:
     if hasattr(obj, "empty"):
         return not obj.empty
@@ -54,6 +55,7 @@ def require_or_raise_tuple(collection: tuple[str, ...], key: str, error_message:
         raise Exception(error_message)
     return collection[collection.index(key)]
 
+
 def require_absent(collection: tuple[str, ...], key: str, error_message: str = "Key not found."):
     if key in collection:
         raise Exception(error_message)
@@ -88,7 +90,6 @@ def should_not_be_negative(*numbers: int, error_message: str = "Value must not b
     for number in numbers:
         if number < 0:
             raise Exception(error_message)
-
 
 
 def require_columns(dataframe: Any, columns: Iterable[str], message: str = "Missing required columns") -> None:

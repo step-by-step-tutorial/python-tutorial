@@ -1,6 +1,6 @@
+from data_platform.analyzers.aggregate_model import AggregateSpecification
 from data_platform.analyzers.analyzer_chain import AnalyzerChain
 from data_platform.analyzers.analyzer_impl import GroupAggregateAnalyzer
-from data_platform.analyzers.aggregate_model import AggregateSpecification
 from data_platform.cleaners.cleaner_impl import (
     CleanerChain,
     DropDuplicatesCleaner,
@@ -11,20 +11,20 @@ from data_platform.cleaners.cleaner_impl import (
 from data_platform.config.keys import Key
 from data_platform.domain.online_shopping.attribute import attribute
 from data_platform.domain.online_shopping.spark_schema import ONLINE_SHOPPING_SCHEMA
-from data_platform.enrichers.enricher_impl import CopyColumnEnricher, DatetimePartEnricher, EnricherChain, PercentageEnricher
+from data_platform.enrichers.enricher_impl import CopyColumnEnricher, DatetimePartEnricher, EnricherChain, \
+    PercentageEnricher
 from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset import Dataset
 from data_platform.model.pipeline_flow import PipelineFlow
-
-from data_platform.repository.inmemory_datalake_repository import DataLakeRepository
-from data_platform.repository.inmemory_database_repository import InmemoryDatabaseRepository
-from data_platform.repository.inmemory_warehouse_repository import InmemoryWarehouseRepository
-from data_platform.repository.data_exposer import DataExposer
 from data_platform.registry.endpoint_registry import endpoint_registry
+from data_platform.repository.data_exposer import DataExposer
+from data_platform.repository.inmemory_database_repository import InmemoryDatabaseRepository
+from data_platform.repository.inmemory_datalake_repository import DataLakeRepository
+from data_platform.repository.inmemory_warehouse_repository import InmemoryWarehouseRepository
+from data_platform.validators.validator_chain import ValidatorChain
 from data_platform.validators.validator_impl import NonNegativeValidator, NotNullValidator, PositiveValidator, \
     RequiredColumnsValidator
-from data_platform.validators.validator_chain import ValidatorChain
 
 ONLINE_SHOPPING_DATASET = Dataset(
     name="online_shopping",

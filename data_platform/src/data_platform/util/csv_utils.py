@@ -32,4 +32,3 @@ def read_csv_file(path: str, consumer: Callable[[dict[str, str]], None]) -> int:
 
     logger.info("Read %s CSV rows from %s", len(dataframe), path)
     return len(dataframe)
-

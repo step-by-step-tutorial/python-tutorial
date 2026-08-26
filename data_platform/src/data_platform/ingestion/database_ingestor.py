@@ -16,4 +16,3 @@ class DatabaseIngestor:
         query_file = self._endpoint.query_sql_files["select_all"]
         query = read_text_file(query_file).format(table_name=table_name)
         return execute_query_strings(self._endpoint.connection_name, (query,))
-

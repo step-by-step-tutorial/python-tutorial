@@ -2,8 +2,8 @@ from collections.abc import Iterable
 
 from pyspark.sql import DataFrame
 
-from data_platform.util.dataframe_utils import empty_compatible_dataframe
 from data_platform.util.collection_utils import find_missing_columns
+from data_platform.util.dataframe_utils import empty_compatible_dataframe
 from data_platform.validators.assessment import Assessment
 from data_platform.validators.violation import Violation
 

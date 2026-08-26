@@ -21,4 +21,3 @@ class SparkCsvFileIngestor:
             .schema(schema)
             .csv(file_path)
         )
-

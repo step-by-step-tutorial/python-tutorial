@@ -30,4 +30,3 @@ class ConnectionRegistry(Registry[Any]):
 connection_registry = ConnectionRegistry()
 
 atexit.register(connection_registry.close_all)
-

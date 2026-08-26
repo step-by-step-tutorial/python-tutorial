@@ -1,5 +1,3 @@
-from typing import Any
-
 from pyspark.sql import DataFrame
 
 from data_platform.analyzers.aggregate_model import AggregateSpecification

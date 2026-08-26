@@ -19,4 +19,3 @@ app = AppSettings(
     scripts_dir=Path(os.getenv("SCRIPTS_DIR", "scripts")),
     spark_dir=Path(os.getenv("SPARK_DIR", "spark")),
 )
-

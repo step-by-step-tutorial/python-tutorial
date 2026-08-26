@@ -27,7 +27,7 @@ def ensure_pipeline_success(**context) -> None:
         task_id
         for task_id, state in task_states.items()
         if task_id != current_task_id
-        and _state_name(state) in {"failed", "upstream_failed"}
+           and _state_name(state) in {"failed", "upstream_failed"}
     ]
     if failed_tasks:
         raise AirflowException(f"Pipeline tasks failed: {', '.join(failed_tasks)}")

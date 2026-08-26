@@ -8,4 +8,3 @@ def elapsed_milliseconds(started_at: float) -> int:
 
 def generate_ingestion_time() -> datetime:
     return datetime.now(UTC)
-

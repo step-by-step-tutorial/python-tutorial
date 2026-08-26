@@ -25,4 +25,3 @@ class AuditLogService(AbstractAuditService):
                 "error": event.error_message,
             },
         )
-

@@ -18,4 +18,3 @@ class CsvFileIngestor(DatasetIngestor):
         logger.info("Ingesting CSV file from %s", self._endpoint.file_path)
         data = csv_to_dataframe(self._endpoint.file_path)
         return data
-

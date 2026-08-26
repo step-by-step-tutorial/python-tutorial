@@ -40,4 +40,3 @@ class OnlineShoppingAttribute:
 
 
 attribute = OnlineShoppingAttribute()
-

@@ -90,4 +90,3 @@ class AuditEndpoint:
     channel_name: str = ""
     bucket_name: str = ""
     name: str = field(default="audit", init=False)
-

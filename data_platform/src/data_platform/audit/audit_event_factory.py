@@ -242,4 +242,3 @@ class AuditEventFactory:
             output_row_count=request.row_count,
             metadata=request.metadata or {},
         )
-

@@ -70,4 +70,3 @@ warehouse = MappingProxyType(
         ),
     }
 )
-

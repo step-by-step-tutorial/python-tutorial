@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM python:3.12-slim-trixie
 
 LABEL authors="samanalishiri@gmail.com"
@@ -11,12 +12,18 @@ ENV OUTPUT_DIR=/app/output
 WORKDIR /app
 
 COPY pyproject.toml ./
+COPY requirements.txt ./requirements.txt
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install --upgrade pip \
+    && python -m pip install -r requirements.txt
+
 COPY src ./src
 COPY config ./config
 COPY data ./data
 COPY scripts ./scripts
 
-RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install .
 
 CMD ["sh", "-c", "for config in ./config/*.json; do python -m test_data --config \"$config\" || exit 1; done; exec python -m test_data.api.dataset_api"]

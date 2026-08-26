@@ -28,4 +28,3 @@ def create_audit_connection():
         username=main_settings.warehouse[Key.AUDIT_WAREHOUSE].user,
         password=main_settings.warehouse[Key.AUDIT_WAREHOUSE].password,
     )
-

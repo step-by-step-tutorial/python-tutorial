@@ -1,5 +1,4 @@
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 from pyspark.sql import DataFrame, Window
 from pyspark.sql.functions import avg, coalesce, col, lit, lower, regexp_replace, to_timestamp, trim, when
@@ -45,7 +44,8 @@ class BooleanColumnCleaner:
         self.column, self.default_value = column, default_value
 
     def clean(self, dataframe: DataFrame) -> DataFrame:
-        value = when(lower(trim(col(self.column).cast("string"))).isin("true", "1", "yes", "y"), lit(True)).otherwise(lit(False))
+        value = when(lower(trim(col(self.column).cast("string"))).isin("true", "1", "yes", "y"), lit(True)).otherwise(
+            lit(False))
         return dataframe.withColumn(self.column, coalesce(value, lit(self.default_value)))
 
 

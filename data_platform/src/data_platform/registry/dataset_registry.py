@@ -8,4 +8,3 @@ class DatasetRegistry(Registry[Dataset]):
 
 
 dataset_registry = DatasetRegistry()
-

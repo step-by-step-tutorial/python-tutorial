@@ -48,4 +48,3 @@ def read_csv_file(path_str: str, consumer: Callable[[dict[str, Any]], None]) -> 
             row_counter += 1
 
     return row_counter
-

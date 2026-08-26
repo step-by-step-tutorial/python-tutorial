@@ -29,4 +29,3 @@ class Key(StrEnum):
     AUDIT_KAFKA_PRODUCER = "audit.kafka.producer"
     AUDIT_KAFKA_CONSUMER = "audit.kafka.listener"
     HOUSE_KAFKA_PRODUCER = "house.kafka.producer"
-

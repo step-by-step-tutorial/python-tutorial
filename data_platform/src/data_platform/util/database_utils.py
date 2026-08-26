@@ -1,6 +1,6 @@
-﻿from sqlalchemy import text
+﻿from typing import Any
 
-from typing import Any
+from sqlalchemy import text
 
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.file_utils import read_text_files

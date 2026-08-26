@@ -9,5 +9,3 @@ class DataExposer:
     def expose(self, data: Any) -> None:
         for persist_callback in self._persist_callbacks:
             persist_callback(data)
-
-

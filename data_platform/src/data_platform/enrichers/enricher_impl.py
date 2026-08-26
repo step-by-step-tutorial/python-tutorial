@@ -1,8 +1,6 @@
-from collections.abc import Callable
 import hashlib
+from collections.abc import Callable
 from typing import Any
-
-from data_platform.enrichers.enricher_chain import EnricherChain
 
 
 class CalculateColumnEnricher:
@@ -68,5 +66,6 @@ class HashColumnsEnricher:
         def digest(row: Any) -> str:
             values = ["" if row[column] is None else str(row[column]) for column in self.columns]
             return hashlib.sha256(self.separator.join(values).encode("utf-8")).hexdigest()
+
         dataframe[self.target] = dataframe.apply(digest, axis=1)
         return dataframe

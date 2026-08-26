@@ -8,4 +8,3 @@ class AbstractAuditService(ABC):
     @abstractmethod
     def save(self, event: AuditEvent) -> None:
         raise NotImplementedError
-

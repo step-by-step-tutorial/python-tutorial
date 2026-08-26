@@ -4,11 +4,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from data_platform.model.dataset_ingestor import DatasetIngestor
-from data_platform.repository.storage_repository import StorageRepository
 from data_platform.analyzers.spark_analyzer_chain import SparkAnalyzerChain
 from data_platform.cleaners.spark_cleaner_chain import SparkCleanerChain
 from data_platform.enrichers.spark_enricher_chain import SparkEnricherChain
+from data_platform.model.dataset_ingestor import DatasetIngestor
+from data_platform.repository.storage_repository import StorageRepository
 from data_platform.validators.spark_validator_chain import SparkValidatorChain
 
 

@@ -33,4 +33,3 @@ class SparkKafkaIngestor:
             )
             .select("payload.*")
         )
-

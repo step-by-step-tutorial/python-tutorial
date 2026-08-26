@@ -9,4 +9,3 @@ class ApiSettings:
 
 
 api = MappingProxyType({"data_simulator": ApiSettings(os.getenv("DATA_SIMULATOR_API_URL", "http://localhost:8080"))})
-

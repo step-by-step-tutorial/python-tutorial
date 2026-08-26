@@ -52,4 +52,3 @@ class AuditEvent(BaseModel):
     error_message: str | None = None
     error_stacktrace: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
-

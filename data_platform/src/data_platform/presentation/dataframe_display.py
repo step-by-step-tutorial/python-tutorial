@@ -22,4 +22,3 @@ def show_spark_dataframes(dataframes: Mapping[str, object]) -> None:
     for name, dataframe in dataframes.items():
         logger.info("Displaying analysis result %s", name)
         dataframe.show()
-

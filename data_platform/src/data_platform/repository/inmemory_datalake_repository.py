@@ -20,7 +20,8 @@ class DataLakeRepository(StorageRepository):
     def write(self, data: pd.DataFrame, path: str, file_extension: str = "parquet") -> str:
         row_count = len(data) if isinstance(data, pd.DataFrame) else "unknown"
         column_count = len(data.columns) if isinstance(data, pd.DataFrame) else "unknown"
-        logger.info("Writing datalake data: bucket=%s path=%s rows=%s columns=%s", self._bucket_name, path, row_count, column_count)
+        logger.info("Writing datalake data: bucket=%s path=%s rows=%s columns=%s", self._bucket_name, path, row_count,
+                    column_count)
         parquet_buffer = BytesIO()
         data.to_parquet(parquet_buffer, index=False)
         parquet_buffer.seek(0)
@@ -54,4 +55,3 @@ class DataLakeRepository(StorageRepository):
         object_keys = [object_metadata["Key"] for object_metadata in response.get("Contents", [])]
         logger.debug("Found datalake objects: bucket=%s path=%s objects=%s", self._bucket_name, path, len(object_keys))
         return object_keys
-

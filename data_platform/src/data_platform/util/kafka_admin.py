@@ -24,4 +24,3 @@ def ensure_topic_exists(
         logger.info("Ensured Kafka topic exists: %s", topic_name)
     except Exception as error:
         logger.warning("Unable to ensure Kafka topic %s exists: %s", topic_name, error)
-

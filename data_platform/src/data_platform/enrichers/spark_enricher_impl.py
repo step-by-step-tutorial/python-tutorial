@@ -1,7 +1,6 @@
-from typing import Any
-
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, concat_ws, date_format, dayofmonth, dayofweek, dayofyear, hour, month, quarter, round, sha2, year
+from pyspark.sql.functions import col, concat_ws, dayofmonth, dayofweek, dayofyear, hour, month, quarter, \
+    round, sha2, year
 
 
 class MultiplyColumnsEnricher:
@@ -42,7 +41,8 @@ class DatetimePartEnricher:
         self.source, self.part, self.target = source, part, target
 
     def enrich(self, dataframe: DataFrame) -> DataFrame:
-        parts = {"year": year, "month": month, "day": dayofmonth, "dayofweek": dayofweek, "dayofyear": dayofyear, "hour": hour, "quarter": quarter}
+        parts = {"year": year, "month": month, "day": dayofmonth, "dayofweek": dayofweek, "dayofyear": dayofyear,
+                 "hour": hour, "quarter": quarter}
         if self.part not in parts:
             raise ValueError(f"Unsupported datetime part: {self.part}")
         return dataframe.withColumn(self.target, parts[self.part](col(self.source)))
@@ -53,4 +53,5 @@ class HashColumnsEnricher:
         self.columns, self.target, self.separator = columns, target, separator
 
     def enrich(self, dataframe: DataFrame) -> DataFrame:
-        return dataframe.withColumn(self.target, sha2(concat_ws(self.separator, *(col(column).cast("string") for column in self.columns)), 256))
+        return dataframe.withColumn(self.target, sha2(
+            concat_ws(self.separator, *(col(column).cast("string") for column in self.columns)), 256))

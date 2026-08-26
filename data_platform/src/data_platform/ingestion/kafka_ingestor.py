@@ -35,4 +35,3 @@ class KafkaIngestor:
 
         logger.info("Ingested %s Kafka messages from topic %s", len(records), self._endpoint.channel_name)
         return pd.json_normalize(records)
-

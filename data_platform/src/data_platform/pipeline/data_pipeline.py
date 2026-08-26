@@ -23,7 +23,8 @@ class DataPipeline(Pipeline):
     def ingest(self) -> str:
         raw_path = generate_relative_path(StorageEnvironment.RAW, self.ingestion_time, self.dataset.name)
         data = pd.concat([ingestor.ingest() for ingestor in self.flow.ingestors], ignore_index=True)
-        logger.info("Ingested dataset: dataset=%s rows=%s columns=%s path=%s", self.dataset.name, len(data), len(data.columns), raw_path)
+        logger.info("Ingested dataset: dataset=%s rows=%s columns=%s path=%s", self.dataset.name, len(data),
+                    len(data.columns), raw_path)
         path = self.flow.repository.write(data, raw_path)
         if self.flow.backup_repository is not None:
             self.flow.backup_repository.write(data, raw_path)
@@ -50,7 +51,8 @@ class DataPipeline(Pipeline):
         accepted_data = assessment.accepted
         rejected_data = assessment.rejected
         errors = assessment.errors
-        logger.info("Validated dataset: dataset=%s accepted_rows=%s rejected_rows=%s error_count=%s", self.dataset.name, len(accepted_data), len(rejected_data), len(errors))
+        logger.info("Validated dataset: dataset=%s accepted_rows=%s rejected_rows=%s error_count=%s", self.dataset.name,
+                    len(accepted_data), len(rejected_data), len(errors))
         if is_not_blank(rejected_data):
             self.flow.repository.write(rejected_data, rejected_path)
             logger.error(f"Validation failed for dataset {self.dataset.name}: {errors}")
@@ -82,7 +84,8 @@ class DataPipeline(Pipeline):
                 generate_relative_path(StorageEnvironment.REPORTS, self.ingestion_time, self.dataset.name), result.name
             )
             self.flow.repository.write(pd.DataFrame(result.data), report_path)
-            logger.info("Analyzer report persisted: dataset=%s report=%s path=%s rows=%s", self.dataset.name, result.name, report_path, len(result.data))
+            logger.info("Analyzer report persisted: dataset=%s report=%s path=%s rows=%s", self.dataset.name,
+                        result.name, report_path, len(result.data))
 
     def cleanup(self) -> None:
         if self.flow.after_pipeline is not None:

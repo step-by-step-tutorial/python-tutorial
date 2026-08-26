@@ -28,7 +28,8 @@ class SparkPipeline(Pipeline):
         data = dataframes[0]
         for dataframe in dataframes[1:]:
             data = data.unionByName(dataframe, allowMissingColumns=True)
-        logger.info("Ingested Spark dataset: dataset=%s rows=%s columns=%s path=%s", self.dataset.name, data.count(), len(data.columns), path)
+        logger.info("Ingested Spark dataset: dataset=%s rows=%s columns=%s path=%s", self.dataset.name, data.count(),
+                    len(data.columns), path)
         return self._write(data, path, "raw")
 
     def clean(self, path: str) -> str:
@@ -43,7 +44,8 @@ class SparkPipeline(Pipeline):
         rejected_path = generate_relative_path(StorageEnvironment.REJECTED, self.ingestion_time, self.dataset.name)
         if not assessment.rejected.isEmpty():
             self._repository.write(assessment.rejected, rejected_path)
-            logger.warning("Spark validation rejected rows: dataset=%s rows=%s errors=%s", self.dataset.name, assessment.rejected.count(), len(assessment.errors))
+            logger.warning("Spark validation rejected rows: dataset=%s rows=%s errors=%s", self.dataset.name,
+                           assessment.rejected.count(), len(assessment.errors))
         return self._write(assessment.accepted, accepted_path, "accepted")
 
     def enrich(self, path: str) -> str:
@@ -62,7 +64,8 @@ class SparkPipeline(Pipeline):
         for result in self.flow.analyzers.analyze(self._repository.read(path)):
             report_path = join_path(reports_path, result.name)
             self._repository.write(result.data, report_path)
-            logger.info("Spark analyzer report persisted: dataset=%s report=%s path=%s rows=%s", self.dataset.name, result.name, report_path, result.data.count())
+            logger.info("Spark analyzer report persisted: dataset=%s report=%s path=%s rows=%s", self.dataset.name,
+                        result.name, report_path, result.data.count())
 
     def cleanup(self) -> None:
         self.flow.after_pipeline(self)

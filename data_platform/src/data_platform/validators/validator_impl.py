@@ -3,8 +3,8 @@ from typing import Any
 
 from data_platform.util.dataframe_utils import empty_compatible_dataframe
 from data_platform.validators.assessment import Assessment
-from data_platform.validators.validator import Validator
 from data_platform.validators.data_validator_utils import require_not_blank, require_columns
+from data_platform.validators.validator import Validator
 
 
 class RequiredColumnsValidator:

@@ -37,6 +37,7 @@ def create_session() -> SparkSession:
         .config("spark.driver.host", main_settings.spark.driver_host)
         .config("spark.driver.bindAddress", main_settings.spark.driver_bind_address)
         .config("spark.jars.packages", ",".join(SPARK_JARS))
+        .config("spark.jars.ivy", "/opt/spark-ivy")
         .config("spark.jars.excludes", "org.slf4j:slf4j-api")
         .config("spark.hadoop.fs.s3a.endpoint", main_settings.data_lake[Key.PLATFORM_DATA_LAKE].endpoint)
         .config("spark.hadoop.fs.s3a.access.key", main_settings.data_lake[Key.PLATFORM_DATA_LAKE].access_key)
@@ -57,4 +58,3 @@ def create_session() -> SparkSession:
     )
 
     return session
-

@@ -29,7 +29,6 @@ from data_platform.validators.validator_impl import (
     RequiredColumnsValidator,
 )
 
-
 numeric_columns = (
     attribute.latitude, attribute.longitude, attribute.construction_year,
     attribute.renovation_year, attribute.area_sqm, attribute.living_area_sqm,
@@ -61,7 +60,6 @@ text_columns = (
     attribute.heating_type, attribute.energy_source, attribute.energy_efficiency_class,
     attribute.condition,
 )
-
 
 house_dataset = Dataset(
     name="house",
@@ -115,15 +113,18 @@ house_dataset = Dataset(
             ),
             GroupAggregateAnalyzer(
                 "average_price_per_square_meter_by_property_type",
-                AggregateSpecification(attribute.property_type, attribute.price_per_sqm, "mean", "average_price_per_sqm"),
+                AggregateSpecification(attribute.property_type, attribute.price_per_sqm, "mean",
+                                       "average_price_per_sqm"),
             ),
             GroupAggregateAnalyzer(
                 "average_living_area_by_property_type",
-                AggregateSpecification(attribute.property_type, attribute.living_area_sqm, "mean", "average_living_area_sqm"),
+                AggregateSpecification(attribute.property_type, attribute.living_area_sqm, "mean",
+                                       "average_living_area_sqm"),
             ),
             GroupAggregateAnalyzer(
                 "average_energy_consumption_by_city",
-                AggregateSpecification(attribute.city, attribute.annual_energy_consumption_kwh, "mean", "average_energy_consumption_kwh"),
+                AggregateSpecification(attribute.city, attribute.annual_energy_consumption_kwh, "mean",
+                                       "average_energy_consumption_kwh"),
             ),
         )),
     ),

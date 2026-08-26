@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM python:3.12-slim-trixie
 
 LABEL authors="samanalishiri@gmail.com"
@@ -18,7 +19,8 @@ COPY pyproject.toml ./
 COPY src ./src
 COPY scripts ./scripts
 
-RUN python -m pip install --upgrade pip \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install --upgrade pip \
     && python -m pip install -r requirements.txt \
     && python -m pip install -e .
 

@@ -1,5 +1,5 @@
-import data_platform.connector.datalake_connections
 import data_platform.connector.database_connections
+import data_platform.connector.datalake_connections
 import data_platform.connector.kafka_connections
 import data_platform.connector.warehouse_connections
 from data_platform.config.keys import Key
@@ -16,19 +16,32 @@ from data_platform.util.path_utils import generate_dataset_download_url, generat
 
 def initialize_registries() -> None:
     connection_registry.clear()
-    connection_registry.register_lazy_item(Key.HOUSE_DATABASE, data_platform.connector.database_connections.create_house_connection)
-    connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_DATABASE, data_platform.connector.database_connections.create_online_shopping_connection)
-    connection_registry.register_lazy_item(Key.AUDIT_DATABASE, data_platform.connector.database_connections.create_audit_connection)
-    connection_registry.register_lazy_item(Key.HOUSE_DATA_LAKE, data_platform.connector.datalake_connections.create_house_connection)
-    connection_registry.register_lazy_item(Key.AUDIT_DATA_LAKE, data_platform.connector.datalake_connections.create_audit_connection)
-    connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_DATA_LAKE, data_platform.connector.datalake_connections.create_online_shopping_connection)
-    connection_registry.register_lazy_item(Key.HOUSE_WAREHOUSE, data_platform.connector.warehouse_connections.create_house_connection)
-    connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_WAREHOUSE, data_platform.connector.warehouse_connections.create_online_shopping_connection)
-    connection_registry.register_lazy_item(Key.AUDIT_WAREHOUSE, data_platform.connector.warehouse_connections.create_audit_connection)
-    connection_registry.register_lazy_item(Key.HOUSE_KAFKA_PRODUCER, data_platform.connector.kafka_connections.create_house_publisher_connection)
-    connection_registry.register_lazy_item(Key.AUDIT_KAFKA_PRODUCER, data_platform.connector.kafka_connections.create_audit_publisher_connection)
-    connection_registry.register_lazy_item(Key.HOUSE_KAFKA_CONSUMER, data_platform.connector.kafka_connections.create_house_listener_connection)
-    connection_registry.register_lazy_item(Key.AUDIT_KAFKA_CONSUMER, data_platform.connector.kafka_connections.create_audit_listener_connection)
+    connection_registry.register_lazy_item(Key.HOUSE_DATABASE,
+                                           data_platform.connector.database_connections.create_house_connection)
+    connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_DATABASE,
+                                           data_platform.connector.database_connections.create_online_shopping_connection)
+    connection_registry.register_lazy_item(Key.AUDIT_DATABASE,
+                                           data_platform.connector.database_connections.create_audit_connection)
+    connection_registry.register_lazy_item(Key.HOUSE_DATA_LAKE,
+                                           data_platform.connector.datalake_connections.create_house_connection)
+    connection_registry.register_lazy_item(Key.AUDIT_DATA_LAKE,
+                                           data_platform.connector.datalake_connections.create_audit_connection)
+    connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_DATA_LAKE,
+                                           data_platform.connector.datalake_connections.create_online_shopping_connection)
+    connection_registry.register_lazy_item(Key.HOUSE_WAREHOUSE,
+                                           data_platform.connector.warehouse_connections.create_house_connection)
+    connection_registry.register_lazy_item(Key.ONLINE_SHOPPING_WAREHOUSE,
+                                           data_platform.connector.warehouse_connections.create_online_shopping_connection)
+    connection_registry.register_lazy_item(Key.AUDIT_WAREHOUSE,
+                                           data_platform.connector.warehouse_connections.create_audit_connection)
+    connection_registry.register_lazy_item(Key.HOUSE_KAFKA_PRODUCER,
+                                           data_platform.connector.kafka_connections.create_house_publisher_connection)
+    connection_registry.register_lazy_item(Key.AUDIT_KAFKA_PRODUCER,
+                                           data_platform.connector.kafka_connections.create_audit_publisher_connection)
+    connection_registry.register_lazy_item(Key.HOUSE_KAFKA_CONSUMER,
+                                           data_platform.connector.kafka_connections.create_house_listener_connection)
+    connection_registry.register_lazy_item(Key.AUDIT_KAFKA_CONSUMER,
+                                           data_platform.connector.kafka_connections.create_audit_listener_connection)
     endpoint_registry.clear()
     endpoint_registry.register(
         "audit",

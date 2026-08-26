@@ -50,4 +50,3 @@ def create_audit_listener_connection() -> Consumer:
             "enable.auto.commit": False,
         }
     )
-

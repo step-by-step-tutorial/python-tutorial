@@ -1,11 +1,12 @@
 ﻿import json
 import logging
+
 from confluent_kafka import Producer
 
 from data_platform.model.endpoints import FileEndpoint, MessagingEndpoint
+from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.file_utils import read_csv_file
 from data_platform.util.kafka_admin import ensure_topic_exists
-from data_platform.registry.connection_registry import connection_registry
 
 logger = logging.getLogger(__name__)
 

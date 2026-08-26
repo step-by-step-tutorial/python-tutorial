@@ -1,8 +1,8 @@
 from typing import Any
 
 from data_platform.validators.assessment import Assessment
-from data_platform.validators.violation import Violation
 from data_platform.validators.data_validator_utils import is_not_blank, require_or_default
+from data_platform.validators.violation import Violation
 
 
 class Validator:

@@ -15,4 +15,3 @@ def configure_logging() -> None:
 
 def log_line() -> None:
     logger.info(100 * "=")
-

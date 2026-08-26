@@ -1,6 +1,7 @@
 import logging
 
 from pyspark.sql import DataFrame, SparkSession
+
 from data_platform.model.endpoints import DataLakeEndpoint, MessagingEndpoint
 from data_platform.repository.spark_datalake_repository import SparkDatalakeRepository
 from data_platform.util.kafka_admin import ensure_topic_exists
@@ -10,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class SparkStreamingRepository:
-    def __init__(self, session: SparkSession, messaging_endpoint: MessagingEndpoint, data_lake_endpoint: DataLakeEndpoint) -> None:
+    def __init__(self, session: SparkSession, messaging_endpoint: MessagingEndpoint,
+                 data_lake_endpoint: DataLakeEndpoint) -> None:
         self._session = session
         self._messaging_endpoint = messaging_endpoint
         self._datalake_repository = SparkDatalakeRepository(session, data_lake_endpoint)

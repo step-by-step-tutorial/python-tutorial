@@ -24,4 +24,3 @@ class RestApiIngestor:
         if isinstance(data, list):
             return pd.json_normalize(data)
         return pd.json_normalize([data])
-

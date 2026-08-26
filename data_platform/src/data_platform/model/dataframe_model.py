@@ -6,4 +6,3 @@ from typing import Any
 class DataFrameModel:
     schema: Any = None
     required_columns: frozenset[str] = frozenset()
-

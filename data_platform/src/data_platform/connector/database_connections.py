@@ -14,4 +14,3 @@ def create_online_shopping_connection():
 
 def create_audit_connection():
     return create_engine(main_settings.database[Key.AUDIT_DATABASE].sqlalchemy_url)
-

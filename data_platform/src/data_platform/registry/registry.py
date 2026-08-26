@@ -65,4 +65,3 @@ class Registry(Generic[RegistryItem]):
     def clear(self) -> None:
         self._items.clear()
         self._lazy_loading_items.clear()
-

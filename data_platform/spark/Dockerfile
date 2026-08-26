@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM spark:4.1.2-java21
 LABEL maintainer="samanalishiri@gmail.com"
 
@@ -26,6 +27,14 @@ RUN curl -fsSL "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYT
   && rm -rf /tmp/python.tgz "/tmp/Python-${PYTHON_VERSION}"
 
 RUN python -m venv /opt/venv && /opt/venv/bin/pip --version
+
+RUN mkdir -p /opt/spark-ivy \
+  && /opt/spark/bin/spark-submit \
+      --packages "org.postgresql:postgresql:42.7.7,org.apache.hadoop:hadoop-aws:3.4.2,org.slf4j:slf4j-api:1.7.36,org.slf4j:slf4j-reload4j:1.7.36,ch.qos.reload4j:reload4j:1.2.22,org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.2" \
+      --conf spark.jars.ivy=/opt/spark-ivy \
+      --conf spark.jars.excludes=org.slf4j:slf4j-api \
+      --version \
+  && chmod -R a+rX /opt/spark-ivy
 
 ENV PATH="/opt/venv/bin:/usr/local/bin:${PATH}" \
     PYSPARK_PYTHON="/usr/local/bin/python" \

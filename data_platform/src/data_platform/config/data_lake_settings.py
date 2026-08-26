@@ -20,7 +20,7 @@ class DataLakeSettings:
 
 data_lake = MappingProxyType(
     {
-    Key.PLATFORM_DATA_LAKE: DataLakeSettings(
+        Key.PLATFORM_DATA_LAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_DATALAKE_ENDPOINT", "http://localhost:9000"),
             access_key=os.getenv("DATA_PLATFORM_DATALAKE_ACCESS_KEY", "admin"),
             secret_key=os.getenv("DATA_PLATFORM_DATALAKE_SECRET_KEY", "administrator"),
@@ -77,4 +77,3 @@ data_lake = MappingProxyType(
         ),
     }
 )
-

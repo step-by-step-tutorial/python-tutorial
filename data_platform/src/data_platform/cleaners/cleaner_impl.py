@@ -3,8 +3,6 @@ from typing import Any
 
 import pandas as pd
 
-from data_platform.cleaners.cleaner_chain import CleanerChain
-
 
 class DropDuplicatesCleaner:
     def __init__(self, subset: str | Sequence[str] | None = None) -> None:
@@ -19,7 +17,8 @@ class NumericColumnCleaner:
         self.column, self.default_value = column, default_value
 
     def clean(self, dataframe: Any) -> Any:
-        converted = pd.to_numeric(dataframe[self.column].astype("string").str.replace(",", "", regex=False).str.strip(), errors="coerce")
+        converted = pd.to_numeric(dataframe[self.column].astype("string").str.replace(",", "", regex=False).str.strip(),
+                                  errors="coerce")
         dataframe[self.column] = converted if self.default_value is None else converted.fillna(self.default_value)
         return dataframe
 
@@ -55,6 +54,7 @@ class BooleanColumnCleaner:
             if isinstance(value, (int, float)):
                 return bool(value)
             return str(value).strip().lower() in {"true", "1", "yes", "y"}
+
         dataframe[self.column] = dataframe[self.column].map(convert).astype(bool)
         return dataframe
 

@@ -20,4 +20,3 @@ class WarehouseIngestor:
 
         connection = connection_registry.get_item(self._endpoint.connection_name)
         return connection.query_df(query)
-

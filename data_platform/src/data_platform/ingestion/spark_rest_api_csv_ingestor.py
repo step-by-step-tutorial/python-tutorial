@@ -45,7 +45,8 @@ class SparkRestApiCsvIngestor(DatasetIngestor):
                 .cache()
             )
             row_count = dataframe.count()
-            logger.info("Loaded CSV resource into Spark: url=%s rows=%s columns=%s bytes=%s", self._endpoint.url, row_count, len(dataframe.columns), len(payload))
+            logger.info("Loaded CSV resource into Spark: url=%s rows=%s columns=%s bytes=%s", self._endpoint.url,
+                        row_count, len(dataframe.columns), len(payload))
             return dataframe
         finally:
             if temporary_path is not None:
