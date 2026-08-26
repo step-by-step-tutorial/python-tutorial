@@ -11,7 +11,7 @@ EXIT_ERROR = 1
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate test data from text files.")
-    parser.add_argument("--config", required=True, help="Path to the JSON config file, for example config/sale.json")
+    parser.add_argument("--config", required=True, help="Path to the JSON config file, for example config/online_shopping.json")
     return parser
 
 

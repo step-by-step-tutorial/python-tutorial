@@ -44,9 +44,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ```
 
 ```shell
-python -m test_data --config ./test_data/config/sale.json
 python -m test_data --config ./test_data/config/online_shopping.json
-python -m test_data --config ./test_data/config/hr.json
 ```
 
 ```shell

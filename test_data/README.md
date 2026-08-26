@@ -142,9 +142,7 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 
 ```shell
 cd ./test_data
-python -m test_data --config ./config/sale.json
 python -m test_data --config ./config/online_shopping.json
-python -m test_data --config ./config/hr.json
 python -m test_data --help
 ```
 
@@ -400,7 +398,7 @@ Counts are values available, not rows generated.
 
 ## Add a New Dataset
 
-1. Copy `config/sale.json` to `config/<dataset>.json` and set `row_count` and `output_name`.
+1. Copy `config/online_shopping.json` to `config/<dataset>.json` and set `row_count` and `output_name`.
 2. Reuse the existing files under `data/` wherever possible — most datasets need no new data.
 3. For genuinely new values, add a file named after the *kind* of data, not the dataset:
    `data/<kind>.txt` for a flat list, or `data/<kind>/<key>.txt` plus a mapping CSV when the values depend on another
