@@ -78,6 +78,13 @@ class TestDatalakeUtils:
         assert actual_object_key == "raw/house/part-001.parquet"
         assert actual_checkpoint == "s3a://app-datalake/checkpoints/house-events"
 
+    def test_should_generate_dataset_download_url(self) -> None:
+        actual = datalake_path_utils.generate_dataset_download_url(
+            "http://test-data:8080/", "Online_Shopping"
+        )
+
+        assert actual == "http://test-data:8080/datasets/online_shopping/download?format=csv"
+
     def test_should_unpersist_persisted_dataframes_in_reverse_order(self, mocker) -> None:
         # Given
         given_first = mocker.Mock()

@@ -8,5 +8,5 @@ class ApiSettings:
     url: str
 
 
-api = MappingProxyType({"test_data": ApiSettings(os.getenv("TEST_DATA_API_URL", "http://localhost:8080"))})
+api = MappingProxyType({"data_simulator": ApiSettings(os.getenv("DATA_SIMULATOR_API_URL", "http://localhost:8080"))})
 

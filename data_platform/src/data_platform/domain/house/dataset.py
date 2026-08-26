@@ -12,7 +12,8 @@ from data_platform.cleaners.cleaner_impl import (
 from data_platform.config.keys import Key
 from data_platform.domain.house.attribute import attribute
 from data_platform.domain.house.spark_schema import build_schema
-from data_platform.ingestion.csv_file_ingestor import CsvFileIngestor
+from data_platform.enrichers.enricher_impl import EnricherChain
+from data_platform.ingestion.rest_api_csv_ingestor import RestApiCsvIngestor
 from data_platform.model.dataframe_model import DataFrameModel
 from data_platform.model.dataset import Dataset
 from data_platform.model.pipeline_flow import PipelineFlow
@@ -70,6 +71,7 @@ house_dataset = Dataset(
     audit=endpoint_registry.get_item("audit"),
     endpoints={
         Key.HOUSE_CSV_FILE: endpoint_registry.get_item(Key.HOUSE_CSV_FILE),
+        Key.HOUSE_REST_API: endpoint_registry.get_item(Key.HOUSE_REST_API),
         Key.HOUSE_KAFKA_CONSUMER: endpoint_registry.get_item(Key.HOUSE_KAFKA_CONSUMER),
         Key.HOUSE_KAFKA_PRODUCER: endpoint_registry.get_item(Key.HOUSE_KAFKA_PRODUCER),
         Key.HOUSE_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_DATA_LAKE),
@@ -78,7 +80,7 @@ house_dataset = Dataset(
     },
     flow=PipelineFlow(
         repository=DataLakeRepository(endpoint_registry.get_item(Key.HOUSE_DATA_LAKE)),
-        ingestors=(CsvFileIngestor(endpoint_registry.get_item(Key.HOUSE_CSV_FILE)),),
+        ingestors=(RestApiCsvIngestor(endpoint_registry.get_item(Key.HOUSE_REST_API)),),
         cleaners=CleanerChain(
             tuple(NumericColumnCleaner(column) for column in numeric_columns)
             + tuple(BooleanColumnCleaner(column) for column in boolean_columns)
@@ -94,7 +96,7 @@ house_dataset = Dataset(
             PositiveValidator(attribute.area_sqm),
             PositiveValidator(attribute.total_price),
         )),
-        enrichers=(),
+        enrichers=EnricherChain(),
         exposers=(
             DataExposer((InmemoryDataframeRepository(endpoint_registry.get_item(Key.HOUSE_DATABASE)).overwrite,)),
             DataExposer((InmemoryWarehouseRepository(endpoint_registry.get_item(Key.HOUSE_WAREHOUSE)).overwrite,)),

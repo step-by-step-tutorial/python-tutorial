@@ -1,5 +1,6 @@
 name: ${COMPOSE_PROJECT_NAME}
 x-data-platform-env: &data_platform_env
+  DATA_SIMULATOR_API_URL: ${DATA_SIMULATOR_API_URL:-http://localhost:8080}
   ROOT: ${ROOT}
   PIPELINE_TYPE: ${PIPELINE_TYPE}
   RESOURCES_DIR: ${DATA_PLATFORM_RESOURCES_DIR}

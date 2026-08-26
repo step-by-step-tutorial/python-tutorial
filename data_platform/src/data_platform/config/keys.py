@@ -2,7 +2,7 @@
 
 
 class Key(StrEnum):
-    TEST_DATA_API = "test_data.api"
+    DATA_SIMULATOR_API = "data_simulator.api"
     PLATFORM_DATABASE = "data-platform.database"
     HOUSE_DATABASE = "house.database"
     ONLINE_SHOPPING_DATABASE = "online_shopping.database"
@@ -18,7 +18,7 @@ class Key(StrEnum):
     AUDIT_WAREHOUSE = "audit.warehouse"
 
     HOUSE_CSV_FILE = "house.file.csv"
-
+    HOUSE_REST_API = "house.rest.api"
     ONLINE_SHOPPING_REST_API = "online_shopping.rest.api"
     ONLINE_SHOPPING_DATA_LAKE = "online_shopping.datalake"
 

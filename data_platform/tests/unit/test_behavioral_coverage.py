@@ -18,7 +18,6 @@ from data_platform.cleaners.cleaner_impl import (
     StripColumnCleaner,
     ToDatetimeCleaner,
 )
-from data_platform.config.data_simulator_settings import DataSimulatorSettings
 from data_platform.enrichers.enricher_impl import (
     CalculateColumnEnricher,
     CopyColumnEnricher,
@@ -169,12 +168,6 @@ def test_analyzers_return_reports_with_data() -> None:
     ]
     query_report = RepositoryQueryAnalyzer("query", type("Repository", (), {"find_by_query": lambda self, _: (("ok",),)})()).analyze("select")
     assert query_report.data == (("ok",),)
-
-
-def test_data_simulator_builds_dataset_download_url() -> None:
-    assert DataSimulatorSettings("http://test-data/").download_url("Online_Shopping") == (
-        "http://test-data/datasets/online_shopping.json/download?format=json"
-    )
 
 
 def test_complete_pipeline_persists_each_stage_and_exposes_valid_data(mocker) -> None:

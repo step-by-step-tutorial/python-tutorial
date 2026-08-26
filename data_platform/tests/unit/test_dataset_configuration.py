@@ -104,7 +104,7 @@ class TestDatasetRegistry:
 class TestConcreteDatasetConfiguration:
 
     @pytest.mark.parametrize("dataset, storage_object_name", [
-        (house_dataset, "csv"),
+        (house_dataset, "api"),
         (ONLINE_SHOPPING_DATASET, "api"),
     ])
     def test_each_dataset_declares_the_complete_pipeline_stages(self, dataset, storage_object_name) -> None:
@@ -122,6 +122,8 @@ class TestConcreteDatasetConfiguration:
             assert endpoint.name == endpoint_name
 
         assert Path(house_dataset.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
+        house_api = house_dataset.get_endpoint("house.rest.api", RestApiEndpoint)
+        assert house_api.url.endswith("/datasets/house/download?format=csv")
         assert house_dataset.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house-events"
         assert house_dataset.get_endpoint("house.kafka.listener",
                                           MessagingEndpoint).connection_name == "house.kafka.listener"

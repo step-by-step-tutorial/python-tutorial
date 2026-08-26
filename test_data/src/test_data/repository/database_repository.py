@@ -1,6 +1,6 @@
 from collections.abc import Iterable, Mapping, Sequence
 
-from sqlalchemy import Column, MetaData, String, Table, func, select
+from sqlalchemy import Column, MetaData, String, Table, func, select, text
 
 from test_data.connector.database_connector import create_connection
 
@@ -14,6 +14,10 @@ class DatabaseRepository:
         row_list = [dict(row) for row in rows]
 
         engine = create_connection(self._url)
+
+        if self._schema:
+            with engine.begin() as connection:
+                connection.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{self._schema}"'))
 
         metadata = MetaData()
         columns = (Column(header, String(), nullable=True) for header in headers)

@@ -5,12 +5,14 @@ from airflow.sdk import DAG
 from airflow.task.trigger_rule import TriggerRule
 
 from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
-from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
 from data_platform.pipeline.data_pipeline import DataPipeline
 from data_platform.registry.bootstrap import initialize_registries
 from data_platform.util.airflow_utils import ensure_pipeline_success
 
 initialize_registries()
+
+from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
+
 pipeline = DataPipeline(ONLINE_SHOPPING_DATASET)
 adapter = DagPipelineAdapter(pipeline)
 

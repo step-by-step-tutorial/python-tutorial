@@ -11,7 +11,7 @@ from data_platform.model.endpoints import (
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.registry.endpoint_registry import endpoint_registry
-from data_platform.util.path_utils import generate_project_path
+from data_platform.util.path_utils import generate_dataset_download_url, generate_project_path
 
 
 def initialize_registries() -> None:
@@ -48,7 +48,17 @@ def initialize_registries() -> None:
         FileEndpoint(
             name=Key.HOUSE_CSV_FILE,
             file_name="house.csv",
-            file_path=str(generate_project_path(main_settings.app.root, main_settings.app.resources_dir, "house.csv")),
+            file_path=str(generate_project_path(
+                main_settings.app.root,
+                main_settings.app.resources_dir,
+                "house.csv",
+            )),
+        ))
+    endpoint_registry.register(
+        Key.HOUSE_REST_API,
+        RestApiEndpoint(
+            name=Key.HOUSE_REST_API,
+            url=generate_dataset_download_url(main_settings.api["data_simulator"].url, "house"),
         ))
     endpoint_registry.register(
         Key.HOUSE_KAFKA_CONSUMER,
@@ -113,7 +123,7 @@ def initialize_registries() -> None:
         Key.ONLINE_SHOPPING_REST_API,
         RestApiEndpoint(
             name=Key.ONLINE_SHOPPING_REST_API,
-            url=f"{main_settings.api["test_data"].url.rstrip('/')}/datasets/online_shopping/download?format=csv",
+            url=generate_dataset_download_url(main_settings.api["data_simulator"].url, "online_shopping"),
         ))
     endpoint_registry.register(
         Key.ONLINE_SHOPPING_DATA_LAKE,

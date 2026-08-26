@@ -19,6 +19,10 @@ def normalize_relative_path(path: str) -> str:
     return join_path(path)
 
 
+def generate_dataset_download_url(api_url: str, dataset_name: str, file_format: str = "csv") -> str:
+    return f"{api_url.rstrip('/')}/datasets/{dataset_name.lower()}/download?format={file_format}"
+
+
 def generate_relative_path(env: StorageEnvironment, ingestion_time: datetime, dataset_name: str) -> str:
     ingestion_id = ingestion_time.strftime("%Y%m%dT%H%M%S%fZ")
     return join_path(

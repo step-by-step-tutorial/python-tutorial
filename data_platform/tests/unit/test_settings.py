@@ -15,7 +15,7 @@ class TestMainSettings:
             "audit.kafka.producer",
             "audit.kafka.listener",
         }
-        assert settings.api["test_data"].url == "http://localhost:8080"
+        assert settings.api["data_simulator"].url == "http://localhost:8080"
         assert settings.messaging["audit.kafka.producer"].audit_channel_name == "audit.audit.event.v1"
         assert settings.data_lake["audit.datalake"].audit_bucket_name == "app-datalake-audit"
         assert settings.data_lake["data-platform.datalake"].checkpoint_path == "s3a://app-datalake/checkpoints/events"
