@@ -15,7 +15,6 @@ def run_pipeline(dataset_name: str) -> None:
 
 
 def select_dataset() -> str | None:
-    """Display registered datasets and return the selected dataset name."""
     names = dataset_registry.names()
     if not names:
         raise RuntimeError("No datasets are registered.")

@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.7
 FROM python:3.12-slim-trixie
 
 LABEL authors="samanalishiri@gmail.com"
@@ -27,4 +26,4 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 RUN java -version \
     && test -x "${JAVA_HOME}/bin/java"
 
-CMD ["sh", "-c", "python -m data_platform.main"]
+CMD ["bash", "-c", "python -m data_platform.main"]

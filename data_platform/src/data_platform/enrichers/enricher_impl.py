@@ -2,6 +2,8 @@ import hashlib
 from collections.abc import Callable
 from typing import Any
 
+from data_platform.enrichers.enricher_chain import EnricherChain
+
 
 class CalculateColumnEnricher:
     def __init__(self, column: str, function: Callable[[Any], Any]) -> None:

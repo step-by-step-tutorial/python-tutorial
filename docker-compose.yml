@@ -416,7 +416,7 @@ services:
       kafka-init:
         condition: service_completed_successfully
     command: >
-      sh -c "python -m data_platform.main"
+      bash -c "python -m data_platform.main"
   test-data:
     image: ${TEST_DATA_IMAGE}
     build:
