@@ -1,6 +1,8 @@
 from collections.abc import Iterable, Mapping, Sequence
 
-from sqlalchemy import Column, MetaData, String, Table, create_engine, func, select
+from sqlalchemy import Column, MetaData, String, Table, func, select
+
+from test_data.connector.database_connector import create_connection
 
 
 class DatabaseRepository:
@@ -11,7 +13,7 @@ class DatabaseRepository:
     def write_rows(self, table_name: str, headers: Sequence[str], rows: Iterable[Mapping[str, str]]) -> None:
         row_list = [dict(row) for row in rows]
 
-        engine = create_engine(self._url)
+        engine = create_connection(self._url)
 
         metadata = MetaData()
         columns = (Column(header, String(), nullable=True) for header in headers)
@@ -25,7 +27,7 @@ class DatabaseRepository:
                 connection.execute(table.insert(), row_list)
 
     def read_page(self, table_name: str, page: int, page_size: int) -> tuple[list[dict[str, str | None]], int]:
-        engine = create_engine(self._url)
+        engine = create_connection(self._url)
         table = Table(table_name, MetaData(), schema=self._schema, autoload_with=engine)
 
         with engine.connect() as connection:

@@ -12,7 +12,6 @@ from test_data.repository.database_repository import DatabaseRepository
 from test_data.connector.kafka_connector import create_producer
 from test_data.util.csv_utils import write_csv
 from test_data.util.json_utils import write_json
-from test_data.util.kafka_utils import handle_delivery
 from test_data.util.output_format_utils import output_file_name
 from test_data.util.xml_utils import write_xml
 
@@ -71,16 +70,30 @@ class KafkaWriter(Writer):
     def write(self, rows: Sequence[Mapping[str, str]], config: Any) -> None:
         topic_name = config.kafka_topic
         producer = create_producer()
+        delivery_errors: list[str] = []
+
+        def record_delivery(error, message) -> None:
+            if error is not None:
+                delivery_errors.append(str(error))
+
         for row in rows:
             producer.produce(
                 topic=topic_name,
                 key=str(row[config.kafka_key_column]),
                 value=json.dumps(dict(row), ensure_ascii=False).encode("utf-8"),
-                on_delivery=handle_delivery,
+                on_delivery=record_delivery,
             )
             producer.poll(0)
 
-        producer.flush()
+        pending_messages = producer.flush(env_config.KAFKA_FLUSH_TIMEOUT_SECONDS)
+        if delivery_errors:
+            raise RuntimeError(
+                f"Kafka delivery failed for {len(delivery_errors)} messages: {delivery_errors[0]}"
+            )
+        if pending_messages:
+            raise RuntimeError(
+                f"Kafka delivery timed out with {pending_messages} messages still pending."
+            )
         logger.info(f"Kafka output written {len(rows)} to topic {topic_name}")
 
 
@@ -98,4 +111,11 @@ class WriterRegistry:
     def write_all(self, rows: Iterable[Mapping[str, str]], config: Any) -> None:
         row_list = [dict(row) for row in rows]
         for name in config.destinations:
-            self._writers[name].write(row_list, config)
+            writer = self._writers.get(name)
+            if writer is None:
+                logger.error(f"Writer '{name}' is not registered; continuing with next writer.")
+                continue
+            try:
+                writer.write(row_list, config)
+            except Exception as e:
+                logger.error(f"Writer '{name}' failed due to {e} and continuing with next writer.")

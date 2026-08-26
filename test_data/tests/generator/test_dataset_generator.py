@@ -263,7 +263,7 @@ def test_generate_dataset_publishes_json_rows_to_kafka(tmp_path: Path, mocker, m
     assert producer.produce.call_args_list[0].kwargs["topic"] == "test-data-sample"
     assert producer.produce.call_args_list[0].kwargs["key"] == "1"
     assert producer.produce.call_args_list[0].kwargs["value"] == b'{"id": "1", "country": "USA"}'
-    producer.flush.assert_called_once_with()
+    producer.flush.assert_called_once_with(env_config.KAFKA_FLUSH_TIMEOUT_SECONDS)
 
     monkeypatch.delenv("PROJECT_ROOT", raising=False)
     monkeypatch.delenv("CONFIG_DIR", raising=False)
