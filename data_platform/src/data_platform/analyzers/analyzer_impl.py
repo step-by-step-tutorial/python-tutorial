@@ -3,7 +3,7 @@ from typing import Any
 from data_platform.analyzers.aggregate_model import AggregateSpecification
 from data_platform.analyzers.analyzer import Analyzer
 from data_platform.analyzers.report import Report
-from data_platform.repository.database_repository import DatabaseRepository
+from data_platform.repository.inmemory_database_repository import InmemoryDatabaseRepository
 
 
 class GroupAggregateAnalyzer(Analyzer):
@@ -25,7 +25,7 @@ class GroupAggregateAnalyzer(Analyzer):
 
 
 class RepositoryQueryAnalyzer(Analyzer):
-    def __init__(self, name: str, repository: DatabaseRepository) -> None:
+    def __init__(self, name: str, repository: InmemoryDatabaseRepository) -> None:
         self.name = name
         self._repository = repository
 

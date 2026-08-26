@@ -68,6 +68,7 @@ services:
       MINIO_ROOT_USER: ${DATA_PLATFORM_DATALAKE_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${DATA_PLATFORM_DATALAKE_SECRET_KEY}
       MINIO_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BUCKET_NAME}
+      MINIO_HOUSE_BUCKET_NAME: ${DATA_PLATFORM_HOUSE_DATALAKE_BUCKET_NAME}
       MINIO_AUDIT_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME}
     entrypoint:
       - /bin/sh
@@ -79,6 +80,9 @@ services:
 
         mc mb --ignore-existing \
           "local/$${MINIO_BUCKET_NAME}"
+
+        mc mb --ignore-existing \
+          "local/$${MINIO_HOUSE_BUCKET_NAME}"
 
         mc mb --ignore-existing \
           "local/$${MINIO_AUDIT_BUCKET_NAME}"
@@ -98,6 +102,8 @@ services:
       - ${WAREHOUSE_VOLUME}:/var/lib/clickhouse
       - ./scripts/warehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
       - ./scripts/warehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
+      - ./scripts/warehouse/online_shopping/create_database.sql:/docker-entrypoint-initdb.d/50_online_shopping_create_database.sql
+      - ./scripts/warehouse/online_shopping/create_table.sql:/docker-entrypoint-initdb.d/60_online_shopping_create_table.sql
     healthcheck:
       test:
         [

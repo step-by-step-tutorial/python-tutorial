@@ -46,6 +46,12 @@ x-data-platform-env: &data_platform_env
   DATA_PLATFORM_DATAWAREHOUSE_USER: ${DATA_PLATFORM_DATAWAREHOUSE_USER}
   DATA_PLATFORM_DATAWAREHOUSE_PASSWORD: ${DATA_PLATFORM_DATAWAREHOUSE_PASSWORD}
   DATA_PLATFORM_DATAWAREHOUSE_JDBC_URL: ${DATA_PLATFORM_DATAWAREHOUSE_JDBC_URL}
+  DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_HOST: ${DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_HOST}
+  DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_PORT: ${DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_PORT}
+  DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_NAME: ${DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_NAME}
+  DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_USER: ${DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_USER}
+  DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_PASSWORD: ${DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_PASSWORD}
+  DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_JDBC_URL: ${DATA_PLATFORM_ONLINE_SHOPPING_WAREHOUSE_JDBC_URL}
   DATA_PLATFORM_HOUSE_DATABASE_HOST: ${DATA_PLATFORM_HOUSE_DATABASE_HOST}
   DATA_PLATFORM_HOUSE_DATABASE_PORT: ${DATA_PLATFORM_HOUSE_DATABASE_PORT}
   DATA_PLATFORM_HOUSE_DATABASE_NAME: ${DATA_PLATFORM_HOUSE_DATABASE_NAME}
@@ -108,7 +114,8 @@ services:
       - ${DATABASE_VOLUME}:/var/lib/postgresql/data
       - ./data_platform/scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
       - ./data_platform/scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
-      - ./test_data/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/40_test_data_create_schema.sql:ro
+      - ./data_platform/scripts/database/online_shopping/create_tables.sql:/docker-entrypoint-initdb.d/40_online_shopping_create_tables.sql
+      - ./test_data/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/50_test_data_create_schema.sql:ro
     healthcheck:
       test:
         [
@@ -162,6 +169,7 @@ services:
       MINIO_ROOT_USER: ${DATA_PLATFORM_DATALAKE_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${DATA_PLATFORM_DATALAKE_SECRET_KEY}
       MINIO_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BUCKET_NAME}
+      MINIO_HOUSE_BUCKET_NAME: ${DATA_PLATFORM_HOUSE_DATALAKE_BUCKET_NAME}
       MINIO_AUDIT_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME}
       MINIO_BACKUP_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BACKUP_BUCKET_NAME}
     entrypoint:
@@ -174,6 +182,9 @@ services:
 
         mc mb --ignore-existing \
           "local/$${MINIO_BUCKET_NAME}"
+
+        mc mb --ignore-existing \
+          "local/$${MINIO_HOUSE_BUCKET_NAME}"
 
         mc mb --ignore-existing \
           "local/$${MINIO_AUDIT_BUCKET_NAME}"
@@ -196,6 +207,8 @@ services:
       - ${DATAWAREHOUSE_VOLUME}:/var/lib/clickhouse
       - ./data_platform/scripts/warehouse/house/create_database.sql:/docker-entrypoint-initdb.d/30_house_create_database.sql
       - ./data_platform/scripts/warehouse/house/create_table.sql:/docker-entrypoint-initdb.d/40_house_create_table.sql
+      - ./data_platform/scripts/warehouse/online_shopping/create_database.sql:/docker-entrypoint-initdb.d/50_online_shopping_create_database.sql
+      - ./data_platform/scripts/warehouse/online_shopping/create_table.sql:/docker-entrypoint-initdb.d/60_online_shopping_create_table.sql
     healthcheck:
       test:
         [

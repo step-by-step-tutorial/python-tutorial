@@ -19,7 +19,7 @@ from data_platform.model.dataset import Dataset
 from data_platform.model.pipeline_flow import PipelineFlow
 from data_platform.registry.endpoint_registry import endpoint_registry
 from data_platform.repository.data_exposer import DataExposer
-from data_platform.repository.inmemory_database_repository import InmemoryDataframeRepository
+from data_platform.repository.inmemory_database_repository import InmemoryDatabaseRepository
 from data_platform.repository.inmemory_datalake_repository import DataLakeRepository
 from data_platform.repository.inmemory_warehouse_repository import InmemoryWarehouseRepository
 from data_platform.validators.validator_chain import ValidatorChain
@@ -100,7 +100,7 @@ house_dataset = Dataset(
         )),
         enrichers=EnricherChain(),
         exposers=(
-            DataExposer((InmemoryDataframeRepository(endpoint_registry.get_item(Key.HOUSE_DATABASE)).overwrite,)),
+            DataExposer((InmemoryDatabaseRepository(endpoint_registry.get_item(Key.HOUSE_DATABASE)).overwrite,)),
             DataExposer((InmemoryWarehouseRepository(endpoint_registry.get_item(Key.HOUSE_WAREHOUSE)).overwrite,)),
         ),
         analyzers=AnalyzerChain((

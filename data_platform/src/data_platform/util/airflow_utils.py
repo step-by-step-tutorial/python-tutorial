@@ -1,6 +1,12 @@
 from airflow.exceptions import AirflowException
 
 
+def _state_name(state) -> str:
+    if isinstance(state, dict):
+        state = state.get("state")
+    return getattr(state, "value", state)
+
+
 def ensure_pipeline_success(**context) -> None:
     current_task_id = context["task"].task_id
     dag_run = context["dag_run"]
@@ -21,7 +27,7 @@ def ensure_pipeline_success(**context) -> None:
         task_id
         for task_id, state in task_states.items()
         if task_id != current_task_id
-        and getattr(state, "value", state) in {"failed", "upstream_failed"}
+        and _state_name(state) in {"failed", "upstream_failed"}
     ]
     if failed_tasks:
         raise AirflowException(f"Pipeline tasks failed: {', '.join(failed_tasks)}")

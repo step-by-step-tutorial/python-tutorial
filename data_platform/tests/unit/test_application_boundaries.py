@@ -6,7 +6,7 @@ import pytest
 from data_platform import main as application
 from data_platform.connector import spark_session_factory
 from data_platform.presentation import dataframe_display
-from data_platform.repository.database_repository import DatabaseRepository
+from data_platform.repository.inmemory_database_repository import InmemoryDatabaseRepository
 from data_platform.repository.spark_database_repository import SparkDatabaseRepository
 from data_platform.service.spark_data_lake_service import SparkDataLakeService
 from data_platform.util import csv_utils
@@ -67,9 +67,9 @@ def test_spark_session_factory_detects_stopped_or_invalid_sessions(mocker) -> No
 
 
 def test_database_repositories_delegate_query_and_write_operations(mocker) -> None:
-    select = mocker.patch("data_platform.repository.database_repository.execute_select_query", return_value=(("row",),))
-    execute = mocker.patch("data_platform.repository.database_repository.execute_query_files")
-    repository = DatabaseRepository(type("Endpoint", (), {"connection_name": "db"})())
+    select = mocker.patch("data_platform.repository.inmemory_database_repository.execute_select_query", return_value=(("row",),))
+    execute = mocker.patch("data_platform.repository.inmemory_database_repository.execute_query_files")
+    repository = InmemoryDatabaseRepository(type("Endpoint", (), {"connection_name": "db"})())
     assert repository.find_by_query("select") == (("row",),)
     repository.execute_query_files(("one.sql",))
     assert select.call_args.args == ("db", "select")
