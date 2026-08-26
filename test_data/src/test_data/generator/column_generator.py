@@ -211,6 +211,7 @@ class RandomFromMappedFileColumn(ColumnGenerator):
 
 
 class RandomFromMappedCsvColumn(ColumnGenerator):
+    _candidate_rows: dict[tuple[object, ...], tuple[Mapping[str, str], ...]] = {}
     _selected_rows: dict[tuple[object, ...], Mapping[str, str]] = {}
 
     def validate(self) -> None:
@@ -251,24 +252,27 @@ class RandomFromMappedCsvColumn(ColumnGenerator):
         )
         selected = self._selected_rows.get(cache_key)
         if selected is None:
-            rows = self.source_repository.read_csv_rows(mapping_file, key_column, source_value)
-            if self.model.filter_column and self.model.filter_values:
-                filtered_rows = tuple(
-                    row for row in rows if row.get(self.model.filter_column) in self.model.filter_values
-                )
-                if not filtered_rows and self.model.filter_fallback_values:
+            rows = self._candidate_rows.get(cache_key)
+            if rows is None:
+                rows = self.source_repository.read_csv_rows(mapping_file, key_column, source_value)
+                if self.model.filter_column and self.model.filter_values:
                     filtered_rows = tuple(
+                        row for row in rows if row.get(self.model.filter_column) in self.model.filter_values
+                    )
+                    if not filtered_rows and self.model.filter_fallback_values:
+                        filtered_rows = tuple(
+                            row
+                            for row in rows
+                            if row.get(self.model.filter_column) in self.model.filter_fallback_values
+                        )
+                    rows = filtered_rows
+                if self.model.required_columns:
+                    rows = tuple(
                         row
                         for row in rows
-                        if row.get(self.model.filter_column) in self.model.filter_fallback_values
+                        if all(row.get(column) for column in self.model.required_columns)
                     )
-                rows = filtered_rows
-            if self.model.required_columns:
-                rows = tuple(
-                    row
-                    for row in rows
-                    if all(row.get(column) for column in self.model.required_columns)
-                )
+                self._candidate_rows[cache_key] = rows
             if not rows:
                 raise Exception(f"No rows found for '{source_value}' in mapping for column {self.model.name}.")
             selected = self.rand.choice(rows)
