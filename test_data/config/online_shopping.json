@@ -1,7 +1,7 @@
 {
   "row_count": 5000,
   "output_name": "online_shopping",
-  "kafka_topic": "online-shopping-events",
+  "kafka_topic": "online-shopping.events.v1",
   "kafka_key_column": "order_id",
   "destinations": ["csv", "json", "database", "kafka"],
   "columns": [

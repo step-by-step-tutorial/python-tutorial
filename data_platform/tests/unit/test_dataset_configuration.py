@@ -124,7 +124,7 @@ class TestConcreteDatasetConfiguration:
         assert Path(house_dataset.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
         house_api = house_dataset.get_endpoint("house.rest.api", RestApiEndpoint)
         assert house_api.url.endswith("/datasets/house/download?format=csv")
-        assert house_dataset.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house-events"
+        assert house_dataset.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house.events.v1"
         assert house_dataset.get_endpoint("house.kafka.listener",
                                           MessagingEndpoint).connection_name == "house.kafka.listener"
         assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).schema == "house"
@@ -143,7 +143,7 @@ class TestConcreteDatasetConfiguration:
         assert house_dataset.audit.messaging_connection_name == "audit.kafka.producer"
         assert house_dataset.audit.datalake_connection_name == "audit.datalake"
         assert house_dataset.audit.create_sql_files == {"create": "database/audit/create_tables.sql"}
-        assert house_dataset.audit.channel_name == "audit.audit.event.v1"
+        assert house_dataset.audit.channel_name == "audit.audit.events.v1"
         assert house_dataset.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
 
     def test_pipeline_steps_is_the_only_pipeline_stage_configuration(self) -> None:

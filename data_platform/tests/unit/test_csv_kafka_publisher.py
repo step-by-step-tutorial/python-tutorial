@@ -8,7 +8,7 @@ class TestCsvKafkaPublisher:
         given_file_endpoint = FileEndpoint(name="house.file.csv", file_path="/tmp/house.csv")
         given_messaging_endpoint = MessagingEndpoint(
             connection_name="house.kafka.producer",
-            channel_name="house-events",
+            channel_name="house.events.v1",
             bootstrap_servers="localhost:9092",
         )
 
@@ -31,8 +31,8 @@ class TestCsvKafkaPublisher:
         assert mock_read_csv.call_count == 1
         assert mock_read_csv.call_args.args[0] == "/tmp/house.csv"
         assert mock_ensure_topic.call_count == 1
-        assert mock_ensure_topic.call_args.args == ("localhost:9092", "house-events")
+        assert mock_ensure_topic.call_args.args == ("localhost:9092", "house.events.v1")
         assert given_producer.produce.call_count == 2
-        assert given_producer.produce.call_args_list[0].kwargs["topic"] == "house-events"
+        assert given_producer.produce.call_args_list[0].kwargs["topic"] == "house.events.v1"
         assert given_producer.poll.call_count == 1
         assert given_producer.flush.call_count == 1

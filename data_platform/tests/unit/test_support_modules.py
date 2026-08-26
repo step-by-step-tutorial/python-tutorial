@@ -68,7 +68,7 @@ class TestDatalakeUtils:
         actual_datalake_uri = datalake_path_utils.generate_full_path("app-datalake", "path/to/file")
         actual_audit_uri = datalake_path_utils.generate_full_path("app-datalake-audit", "audit/file.json")
         actual_object_key = datalake_path_utils.generate_object_key("/raw/house/", "/part-001.parquet")
-        actual_checkpoint = datalake_path_utils.generate_checkpoint_path("app-datalake", "house-events")
+        actual_checkpoint = datalake_path_utils.generate_checkpoint_path("app-datalake", "house.events.v1")
 
         # Then
         assert actual_relative.startswith("raw/house/")
@@ -76,7 +76,7 @@ class TestDatalakeUtils:
         assert actual_datalake_uri == "s3a://app-datalake/path/to/file"
         assert actual_audit_uri == "s3a://app-datalake-audit/audit/file.json"
         assert actual_object_key == "raw/house/part-001.parquet"
-        assert actual_checkpoint == "s3a://app-datalake/checkpoints/house-events"
+        assert actual_checkpoint == "s3a://app-datalake/checkpoints/house.events.v1"
 
     def test_should_generate_dataset_download_url(self) -> None:
         actual = datalake_path_utils.generate_dataset_download_url(
@@ -248,7 +248,7 @@ class TestLoggingAndStreaming:
     def test_should_log_delivery_success_and_failure(self, mocker) -> None:
         # Given
         given_message = mocker.Mock()
-        given_message.topic.return_value = "house-events"
+        given_message.topic.return_value = "house.events.v1"
         mock_logger_info = mocker.patch.object(handle_kafka_response.__globals__["logger"], "info")
         mock_logger_error = mocker.patch.object(handle_kafka_response.__globals__["logger"], "error")
 

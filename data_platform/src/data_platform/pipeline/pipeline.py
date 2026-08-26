@@ -23,7 +23,8 @@ class Pipeline(ABC):
         self.pipeline_name = dataset.name
         self.pipeline_id = create_pipeline_id()
         self.ingestion_time = generate_ingestion_time()
-        self._started_at = None
+        # DAG task processes are isolated, so a later task may not see prepare()'s timestamp.
+        self._started_at = time.perf_counter()
         self._audit_service = AuditService(dataset.audit)
 
     @abstractmethod

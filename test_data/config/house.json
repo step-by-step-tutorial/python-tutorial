@@ -1,7 +1,7 @@
 {
   "row_count": 50000,
   "output_name": "house",
-  "kafka_topic": "house-events",
+  "kafka_topic": "house.events.v1",
   "kafka_key_column": "property_id",
   "destinations": ["csv", "json", "database", "kafka"],
   "columns": [

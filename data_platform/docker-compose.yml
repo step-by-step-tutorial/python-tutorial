@@ -29,6 +29,7 @@ x-data-platform-env: &data_platform_env
   DATA_PLATFORM_DATALAKE_SECRET_KEY: ${DATA_PLATFORM_DATALAKE_SECRET_KEY}
   DATA_PLATFORM_DATALAKE_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BUCKET_NAME}
   DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME}
+  DATA_PLATFORM_DATALAKE_BACKUP_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BACKUP_BUCKET_NAME}
   DATA_PLATFORM_DATALAKE_SCHEME: ${DATA_PLATFORM_DATALAKE_SCHEME}
   DATA_PLATFORM_DATALAKE_ENVIRONMENT: ${DATA_PLATFORM_DATALAKE_ENVIRONMENT}
   DATA_PLATFORM_AUDIT_CHANNEL_NAME: ${DATA_PLATFORM_AUDIT_CHANNEL_NAME}
@@ -160,6 +161,7 @@ services:
       MINIO_ROOT_PASSWORD: ${DATA_PLATFORM_DATALAKE_SECRET_KEY}
       MINIO_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BUCKET_NAME}
       MINIO_AUDIT_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME}
+      MINIO_BACKUP_BUCKET_NAME: ${DATA_PLATFORM_DATALAKE_BACKUP_BUCKET_NAME}
     entrypoint:
       - /bin/sh
       - -c
@@ -173,6 +175,9 @@ services:
 
         mc mb --ignore-existing \
           "local/$${MINIO_AUDIT_BUCKET_NAME}"
+
+        mc mb --ignore-existing \
+          "local/$${MINIO_BACKUP_BUCKET_NAME}"
 
   warehouse:
     image: ${WAREHOUSE_IMAGE}
@@ -339,7 +344,7 @@ services:
           sleep 2
         done
 
-        for topic in house-events audit-events house.audit.event.v1; do
+        for topic in house.events.v1 audit.events.v1 house.audit.events.v1; do
           /opt/kafka/bin/kafka-topics.sh \
             --bootstrap-server kafka:9094 \
             --create \

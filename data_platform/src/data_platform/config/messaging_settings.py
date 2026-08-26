@@ -17,26 +17,26 @@ messaging = MappingProxyType(
     {
         Key.HOUSE_KAFKA_CONSUMER: MessagingSettings(
             bootstrap_servers=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("DATA_PLATFORM_HOUSE_CHANNEL_NAME", "house-events"),
-            audit_channel_name=os.getenv("DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.event.v1"),
+            channel_name=os.getenv("DATA_PLATFORM_HOUSE_CHANNEL_NAME", "house.events.v1"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.events.v1"),
             starting_offsets=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.HOUSE_KAFKA_PRODUCER: MessagingSettings(
             bootstrap_servers=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("DATA_PLATFORM_HOUSE_CHANNEL_NAME", "house-events"),
-            audit_channel_name=os.getenv("DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.event.v1"),
+            channel_name=os.getenv("DATA_PLATFORM_HOUSE_CHANNEL_NAME", "house.events.v1"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_HOUSE_AUDIT_CHANNEL_NAME", "house.audit.events.v1"),
             starting_offsets=os.getenv("DATA_PLATFORM_HOUSE_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.AUDIT_KAFKA_PRODUCER: MessagingSettings(
             bootstrap_servers=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
-            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "audit.audit.event.v1"),
+            channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit.events.v1"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "audit.audit.events.v1"),
             starting_offsets=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
         Key.AUDIT_KAFKA_CONSUMER: MessagingSettings(
             bootstrap_servers=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS", "localhost:9092"),
-            channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit-events"),
-            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "audit.audit.event.v1"),
+            channel_name=os.getenv("DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME", "audit.events.v1"),
+            audit_channel_name=os.getenv("DATA_PLATFORM_AUDIT_CHANNEL_NAME", "audit.audit.events.v1"),
             starting_offsets=os.getenv("DATA_PLATFORM_AUDIT_STREAMING_STARTING_OFFSETS", "earliest"),
         ),
     }

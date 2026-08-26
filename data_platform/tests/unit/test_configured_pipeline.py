@@ -116,6 +116,17 @@ def test_configured_pipeline_executes_explicit_stages_without_merging_ingestors(
     assert audit.emit.call_count == 18
 
 
+def test_pipeline_can_complete_when_created_in_a_later_airflow_task(mocker) -> None:
+    audit = mocker.Mock()
+    mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=audit)
+    pipeline = DataPipeline(_dataset(_Lake(), _Consumer(), _Consumer()))
+
+    pipeline.complete_pipeline()
+
+    event = audit.emit.call_args.args[0]
+    assert event.duration_ms >= 0
+
+
 def test_configured_pipeline_persists_invalid_rows_and_logs_validation_errors(mocker, caplog) -> None:
     lake, exposer, analyzer = _Lake(), _Consumer(), _Consumer()
     mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=mocker.Mock())
