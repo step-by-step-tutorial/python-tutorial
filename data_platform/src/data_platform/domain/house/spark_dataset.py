@@ -22,23 +22,21 @@ from data_platform.repository.spark_warehouse_repository import SparkWarehouseRe
 from data_platform.validators.spark_validator_chain import SparkValidatorChain
 from data_platform.validators.spark_validator_impl import NotNullValidator, PositiveValidator, RequiredColumnsValidator
 
-house_spark_endpoints = {
-    Key.HOUSE_REST_API: endpoint_registry.get_item(Key.HOUSE_REST_API),
-    Key.HOUSE_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_DATA_LAKE),
-    Key.HOUSE_BACKUP_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_BACKUP_DATA_LAKE),
-    Key.HOUSE_DATABASE: endpoint_registry.get_item(Key.HOUSE_DATABASE),
-    Key.HOUSE_WAREHOUSE: endpoint_registry.get_item(Key.HOUSE_WAREHOUSE),
-}
-
 spark_house_dataset = Dataset(
     name="house",
     audit=endpoint_registry.get_item("audit"),
     dataframe=DataFrameModel(schema=HOUSE_SCHEMA, required_columns=frozenset(attribute.columns)),
-    endpoints=house_spark_endpoints,
+    endpoints={
+        Key.HOUSE_REST_API: endpoint_registry.get_item(Key.HOUSE_REST_API),
+        Key.HOUSE_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_DATA_LAKE),
+        Key.HOUSE_BACKUP_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_BACKUP_DATA_LAKE),
+        Key.HOUSE_DATABASE: endpoint_registry.get_item(Key.HOUSE_DATABASE),
+        Key.HOUSE_WAREHOUSE: endpoint_registry.get_item(Key.HOUSE_WAREHOUSE),
+    },
     flow=SparkPipelineFlow(
-        repository=SparkDatalakeRepository(create_session, house_spark_endpoints[Key.HOUSE_DATA_LAKE]),
-        backup_repository=SparkDatalakeRepository(create_session, house_spark_endpoints[Key.HOUSE_BACKUP_DATA_LAKE]),
-        ingestors=(SparkRestApiCsvIngestor(house_spark_endpoints[Key.HOUSE_REST_API], create_session, HOUSE_SCHEMA),),
+        repository=SparkDatalakeRepository(create_session, endpoint_registry.get_item(Key.HOUSE_DATA_LAKE)),
+        backup_repository=SparkDatalakeRepository(create_session, endpoint_registry.get_item(Key.HOUSE_BACKUP_DATA_LAKE)),
+        ingestors=(SparkRestApiCsvIngestor(endpoint_registry.get_item(Key.HOUSE_REST_API), create_session, HOUSE_SCHEMA),),
         cleaners=SparkCleanerChain(
             tuple(NumericColumnCleaner(column) for column in numeric_columns)
             + tuple(BooleanColumnCleaner(column) for column in boolean_columns)
@@ -51,8 +49,8 @@ spark_house_dataset = Dataset(
              NotNullValidator(attribute.area_sqm), NotNullValidator(attribute.total_price),
              PositiveValidator(attribute.area_sqm), PositiveValidator(attribute.total_price))),
         enrichers=SparkEnricherChain(),
-        exposers=(DataExposer((SparkDatabaseRepository(house_spark_endpoints[Key.HOUSE_DATABASE]).overwrite,)),
-                  DataExposer((SparkWarehouseRepository(house_spark_endpoints[Key.HOUSE_WAREHOUSE]).overwrite,))),
+        exposers=(DataExposer((SparkDatabaseRepository(endpoint_registry.get_item(Key.HOUSE_DATABASE)).overwrite,)),
+                  DataExposer((SparkWarehouseRepository(endpoint_registry.get_item(Key.HOUSE_WAREHOUSE)).overwrite,))),
         analyzers=SparkAnalyzerChain((
             GroupAggregateAnalyzer("property_count_by_city",
                                    AggregateSpecification(attribute.city, attribute.property_id, "count",

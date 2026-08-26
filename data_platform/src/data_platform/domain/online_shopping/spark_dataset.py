@@ -23,14 +23,6 @@ from data_platform.validators.spark_validator_chain import SparkValidatorChain
 from data_platform.validators.spark_validator_impl import NonNegativeValidator, NotNullValidator, PositiveValidator, \
     RequiredColumnsValidator
 
-online_shopping_spark_endpoints = {
-    Key.ONLINE_SHOPPING_KAFKA_CONSUMER: endpoint_registry.get_item(Key.ONLINE_SHOPPING_KAFKA_CONSUMER),
-    Key.ONLINE_SHOPPING_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATA_LAKE),
-    Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE),
-    Key.ONLINE_SHOPPING_DATABASE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATABASE),
-    Key.ONLINE_SHOPPING_WAREHOUSE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_WAREHOUSE),
-}
-
 spark_online_shopping_dataset = Dataset(
     name="online_shopping",
     audit=endpoint_registry.get_item("audit"),
@@ -40,25 +32,46 @@ spark_online_shopping_dataset = Dataset(
             {attribute.order_id, attribute.order_date, attribute.sales_channel, attribute.country,
              attribute.product_name, attribute.unit_price, attribute.quantity, attribute.total_amount}),
     ),
-    endpoints=online_shopping_spark_endpoints,
+    endpoints={
+        Key.ONLINE_SHOPPING_KAFKA_CONSUMER: endpoint_registry.get_item(Key.ONLINE_SHOPPING_KAFKA_CONSUMER),
+        Key.ONLINE_SHOPPING_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATA_LAKE),
+        Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE),
+        Key.ONLINE_SHOPPING_DATABASE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATABASE),
+        Key.ONLINE_SHOPPING_WAREHOUSE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_WAREHOUSE),
+    },
     flow=SparkPipelineFlow(
-        repository=SparkDatalakeRepository(create_session,
-                                           online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_DATA_LAKE]),
-        backup_repository=SparkDatalakeRepository(create_session, online_shopping_spark_endpoints[
-            Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE]),
+        repository=SparkDatalakeRepository(create_session, endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATA_LAKE)),
+        backup_repository=SparkDatalakeRepository(
+            create_session,
+            endpoint_registry.get_item(Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE)
+        ),
         ingestors=(
-            SparkKafkaIngestor(online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_KAFKA_CONSUMER], create_session,
-                               ONLINE_SHOPPING_SCHEMA),),
-        cleaners=SparkCleanerChain((DropDuplicatesCleaner(attribute.order_id), ToDatetimeCleaner(attribute.order_date),
-                                    ToDatetimeCleaner(attribute.estimated_delivery_date),
-                                    StripColumnCleaner(attribute.phone), *(NumericColumnCleaner(column) for column in
-                                                                           (attribute.customer_id, attribute.unit_price,
-                                                                            attribute.quantity, attribute.subtotal,
-                                                                            attribute.discount_percent,
-                                                                            attribute.shipping_cost,
-                                                                            attribute.tax_amount,
-                                                                            attribute.total_amount,
-                                                                            attribute.delivery_days)))),
+            SparkKafkaIngestor(
+                endpoint_registry.get_item(Key.ONLINE_SHOPPING_KAFKA_CONSUMER),
+                create_session,
+                ONLINE_SHOPPING_SCHEMA
+            ),
+        ),
+        cleaners=SparkCleanerChain(
+            (
+                DropDuplicatesCleaner(attribute.order_id),
+                ToDatetimeCleaner(attribute.order_date),
+                ToDatetimeCleaner(attribute.estimated_delivery_date),
+                StripColumnCleaner(attribute.phone),
+                *(
+                    NumericColumnCleaner(column) for column in
+                    (
+                        attribute.customer_id, attribute.unit_price,
+                        attribute.quantity, attribute.subtotal,
+                        attribute.discount_percent,
+                        attribute.shipping_cost,
+                        attribute.tax_amount,
+                        attribute.total_amount,
+                        attribute.delivery_days
+                    )
+                )
+            )
+        ),
         validators=SparkValidatorChain((RequiredColumnsValidator(
             (attribute.order_id, attribute.order_date, attribute.quantity, attribute.unit_price,
              attribute.total_amount)), NotNullValidator(attribute.order_id), NotNullValidator(attribute.order_date),
@@ -71,8 +84,8 @@ spark_online_shopping_dataset = Dataset(
              DatetimePartEnricher(attribute.order_date, "year", attribute.year),
              DatetimePartEnricher(attribute.order_date, "month", attribute.month))),
         exposers=(DataExposer(
-            (SparkDatabaseRepository(online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_DATABASE]).overwrite,
-             SparkWarehouseRepository(online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_WAREHOUSE]).overwrite)),),
+            (SparkDatabaseRepository(endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATABASE)).overwrite,
+             SparkWarehouseRepository(endpoint_registry.get_item(Key.ONLINE_SHOPPING_WAREHOUSE)).overwrite)),),
         analyzers=SparkAnalyzerChain((
             GroupAggregateAnalyzer("revenue_by_country",
                                    AggregateSpecification(attribute.country, attribute.net_revenue, "sum",
