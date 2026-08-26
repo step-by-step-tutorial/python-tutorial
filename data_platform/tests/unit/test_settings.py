@@ -7,7 +7,13 @@ class TestMainSettings:
         assert settings.app.root
         assert settings.app.resources_dir == "resources"
         assert set(settings.database) == {"data-platform.database", "house.database", "online_shopping.database", "audit.database"}
-        assert set(settings.data_lake) == {"data-platform.datalake", "house.datalake", "audit.datalake"}
+        assert set(settings.data_lake) == {
+            "data-platform.datalake",
+            "data-platform.backup.datalake",
+            "house.datalake",
+            "house.backup.datalake",
+            "audit.datalake",
+        }
         assert set(settings.warehouse) == {"data-platform.warehouse", "house.warehouse", "online_shopping.warehouse", "audit.warehouse"}
         assert set(settings.messaging) == {
             "house.kafka.listener",

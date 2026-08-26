@@ -212,7 +212,10 @@ def test_complete_pipeline_persists_each_stage_and_exposes_valid_data(mocker) ->
 
     DataPipeline(dataset).run()
 
-    assert len(repository.paths) == 5
+    assert len(repository.paths) == 6
+    report_paths = tuple(path for path in repository.paths if path.startswith("reports/example/"))
+    assert len(report_paths) == 1
+    assert report_paths[0].endswith("/summary")
     assert {"id", "value", "enriched_value"} == set(exposed[0].columns)
     assert exposed[0]["id"].tolist() == [1]
     assert analyzed[0]["enriched_value"].tolist() == [10]

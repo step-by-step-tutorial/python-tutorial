@@ -25,3 +25,4 @@ class PipelineFlow:
     after_pipeline: Callable[..., Any] = lambda *args, **kwargs: None
     before_step: Callable[..., Any] = lambda *args, **kwargs: None
     after_stage: Callable[..., Any] = lambda *args, **kwargs: None
+    backup_repository: StorageRepository | None = None

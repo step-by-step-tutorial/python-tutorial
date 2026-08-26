@@ -18,6 +18,9 @@ class DataLakeRepository(StorageRepository):
         self._bucket_name = endpoint.bucket_name
 
     def write(self, data: pd.DataFrame, path: str, file_extension: str = "parquet") -> str:
+        row_count = len(data) if isinstance(data, pd.DataFrame) else "unknown"
+        column_count = len(data.columns) if isinstance(data, pd.DataFrame) else "unknown"
+        logger.info("Writing datalake data: bucket=%s path=%s rows=%s columns=%s", self._bucket_name, path, row_count, column_count)
         parquet_buffer = BytesIO()
         data.to_parquet(parquet_buffer, index=False)
         parquet_buffer.seek(0)
@@ -33,6 +36,7 @@ class DataLakeRepository(StorageRepository):
         client = connection_registry.get_item(self._connection_name)
         dataframes: list[pd.DataFrame] = []
         object_keys = self.find_keys(path)
+        logger.info("Reading datalake data: bucket=%s path=%s objects=%s", self._bucket_name, path, len(object_keys))
 
         for object_key in object_keys:
             parquet_buffer = BytesIO()
@@ -47,5 +51,7 @@ class DataLakeRepository(StorageRepository):
         client = connection_registry.get_item(self._connection_name)
         response = client.list_objects_v2(Bucket=self._bucket_name, Prefix=normalize_relative_path(path))
 
-        return [object_metadata["Key"] for object_metadata in response.get("Contents", [])]
+        object_keys = [object_metadata["Key"] for object_metadata in response.get("Contents", [])]
+        logger.debug("Found datalake objects: bucket=%s path=%s objects=%s", self._bucket_name, path, len(object_keys))
+        return object_keys
 

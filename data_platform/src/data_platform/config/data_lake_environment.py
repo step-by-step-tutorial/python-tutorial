@@ -7,3 +7,4 @@ class StorageEnvironment(StrEnum):
     ACCEPTED = "validated"
     REJECTED = "invalid"
     ENRICHED = "enriched"
+    REPORTS = "reports"

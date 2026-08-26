@@ -86,6 +86,14 @@ def initialize_registries() -> None:
             scheme=main_settings.data_lake[Key.HOUSE_DATA_LAKE].scheme,
         ))
     endpoint_registry.register(
+        Key.HOUSE_BACKUP_DATA_LAKE,
+        DataLakeEndpoint(
+            name=Key.HOUSE_BACKUP_DATA_LAKE,
+            connection_name=Key.HOUSE_DATA_LAKE,
+            bucket_name=main_settings.data_lake[Key.HOUSE_BACKUP_DATA_LAKE].bucket_name,
+            scheme=main_settings.data_lake[Key.HOUSE_BACKUP_DATA_LAKE].scheme,
+        ))
+    endpoint_registry.register(
         Key.HOUSE_DATABASE,
         DatabaseEndpoint(
             name=Key.HOUSE_DATABASE,
@@ -132,6 +140,14 @@ def initialize_registries() -> None:
             connection_name=Key.ONLINE_SHOPPING_DATA_LAKE,
             bucket_name=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].bucket_name,
             scheme=main_settings.data_lake[Key.PLATFORM_DATA_LAKE].scheme,
+        ))
+    endpoint_registry.register(
+        Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE,
+        DataLakeEndpoint(
+            name=Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE,
+            connection_name=Key.ONLINE_SHOPPING_DATA_LAKE,
+            bucket_name=main_settings.data_lake[Key.PLATFORM_BACKUP_DATA_LAKE].bucket_name,
+            scheme=main_settings.data_lake[Key.PLATFORM_BACKUP_DATA_LAKE].scheme,
         ))
     endpoint_registry.register(
         Key.ONLINE_SHOPPING_DATABASE,

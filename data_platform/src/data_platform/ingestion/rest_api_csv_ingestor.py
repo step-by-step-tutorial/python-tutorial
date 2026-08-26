@@ -19,6 +19,7 @@ class RestApiCsvIngestor(DatasetIngestor):
         logger.info("Downloading CSV data from %s", self._endpoint.url)
         request = Request(self._endpoint.url, method=self._endpoint.method, headers=self._endpoint.headers)
         with build_opener().open(request) as response:
-            data = pd.read_csv(StringIO(response.read().decode("utf-8")))
+            payload = response.read()
+            data = pd.read_csv(StringIO(payload.decode("utf-8")))
+        logger.info("Downloaded CSV data: url=%s rows=%s columns=%s bytes=%s", self._endpoint.url, len(data), len(data.columns), len(payload))
         return data
-

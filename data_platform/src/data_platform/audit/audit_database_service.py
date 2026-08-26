@@ -7,6 +7,10 @@ from data_platform.model.endpoints import AuditEndpoint
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.file_utils import read_text_file
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class AuditDatabaseService(AbstractAuditService):
 
@@ -15,6 +19,8 @@ class AuditDatabaseService(AbstractAuditService):
         self._insert_event_sql = read_text_file(audit_endpoint.write_sql_files["write"])
 
     def save(self, event: AuditEvent) -> None:
+        logger.debug("Persisting audit event to database: event_id=%s type=%s", event.event_id, event.event_type.value)
         with self._connection.begin() as connection:
             connection.execute(text(self._insert_event_sql), to_persistable_event(event))
+        logger.info("Audit event persisted to database: event_id=%s type=%s", event.event_id, event.event_type.value)
 

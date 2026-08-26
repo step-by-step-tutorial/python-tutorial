@@ -110,6 +110,8 @@ class WriterRegistry:
 
     def write_all(self, rows: Iterable[Mapping[str, str]], config: Any) -> None:
         row_list = [dict(row) for row in rows]
+        dataset_name = getattr(config, "name", getattr(config, "output_name", "unknown"))
+        logger.info("Writing dataset outputs: dataset=%s rows=%s destinations=%s", dataset_name, len(row_list), config.destinations)
         for name in config.destinations:
             writer = self._writers.get(name)
             if writer is None:
@@ -119,3 +121,4 @@ class WriterRegistry:
                 writer.write(row_list, config)
             except Exception as e:
                 logger.error(f"Writer '{name}' failed due to {e} and continuing with next writer.")
+        logger.info("Dataset outputs completed: dataset=%s rows=%s", dataset_name, len(row_list))

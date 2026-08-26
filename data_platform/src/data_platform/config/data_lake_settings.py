@@ -20,7 +20,7 @@ class DataLakeSettings:
 
 data_lake = MappingProxyType(
     {
-        Key.PLATFORM_DATA_LAKE: DataLakeSettings(
+    Key.PLATFORM_DATA_LAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_DATALAKE_ENDPOINT", "http://localhost:9000"),
             access_key=os.getenv("DATA_PLATFORM_DATALAKE_ACCESS_KEY", "admin"),
             secret_key=os.getenv("DATA_PLATFORM_DATALAKE_SECRET_KEY", "administrator"),
@@ -30,6 +30,17 @@ data_lake = MappingProxyType(
             environment=os.getenv("DATA_PLATFORM_DATALAKE_ENVIRONMENT", "dev"),
             checkpoint_path=os.getenv("DATA_PLATFORM_DATALAKE_CHECKPOINT_PATH",
                                       generate_checkpoint_path("app-datalake", "events")),
+        ),
+        Key.PLATFORM_BACKUP_DATA_LAKE: DataLakeSettings(
+            endpoint=os.getenv("DATA_PLATFORM_DATALAKE_ENDPOINT", "http://localhost:9000"),
+            access_key=os.getenv("DATA_PLATFORM_DATALAKE_ACCESS_KEY", "admin"),
+            secret_key=os.getenv("DATA_PLATFORM_DATALAKE_SECRET_KEY", "administrator"),
+            bucket_name=os.getenv("DATA_PLATFORM_DATALAKE_BACKUP_BUCKET_NAME", "app-datalake-backup"),
+            audit_bucket_name=os.getenv("DATA_PLATFORM_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
+            scheme=os.getenv("DATA_PLATFORM_DATALAKE_SCHEME", "s3a"),
+            environment=os.getenv("DATA_PLATFORM_DATALAKE_ENVIRONMENT", "dev"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_DATALAKE_CHECKPOINT_PATH",
+                                      generate_checkpoint_path("app-datalake-backup", "events")),
         ),
         Key.HOUSE_DATA_LAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENDPOINT", "http://localhost:9000"),
@@ -41,6 +52,17 @@ data_lake = MappingProxyType(
             environment=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENVIRONMENT", "dev"),
             checkpoint_path=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_CHECKPOINT_PATH",
                                       generate_checkpoint_path("app-datalake-house", "house.events.v1")),
+        ),
+        Key.HOUSE_BACKUP_DATA_LAKE: DataLakeSettings(
+            endpoint=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENDPOINT", "http://localhost:9000"),
+            access_key=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ACCESS_KEY", "admin"),
+            secret_key=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_SECRET_KEY", "administrator"),
+            bucket_name=os.getenv("DATA_PLATFORM_DATALAKE_BACKUP_BUCKET_NAME", "app-datalake-backup"),
+            audit_bucket_name=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_AUDIT_BUCKET_NAME", "app-datalake-audit"),
+            scheme=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_SCHEME", "s3a"),
+            environment=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENVIRONMENT", "dev"),
+            checkpoint_path=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_CHECKPOINT_PATH",
+                                      generate_checkpoint_path("app-datalake-backup", "house.events.v1")),
         ),
         Key.AUDIT_DATA_LAKE: DataLakeSettings(
             endpoint=os.getenv("DATA_PLATFORM_AUDIT_DATALAKE_ENDPOINT", "http://localhost:9000"),

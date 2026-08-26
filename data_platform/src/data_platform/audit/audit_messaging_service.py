@@ -24,7 +24,13 @@ class AuditMessagingService(AbstractAuditService):
             main_settings.messaging[self._connection_name].bootstrap_servers,
             self._channel_name,
         )
-        logger.info("Publishing audit event %s to messaging channel %s", event.event_id, self._channel_name)
+        logger.info(
+            "Publishing audit event: event_id=%s type=%s status=%s topic=%s",
+            event.event_id,
+            event.event_type.value,
+            event.status.value,
+            self._channel_name,
+        )
 
         try:
             self._producer.produce(
@@ -39,6 +45,15 @@ class AuditMessagingService(AbstractAuditService):
             )
             self._producer.poll(0)
         except Exception as error:
-            logger.exception("Failed to publish audit event %s due to error: %s", event.event_id, error)
+            logger.error(
+                "Failed to publish audit event: event_id=%s topic=%s error=%s",
+                event.event_id,
+                self._channel_name,
+                error,
+            )
             raise
-
+        logger.debug(
+            "Audit event queued for Kafka: event_id=%s topic=%s",
+            event.event_id,
+            self._channel_name,
+        )

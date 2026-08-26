@@ -40,11 +40,13 @@ ONLINE_SHOPPING_DATASET = Dataset(
     endpoints={
         Key.ONLINE_SHOPPING_REST_API: endpoint_registry.get_item(Key.ONLINE_SHOPPING_REST_API),
         Key.ONLINE_SHOPPING_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATA_LAKE),
+        Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE),
         Key.ONLINE_SHOPPING_DATABASE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATABASE),
         Key.ONLINE_SHOPPING_WAREHOUSE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_WAREHOUSE),
     },
     flow=PipelineFlow(
         repository=DataLakeRepository(endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATA_LAKE)),
+        backup_repository=DataLakeRepository(endpoint_registry.get_item(Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE)),
         ingestors=(
             RestApiCsvIngestor(endpoint_registry.get_item(Key.ONLINE_SHOPPING_REST_API)),
         ),
@@ -101,6 +103,36 @@ ONLINE_SHOPPING_DATASET = Dataset(
                 attribute.net_revenue,
                 "sum",
                 attribute.revenue
+            )),
+            GroupAggregateAnalyzer("order_count_by_country", AggregateSpecification(
+                attribute.country,
+                attribute.order_id,
+                "count",
+                "order_count"
+            )),
+            GroupAggregateAnalyzer("revenue_by_category", AggregateSpecification(
+                attribute.category,
+                attribute.net_revenue,
+                "sum",
+                attribute.revenue
+            )),
+            GroupAggregateAnalyzer("average_order_value_by_sales_channel", AggregateSpecification(
+                attribute.sales_channel,
+                attribute.total_amount,
+                "mean",
+                "average_order_value"
+            )),
+            GroupAggregateAnalyzer("average_delivery_days_by_shipping_method", AggregateSpecification(
+                attribute.shipping_method,
+                attribute.delivery_days,
+                "mean",
+                "average_delivery_days"
+            )),
+            GroupAggregateAnalyzer("order_count_by_fulfillment_status", AggregateSpecification(
+                attribute.fulfillment_status,
+                attribute.order_id,
+                "count",
+                "order_count"
             )),
         )),
     ),

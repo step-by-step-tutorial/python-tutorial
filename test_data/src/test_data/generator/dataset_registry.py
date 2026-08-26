@@ -6,6 +6,9 @@ from test_data.config import settings as env_config
 from test_data.config.config_utils import read_config
 from test_data.model.schemas import Dataset, DatasetMetadata
 from test_data.util.file_utils import list_of_file_names
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DatasetRegistry:
@@ -14,6 +17,7 @@ class DatasetRegistry:
             Path(name).stem: Dataset(name=Path(name).stem, config=read_config(name))
             for name in list_of_file_names(env_config.CONFIG_DIR)
         }
+        logger.info("Loaded dataset registry: datasets=%s", list(self._datasets))
 
     def get_all_datasets(self) -> list[Dataset]:
         return list(self._datasets.values())

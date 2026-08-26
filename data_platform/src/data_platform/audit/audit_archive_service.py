@@ -1,4 +1,5 @@
 ﻿import json
+import logging
 from datetime import datetime
 from typing import Any
 
@@ -11,6 +12,8 @@ from data_platform.util.path_utils import (
     generate_audit_manifest_key,
     generate_full_path,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class AuditArchiveService(AbstractAuditService):
@@ -38,6 +41,14 @@ class AuditArchiveService(AbstractAuditService):
                 "event-id": str(event.event_id),
             },
         )
+        logger.info(
+            "Audit event archived: event_id=%s type=%s bucket=%s key=%s bytes=%s",
+            event.event_id,
+            event.event_type.value,
+            self._bucket_name,
+            object_key,
+            len(content),
+        )
 
     def write_manifest(
             self,
@@ -56,6 +67,14 @@ class AuditArchiveService(AbstractAuditService):
             ContentLength=len(content),
             ContentType="application/json",
         )
+        logger.info(
+            "Audit manifest archived: pipeline=%s pipeline_id=%s bucket=%s key=%s bytes=%s",
+            pipeline_name,
+            pipeline_id,
+            self._bucket_name,
+            object_key,
+            len(content),
+        )
         return generate_full_path(bucket_name=self._bucket_name, relative_path=object_key)
 
     def _ensure_bucket_exists(self) -> None:
@@ -63,3 +82,4 @@ class AuditArchiveService(AbstractAuditService):
         bucket_names = {bucket["Name"] for bucket in buckets.get("Buckets", [])}
         if self._bucket_name not in bucket_names:
             self._client.create_bucket(Bucket=self._bucket_name)
+            logger.info("Created audit archive bucket: bucket=%s", self._bucket_name)

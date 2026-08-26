@@ -1,4 +1,5 @@
 import os
+import logging
 from pathlib import Path
 
 import uvicorn
@@ -15,6 +16,7 @@ from test_data.util.file_utils import check_file_exists
 from test_data.util.output_format_utils import media_type_for
 
 __version__ = "1.1.0"
+logger = logging.getLogger(__name__)
 
 
 def create_api() -> FastAPI:
@@ -33,6 +35,7 @@ def create_api() -> FastAPI:
     )
 
     registry = DatasetRegistry()
+    logger.info("Data simulator API initialized: datasets=%s", registry.get_all_names())
 
     @app.get("/", include_in_schema=False)
     async def redirect_to_health() -> RedirectResponse:
@@ -56,6 +59,7 @@ def create_api() -> FastAPI:
 
     @app.post("/datasets/{name}/generate", tags=["Datasets"], summary="Generate dataset output")
     async def generate(name: str) -> DatasetMetadata:
+        logger.info("Dataset generation requested: dataset=%s", name)
         return DatasetGenerator(config_name=name).write().get_metadata()
 
     @app.get(
@@ -70,6 +74,7 @@ def create_api() -> FastAPI:
             page: int = Query(1, ge=1, description="One-based page number."),
             page_size: int = Query(100, ge=1, le=1_000, description="Maximum number of rows to return."),
     ) -> DatabasePage:
+        logger.info("Dataset rows requested: dataset=%s page=%s page_size=%s", name, page, page_size)
         dataset = registry.get_one(name)
         if "database" not in dataset.destinations:
             raise HTTPException(status_code=404, detail=f"Dataset {name} has no database destination.")
@@ -85,6 +90,7 @@ def create_api() -> FastAPI:
         except NoSuchTableError as error:
             raise HTTPException(status_code=404, detail=f"Database table for {name} was not found.") from error
 
+        logger.info("Dataset rows returned: dataset=%s page=%s returned=%s total=%s", name, page, len(items), total)
         return DatabasePage(page=page, page_size=page_size, total=total, items=items)
 
     @app.get(
@@ -102,6 +108,7 @@ def create_api() -> FastAPI:
                 description="Configured output format to download, such as csv, json, or xml.",
             ),
     ) -> FileResponse:
+        logger.info("Dataset download requested: dataset=%s format=%s", name, format_name)
         dataset = registry.get_one(name)
         if format_name not in dataset.destinations:
             raise HTTPException(status_code=404, detail=f"Format '{format_name}' is not available for {name}.")
@@ -113,6 +120,7 @@ def create_api() -> FastAPI:
             raise HTTPException(status_code=404, detail=f"Unsupported format: {format_name}.") from error
 
         check_file_exists(path)
+        logger.info("Dataset download ready: dataset=%s format=%s path=%s bytes=%s", name, format_name, path, path.stat().st_size)
         return FileResponse(path, media_type=media_type, filename=path.name)
 
     return app

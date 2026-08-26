@@ -141,6 +141,13 @@ def test_kafka_admin_and_airflow_helpers_handle_noop_and_failures(mocker) -> Non
     with pytest.raises(Exception):
         ensure_pipeline_success(task=task, dag_run=failed)
 
+    task_instance = type("TaskInstance", (), {
+        "get_task_states": lambda self, **_: {"upstream": "failed", "final": "success"}
+    })()
+    modern_dag_run = type("DagRun", (), {"dag_id": "example", "run_id": "run-1"})()
+    with pytest.raises(Exception):
+        ensure_pipeline_success(task=task, dag_run=modern_dag_run, task_instance=task_instance)
+
 
 def test_validator_utility_rejects_invalid_contracts() -> None:
     with pytest.raises(Exception):

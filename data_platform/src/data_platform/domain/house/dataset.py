@@ -75,11 +75,13 @@ house_dataset = Dataset(
         Key.HOUSE_KAFKA_CONSUMER: endpoint_registry.get_item(Key.HOUSE_KAFKA_CONSUMER),
         Key.HOUSE_KAFKA_PRODUCER: endpoint_registry.get_item(Key.HOUSE_KAFKA_PRODUCER),
         Key.HOUSE_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_DATA_LAKE),
+        Key.HOUSE_BACKUP_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_BACKUP_DATA_LAKE),
         Key.HOUSE_DATABASE: endpoint_registry.get_item(Key.HOUSE_DATABASE),
         Key.HOUSE_WAREHOUSE: endpoint_registry.get_item(Key.HOUSE_WAREHOUSE),
     },
     flow=PipelineFlow(
         repository=DataLakeRepository(endpoint_registry.get_item(Key.HOUSE_DATA_LAKE)),
+        backup_repository=DataLakeRepository(endpoint_registry.get_item(Key.HOUSE_BACKUP_DATA_LAKE)),
         ingestors=(RestApiCsvIngestor(endpoint_registry.get_item(Key.HOUSE_REST_API)),),
         cleaners=CleanerChain(
             tuple(NumericColumnCleaner(column) for column in numeric_columns)
@@ -103,12 +105,24 @@ house_dataset = Dataset(
         ),
         analyzers=AnalyzerChain((
             GroupAggregateAnalyzer(
-                "average_price_by_city",
-                AggregateSpecification(attribute.city, attribute.total_price, "mean", "average_price"),
+                "property_count_by_city",
+                AggregateSpecification(attribute.city, attribute.property_id, "count", "property_count"),
+            ),
+            GroupAggregateAnalyzer(
+                "average_total_price_by_city",
+                AggregateSpecification(attribute.city, attribute.total_price, "mean", "average_total_price"),
             ),
             GroupAggregateAnalyzer(
                 "average_price_per_square_meter_by_property_type",
                 AggregateSpecification(attribute.property_type, attribute.price_per_sqm, "mean", "average_price_per_sqm"),
+            ),
+            GroupAggregateAnalyzer(
+                "average_living_area_by_property_type",
+                AggregateSpecification(attribute.property_type, attribute.living_area_sqm, "mean", "average_living_area_sqm"),
+            ),
+            GroupAggregateAnalyzer(
+                "average_energy_consumption_by_city",
+                AggregateSpecification(attribute.city, attribute.annual_energy_consumption_kwh, "mean", "average_energy_consumption_kwh"),
             ),
         )),
     ),

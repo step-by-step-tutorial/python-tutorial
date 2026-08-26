@@ -12,6 +12,7 @@ from data_platform.cleaners.cleaner_impl import CleanerChain
 from data_platform.enrichers.enricher_impl import EnricherChain
 from data_platform.validators.validator_chain import ValidatorChain
 from data_platform.pipeline.data_pipeline import DataPipeline
+from data_platform.analyzers.report import Report
 
 
 def _factory(service):
@@ -72,7 +73,9 @@ class _Exposer:
 
 class _Analyzer:
     def __init__(self, consumer, lake): self.name = "analyze"; self.consumer = consumer; self.storage_service = lake; self.storage_service_name = "storage"
-    def analyze(self, value): self.consumer.analyze(value)
+    def analyze(self, value):
+        self.consumer.analyze(value)
+        return (Report("summary", pd.DataFrame({"value": [1]})),)
 
 
 def _dataset(lake, exposer, analyzer) -> Dataset:

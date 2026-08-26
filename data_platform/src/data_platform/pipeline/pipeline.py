@@ -1,4 +1,5 @@
 ﻿import time
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
@@ -14,6 +15,8 @@ from data_platform.audit.audit_service import AuditService
 from data_platform.model.dataset import Dataset
 from data_platform.util.pipeline_utils import create_pipeline_id
 from data_platform.util.time_utils import elapsed_milliseconds, generate_ingestion_time
+
+logger = logging.getLogger(__name__)
 
 
 class Pipeline(ABC):
@@ -63,14 +66,17 @@ class Pipeline(ABC):
         self.dataset.flow.before_step(step_name)
         step_id = f"{self.pipeline_id}-{step_name}"
         started_at = time.perf_counter()
+        logger.info("Pipeline step started: dataset=%s pipeline_id=%s step=%s", self.pipeline_name, self.pipeline_id, step_name)
         self.start_task(step_id, step_name)
         try:
             result = action()
         except Exception as error:
+            logger.error("Pipeline step failed: dataset=%s pipeline_id=%s step=%s error=%s", self.pipeline_name, self.pipeline_id, step_name, error)
             self.fail_task(step_name, step_id, error, started_at)
             raise
         self.complete_task(step_name, step_id, started_at)
         self.dataset.flow.after_stage(step_name)
+        logger.info("Pipeline step completed: dataset=%s pipeline_id=%s step=%s duration_ms=%s", self.pipeline_name, self.pipeline_id, step_name, elapsed_milliseconds(started_at))
         return result
 
     def run(self) -> None:
@@ -92,6 +98,7 @@ class Pipeline(ABC):
 
     def start_pipeline(self) -> None:
         self._started_at = time.perf_counter()
+        logger.info("Pipeline started: dataset=%s pipeline_id=%s ingestion_time=%s", self.pipeline_name, self.pipeline_id, self.ingestion_time.isoformat())
         event = AuditEventFactory.create_pipeline_started_event(
             PipelineStartedAuditRequest(
                 pipeline_name=self.pipeline_name,
@@ -105,11 +112,13 @@ class Pipeline(ABC):
         self._audit_service.emit(event)
 
     def complete_pipeline(self) -> None:
+        duration_ms = elapsed_milliseconds(self._started_at)
+        logger.info("Pipeline completed: dataset=%s pipeline_id=%s duration_ms=%s", self.pipeline_name, self.pipeline_id, duration_ms)
         event = AuditEventFactory.create_pipeline_completed_event(
             PipelineCompletedAuditRequest(
                 pipeline_name=self.pipeline_name,
                 pipeline_id=self.pipeline_id,
-                duration_ms=elapsed_milliseconds(self._started_at),
+                duration_ms=duration_ms,
                 metadata={
                     "dataset": self.dataset.name,
                     "ingestion_time": self.ingestion_time.isoformat()
@@ -119,11 +128,13 @@ class Pipeline(ABC):
         self._audit_service.emit(event)
 
     def fail_pipeline(self, error: Exception) -> None:
+        duration_ms = elapsed_milliseconds(self._started_at)
+        logger.error("Pipeline failed: dataset=%s pipeline_id=%s duration_ms=%s error=%s", self.pipeline_name, self.pipeline_id, duration_ms, error)
         event = AuditEventFactory.create_pipeline_failed_event(
             PipelineFailedAuditRequest(
                 pipeline_name=self.pipeline_name,
                 pipeline_id=self.pipeline_id,
-                duration_ms=elapsed_milliseconds(self._started_at),
+                duration_ms=duration_ms,
                 error=error,
                 metadata={
                     "dataset": self.dataset.name,
