@@ -6,7 +6,7 @@ from pyspark.sql.functions import avg, coalesce, col, lit, lower, regexp_replace
 
 class DropDuplicatesCleaner:
     def __init__(self, subset: str | Sequence[str] | None = None) -> None:
-        self.subset = subset
+        self.subset = (subset,) if isinstance(subset, str) else subset
 
     def clean(self, dataframe: DataFrame) -> DataFrame:
         return dataframe.dropDuplicates(self.subset)

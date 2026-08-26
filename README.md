@@ -101,6 +101,7 @@ docker rmi samanalishiri/test-data:latest
     * Username: admin
     * Password: admin
     * Database: sale_airflow
+* Kafka: http://localhost:9002/
 
 ## Clean Directory
 

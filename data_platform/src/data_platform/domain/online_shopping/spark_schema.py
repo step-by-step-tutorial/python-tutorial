@@ -5,7 +5,7 @@ from data_platform.domain.online_shopping.attribute import attribute
 _INTEGER_COLUMNS = {attribute.customer_id, attribute.quantity, attribute.delivery_days, attribute.year, attribute.month}
 _DOUBLE_COLUMNS = {attribute.unit_price, attribute.subtotal, attribute.discount_percent, attribute.shipping_cost,
                    attribute.tax_amount, attribute.total_amount, attribute.discount_amount, attribute.net_revenue,
-                   attribute.revenue}
+                   }
 _TIMESTAMP_COLUMNS = {attribute.order_date, attribute.estimated_delivery_date}
 _DERIVED_COLUMNS = {attribute.discount_amount, attribute.net_revenue, attribute.year, attribute.month,
                     attribute.revenue}
@@ -21,5 +21,4 @@ ONLINE_SHOPPING_SCHEMA = StructType([
     StructField(attribute.net_revenue, DoubleType(), nullable=True),
     StructField(attribute.year, IntegerType(), nullable=True),
     StructField(attribute.month, IntegerType(), nullable=True),
-    StructField(attribute.revenue, DoubleType(), nullable=True),
 ])
