@@ -240,21 +240,27 @@ class RandomFromMappedCsvColumn(ColumnGenerator):
         mapping_file = require_not_blank(mapping_file)
         mapping_file = str(absolute_project_path(mapping_file))
         key_column = require_not_blank(self.model.key_column)
-        cache_key = (
+        candidate_cache_key = (
             mapping_file,
             source_value,
             key_column,
-            row_index,
             self.model.filter_column,
             tuple(self.model.filter_values or ()),
             tuple(self.model.filter_fallback_values or ()),
             tuple(self.model.required_columns or ()),
+            self.model.candidate_limit,
         )
-        selected = self._selected_rows.get(cache_key)
+        selected_cache_key = candidate_cache_key + (row_index,)
+        selected = self._selected_rows.get(selected_cache_key)
         if selected is None:
-            rows = self._candidate_rows.get(cache_key)
+            rows = self._candidate_rows.get(candidate_cache_key)
             if rows is None:
-                rows = self.source_repository.read_csv_rows(mapping_file, key_column, source_value)
+                rows = self.source_repository.read_csv_rows(
+                    mapping_file,
+                    key_column,
+                    source_value,
+                    self.model.candidate_limit,
+                )
                 if self.model.filter_column and self.model.filter_values:
                     filtered_rows = tuple(
                         row for row in rows if row.get(self.model.filter_column) in self.model.filter_values
@@ -272,11 +278,11 @@ class RandomFromMappedCsvColumn(ColumnGenerator):
                         for row in rows
                         if all(row.get(column) for column in self.model.required_columns)
                     )
-                self._candidate_rows[cache_key] = rows
+                self._candidate_rows[candidate_cache_key] = rows
             if not rows:
                 raise Exception(f"No rows found for '{source_value}' in mapping for column {self.model.name}.")
             selected = self.rand.choice(rows)
-            self._selected_rows[cache_key] = selected
+            self._selected_rows[selected_cache_key] = selected
         if self.model.value_template is not None:
             try:
                 return self.model.value_template.format_map(selected)

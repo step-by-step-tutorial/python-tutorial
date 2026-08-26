@@ -38,7 +38,8 @@
       "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
       "value_column": "street",
-      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"],
+      "candidate_limit": 10000
     },
     {
       "name": "house_number",
@@ -47,7 +48,8 @@
       "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
       "value_column": "house_number",
-      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"],
+      "candidate_limit": 10000
     },
     {
       "name": "postal_code",
@@ -56,7 +58,8 @@
       "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
       "value_column": "postal_code",
-      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"],
+      "candidate_limit": 10000
     },
     {
       "name": "city",
@@ -80,7 +83,8 @@
       "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
       "value_column": "latitude",
-      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"],
+      "candidate_limit": 10000
     },
     {
       "name": "longitude",
@@ -89,7 +93,8 @@
       "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
       "value_column": "longitude",
-      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"],
+      "candidate_limit": 10000
     },
     {
       "name": "construction_year",

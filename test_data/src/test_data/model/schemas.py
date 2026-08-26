@@ -30,6 +30,7 @@ class ColumnModel:
     value_column: str | None = None
     value_template: str | None = None
     required_columns: tuple[str, ...] | None = None
+    candidate_limit: int | None = None
     filter_column: str | None = None
     filter_values: tuple[str, ...] | None = None
     filter_fallback_values: tuple[str, ...] | None = None

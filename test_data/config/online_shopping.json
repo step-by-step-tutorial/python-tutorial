@@ -51,7 +51,9 @@
       "source_field": "country",
       "mapping_file": "data/los_angeles.csv",
       "key_column": "country",
-      "value_template": "{house_number} {street}, {city}, {state} {postal_code}, {country}"
+      "value_template": "{house_number} {street}, {city}, {state} {postal_code}, {country}",
+      "required_columns": ["street", "house_number", "postal_code", "city", "state"],
+      "candidate_limit": 10000
     },
     { "name": "country", "type": "random_from_file", "file": "data/countries.txt" },
     {
