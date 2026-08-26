@@ -1,7 +1,7 @@
 ﻿import atexit
 from typing import Any
 
-from data_platform.registry.base_registry import Registry
+from data_platform.registry.registry import Registry
 
 
 class ConnectionRegistry(Registry[Any]):

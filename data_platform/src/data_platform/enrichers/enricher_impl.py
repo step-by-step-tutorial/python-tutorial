@@ -2,15 +2,7 @@ from collections.abc import Callable
 import hashlib
 from typing import Any
 
-
-class EnricherChain:
-    def __init__(self, enrichers: tuple[Any, ...] = ()) -> None:
-        self.enrichers = enrichers
-
-    def enrich(self, dataframe: Any) -> Any:
-        for enricher in self.enrichers:
-            dataframe = enricher.enrich(dataframe)
-        return dataframe
+from data_platform.enrichers.enricher_chain import EnricherChain
 
 
 class CalculateColumnEnricher:

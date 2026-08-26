@@ -3,15 +3,7 @@ from typing import Any
 
 import pandas as pd
 
-
-class CleanerChain:
-    def __init__(self, cleaners: tuple[Any, ...] = ()) -> None:
-        self.cleaners = cleaners
-
-    def clean(self, dataframe: Any) -> Any:
-        for cleaner in self.cleaners:
-            dataframe = cleaner.clean(dataframe)
-        return dataframe
+from data_platform.cleaners.cleaner_chain import CleanerChain
 
 
 class DropDuplicatesCleaner:
