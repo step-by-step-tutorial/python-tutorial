@@ -53,6 +53,7 @@ boolean_columns = (
 )
 date_columns = (attribute.purchase_date, attribute.created_at, attribute.updated_at)
 text_columns = (
+    attribute.property_id,
     attribute.property_type, attribute.address, attribute.street, attribute.house_number,
     attribute.postal_code, attribute.city, attribute.state, attribute.country,
     attribute.owner_id, attribute.owner_name, attribute.owner_type,

@@ -65,18 +65,18 @@ class TestDatalakeUtils:
             "house"
         )
         actual_full = datalake_path_utils.generate_full_path("bucket", "path/to/file")
-        actual_datalake_uri = datalake_path_utils.generate_full_path("online_shopping", "path/to/file")
+        actual_datalake_uri = datalake_path_utils.generate_full_path("online-shopping", "path/to/file")
         actual_audit_uri = datalake_path_utils.generate_full_path("audit", "audit/file.json")
         actual_object_key = datalake_path_utils.generate_object_key("/raw/house/", "/part-001.parquet")
-        actual_checkpoint = datalake_path_utils.generate_checkpoint_path("online_shopping", "house.events.v1")
+        actual_checkpoint = datalake_path_utils.generate_checkpoint_path("online-shopping", "house.events.v1")
 
         # Then
         assert actual_relative.startswith("raw/house/")
         assert actual_full == "s3a://bucket/path/to/file"
-        assert actual_datalake_uri == "s3a://online_shopping/path/to/file"
+        assert actual_datalake_uri == "s3a://online-shopping/path/to/file"
         assert actual_audit_uri == "s3a://audit/audit/file.json"
         assert actual_object_key == "raw/house/part-001.parquet"
-        assert actual_checkpoint == "s3a://online_shopping/checkpoints/house.events.v1"
+        assert actual_checkpoint == "s3a://online-shopping/checkpoints/house.events.v1"
 
     def test_should_generate_dataset_download_url(self) -> None:
         actual = datalake_path_utils.generate_dataset_download_url(
