@@ -163,5 +163,4 @@ cython_debug/
 report/
 **/output/*.*
 **/output_test/*.*
-
-*.parquet
+**/data_generator/**

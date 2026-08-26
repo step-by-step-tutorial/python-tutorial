@@ -11,6 +11,14 @@ def convert_to_column(raw_column: dict[str, Any]) -> ColumnModel:
         data["source_fields"] = tuple(data["source_fields"])
     if data.get("file_columns") is not None:
         data["file_columns"] = tuple(data["file_columns"])
+    if data.get("filter_values") is not None:
+        data["filter_values"] = tuple(data["filter_values"])
+    if data.get("filter_fallback_values") is not None:
+        data["filter_fallback_values"] = tuple(data["filter_fallback_values"])
+    if data.get("required_columns") is not None:
+        data["required_columns"] = tuple(data["required_columns"])
+    if data.get("exclude_directories") is not None:
+        data["exclude_directories"] = tuple(data["exclude_directories"])
 
     return ColumnModel(**data)
 

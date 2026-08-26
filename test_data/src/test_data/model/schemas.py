@@ -25,8 +25,15 @@ class ColumnModel:
     source_field: str | None = None
     source_fields: tuple[str, ...] | None = None
     mapping_file: str | None = None
+    file_template: str | None = None
     key_column: str | None = None
     value_column: str | None = None
+    value_template: str | None = None
+    required_columns: tuple[str, ...] | None = None
+    filter_column: str | None = None
+    filter_values: tuple[str, ...] | None = None
+    filter_fallback_values: tuple[str, ...] | None = None
+    exclude_directories: tuple[str, ...] | None = None
     file_column: str | None = None
     file_columns: tuple[str, ...] | None = None
     separator: str | None = None

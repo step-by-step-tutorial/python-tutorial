@@ -289,6 +289,84 @@ def test_email_reports_empty_name() -> None:
         generator.generate({"given": "", "family": "Bauer"}, 0)
 
 
+def test_random_from_directory_uses_non_excluded_directories(project_root: Path) -> None:
+    (project_root / "data" / "regions" / "California").mkdir(parents=True)
+    (project_root / "data" / "regions" / "Nevada").mkdir()
+    (project_root / "data" / "regions" / "_metadata").mkdir()
+
+    generator = build(
+        ColumnModel(
+            name="state",
+            type="random_from_directory",
+            file="data/regions",
+            exclude_directories=("_metadata",),
+        )
+    )
+
+    assert generator.generate({}, 0) in {"California", "Nevada"}
+
+
+def test_filtered_mapped_rows_do_not_share_cache_with_other_filters(project_root: Path, write_lines) -> None:
+    path = project_root / "data" / "regions" / "California" / "data.csv"
+    path.parent.mkdir(parents=True)
+    write_lines(
+        path,
+        "state,name,feature_class",
+        "California,Sunset Road,R",
+        "California,Los Angeles,P",
+    )
+
+    street = build(
+        ColumnModel(
+            name="street",
+            type="random_from_mapped_csv",
+            source_field="state",
+            file_template="data/regions/{state}/data.csv",
+            key_column="state",
+            value_column="name",
+            filter_column="feature_class",
+            filter_values=("R",),
+        )
+    )
+    city = build(
+        ColumnModel(
+            name="city",
+            type="random_from_mapped_csv",
+            source_field="state",
+            file_template="data/regions/{state}/data.csv",
+            key_column="state",
+            value_column="name",
+            filter_column="feature_class",
+            filter_values=("P",),
+        )
+    )
+
+    assert street.generate({"state": "California"}, 0) == "Sunset Road"
+    assert city.generate({"state": "California"}, 0) == "Los Angeles"
+
+
+def test_filtered_mapped_rows_use_configured_fallback(project_root: Path, write_lines) -> None:
+    path = project_root / "data" / "regions" / "Canada" / "data.csv"
+    path.parent.mkdir(parents=True)
+    write_lines(path, "state,name,feature_class", "Canada,Ottawa,P")
+
+    generator = build(
+        ColumnModel(
+            name="street",
+            type="random_from_mapped_csv",
+            source_field="state",
+            file_template="data/regions/{state}/data.csv",
+            key_column="state",
+            value_column="name",
+            filter_column="feature_class",
+            filter_values=("R",),
+            filter_fallback_values=("P",),
+        )
+    )
+
+    assert generator.generate({"state": "Canada"}, 0) == "Ottawa"
+
+
 @pytest.mark.parametrize(
     "column",
     [

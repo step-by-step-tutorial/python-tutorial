@@ -47,11 +47,11 @@
     },
     {
       "name": "shipping_address",
-      "type": "random_from_mapped_file",
+      "type": "random_from_mapped_csv",
       "source_field": "country",
-      "mapping_file": "data/country_source_map.csv",
+      "mapping_file": "data/los_angeles.csv",
       "key_column": "country",
-      "file_column": "address_file"
+      "value_template": "{house_number} {street}, {city}, {state} {postal_code}, {country}"
     },
     { "name": "country", "type": "random_from_file", "file": "data/countries.txt" },
     {

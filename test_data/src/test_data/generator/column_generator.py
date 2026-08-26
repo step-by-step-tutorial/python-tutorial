@@ -9,6 +9,7 @@ from test_data.config import settings as env_config
 from test_data.converter.data_converter import convert_to_email, random_date_between, random_date_from
 from test_data.repository.sources_repository import SourceRepository
 from test_data.model.schemas import ColumnModel
+from test_data.util.file_utils import absolute_project_path, list_of_directory_names
 from test_data.util.validation_utils import (
     check_min_max,
     check_negative_days,
@@ -20,13 +21,14 @@ from test_data.util.validation_utils import (
     require_xor, should_not_be_negative, )
 
 Row = Mapping[str, str]
+SOURCE_REPOSITORY = SourceRepository()
 
 
 class ColumnGenerator(ABC):
 
     def __init__(self, model: ColumnModel) -> None:
         self.model = model
-        self.source_repository = SourceRepository()
+        self.source_repository = SOURCE_REPOSITORY
         self.rand = Random(env_config.RANDOM_SEED)
         self.validate()
 
@@ -158,6 +160,19 @@ class RandomFromFileColumn(ColumnGenerator):
         return self.rand.choice(self.source_repository.read_text_file(self.model.file))  # type: ignore[arg-type]
 
 
+class RandomFromDirectoryColumn(ColumnGenerator):
+    def validate(self) -> None:
+        self.require("file")
+
+    def generate(self, row: Row, row_index: int) -> str:
+        directories = list_of_directory_names(absolute_project_path(require_not_blank(self.model.file)))
+        excluded = set(self.model.exclude_directories or ())
+        directories = [directory for directory in directories if directory not in excluded]
+        if not directories:
+            raise Exception(f"No directories found for column {self.model.name}.")
+        return self.rand.choice(directories)
+
+
 class RandomFromMappedFileColumn(ColumnGenerator):
 
     def __init__(self, model: ColumnModel):
@@ -196,10 +211,20 @@ class RandomFromMappedFileColumn(ColumnGenerator):
 
 
 class RandomFromMappedCsvColumn(ColumnGenerator):
-    _selected_rows: dict[tuple[str, str, str, int], Mapping[str, str]] = {}
+    _selected_rows: dict[tuple[object, ...], Mapping[str, str]] = {}
 
     def validate(self) -> None:
-        self.require("source_field", "mapping_file", "key_column", "value_column")
+        self.require("source_field", "key_column")
+        require_xor(
+            obj1=self.model.value_column,
+            obj2=self.model.value_template,
+            error_message=f"Column {self.model.name} requires exactly one of value_column or value_template."
+        )
+        require_xor(
+            obj1=self.model.mapping_file,
+            obj2=self.model.file_template,
+            error_message=f"Column {self.model.name} requires exactly one of mapping_file or file_template."
+        )
 
     @property
     def dependencies(self) -> tuple[str, ...]:
@@ -207,16 +232,55 @@ class RandomFromMappedCsvColumn(ColumnGenerator):
 
     def generate(self, row: Row, row_index: int) -> str:
         source_value = self.get_by_source(row)
-        mapping_file = require_not_blank(self.model.mapping_file)
+        mapping_file = self.model.mapping_file
+        if self.model.file_template is not None:
+            source_field = require_not_blank(self.model.source_field)
+            mapping_file = self.model.file_template.format(**{source_field: source_value})
+        mapping_file = require_not_blank(mapping_file)
+        mapping_file = str(absolute_project_path(mapping_file))
         key_column = require_not_blank(self.model.key_column)
-        cache_key = (mapping_file, source_value, key_column, row_index)
+        cache_key = (
+            mapping_file,
+            source_value,
+            key_column,
+            row_index,
+            self.model.filter_column,
+            tuple(self.model.filter_values or ()),
+            tuple(self.model.filter_fallback_values or ()),
+            tuple(self.model.required_columns or ()),
+        )
         selected = self._selected_rows.get(cache_key)
         if selected is None:
             rows = self.source_repository.read_csv_rows(mapping_file, key_column, source_value)
+            if self.model.filter_column and self.model.filter_values:
+                filtered_rows = tuple(
+                    row for row in rows if row.get(self.model.filter_column) in self.model.filter_values
+                )
+                if not filtered_rows and self.model.filter_fallback_values:
+                    filtered_rows = tuple(
+                        row
+                        for row in rows
+                        if row.get(self.model.filter_column) in self.model.filter_fallback_values
+                    )
+                rows = filtered_rows
+            if self.model.required_columns:
+                rows = tuple(
+                    row
+                    for row in rows
+                    if all(row.get(column) for column in self.model.required_columns)
+                )
             if not rows:
                 raise Exception(f"No rows found for '{source_value}' in mapping for column {self.model.name}.")
             selected = self.rand.choice(rows)
             self._selected_rows[cache_key] = selected
+        if self.model.value_template is not None:
+            try:
+                return self.model.value_template.format_map(selected)
+            except (KeyError, ValueError) as error:
+                raise Exception(
+                    f"Column {self.model.name} has an invalid value template."
+                ) from error
+
         return require_or_raise_map(
             selected,
             require_not_blank(self.model.value_column),

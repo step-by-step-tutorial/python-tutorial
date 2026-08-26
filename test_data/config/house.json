@@ -18,58 +18,57 @@
       "name": "street",
       "type": "random_from_mapped_csv",
       "source_field": "city",
-      "mapping_file": "data/city_address_records.csv",
+      "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
-      "value_column": "street"
+      "value_column": "street",
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
     },
     {
       "name": "house_number",
       "type": "random_from_mapped_csv",
       "source_field": "city",
-      "mapping_file": "data/city_address_records.csv",
+      "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
-      "value_column": "house_number"
+      "value_column": "house_number",
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
     },
     {
       "name": "postal_code",
       "type": "random_from_mapped_csv",
       "source_field": "city",
-      "mapping_file": "data/city_address_records.csv",
+      "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
-      "value_column": "postal_code"
+      "value_column": "postal_code",
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
     },
     {
       "name": "city",
-      "type": "random_from_mapped_file",
-      "source_field": "state",
-      "mapping_file": "data/state_city_map.csv",
-      "key_column": "state",
-      "file_column": "city_file"
+      "type": "fixed",
+      "value": "Los Angeles"
     },
     {
       "name": "state",
-      "type": "random_from_mapped_file",
-      "source_field": "country",
-      "mapping_file": "data/country_state_map.csv",
-      "key_column": "country",
-      "file_column": "state_file"
+      "type": "fixed",
+      "value": "California"
     },
-    { "name": "country", "type": "random_from_file", "file": "data/property_countries.txt" },
+    { "name": "country", "type": "fixed", "value": "United States" },
     {
       "name": "latitude",
       "type": "random_from_mapped_csv",
       "source_field": "city",
-      "mapping_file": "data/city_address_records.csv",
+      "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
-      "value_column": "latitude"
+      "value_column": "latitude",
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
     },
     {
       "name": "longitude",
       "type": "random_from_mapped_csv",
       "source_field": "city",
-      "mapping_file": "data/city_address_records.csv",
+      "mapping_file": "data/los_angeles.csv",
       "key_column": "city",
-      "value_column": "longitude"
+      "value_column": "longitude",
+      "required_columns": ["street", "house_number", "postal_code", "latitude", "longitude"]
     },
 
     { "name": "construction_year", "type": "random_int", "min": 1900, "max": 2024 },

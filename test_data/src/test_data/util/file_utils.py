@@ -12,6 +12,10 @@ def list_of_file_names(directory: Path) -> list[str]:
     return [path.name for path in paths if path.is_file()]
 
 
+def list_of_directory_names(directory: Path) -> list[str]:
+    return sorted(path.name for path in Path(directory).glob("*") if path.is_dir())
+
+
 def check_file_exists(path: Path):
     if not path.is_file():
         raise Exception(f"File {path.name} does not exist.")
