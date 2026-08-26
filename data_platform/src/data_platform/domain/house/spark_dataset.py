@@ -22,7 +22,6 @@ from data_platform.spark_validators.validator_chain import SparkValidatorChain
 from data_platform.spark_validators.validator_impl import NotNullValidator, PositiveValidator, RequiredColumnsValidator
 
 
-spark_session = create_session()
 house_spark_endpoints = {
     Key.HOUSE_REST_API: endpoint_registry.get_item(Key.HOUSE_REST_API),
     Key.HOUSE_DATA_LAKE: endpoint_registry.get_item(Key.HOUSE_DATA_LAKE),
@@ -38,9 +37,9 @@ spark_house_dataset = Dataset(
     dataframe=DataFrameModel(schema=HOUSE_SCHEMA, required_columns=frozenset(attribute.columns)),
     endpoints=house_spark_endpoints,
     flow=SparkPipelineFlow(
-        repository=SparkDatalakeRepository(spark_session, house_spark_endpoints[Key.HOUSE_DATA_LAKE]),
-        backup_repository=SparkDatalakeRepository(spark_session, house_spark_endpoints[Key.HOUSE_BACKUP_DATA_LAKE]),
-        ingestors=(SparkRestApiCsvIngestor(house_spark_endpoints[Key.HOUSE_REST_API], spark_session, HOUSE_SCHEMA),),
+        repository=SparkDatalakeRepository(create_session, house_spark_endpoints[Key.HOUSE_DATA_LAKE]),
+        backup_repository=SparkDatalakeRepository(create_session, house_spark_endpoints[Key.HOUSE_BACKUP_DATA_LAKE]),
+        ingestors=(SparkRestApiCsvIngestor(house_spark_endpoints[Key.HOUSE_REST_API], create_session, HOUSE_SCHEMA),),
         cleaners=SparkCleanerChain(
             tuple(NumericColumnCleaner(column) for column in numeric_columns)
             + tuple(BooleanColumnCleaner(column) for column in boolean_columns)

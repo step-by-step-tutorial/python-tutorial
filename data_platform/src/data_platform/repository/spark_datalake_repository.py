@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 
 from pyspark.sql import DataFrame, SparkSession
 
@@ -12,14 +13,21 @@ logger = logging.getLogger(__name__)
 
 
 class SparkDatalakeRepository(StorageRepository):
-    def __init__(self, session: SparkSession, datalake_endpoint: DataLakeEndpoint) -> None:
+    def __init__(self, session: SparkSession | Callable[[], SparkSession], datalake_endpoint: DataLakeEndpoint) -> None:
         self._session = session
         self._datalake_endpoint = datalake_endpoint
+
+    @property
+    def session(self) -> SparkSession:
+        if hasattr(self._session, "read"):
+            return self._session
+        self._session = self._session()
+        return self._session
 
     def read(self, path: str) -> DataFrame:
         should_not_be_none_or_empty(path, "path")
         logger.info("Reading Spark datalake data: bucket=%s path=%s", self._datalake_endpoint.bucket_name, path)
-        return self._session.read.parquet(generate_datalake_path(self._datalake_endpoint, path))
+        return self.session.read.parquet(generate_datalake_path(self._datalake_endpoint, path))
 
     def write(self, dataframe: DataFrame, path: str) -> str:
         should_not_be_none(dataframe, "dataframe")

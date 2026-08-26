@@ -22,7 +22,6 @@ from data_platform.spark_validators.validator_chain import SparkValidatorChain
 from data_platform.spark_validators.validator_impl import NonNegativeValidator, NotNullValidator, PositiveValidator, RequiredColumnsValidator
 
 
-spark_session = create_session()
 online_shopping_spark_endpoints = {
     Key.ONLINE_SHOPPING_REST_API: endpoint_registry.get_item(Key.ONLINE_SHOPPING_REST_API),
     Key.ONLINE_SHOPPING_DATA_LAKE: endpoint_registry.get_item(Key.ONLINE_SHOPPING_DATA_LAKE),
@@ -41,9 +40,9 @@ spark_online_shopping_dataset = Dataset(
     ),
     endpoints=online_shopping_spark_endpoints,
     flow=SparkPipelineFlow(
-        repository=SparkDatalakeRepository(spark_session, online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_DATA_LAKE]),
-        backup_repository=SparkDatalakeRepository(spark_session, online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE]),
-        ingestors=(SparkRestApiCsvIngestor(online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_REST_API], spark_session, ONLINE_SHOPPING_SCHEMA),),
+        repository=SparkDatalakeRepository(create_session, online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_DATA_LAKE]),
+        backup_repository=SparkDatalakeRepository(create_session, online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_BACKUP_DATA_LAKE]),
+        ingestors=(SparkRestApiCsvIngestor(online_shopping_spark_endpoints[Key.ONLINE_SHOPPING_REST_API], create_session, ONLINE_SHOPPING_SCHEMA),),
         cleaners=SparkCleanerChain((DropDuplicatesCleaner(attribute.order_id), ToDatetimeCleaner(attribute.order_date), ToDatetimeCleaner(attribute.estimated_delivery_date), StripColumnCleaner(attribute.phone), *(NumericColumnCleaner(column) for column in (attribute.customer_id, attribute.unit_price, attribute.quantity, attribute.subtotal, attribute.discount_percent, attribute.shipping_cost, attribute.tax_amount, attribute.total_amount, attribute.delivery_days)))),
         validators=SparkValidatorChain((RequiredColumnsValidator((attribute.order_id, attribute.order_date, attribute.quantity, attribute.unit_price, attribute.total_amount)), NotNullValidator(attribute.order_id), NotNullValidator(attribute.order_date), PositiveValidator(attribute.quantity), NonNegativeValidator(attribute.unit_price), NonNegativeValidator(attribute.total_amount))),
         enrichers=SparkEnricherChain((PercentageEnricher(attribute.subtotal, attribute.discount_percent, attribute.discount_amount), CopyColumnEnricher(attribute.total_amount, attribute.net_revenue, decimals=2), DatetimePartEnricher(attribute.order_date, "year", attribute.year), DatetimePartEnricher(attribute.order_date, "month", attribute.month))),

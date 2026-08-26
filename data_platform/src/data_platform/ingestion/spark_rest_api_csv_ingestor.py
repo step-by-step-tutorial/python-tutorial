@@ -1,6 +1,7 @@
 import logging
 import os
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 from urllib.request import Request, build_opener
 
@@ -14,11 +15,18 @@ logger = logging.getLogger(__name__)
 
 
 class SparkRestApiCsvIngestor(DatasetIngestor):
-    def __init__(self, endpoint: RestApiEndpoint, session: SparkSession, schema) -> None:
+    def __init__(self, endpoint: RestApiEndpoint, session: SparkSession | Callable[[], SparkSession], schema) -> None:
         self._endpoint = endpoint
         self._session = session
         self._schema = schema
         self.name = "spark_api"
+
+    @property
+    def session(self) -> SparkSession:
+        if hasattr(self._session, "read"):
+            return self._session
+        self._session = self._session()
+        return self._session
 
     def ingest(self) -> DataFrame:
         should_not_be_none(self._schema, "schema")
@@ -33,7 +41,7 @@ class SparkRestApiCsvIngestor(DatasetIngestor):
                 temporary_file.write(payload)
                 temporary_path = Path(temporary_file.name)
             dataframe = (
-                self._session.read.option("header", "true").schema(self._schema).csv(str(temporary_path))
+                self.session.read.option("header", "true").schema(self._schema).csv(str(temporary_path))
                 .cache()
             )
             row_count = dataframe.count()
