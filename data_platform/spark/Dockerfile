@@ -29,11 +29,17 @@ RUN curl -fsSL "https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYT
 RUN python -m venv /opt/venv && /opt/venv/bin/pip --version
 
 RUN mkdir -p /opt/spark-ivy \
+  && printf '%s\n' \
+      'from pyspark.sql import SparkSession' \
+      'SparkSession.builder.master("local[1]").getOrCreate().stop()' \
+      > /tmp/cache_spark_packages.py \
   && /opt/spark/bin/spark-submit \
+      --master local[1] \
       --packages "org.postgresql:postgresql:42.7.7,org.apache.hadoop:hadoop-aws:3.4.2,org.slf4j:slf4j-api:1.7.36,org.slf4j:slf4j-reload4j:1.7.36,ch.qos.reload4j:reload4j:1.2.22,org.apache.spark:spark-sql-kafka-0-10_2.13:4.1.2" \
       --conf spark.jars.ivy=/opt/spark-ivy \
       --conf spark.jars.excludes=org.slf4j:slf4j-api \
-      --version \
+      /tmp/cache_spark_packages.py \
+  && rm /tmp/cache_spark_packages.py \
   && find /opt/spark-ivy -type f -name '*.jar' -exec cp -f {} /opt/spark/jars/ \; \
   && chmod -R a+rX /opt/spark-ivy /opt/spark/jars
 
