@@ -11,8 +11,9 @@ from house_price_prediction.features.house_feature_model import HouseFeatureMode
 from house_price_prediction.features.house_features import HouseFeatureBuilder
 from house_price_prediction.model.baseline_model import BaselineModel
 from house_price_prediction.model.house_price_model import HousePriceModel
+from house_price_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from house_price_prediction.repository.datalake_repository import DataLakeRepository
-from house_price_prediction.repository.model_repository import ModelRepository
+from house_price_prediction.repository.local_repository import LocalRepository
 from house_price_prediction.training.trainer import Trainer
 from house_price_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
 
@@ -20,24 +21,26 @@ logger = logging.getLogger(__name__)
 
 
 class HousePriceTrainer(Trainer[TrainingOutput]):
-    def __init__(self, settings: AppSettings, model_repository: ModelRepository) -> None:
+    def __init__(self, settings: AppSettings) -> None:
         self.settings = settings
-        self.repository = DataLakeRepository(settings.data_lake)
-        self.model_repository = model_repository
+        self.storage_repository = DataLakeRepository(settings.data_lake)
+        self.local_repository = LocalRepository()
+        self.feature_model = HouseFeatureModel()
+        self.pipeline_builder = HousePricePipelineBuilder(self.feature_model, settings.random_state)
 
     def train(self) -> TrainingOutput:
         dataset_path = self.download_dataset()
         dataframe = self.prepare_dataset(dataset_path)
-        features = self.prepare_features(dataframe)
+        features = self.build_features(dataframe)
         target = self.get_target(dataframe)
         dataset_split = self.split_dataset(features, target)
 
         baseline = self.train_baseline(dataset_split)
-        baseline_metrics = self.evaluate_model(baseline, dataset_split, "test")
+        baseline_metrics = self.evaluate_model(baseline, dataset_split.test)
 
         model = self.train_model(dataset_split)
-        validation_metrics = self.evaluate_model(model, dataset_split, "validation")
-        model_metrics = self.evaluate_model(model, dataset_split, "test")
+        validation_metrics = self.evaluate_model(model, dataset_split.validation)
+        model_metrics = self.evaluate_model(model, dataset_split.test)
         model_path = self.save_model(model)
 
         logger.info("House price training completed: model=%s", model_path)
@@ -45,14 +48,14 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
 
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / "house.csv"
-        self.repository.download_latest_csv(dataset_path)
+        self.storage_repository.download_latest_csv(dataset_path)
         return dataset_path
 
     def prepare_dataset(self, dataset_path: Path) -> pd.DataFrame:
         return HouseDataset(dataset_path).training_frame(self.settings.target_column)
 
-    def prepare_features(self, dataframe: pd.DataFrame) -> pd.DataFrame:
-        return HouseFeatureBuilder(dataframe, HouseFeatureModel()).build()
+    def build_features(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        return HouseFeatureBuilder(dataframe, self.feature_model).build()
 
     def get_target(self, dataframe: pd.DataFrame) -> pd.Series:
         return dataframe[self.settings.target_column]
@@ -87,12 +90,11 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         return BaselineModel().fit(partitions.train.features, partitions.train.target)
 
     def train_model(self, partitions: DatasetPartitions) -> HousePriceModel:
-        return HousePriceModel(self.settings.random_state).fit(partitions.train.features, partitions.train.target)
+        return HousePriceModel(self.pipeline_builder).fit(partitions.train.features, partitions.train.target)
 
-    def evaluate_model(self, model, partitions: DatasetPartitions, dataset_name: str) -> RegressionMetrics:
-        dataset = getattr(partitions, dataset_name)
-        logger.info("Evaluating model: dataset=%s rows=%s", dataset_name, len(dataset.features))
+    def evaluate_model(self, model, dataset: DatasetPartition) -> RegressionMetrics:
+        logger.info("Evaluating model: rows=%s", len(dataset.features))
         return ModelEvaluator(dataset.target, model.predict(dataset.features)).evaluate()
 
     def save_model(self, model: HousePriceModel) -> Path:
-        return self.model_repository.save(model, self.settings.model_dir / "house_price_model.joblib")
+        return self.local_repository.save(model, self.settings.model_dir / "house_price_model.joblib")

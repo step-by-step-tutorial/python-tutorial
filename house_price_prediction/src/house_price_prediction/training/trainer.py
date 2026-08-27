@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generic, TypeVar
 
+from house_price_prediction.training.training_models import DatasetPartition
+
 TrainingResultType = TypeVar("TrainingResultType")
 
 
@@ -15,7 +17,7 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    def prepare_features(self, dataframe):
+    def build_features(self, dataframe):
         ...
 
     @abstractmethod
@@ -35,7 +37,7 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    def evaluate_model(self, model, partitions, dataset_name: str):
+    def evaluate_model(self, model, dataset: DatasetPartition):
         ...
 
     @abstractmethod

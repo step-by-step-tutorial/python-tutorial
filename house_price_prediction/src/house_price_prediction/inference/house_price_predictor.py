@@ -6,13 +6,13 @@ import pandas as pd
 from house_price_prediction.features.house_feature_model import HouseFeatureModel
 from house_price_prediction.features.house_features import HouseFeatureBuilder
 from house_price_prediction.inference.predictor import Predictor
-from house_price_prediction.repository.model_repository import ModelRepository
+from house_price_prediction.repository.local_repository import LocalRepository
 
 logger = logging.getLogger(__name__)
 
 
 class HousePricePredictor(Predictor[pd.Series]):
-    def __init__(self, model_path: Path, model_repository: ModelRepository) -> None:
+    def __init__(self, model_path: Path, model_repository: LocalRepository) -> None:
         self.model = model_repository.load(model_path)
 
     def predict(self, dataframe: pd.DataFrame) -> pd.Series:

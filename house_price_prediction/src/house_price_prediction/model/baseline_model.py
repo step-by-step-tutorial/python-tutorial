@@ -1,7 +1,7 @@
 from sklearn.dummy import DummyRegressor
+from house_price_prediction.model.model import Model
 
-
-class BaselineModel:
+class BaselineModel(Model):
     def __init__(self) -> None:
         self.model = DummyRegressor(strategy="mean")
 

@@ -7,14 +7,14 @@ from house_price_prediction.inference.house_price_predictor import HousePricePre
 from house_price_prediction.inference.prediction_service import PredictionService
 from house_price_prediction.presentation.prediction_presenter import PredictionPresenter
 from house_price_prediction.presentation.training_presenter import TrainingPresenter
-from house_price_prediction.repository.model_repository import ModelRepository
+from house_price_prediction.repository.local_repository import LocalRepository
 from house_price_prediction.training.house_price_trainer import HousePriceTrainer
 
 logger = logging.getLogger(__name__)
 
 
 def create_application() -> Application:
-    model_repository = ModelRepository()
+    model_repository = LocalRepository()
     prediction_service = PredictionService(
         house_settings,
         HousePricePredictor(
@@ -25,7 +25,7 @@ def create_application() -> Application:
     )
     return Application(
         house_settings,
-        HousePriceTrainer(house_settings, model_repository),
+        HousePriceTrainer(house_settings),
         prediction_service,
     )
 
@@ -44,7 +44,7 @@ def predict() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     result = application.predict()
-    PredictionPresenter().present(result, house_settings.data_dir / "house_predictions.csv")
+    PredictionPresenter(house_settings.data_dir / "house_predictions.csv").present(result)
 
 
 if __name__ == "__main__":
