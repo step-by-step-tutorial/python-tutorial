@@ -28,8 +28,8 @@ python --version
 pip --version
 java --version
 python -m pip install --upgrade pip
-pip install -r ./requirements.txt
-pip install -e .
+pip install -r ./ml_prediction/requirements.txt
+pip install -e ./ml_prediction/
 ```
 
 ```shell
@@ -55,8 +55,15 @@ python -m http.server 8000 --directory ./report
 
 ```shell
 cd ./ml_prediction
-Set-Location C:\Users\saman\IdeaProjects\python-tutorial\ml_prediction
-python -m ml_prediction
-python -m ml_prediction house train
-python -m ml_prediction house predict
+python -m ml_prediction.main
+```
+
+```shell
+cd ./ml_prediction
+python -m ml_prediction.main house train
+```
+
+```shell
+cd ./ml_prediction
+python -m ml_prediction.main house predict
 ```

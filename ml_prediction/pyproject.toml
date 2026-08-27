@@ -14,9 +14,6 @@ dependencies = [
     "joblib",
 ]
 
-[project.scripts]
-ml-prediction = "ml_prediction.cli:main"
-
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["ml_prediction*"]
