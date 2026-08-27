@@ -21,6 +21,7 @@ def settings(tmp_path: Path) -> AppSettings:
         test_size=0.2,
         random_state=42,
         data_lake=DataLakeSettings("http://localhost:9000", "key", "secret", "house", "prefix"),
+        dataset_source=DatasetSource.DOWNLOAD,
     )
 
 

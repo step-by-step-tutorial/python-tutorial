@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from ml_prediction import cli
+from ml_prediction import main
 from ml_prediction.application.application import Application
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
 from ml_prediction.presentation.presenter import Presenter
@@ -47,31 +47,31 @@ def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None
 
 def test_cli_parser_requires_dataset_and_prediction_together() -> None:
     with pytest.raises(SystemExit):
-        cli.main(["house"])
+        main.main(["house"])
 
 
 def test_cli_select_dataset_retries_invalid_selection(monkeypatch, capsys) -> None:
     selections = iter(["invalid", "1"])
     monkeypatch.setattr("builtins.input", lambda _: next(selections))
 
-    assert cli.select_dataset() == "house"
+    assert main.select_dataset() == "house"
     assert "Select a number" in capsys.readouterr().out
 
 
 def test_cli_select_prediction_supports_exit(monkeypatch) -> None:
     monkeypatch.setattr("builtins.input", lambda _: "q")
 
-    assert cli.select_prediction() is None
+    assert main.select_prediction() is None
 
 
 def test_cli_run_train_and_predict(mocker) -> None:
     application = mocker.Mock()
-    mocker.patch.object(cli, "create_application", return_value=application)
-    training_presenter = mocker.patch.object(cli, "TrainingPresenter")
-    prediction_presenter = mocker.patch.object(cli, "PredictionPresenter")
+    mocker.patch.object(main, "create_application", return_value=application)
+    training_presenter = mocker.patch.object(main, "TrainingPresenter")
+    prediction_presenter = mocker.patch.object(main, "PredictionPresenter")
 
-    cli.run("house", "train")
-    cli.run("house", "predict")
+    main.run("house", "train")
+    main.run("house", "predict")
 
     application.train.assert_called_once_with()
     application.predict.assert_called_once_with()
@@ -80,8 +80,8 @@ def test_cli_run_train_and_predict(mocker) -> None:
 
 
 def test_cli_main_dispatches_direct_operation(mocker) -> None:
-    run = mocker.patch.object(cli, "run")
+    run = mocker.patch.object(main, "run")
 
-    cli.main(["house", "predict"])
+    main.main(["house", "predict"])
 
     run.assert_called_once_with("house", "predict")
