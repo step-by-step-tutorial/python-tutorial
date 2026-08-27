@@ -2,6 +2,8 @@ import logging
 
 import pandas as pd
 
+from house_price_prediction.utils.collection_utils import check_equal
+
 logger = logging.getLogger(__name__)
 
 NUMERIC_FEATURES = (
@@ -66,13 +68,11 @@ FEATURE_COLUMNS = NUMERIC_FEATURES + BOOLEAN_FEATURES + CATEGORICAL_FEATURES
 
 class HouseFeatureBuilder:
     def build(self, dataframe: pd.DataFrame) -> pd.DataFrame:
-        missing_columns = sorted(set(FEATURE_COLUMNS) - set(dataframe.columns))
-        if missing_columns:
-            raise ValueError(f"House dataset is missing feature columns: {missing_columns}")
+        check_equal(FEATURE_COLUMNS, dataframe.columns)
 
         features = dataframe.loc[:, FEATURE_COLUMNS].copy()
         for column in BOOLEAN_FEATURES:
             features[column] = features[column].map({True: 1, False: 0, "True": 1, "False": 0})
 
-        logger.info("Built house features: rows=%s columns=%s", len(features), len(features.columns))
+        logger.info(f"Built house features: rows={len(features)} columns={len(features.columns)}")
         return features

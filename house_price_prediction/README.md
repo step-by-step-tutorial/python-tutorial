@@ -21,6 +21,30 @@ Machine Learning Layer
 
 The current implementation covers dataset preparation, feature engineering, train/test splitting, baseline modeling, model training, evaluation, model persistence, and prediction. Monitoring is planned for a later phase.
 
+## Project Structure
+
+```text
+src/house_price_prediction/
+    config/
+    dataset/
+    features/
+    model/
+    training/
+        trainer.py
+        house_price_trainer.py
+    evaluation/
+    inference/
+        predictor.py
+        house_price_predictor.py
+        prediction_service.py
+    presentation/
+        house_training_presenter.py
+        house_prediction_presenter.py
+    repository/
+```
+
+Generic trainers, predictors, and datasets define reusable contracts for future datasets. Services coordinate use cases, while presenters handle logs and prediction output files. The CLI is limited to starting those workflows.
+
 ## Configuration
 
 The downloader uses the existing house data lake settings by default:

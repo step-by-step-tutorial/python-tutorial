@@ -3,13 +3,12 @@ from pathlib import Path
 
 import pandas as pd
 
+from house_price_prediction.dataset.dataset import Dataset
+
 logger = logging.getLogger(__name__)
 
 
-class HouseDataset:
-    def __init__(self, path: Path) -> None:
-        self.path = path
-
+class HouseDataset(Dataset):
     def load(self) -> pd.DataFrame:
         logger.info(f"Loading house dataset: path={self.path}")
         dataframe = pd.read_csv(self.path)

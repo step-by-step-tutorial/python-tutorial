@@ -26,7 +26,7 @@ class AppSettings:
     data_lake: DataLakeSettings
 
 
-settings = AppSettings(
+house_settings = AppSettings(
     data_dir=Path(os.getenv("HOUSE_ML_DATA_DIR", PROJECT_ROOT / "data")),
     model_dir=Path(os.getenv("HOUSE_ML_MODEL_DIR", PROJECT_ROOT / "models")),
     target_column=os.getenv("HOUSE_ML_TARGET_COLUMN", "total_price"),
