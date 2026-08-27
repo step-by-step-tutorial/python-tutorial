@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from ml_prediction.config.settings import AppSettings
+from ml_prediction.config.settings import AppSettings, DatasetSource
 from ml_prediction.dataset.house_dataset import HouseDataset
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel
@@ -48,7 +48,10 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
 
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / "house.csv"
-        self.storage_repository.download_latest_csv(dataset_path)
+        if self.settings.dataset_source == DatasetSource.DOWNLOAD:
+            self.storage_repository.download_latest_csv(dataset_path)
+        else:
+            logger.info("Using local dataset: path=%s", dataset_path)
         return dataset_path
 
     def prepare_dataset(self, dataset_path: Path) -> pd.DataFrame:

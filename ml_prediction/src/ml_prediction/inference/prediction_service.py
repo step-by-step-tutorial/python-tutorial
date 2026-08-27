@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from ml_prediction.config.settings import AppSettings
+from ml_prediction.config.settings import AppSettings, DatasetSource
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.inference.predictor import Predictor
 from ml_prediction.repository.datalake_repository import DataLakeRepository
@@ -41,5 +41,8 @@ class PredictionService:
 
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / "house.csv"
-        self.repository.download_latest_csv(dataset_path)
+        if self.settings.dataset_source == DatasetSource.DOWNLOAD:
+            self.repository.download_latest_csv(dataset_path)
+        else:
+            logger.info("Using local dataset: path=%s", dataset_path)
         return dataset_path

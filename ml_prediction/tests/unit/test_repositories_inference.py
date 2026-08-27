@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from ml_prediction.config.settings import AppSettings, DataLakeSettings
+from ml_prediction.config.settings import AppSettings, DataLakeSettings, DatasetSource
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
 from ml_prediction.inference.prediction_service import PredictionOutput, PredictionService
 from ml_prediction.repository.datalake_repository import DataLakeRepository
@@ -89,6 +89,37 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
     assert result.dataframe is dataframe
     assert result.predictions.tolist() == [110]
     predictor.predict.assert_called_once_with(dataframe)
+
+
+def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path: Path) -> None:
+    repository = mocker.patch("ml_prediction.inference.prediction_service.DataLakeRepository")
+    service = PredictionService(
+        AppSettings(
+            data_dir=tmp_path / "data",
+            model_dir=tmp_path / "models",
+            target_column="total_price",
+            validation_size=0.2,
+            test_size=0.2,
+            random_state=42,
+            data_lake=DataLakeSettings("http://localhost", "key", "secret", "house", ""),
+            dataset_source=DatasetSource.LOCAL,
+        ),
+        mocker.Mock(),
+        mocker.Mock(),
+    )
+
+    assert service.download_dataset() == tmp_path / "data" / "house.csv"
+    repository.return_value.download_latest_csv.assert_not_called()
+
+
+def test_prediction_service_downloads_dataset_when_configured(mocker, tmp_path: Path) -> None:
+    repository = mocker.patch("ml_prediction.inference.prediction_service.DataLakeRepository")
+    service = PredictionService(settings(tmp_path), mocker.Mock(), mocker.Mock())
+
+    assert service.download_dataset() == tmp_path / "data" / "house.csv"
+    repository.return_value.download_latest_csv.assert_called_once_with(
+        tmp_path / "data" / "house.csv"
+    )
 
 
 def test_prediction_service_rejects_dataset_path_mismatch(mocker, tmp_path: Path) -> None:
