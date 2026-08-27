@@ -56,6 +56,7 @@ python -m http.server 8000 --directory ./report
 ```shell
 cd ./ml_prediction
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\ml_prediction
-python -m ml_prediction.main house
+python -m ml_prediction
+python -m ml_prediction house train
+python -m ml_prediction house predict
 ```
-
