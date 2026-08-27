@@ -31,7 +31,8 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         self.pipeline_builder = HousePricePipelineBuilder(self.feature_model, settings.random_state)
 
     def train(self) -> TrainingOutput:
-        report = self.report_service.start("house", "training")
+        model_path = self.settings.model_dir / "house_price_model.joblib"
+        report = self.report_service.start("house", "training", model_path)
         dataset_path = self.download_dataset()
         report.record("dataset_downloaded", details=str(dataset_path))
         dataframe = self.prepare_dataset(dataset_path)
@@ -87,7 +88,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             metrics=model_metrics,
         )
         model_path = self.save_model(model)
-        report.record("model_saved", details=str(model_path))
+        report.record("model_saved", model_path=model_path, details=str(model_path))
         report.record("training_completed", details=str(report.path))
 
         logger.info("House price training completed: model=%s", model_path)

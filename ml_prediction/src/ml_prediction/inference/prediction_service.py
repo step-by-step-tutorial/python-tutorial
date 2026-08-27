@@ -36,9 +36,13 @@ class PredictionService:
         self.repository = DataLakeRepository(settings.data_lake)
 
     def predict(self) -> PredictionOutput:
-        report = self.report_service.start("house", "prediction")
+        model_path = self.predictor.model_path
+        if not isinstance(model_path, Path):
+            model_path = None
+        report = self.report_service.start("house", "prediction", model_path)
         dataset_path = self.download_dataset()
         report.record("dataset_ready", details=str(dataset_path))
+        report.record("model_loaded", model_path=self.predictor.model_path)
         if self.dataset.path != dataset_path:
             raise ValueError(f"Dataset path does not match downloaded path: {self.dataset.path}")
         dataframe = self.dataset.load()

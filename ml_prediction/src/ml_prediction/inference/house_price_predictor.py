@@ -13,7 +13,12 @@ logger = logging.getLogger(__name__)
 
 class HousePricePredictor(Predictor[pd.Series]):
     def __init__(self, model_path: Path, model_repository: LocalRepository) -> None:
+        self._model_path = model_path
         self.model = model_repository.load(model_path)
+
+    @property
+    def model_path(self) -> Path:
+        return self._model_path
 
     def predict(self, dataframe: pd.DataFrame) -> pd.Series:
         features = HouseFeatureBuilder(dataframe, HouseFeatureModel()).build()
