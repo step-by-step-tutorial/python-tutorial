@@ -36,10 +36,16 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         dataset_split = self.split_dataset(features, target)
 
         baseline = self.train_baseline(dataset_split)
+        logger.info("Evaluating model: model=baseline partition=test rows=%s", len(dataset_split.test.features))
         baseline_metrics = self.evaluate_model(baseline, dataset_split.test)
 
         model = self.train_model(dataset_split)
+        logger.info(
+            "Evaluating model: model=house_price partition=validation rows=%s",
+            len(dataset_split.validation.features),
+        )
         validation_metrics = self.evaluate_model(model, dataset_split.validation)
+        logger.info("Evaluating model: model=house_price partition=test rows=%s", len(dataset_split.test.features))
         model_metrics = self.evaluate_model(model, dataset_split.test)
         model_path = self.save_model(model)
 
@@ -79,9 +85,10 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             random_state=self.settings.random_state,
         )
 
-        logger.info(f"Split house dataset: train_rows={len(train_features)} ")
-        logger.info(f"validation_rows={len(validation_features)} ")
-        logger.info(f"test_rows={len(test_features)}")
+        logger.info(f"Split house dataset:\n"
+                    f"\t\t\t\ttrain_rows={len(train_features)}\n"
+                    f"\t\t\t\tvalidation_rows={len(validation_features)}\n"
+                    f"\t\t\t\ttest_rows={len(test_features)}")
 
         return DatasetPartitions(
             train=DatasetPartition(train_features, train_target),
@@ -96,7 +103,6 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         return HousePriceModel(self.pipeline_builder).fit(partitions.train.features, partitions.train.target)
 
     def evaluate_model(self, model, dataset: DatasetPartition) -> RegressionMetrics:
-        logger.info("Evaluating model: rows=%s", len(dataset.features))
         return ModelEvaluator(dataset.target, model.predict(dataset.features)).evaluate()
 
     def save_model(self, model: HousePriceModel) -> Path:
