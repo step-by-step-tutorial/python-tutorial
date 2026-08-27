@@ -26,17 +26,17 @@ class AppSettings:
 
 
 house_settings = AppSettings(
-    data_dir=Path(os.getenv("HOUSE_ML_DATA_DIR", PROJECT_ROOT / "data")),
-    model_dir=Path(os.getenv("HOUSE_ML_MODEL_DIR", PROJECT_ROOT / "models")),
-    target_column=os.getenv("HOUSE_ML_TARGET_COLUMN", "total_price"),
-    validation_size=float(os.getenv("HOUSE_ML_VALIDATION_SIZE", "0.2")),
-    test_size=float(os.getenv("HOUSE_ML_TEST_SIZE", "0.2")),
-    random_state=int(os.getenv("HOUSE_ML_RANDOM_STATE", "42")),
+    data_dir=Path(os.getenv("ML_PREDICTION_DATA_DIR", PROJECT_ROOT / "data")),
+    model_dir=Path(os.getenv("ML_PREDICTION_MODEL_DIR", PROJECT_ROOT / "models")),
+    target_column=os.getenv("ML_PREDICTION_TARGET_COLUMN", "total_price"),
+    validation_size=float(os.getenv("ML_PREDICTION_VALIDATION_SIZE", "0.2")),
+    test_size=float(os.getenv("ML_PREDICTION_TEST_SIZE", "0.2")),
+    random_state=int(os.getenv("ML_PREDICTION_RANDOM_STATE", "42")),
     data_lake=DataLakeSettings(
-        endpoint=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ENDPOINT", "http://localhost:9000"),
-        access_key=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_ACCESS_KEY", "admin"),
-        secret_key=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_SECRET_KEY", "administrator"),
-        bucket_name=os.getenv("DATA_PLATFORM_HOUSE_DATALAKE_BUCKET_NAME", "house"),
-        object_prefix=os.getenv("HOUSE_ML_DATALAKE_PREFIX", ""),
+        endpoint=os.getenv("ML_PREDICTION_DATALAKE_ENDPOINT", "http://localhost:9000"),
+        access_key=os.getenv("ML_PREDICTION_DATALAKE_ACCESS_KEY", "admin"),
+        secret_key=os.getenv("ML_PREDICTION_DATALAKE_SECRET_KEY", "administrator"),
+        bucket_name=os.getenv("ML_PREDICTION_DATALAKE_BUCKET_NAME", "house"),
+        object_prefix=os.getenv("ML_PREDICTION_DATALAKE_PREFIX", ""),
     ),
 )

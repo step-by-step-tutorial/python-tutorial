@@ -387,39 +387,6 @@ services:
     environment:
       KAFKA_BROKERCONNECT: kafka:9094
       JVM_OPTS: "-Xms32M -Xmx64M"
-  data-platform:
-    image: ${DATA_PLATFORM_IMAGE}
-    build:
-      context: data_platform
-      dockerfile: Dockerfile
-    hostname: ${DATA_PLATFORM_HOST}
-    container_name: ${DATA_PLATFORM_CONTAINER_NAME}
-    stdin_open: true
-    tty: true
-    command: >
-      bash -c "python -m data_platform.main"
-    environment:
-      <<: *data_platform_env
-    volumes:
-      - ./data_platform/resources:/app/resources
-      - ./data_platform/output:/app/output
-      - ./data_platform/scripts:/app/scripts
-      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
-    depends_on:
-      database:
-        condition: service_healthy
-      datalake:
-        condition: service_healthy
-      datalake-init:
-        condition: service_completed_successfully
-      datawarehouse:
-        condition: service_healthy
-      master:
-        condition: service_started
-      kafka:
-        condition: service_started
-      kafka-init:
-        condition: service_completed_successfully
   test-data:
     image: ${TEST_DATA_IMAGE}
     build:
@@ -453,6 +420,65 @@ services:
       database:
         condition: service_healthy
       kafka-init:
+        condition: service_completed_successfully
+  data-platform:
+    image: ${DATA_PLATFORM_IMAGE}
+    build:
+      context: data_platform
+      dockerfile: Dockerfile
+    hostname: ${DATA_PLATFORM_HOST}
+    container_name: ${DATA_PLATFORM_CONTAINER_NAME}
+    stdin_open: true
+    tty: true
+    command: >
+      bash -c "python -m data_platform.main"
+    environment:
+      <<: *data_platform_env
+    volumes:
+      - ./data_platform/resources:/app/resources
+      - ./data_platform/output:/app/output
+      - ./data_platform/scripts:/app/scripts
+      - ./data_platform/spark/log4j2.properties:/app/spark/log4j2.properties:ro
+    depends_on:
+      database:
+        condition: service_healthy
+      datalake:
+        condition: service_healthy
+      datalake-init:
+        condition: service_completed_successfully
+      datawarehouse:
+        condition: service_healthy
+      master:
+        condition: service_started
+      kafka:
+        condition: service_started
+      kafka-init:
+        condition: service_completed_successfully
+  ml-prediction:
+    image: ${ML_PREDICTION_IMAGE}
+    build:
+      context: ml_prediction
+      dockerfile: Dockerfile
+    container_name: ${ML_PREDICTION_CONTAINER_NAME}
+    hostname: ${ML_PREDICTION_HOSTNAME}
+    stdin_open: true
+    tty: true
+    environment:
+      PROJECT_ROOT: /app
+      HOUSE_ML_DATA_DIR: /app/data
+      HOUSE_ML_MODEL_DIR: /app/models
+      DATA_PLATFORM_HOUSE_DATALAKE_ENDPOINT: http://datalake:9000
+      DATA_PLATFORM_HOUSE_DATALAKE_ACCESS_KEY: ${DATA_PLATFORM_HOUSE_DATALAKE_ACCESS_KEY}
+      DATA_PLATFORM_HOUSE_DATALAKE_SECRET_KEY: ${DATA_PLATFORM_HOUSE_DATALAKE_SECRET_KEY}
+      DATA_PLATFORM_HOUSE_DATALAKE_BUCKET_NAME: ${DATA_PLATFORM_HOUSE_DATALAKE_BUCKET_NAME}
+      HOUSE_ML_DATALAKE_PREFIX: ${HOUSE_ML_DATALAKE_PREFIX:-}
+    volumes:
+      - ../ml_prediction/data:/app/data
+      - ../ml_prediction/models:/app/models
+    depends_on:
+      datalake:
+        condition: service_healthy
+      datalake-init:
         condition: service_completed_successfully
 
 volumes:
