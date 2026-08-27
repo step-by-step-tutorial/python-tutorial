@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "house-price-prediction"
+version = "0.1.0"
+description = "Machine learning workflow for house price prediction."
+requires-python = ">=3.12"
+dependencies = [
+    "boto3",
+    "pandas",
+    "scikit-learn",
+    "joblib",
+]
+
+[project.scripts]
+house-price-train = "house_price_prediction.cli:train"
+house-price-predict = "house_price_prediction.cli:predict"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["house_price_prediction*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

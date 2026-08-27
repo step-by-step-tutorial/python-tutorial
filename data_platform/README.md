@@ -1,5 +1,21 @@
 # Data Platform
 
+## Data Platform Pipeline
+
+```text
+Data Platform Pipeline
+    prepare
+    ingest
+    clean
+    validate
+    enrich
+    expose
+    analyze
+    cleanup
+```
+
+The pipeline prepares the dataset configuration, ingests data from its source, cleans and validates the records, enriches the accepted data, exposes it to downstream storage systems, and produces analytical reports. Cleanup runs after completion or failure so resources and pipeline state are finalized consistently.
+
 ## Prerequisite
 
 * Python
