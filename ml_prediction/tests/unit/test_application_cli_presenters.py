@@ -79,6 +79,15 @@ def test_cli_run_train_and_predict(mocker) -> None:
     prediction_presenter.return_value.present.assert_called_once_with(application.predict.return_value)
 
 
+def test_create_application_does_not_load_model_for_training(mocker) -> None:
+    predictor = mocker.patch.object(main, "HousePricePredictor")
+
+    application = main.create_application("house", include_prediction=False)
+
+    assert application.prediction_service is None
+    predictor.assert_not_called()
+
+
 def test_cli_main_dispatches_direct_operation(mocker) -> None:
     run = mocker.patch.object(main, "run")
 

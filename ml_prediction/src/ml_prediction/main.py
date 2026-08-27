@@ -26,19 +26,21 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def create_application(dataset: str) -> Application:
+def create_application(dataset: str, include_prediction: bool = True) -> Application:
     if dataset != "house":
         raise ValueError(f"Unsupported dataset: {dataset}")
 
-    model_repository = LocalRepository()
-    prediction_service = PredictionService(
-        house_settings,
-        HousePricePredictor(
-            house_settings.model_dir / "house_price_model.joblib",
-            model_repository,
-        ),
-        HouseDataset(house_settings.data_dir / "house.csv"),
-    )
+    prediction_service = None
+    if include_prediction:
+        model_repository = LocalRepository()
+        prediction_service = PredictionService(
+            house_settings,
+            HousePricePredictor(
+                house_settings.model_dir / "house_price_model.joblib",
+                model_repository,
+            ),
+            HouseDataset(house_settings.data_dir / "house.csv"),
+        )
     return Application(
         house_settings,
         HousePriceTrainer(house_settings),
@@ -77,7 +79,7 @@ def select_prediction() -> str | None:
 
 
 def run(dataset: str, prediction: str) -> None:
-    application = create_application(dataset)
+    application = create_application(dataset, include_prediction=prediction == "predict")
     if prediction == "train":
         result = application.train()
         TrainingPresenter().present(result)

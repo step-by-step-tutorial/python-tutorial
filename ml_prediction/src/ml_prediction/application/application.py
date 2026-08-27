@@ -11,7 +11,7 @@ class Application:
             self,
             settings: AppSettings,
             trainer: Trainer[Any],
-            prediction_service: PredictionService,
+            prediction_service: PredictionService | None,
     ) -> None:
         self.settings = settings
         self.trainer = trainer
@@ -21,4 +21,6 @@ class Application:
         return self.trainer.train()
 
     def predict(self) -> PredictionOutput:
+        if self.prediction_service is None:
+            raise RuntimeError("Prediction service is not configured for this application")
         return self.prediction_service.predict()

@@ -165,3 +165,4 @@ report/
 **/output_test/*.*
 **/geodata_pipeline/data/**
 **/geodata_pipeline/output/**
+**/ml_prediction/models/**
