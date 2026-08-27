@@ -16,7 +16,6 @@ DATA_DIR = PROJECT_DIR / "data"
 OUTPUT_DIR = PROJECT_DIR / "output"
 GEONAMES_FILE = DATA_DIR / "allCountries.txt"
 POSTAL_CODES_FILE = DATA_DIR / "postalCodes_allCountries.txt"
-valid_country_codes = {"US"}
 
 geonames_columns = [
     "geonameid",
@@ -60,6 +59,8 @@ output_columns = [
 
 @dataclass(frozen=True)
 class Target:
+    country_code: str
+    country: str
     state_code: str
     state: str
     cities: frozenset[str]
@@ -99,6 +100,8 @@ class PostalCodeRecord:
 
 targets = [
     Target(
+        country_code="US",
+        country="United States",
         state_code="CA",
         state="California",
         cities=frozenset({"los angeles"}),
@@ -106,6 +109,8 @@ targets = [
         output_file=OUTPUT_DIR / "los_angeles.csv",
     ),
     Target(
+        country_code="US",
+        country="United States",
         state_code="NY",
         state="New York",
         cities=frozenset({"new york", "brooklyn", "bronx", "queens", "staten island"}),
@@ -196,8 +201,8 @@ class RecordConverter:
         latitude, longitude = GeometryUtils.get_coordinates(row)
 
         return asdict(AddressRecord(
-            country="United States",
-            country_code="US",
+            country=target.country,
+            country_code=target.country_code,
             state=target.state,
             state_code=target.state_code,
             city=city,
@@ -217,12 +222,12 @@ class RecordConverter:
 class GeoDataRepository:
     def __init__(self) -> None:
         self.targets = targets
-        self.geonames: dict[str, dict[str, dict[str, str]]] = {
-            target.state_code: {} for target in self.targets
-        }
-        self.postal_codes: dict[str, dict[str, dict[str, str]]] = {
-            target.state_code: {} for target in self.targets
-        }
+        self.geonames: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
+        self.postal_codes: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
+
+        for target in self.targets:
+            self.geonames.setdefault(target.country_code, {}).setdefault(target.state_code, {})
+            self.postal_codes.setdefault(target.country_code, {}).setdefault(target.state_code, {})
         self.load_geonames()
         self.load_postal_codes()
 
@@ -239,7 +244,7 @@ class GeoDataRepository:
                 country_code = values[8]
                 state_code = values[10]
 
-                if country_code not in valid_country_codes or state_code not in self.geonames:
+                if country_code not in self.geonames or state_code not in self.geonames[country_code]:
                     continue
 
                 row = dict(zip(geonames_columns, values))
@@ -250,10 +255,10 @@ class GeoDataRepository:
 
                 for name in names:
                     if name:
-                        self.geonames[state_code].setdefault(name, row)
+                        self.geonames[country_code][state_code].setdefault(name, row)
                 loaded += 1
 
-        logger.info("Loaded %s GeoNames records for states=%s", loaded, sorted(self.geonames))
+        logger.info("Loaded %s GeoNames records for countries=%s", loaded, sorted(self.geonames))
 
     def load_postal_codes(self) -> None:
         loaded = 0
@@ -267,20 +272,22 @@ class GeoDataRepository:
 
                 postal_code = RecordConverter.convert_postal_code(values)
 
-                if (postal_code.country_code not in valid_country_codes
-                        or postal_code.state_code not in self.postal_codes):
+                if (postal_code.country_code not in self.postal_codes
+                        or postal_code.state_code not in self.postal_codes[postal_code.country_code]):
                     continue
 
-                self.postal_codes[postal_code.state_code][postal_code.postal_code] = asdict(postal_code)
+                self.postal_codes[postal_code.country_code][postal_code.state_code][postal_code.postal_code] = asdict(
+                    postal_code
+                )
                 loaded += 1
 
-        logger.info("Loaded %s postal-code records for states=%s", loaded, sorted(self.postal_codes))
+        logger.info("Loaded %s postal-code records for countries=%s", loaded, sorted(self.postal_codes))
 
 class AddressResolver:
     def __init__(self, repository: GeoDataRepository) -> None:
         self.repository = repository
 
-    def find_city(self, row: dict[str, Any], state_code: str) -> str | None:
+    def find_city(self, row: dict[str, Any], target: Target) -> str | None:
         postal_city = row.get("postal_city")
 
         if postal_city:
@@ -289,7 +296,7 @@ class AddressResolver:
         postcode = row.get("postcode")
 
         if postcode:
-            postal = self.repository.postal_codes[state_code].get(postcode)
+            postal = self.repository.postal_codes[target.country_code][target.state_code].get(postcode)
 
             if postal:
                 return postal["city"]
@@ -301,11 +308,11 @@ class AddressResolver:
 
         return None
 
-    def find_geoname(self, city: str | None, state_code: str) -> dict[str, str] | None:
+    def find_geoname(self, city: str | None, target: Target) -> dict[str, str] | None:
         if not city:
             return None
 
-        return self.repository.geonames[state_code].get(TextUtils.normalize(city))
+        return self.repository.geonames[target.country_code][target.state_code].get(TextUtils.normalize(city))
 
 
 class Pipeline:
@@ -334,18 +341,18 @@ class Pipeline:
                 for row in batch.to_pylist():
                     processed += 1
 
-                    if (row.get("country") or "") not in valid_country_codes:
+                    if (row.get("country") or "") != target.country_code:
                         continue
 
                     if not AddressUtils.matches_state(row, state, state_code):
                         continue
 
-                    city = self.address_resolver.find_city(row, state_code)
+                    city = self.address_resolver.find_city(row, target)
 
                     if not AddressUtils.is_target_city(city, target.cities):
                         continue
 
-                    geoname = self.address_resolver.find_geoname(city, state_code)
+                    geoname = self.address_resolver.find_geoname(city, target)
                     output_row = RecordConverter.convert_address(row, target, city, geoname)
 
                     writer.writerow(output_row)
