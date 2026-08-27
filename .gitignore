@@ -163,4 +163,5 @@ cython_debug/
 report/
 **/output/*.*
 **/output_test/*.*
-**/data_generator/**
+**/geodata_pipeline/data/**
+**/geodata_pipeline/output/**
