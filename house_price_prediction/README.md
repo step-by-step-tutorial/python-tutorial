@@ -2,7 +2,8 @@
 
 Initial machine-learning project for the house dataset.
 
-The workflow downloads the latest CSV from the house data lake, prepares price-prediction features, trains a baseline and Random Forest regression model, evaluates both, and saves the trained model.
+The workflow downloads the latest CSV from the house data lake, prepares price-prediction features, trains a baseline
+and Random Forest regression model, evaluates both, and saves the trained model.
 
 ## Machine Learning Layer
 
@@ -19,7 +20,8 @@ Machine Learning Layer
     monitoring
 ```
 
-The current implementation covers dataset preparation, feature engineering, train/test splitting, baseline modeling, model training, evaluation, model persistence, and prediction. Monitoring is planned for a later phase.
+The current implementation covers dataset preparation, feature engineering, train/test splitting, baseline modeling,
+model training, evaluation, model persistence, and prediction. Monitoring is planned for a later phase.
 
 ## Project Structure
 
@@ -43,7 +45,8 @@ src/house_price_prediction/
     repository/
 ```
 
-Generic trainers, predictors, and datasets define reusable contracts for future datasets. Services coordinate use cases, while presenters handle logs and prediction output files. The CLI is limited to starting those workflows.
+Generic trainers, predictors, and datasets define reusable contracts for future datasets. Services coordinate use cases,
+while presenters handle logs and prediction output files. The CLI is limited to starting those workflows.
 
 ## Configuration
 
@@ -63,7 +66,8 @@ HOUSE_ML_TEST_SIZE=0.2
 HOUSE_ML_RANDOM_STATE=42
 ```
 
-`HOUSE_ML_DATALAKE_PREFIX` can restrict the search to a specific data lake path. The newest CSV under that prefix is downloaded to `data/house.csv`.
+`HOUSE_ML_DATALAKE_PREFIX` can restrict the search to a specific data lake path. The newest CSV under that prefix is
+downloaded to `data/house.csv`.
 
 ## Run
 
@@ -73,4 +77,6 @@ house-price-train
 house-price-predict
 ```
 
-Training uses a train/validation/test split, compares a mean-value baseline with a Random Forest model, and saves the model to `models/house_price_model.joblib`. Prediction downloads the current CSV and writes `data/house_predictions.csv`.
+Training uses a train/validation/test split, compares a mean-value baseline with a Random Forest model, and saves the
+model to `models/house_price_model.joblib`. Prediction downloads the current CSV and writes
+`data/house_predictions.csv`.

@@ -7,7 +7,7 @@ from house_price_prediction.evaluation.model_evaluator import RegressionMetrics
 
 
 @dataclass(frozen=True)
-class TrainingResult:
+class TrainingOutput:
     model_path: Path
     baseline_metrics: RegressionMetrics
     validation_metrics: RegressionMetrics
@@ -15,10 +15,13 @@ class TrainingResult:
 
 
 @dataclass(frozen=True)
-class DatasetSplit:
-    train_features: pd.DataFrame
-    validation_features: pd.DataFrame
-    test_features: pd.DataFrame
-    train_target: pd.Series
-    validation_target: pd.Series
-    test_target: pd.Series
+class DatasetPartition:
+    features: pd.DataFrame
+    target: pd.Series
+
+
+@dataclass(frozen=True)
+class DatasetPartitions:
+    train: DatasetPartition
+    validation: DatasetPartition
+    test: DatasetPartition
