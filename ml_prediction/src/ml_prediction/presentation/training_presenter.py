@@ -12,6 +12,8 @@ class TrainingPresenter(Presenter):
             "Training result: model=%s",
             result.model_path,
         )
+        logger.info("Training report: path=%s", result.report_path)
+        logger.info("Training report: path=%s", result.report_path)
         logger.info(
             "Baseline test metrics: mae=%.2f rmse=%.2f r2=%.4f",
             result.baseline_metrics.mean_absolute_error,

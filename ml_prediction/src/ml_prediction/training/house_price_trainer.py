@@ -14,6 +14,7 @@ from ml_prediction.model.house_price_model import HousePriceModel
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_repository import LocalRepository
+from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.trainer import Trainer
 from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
 
@@ -21,36 +22,76 @@ logger = logging.getLogger(__name__)
 
 
 class HousePriceTrainer(Trainer[TrainingOutput]):
-    def __init__(self, settings: AppSettings) -> None:
+    def __init__(self, settings: AppSettings, report_service: ReportService | None = None) -> None:
         self.settings = settings
+        self.report_service = report_service or ReportService(settings.report_dir)
         self.storage_repository = DataLakeRepository(settings.data_lake)
         self.local_repository = LocalRepository()
         self.feature_model = HouseFeatureModel()
         self.pipeline_builder = HousePricePipelineBuilder(self.feature_model, settings.random_state)
 
     def train(self) -> TrainingOutput:
+        report = self.report_service.start("house", "training")
         dataset_path = self.download_dataset()
+        report.record("dataset_downloaded", details=str(dataset_path))
         dataframe = self.prepare_dataset(dataset_path)
+        report.record("dataset_prepared", rows=len(dataframe), details=f"target={self.settings.target_column}")
         features = self.build_features(dataframe)
+        report.record("features_built", rows=len(features), details=f"columns={len(features.columns)}")
         target = self.get_target(dataframe)
+        report.record("target_extracted", rows=len(target), details=f"column={self.settings.target_column}")
         dataset_split = self.split_dataset(features, target)
+        report.record(
+            "dataset_split",
+            rows=len(features),
+            details=(
+                f"train={len(dataset_split.train.features)} "
+                f"validation={len(dataset_split.validation.features)} "
+                f"test={len(dataset_split.test.features)}"
+            ),
+        )
 
         baseline = self.train_baseline(dataset_split)
+        report.record("baseline_trained", partition="train", rows=len(dataset_split.train.features), model="baseline")
         logger.info("Evaluating model: model=baseline partition=test rows=%s", len(dataset_split.test.features))
         baseline_metrics = self.evaluate_model(baseline, dataset_split.test)
+        report.record(
+            "model_evaluated",
+            partition="test",
+            rows=len(dataset_split.test.features),
+            model="baseline",
+            metrics=baseline_metrics,
+        )
 
         model = self.train_model(dataset_split)
+        report.record("model_trained", partition="train", rows=len(dataset_split.train.features), model="house_price")
         logger.info(
             "Evaluating model: model=house_price partition=validation rows=%s",
             len(dataset_split.validation.features),
         )
         validation_metrics = self.evaluate_model(model, dataset_split.validation)
+        report.record(
+            "model_evaluated",
+            partition="validation",
+            rows=len(dataset_split.validation.features),
+            model="house_price",
+            metrics=validation_metrics,
+        )
         logger.info("Evaluating model: model=house_price partition=test rows=%s", len(dataset_split.test.features))
         model_metrics = self.evaluate_model(model, dataset_split.test)
+        report.record(
+            "model_evaluated",
+            partition="test",
+            rows=len(dataset_split.test.features),
+            model="house_price",
+            metrics=model_metrics,
+        )
         model_path = self.save_model(model)
+        report.record("model_saved", details=str(model_path))
+        report.record("training_completed", details=str(report.path))
 
         logger.info("House price training completed: model=%s", model_path)
-        return TrainingOutput(model_path, baseline_metrics, validation_metrics, model_metrics)
+        return TrainingOutput(model_path, baseline_metrics, validation_metrics, model_metrics, report.path)
 
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / "house.csv"
@@ -85,10 +126,9 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             random_state=self.settings.random_state,
         )
 
-        logger.info(f"Split house dataset:\n"
-                    f"\t\t\t\ttrain_rows={len(train_features)}\n"
-                    f"\t\t\t\tvalidation_rows={len(validation_features)}\n"
-                    f"\t\t\t\ttest_rows={len(test_features)}")
+        logger.info(f"Split house dataset: train_rows={len(train_features)} "
+                    f"validation_rows={len(validation_features)}"
+                    f"test_rows={len(test_features)}")
 
         return DatasetPartitions(
             train=DatasetPartition(train_features, train_target),

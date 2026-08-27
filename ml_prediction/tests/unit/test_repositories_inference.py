@@ -22,6 +22,7 @@ def settings(tmp_path: Path) -> AppSettings:
         random_state=42,
         data_lake=DataLakeSettings("http://localhost:9000", "key", "secret", "house", "prefix"),
         dataset_source=DatasetSource.DOWNLOAD,
+        report_dir=tmp_path / "reports",
     )
 
 
@@ -89,6 +90,9 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
     assert isinstance(result, PredictionOutput)
     assert result.dataframe is dataframe
     assert result.predictions.tolist() == [110]
+    assert result.report_path is not None
+    assert result.report_path.exists()
+    assert "prediction_completed" in result.report_path.read_text(encoding="utf-8")
     predictor.predict.assert_called_once_with(dataframe)
 
 

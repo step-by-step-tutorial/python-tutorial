@@ -30,6 +30,7 @@ class AppSettings:
     random_state: int
     data_lake: DataLakeSettings
     dataset_source: DatasetSource = DatasetSource.LOCAL
+    report_dir: Path = PROJECT_ROOT / "reports"
 
 
 house_settings = AppSettings(
@@ -40,6 +41,7 @@ house_settings = AppSettings(
     test_size=float(os.getenv("ML_PREDICTION_TEST_SIZE", "0.2")),
     random_state=int(os.getenv("ML_PREDICTION_RANDOM_STATE", "42")),
     dataset_source=DatasetSource(os.getenv("ML_PREDICTION_DATASET_SOURCE", DatasetSource.LOCAL)),
+    report_dir=Path(os.getenv("ML_PREDICTION_REPORT_DIR", PROJECT_ROOT / "reports")),
     data_lake=DataLakeSettings(
         endpoint=os.getenv("ML_PREDICTION_DATALAKE_ENDPOINT", "http://localhost:9000"),
         access_key=os.getenv("ML_PREDICTION_DATALAKE_ACCESS_KEY", "admin"),

@@ -43,6 +43,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         test_size=0.2,
         random_state=42,
         data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
+        report_dir=tmp_path / "reports",
     )
     mocker.patch("ml_prediction.training.house_price_trainer.DataLakeRepository")
     mocker.patch("ml_prediction.training.house_price_trainer.LocalRepository")
@@ -76,6 +77,9 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     trainer.train_model.assert_called_once_with(partitions)
     assert trainer.evaluate_model.call_count == 3
     trainer.save_model.assert_called_once_with(model)
+    assert result.report_path is not None
+    assert result.report_path.exists()
+    assert "training_completed" in result.report_path.read_text(encoding="utf-8")
 
 
 def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path, mocker) -> None:

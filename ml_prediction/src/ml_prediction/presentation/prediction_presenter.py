@@ -15,9 +15,10 @@ class PredictionPresenter(Presenter):
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         result.dataframe.assign(predicted_total_price=result.predictions).to_csv(self.output_path, index=False)
         logger.info(
-            "Prediction result: source=%s output=%s rows=%s min=%.2f max=%.2f average=%.2f",
+            "Prediction result: source=%s output=%s report=%s rows=%s min=%.2f max=%.2f average=%.2f",
             result.source_path,
             self.output_path,
+            result.report_path,
             len(result.predictions),
             result.predictions.min(),
             result.predictions.max(),

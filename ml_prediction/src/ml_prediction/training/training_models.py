@@ -12,6 +12,7 @@ class TrainingOutput:
     baseline_metrics: RegressionMetrics
     validation_metrics: RegressionMetrics
     model_metrics: RegressionMetrics
+    report_path: Path | None = None
 
 
 @dataclass(frozen=True)

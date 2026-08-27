@@ -1,0 +1,69 @@
+import csv
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+from ml_prediction.evaluation.model_evaluator import RegressionMetrics
+
+
+@dataclass
+class Report:
+    path: Path
+    dataset: str
+
+    fieldnames = (
+        "timestamp",
+        "dataset",
+        "operation",
+        "step",
+        "partition",
+        "rows",
+        "model",
+        "mae",
+        "rmse",
+        "r2",
+        "details",
+    )
+
+    def __init__(self, path: Path, dataset: str, operation: str) -> None:
+        self.path = path
+        self.dataset = dataset
+        self.operation = operation
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        with self.path.open("w", newline="", encoding="utf-8") as report_file:
+            csv.DictWriter(report_file, fieldnames=self.fieldnames).writeheader()
+
+    def record(
+            self,
+            step: str,
+            partition: str = "",
+            rows: int | None = None,
+            model: str = "",
+            metrics: RegressionMetrics | None = None,
+            details: str = "",
+    ) -> None:
+        row = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "dataset": self.dataset,
+            "operation": self.operation,
+            "step": step,
+            "partition": partition,
+            "rows": rows if rows is not None else "",
+            "model": model,
+            "mae": metrics.mean_absolute_error if metrics else "",
+            "rmse": metrics.root_mean_squared_error if metrics else "",
+            "r2": metrics.r2_score if metrics else "",
+            "details": details,
+        }
+        with self.path.open("a", newline="", encoding="utf-8") as report_file:
+            csv.DictWriter(report_file, fieldnames=self.fieldnames).writerow(row)
+
+
+class ReportService:
+    def __init__(self, report_dir: Path) -> None:
+        self.report_dir = report_dir
+
+    def start(self, dataset: str, operation: str) -> Report:
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        path = self.report_dir / f"{dataset}_{operation}_report_{timestamp}.csv"
+        return Report(path, dataset, operation)

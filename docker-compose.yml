@@ -467,6 +467,7 @@ services:
       PROJECT_ROOT: /app
       ML_PREDICTION_DATA_DIR: ${ML_PREDICTION_DATA_DIR}
       ML_PREDICTION_MODEL_DIR: ${ML_PREDICTION_MODEL_DIR}
+      ML_PREDICTION_REPORT_DIR: ${ML_PREDICTION_REPORT_DIR}
       ML_PREDICTION_TARGET_COLUMN: ${ML_PREDICTION_TARGET_COLUMN}
       ML_PREDICTION_VALIDATION_SIZE: ${ML_PREDICTION_VALIDATION_SIZE}
       ML_PREDICTION_TEST_SIZE: ${ML_PREDICTION_TEST_SIZE}
@@ -480,6 +481,7 @@ services:
     volumes:
       - ../ml_prediction/data:/app/data
       - ../ml_prediction/models:/app/models
+      - ./ml_prediction/reports:/app/reports
     depends_on:
       datalake:
         condition: service_healthy
