@@ -1,5 +1,5 @@
 from sklearn.dummy import DummyRegressor
-from house_price_prediction.model.model import Model
+from ml_prediction.model.model import Model
 
 class BaselineModel(Model):
     def __init__(self) -> None:

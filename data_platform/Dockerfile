@@ -26,4 +26,4 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 RUN java -version \
     && test -x "${JAVA_HOME}/bin/java"
 
-CMD ["bash", "-c", "python -m data_platform.main"]
+CMD ["python", "-m", "data_platform.main"]

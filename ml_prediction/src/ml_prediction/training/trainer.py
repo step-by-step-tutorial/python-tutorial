@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generic, TypeVar
 
-from house_price_prediction.training.training_models import DatasetPartition
+from ml_prediction.training.training_models import DatasetPartition
 
 TrainingResultType = TypeVar("TrainingResultType")
 

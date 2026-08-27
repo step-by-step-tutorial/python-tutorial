@@ -4,8 +4,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
-from house_price_prediction.features.feature_model import FeatureModel
-from house_price_prediction.pipeline.pipeline_builder import PipelineBuilder
+from ml_prediction.features.feature_model import FeatureModel
+from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 
 
 class HousePricePipelineBuilder(PipelineBuilder):

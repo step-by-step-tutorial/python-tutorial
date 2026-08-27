@@ -3,7 +3,7 @@ from pathlib import Path
 
 import boto3
 
-from house_price_prediction.config.settings import DataLakeSettings
+from ml_prediction.config.settings import DataLakeSettings
 
 logger = logging.getLogger(__name__)
 

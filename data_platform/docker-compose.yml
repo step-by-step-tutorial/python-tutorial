@@ -409,8 +409,7 @@ services:
         condition: service_started
       kafka-init:
         condition: service_completed_successfully
-    command: >
-      sh -c "python -m data_platform.main"
+    command: ["python", "-m", "data_platform.main"]
 
 volumes:
   airflow_database_data:

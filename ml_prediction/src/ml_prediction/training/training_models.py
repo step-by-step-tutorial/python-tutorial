@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from house_price_prediction.evaluation.model_evaluator import RegressionMetrics
+from ml_prediction.evaluation.model_evaluator import RegressionMetrics
 
 
 @dataclass(frozen=True)

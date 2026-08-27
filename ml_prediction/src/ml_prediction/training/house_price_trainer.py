@@ -4,18 +4,18 @@ from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from house_price_prediction.config.settings import AppSettings
-from house_price_prediction.dataset.house_dataset import HouseDataset
-from house_price_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
-from house_price_prediction.features.house_feature_model import HouseFeatureModel
-from house_price_prediction.features.house_features import HouseFeatureBuilder
-from house_price_prediction.model.baseline_model import BaselineModel
-from house_price_prediction.model.house_price_model import HousePriceModel
-from house_price_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
-from house_price_prediction.repository.datalake_repository import DataLakeRepository
-from house_price_prediction.repository.local_repository import LocalRepository
-from house_price_prediction.training.trainer import Trainer
-from house_price_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
+from ml_prediction.config.settings import AppSettings
+from ml_prediction.dataset.house_dataset import HouseDataset
+from ml_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
+from ml_prediction.features.house_feature_model import HouseFeatureModel
+from ml_prediction.features.house_features import HouseFeatureBuilder
+from ml_prediction.model.baseline_model import BaselineModel
+from ml_prediction.model.house_price_model import HousePriceModel
+from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
+from ml_prediction.repository.datalake_repository import DataLakeRepository
+from ml_prediction.repository.local_repository import LocalRepository
+from ml_prediction.training.trainer import Trainer
+from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
 
 logger = logging.getLogger(__name__)
 

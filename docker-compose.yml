@@ -396,6 +396,8 @@ services:
     container_name: ${DATA_PLATFORM_CONTAINER_NAME}
     stdin_open: true
     tty: true
+    command: >
+      bash -c "python -m data_platform.main"
     environment:
       <<: *data_platform_env
     volumes:
@@ -418,8 +420,6 @@ services:
         condition: service_started
       kafka-init:
         condition: service_completed_successfully
-    command: >
-      bash -c "python -m data_platform.main"
   test-data:
     image: ${TEST_DATA_IMAGE}
     build:
@@ -427,6 +427,7 @@ services:
       dockerfile: Dockerfile
     hostname: ${TEST_DATA_HOST}
     container_name: ${TEST_DATA_CONTAINER_NAME}
+    command: ["sh", "-c", "python -m test_data && exec python -m test_data.api.dataset_api"]
     environment:
       PROJECT_ROOT: /app
       CONFIG_DIR: /app/config

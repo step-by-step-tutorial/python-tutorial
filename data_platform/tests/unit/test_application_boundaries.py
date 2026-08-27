@@ -25,7 +25,7 @@ def test_main_runs_explicit_dataset(monkeypatch, mocker) -> None:
     mocker.patch.object(application, "DataPipeline", return_value=pipeline)
     dataset = object()
     mocker.patch.object(application.dataset_registry, "get_item", return_value=dataset)
-    monkeypatch.setattr(sys, "argv", ["data_platform.main", "house"])
+    monkeypatch.setattr(sys, "argv", ["data_platform.main", "house", "inmemory"])
 
     application.main()
 
@@ -37,7 +37,7 @@ def test_main_rejects_headless_execution_without_dataset(monkeypatch) -> None:
     monkeypatch.setattr(sys, "argv", ["data_platform.main"])
     monkeypatch.setattr(sys.stdin, "isatty", lambda: False)
 
-    with pytest.raises(RuntimeError, match="dataset name is required"):
+    with pytest.raises(RuntimeError, match="dataset name and pipeline type are required"):
         application.main()
 
 

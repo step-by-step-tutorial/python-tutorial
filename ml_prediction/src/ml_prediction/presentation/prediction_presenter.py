@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
 
-from house_price_prediction.inference.prediction_service import PredictionOutput
-from house_price_prediction.presentation.presenter import Presenter
+from ml_prediction.inference.prediction_service import PredictionOutput
+from ml_prediction.presentation.presenter import Presenter
 
 logger = logging.getLogger(__name__)
 

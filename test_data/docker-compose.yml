@@ -91,6 +91,7 @@ services:
       dockerfile: Dockerfile
     container_name: test-data
     hostname: test-data
+    command: ["sh", "-c", "python -m test_data && exec python -m test_data.api.dataset_api"]
     environment:
       PROJECT_ROOT: /app
       CONFIG_DIR: /app/config

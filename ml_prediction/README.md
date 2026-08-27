@@ -39,12 +39,12 @@ docker --version
 ## Test
 
 ```shell
-cd ./house_price_prediction
+cd ./ml_prediction
 pytest
 ```
 
 ```shell
-cd ./house_price_prediction
+cd ./ml_prediction
 pytest --html=./report/test/test-report.html
 pytest --cov --cov-report=html:./report/coverage
 python -m http.server 8000 --directory ./report
@@ -54,8 +54,8 @@ python -m http.server 8000 --directory ./report
 
 
 ```shell
-cd ./house_price_prediction
-Set-Location C:\Users\saman\IdeaProjects\python-tutorial\house_price_prediction
-python -m house_price_prediction.main house
+cd ./ml_prediction
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\ml_prediction
+python -m ml_prediction.main house
 ```
 

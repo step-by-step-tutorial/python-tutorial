@@ -26,4 +26,4 @@ COPY scripts ./scripts
 RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install .
 
-CMD ["sh", "-c", "for config in ./config/*.json; do python -m test_data --config \"$config\" || exit 1; done; exec python -m test_data.api.dataset_api"]
+CMD ["python", "-m", "test_data"]

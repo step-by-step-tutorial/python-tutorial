@@ -3,10 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from house_price_prediction.features.house_feature_model import HouseFeatureModel
-from house_price_prediction.features.house_features import HouseFeatureBuilder
-from house_price_prediction.inference.predictor import Predictor
-from house_price_prediction.repository.local_repository import LocalRepository
+from ml_prediction.features.house_feature_model import HouseFeatureModel
+from ml_prediction.features.house_features import HouseFeatureBuilder
+from ml_prediction.inference.predictor import Predictor
+from ml_prediction.repository.local_repository import LocalRepository
 
 logger = logging.getLogger(__name__)
 

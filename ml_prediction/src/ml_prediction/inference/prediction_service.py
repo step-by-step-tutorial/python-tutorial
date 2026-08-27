@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from house_price_prediction.config.settings import AppSettings
-from house_price_prediction.dataset.dataset import Dataset
-from house_price_prediction.inference.predictor import Predictor
-from house_price_prediction.repository.datalake_repository import DataLakeRepository
+from ml_prediction.config.settings import AppSettings
+from ml_prediction.dataset.dataset import Dataset
+from ml_prediction.inference.predictor import Predictor
+from ml_prediction.repository.datalake_repository import DataLakeRepository
 
 logger = logging.getLogger(__name__)
 

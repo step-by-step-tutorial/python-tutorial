@@ -2,8 +2,8 @@ import logging
 
 import pandas as pd
 
-from house_price_prediction.features.feature_builder import FeatureBuilder
-from house_price_prediction.utils.collection_utils import check_equal
+from ml_prediction.features.feature_builder import FeatureBuilder
+from ml_prediction.utils.collection_utils import check_equal
 
 logger = logging.getLogger(__name__)
 

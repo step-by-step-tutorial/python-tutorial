@@ -1,4 +1,4 @@
-from house_price_prediction.features.feature_model import FeatureModel
+from ml_prediction.features.feature_model import FeatureModel
 
 
 class HouseFeatureModel(FeatureModel):

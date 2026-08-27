@@ -2,7 +2,7 @@ import logging
 
 import pandas as pd
 
-from house_price_prediction.dataset.dataset import Dataset
+from ml_prediction.dataset.dataset import Dataset
 
 logger = logging.getLogger(__name__)
 

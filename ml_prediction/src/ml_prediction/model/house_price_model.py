@@ -1,7 +1,7 @@
 import logging
 
-from house_price_prediction.model.model import Model
-from house_price_prediction.pipeline.pipeline_builder import PipelineBuilder
+from ml_prediction.model.model import Model
+from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 
 logger = logging.getLogger(__name__)
 

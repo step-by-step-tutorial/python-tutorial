@@ -1,14 +1,14 @@
 import logging
 
-from house_price_prediction.application.application import Application
-from house_price_prediction.config.settings import house_settings
-from house_price_prediction.dataset.house_dataset import HouseDataset
-from house_price_prediction.inference.house_price_predictor import HousePricePredictor
-from house_price_prediction.inference.prediction_service import PredictionService
-from house_price_prediction.presentation.prediction_presenter import PredictionPresenter
-from house_price_prediction.presentation.training_presenter import TrainingPresenter
-from house_price_prediction.repository.local_repository import LocalRepository
-from house_price_prediction.training.house_price_trainer import HousePriceTrainer
+from ml_prediction.application.application import Application
+from ml_prediction.config.settings import house_settings
+from ml_prediction.dataset.house_dataset import HouseDataset
+from ml_prediction.inference.house_price_predictor import HousePricePredictor
+from ml_prediction.inference.prediction_service import PredictionService
+from ml_prediction.presentation.prediction_presenter import PredictionPresenter
+from ml_prediction.presentation.training_presenter import TrainingPresenter
+from ml_prediction.repository.local_repository import LocalRepository
+from ml_prediction.training.house_price_trainer import HousePriceTrainer
 
 logger = logging.getLogger(__name__)
 
