@@ -22,8 +22,6 @@ from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 
-logger = logging.getLogger(__name__)
-
 DATASETS = ("house",)
 PREDICTIONS = ("train", "predict")
 

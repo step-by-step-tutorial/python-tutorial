@@ -5,11 +5,11 @@ class BaselineModel(Model):
     """Mean-price reference model used only for validation comparison."""
 
     def __init__(self) -> None:
-        self.model = DummyRegressor(strategy="mean")
+        self.dummy_regressor = DummyRegressor(strategy="mean")
 
     def fit(self, features, target) -> "BaselineModel":
-        self.model.fit(features, target)
+        self.dummy_regressor.fit(features, target)
         return self
 
     def predict(self, features):
-        return self.model.predict(features)
+        return self.dummy_regressor.predict(features)
