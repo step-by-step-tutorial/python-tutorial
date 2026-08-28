@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime, timezone
 
 import pandas as pd
 import pytest
@@ -8,6 +9,8 @@ from ml_prediction.inference.house_price_predictor import HousePricePredictor
 from ml_prediction.inference.prediction_service import PredictionOutput, PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.house_features import HouseFeatureBuilder
+from ml_prediction.evaluation.model_evaluator import RegressionMetrics
+from ml_prediction.model.model_metadata import ModelMetadata
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 
@@ -34,6 +37,28 @@ def test_local_model_repository_saves_and_loads(tmp_path: Path) -> None:
 
     assert repository.save({"value": 1}, path) == path
     assert repository.load(path) == {"value": 1}
+
+
+def test_local_model_repository_saves_and_loads_typed_metadata(tmp_path: Path) -> None:
+    repository = LocalModelRepository()
+    path = tmp_path / "models" / "model.joblib"
+    metadata = ModelMetadata(
+        model_type="random_forest",
+        model_parameters={"n_estimators": 200, "n_jobs": -1, "random_state": 42},
+        target_column="total_price",
+        numeric_features=("area_sqm",),
+        boolean_features=("has_garden",),
+        categorical_features=("city",),
+        training_timestamp=datetime.now(timezone.utc),
+        validation_metrics=RegressionMetrics(1.0, 2.0, 0.5),
+        final_test_metrics=RegressionMetrics(1.5, 2.5, 0.4),
+        schema_version="1",
+        model_version="1",
+    )
+
+    repository.save({"value": 1}, path, metadata)
+
+    assert repository.load_metadata(path) == metadata
 
 
 def test_datalake_repository_lists_only_csv_objects(mocker) -> None:

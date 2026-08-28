@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -8,8 +9,10 @@ from ml_prediction.config.settings import AppSettings, DatasetSource
 from ml_prediction.dataset.house_dataset import HouseDataset, PreparedTrainingData
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
 from ml_prediction.features.feature_builder import FeatureBuilder
+from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.baseline_model import BaselineModel
 from ml_prediction.model.house_price_model import HousePriceModel
+from ml_prediction.model.model_metadata import ModelMetadata
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -26,6 +29,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             self,
             settings: AppSettings,
             dataset: HouseDataset,
+            feature_model: HouseFeatureModel,
             feature_builder_factory: Callable[[pd.DataFrame], FeatureBuilder],
             data_lake_repository: DataLakeRepository,
             model_repository: LocalModelRepository,
@@ -36,6 +40,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
     ) -> None:
         self.settings = settings
         self.dataset = dataset
+        self.feature_model = feature_model
         self.feature_builder_factory = feature_builder_factory
         self.report_service = report_service or ReportService(settings.report_dir)
         self.data_lake_repository = data_lake_repository
@@ -104,7 +109,24 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             model="house_price",
             metrics=final_test_metrics,
         )
-        model_path = self.save_model(model)
+        metadata = ModelMetadata(
+            model_type=self.settings.model_type,
+            model_parameters={
+                "n_estimators": self.settings.n_estimators,
+                "n_jobs": self.settings.n_jobs,
+                "random_state": self.settings.random_state,
+            },
+            target_column=self.settings.target_column,
+            numeric_features=self.feature_model.get_numeric_features(),
+            boolean_features=self.feature_model.get_boolean_features(),
+            categorical_features=self.feature_model.get_categorical_features(),
+            training_timestamp=datetime.now(timezone.utc),
+            validation_metrics=validation_metrics,
+            final_test_metrics=final_test_metrics,
+            schema_version="1",
+            model_version="1",
+        )
+        model_path = self.save_model(model, metadata)
         report.record("model_saved", model_path=model_path, details=str(model_path))
         report.record("training_completed", details=str(report.path))
 
@@ -143,5 +165,9 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
     def evaluate_model(self, model, dataset: DatasetPartition) -> RegressionMetrics:
         return self.evaluator.evaluate(dataset.target, model.predict(dataset.features))
 
-    def save_model(self, model: HousePriceModel) -> Path:
-        return self.model_repository.save(model, self.settings.model_dir / "house_price_model.joblib")
+    def save_model(self, model: HousePriceModel, metadata: ModelMetadata) -> Path:
+        return self.model_repository.save(
+            model,
+            self.settings.model_dir / "house_price_model.joblib",
+            metadata,
+        )

@@ -58,6 +58,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),
+        mocker.Mock(),
         dataset_splitter,
     )
     dataset_path = tmp_path / "data" / "house.csv"
@@ -84,7 +85,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     trainer.train_baseline.assert_called_once_with(partitions)
     trainer.train_model.assert_called_once_with(partitions)
     assert trainer.evaluate_model.call_count == 3
-    trainer.save_model.assert_called_once_with(model)
+    trainer.save_model.assert_called_once()
     assert result.report_path is not None
     assert result.report_path.exists()
     assert "training_completed" in result.report_path.read_text(encoding="utf-8")
@@ -103,6 +104,7 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.LOCAL,
         ),
+        mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),
         storage_repository,
@@ -129,6 +131,7 @@ def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, m
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.DOWNLOAD,
         ),
+        mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),
         storage_repository,

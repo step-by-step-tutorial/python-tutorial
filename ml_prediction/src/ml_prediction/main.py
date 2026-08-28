@@ -76,6 +76,7 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
         HousePriceTrainer(
             house_settings,
             dataset_service,
+            feature_model,
             feature_builder_factory,
             data_lake_repository,
             model_repository,
