@@ -68,6 +68,44 @@ def test_house_dataset_rejects_missing_target_column(tmp_path: Path) -> None:
         HouseDataset(path).training_frame("total_price")
 
 
+def test_house_dataset_rejects_empty_dataset(tmp_path: Path) -> None:
+    path = tmp_path / "house.csv"
+    path.write_text("total_price,city\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must not be empty"):
+        HouseDataset(path).training_frame("total_price")
+
+
+def test_house_dataset_rejects_target_without_usable_numeric_values(tmp_path: Path) -> None:
+    path = tmp_path / "house.csv"
+    path.write_text("total_price,city\ninvalid,Paris\nunknown,London\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="total_price"):
+        HouseDataset(path).training_frame("total_price")
+
+
+def test_house_dataset_rejects_duplicated_column_names(tmp_path: Path) -> None:
+    path = tmp_path / "house.csv"
+    path.write_text("total_price,city,city\n100,Paris,Paris\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="city"):
+        HouseDataset(path).training_frame("total_price")
+
+
+def test_house_dataset_preparation_delegates_missing_features_to_builder(tmp_path: Path) -> None:
+    dataframe = house_dataframe()
+    dataframe["total_price"] = [100, 200]
+    dataframe = dataframe.drop(columns=["city"])
+    path = tmp_path / "house.csv"
+    dataframe.to_csv(path, index=False)
+
+    with pytest.raises(ValueError, match="city"):
+        HouseDataset(path).prepare_training_data(
+            "total_price",
+            lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
+        )
+
+
 def test_house_feature_model_combines_feature_groups() -> None:
     model = HouseFeatureModel()
 

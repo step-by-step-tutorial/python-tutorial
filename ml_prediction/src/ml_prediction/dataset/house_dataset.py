@@ -1,3 +1,4 @@
+import csv
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -19,15 +20,41 @@ class PreparedTrainingData:
 class HouseDataset(Dataset):
     def load(self) -> pd.DataFrame:
         logger.info(f"Loading house dataset: path={self.path}")
-        dataframe = pd.read_csv(self.path)
+        try:
+            with self.path.open(newline="", encoding="utf-8") as dataset_file:
+                headers = next(csv.reader(dataset_file), None)
+            if headers is None:
+                raise ValueError("Dataset must not be empty")
+            duplicated_headers = [
+                column
+                for index, column in enumerate(headers)
+                if column in headers[:index]
+            ]
+            if duplicated_headers:
+                raise ValueError(f"Dataset contains duplicated column names: {duplicated_headers}")
+            dataframe = pd.read_csv(self.path)
+        except pd.errors.EmptyDataError as error:
+            raise ValueError("Dataset must not be empty") from error
         logger.info(f"House dataset loaded: rows={len(dataframe)} columns={len(dataframe.columns)}")
         return dataframe
 
     def training_frame(self, target_column: str) -> pd.DataFrame:
         dataframe = self.load().copy()
+        if dataframe.empty:
+            raise ValueError("Dataset must not be empty")
+
+        duplicated_columns = dataframe.columns[dataframe.columns.duplicated()].tolist()
+        if duplicated_columns:
+            raise ValueError(f"Dataset contains duplicated column names: {duplicated_columns}")
+
         if target_column not in dataframe.columns:
             raise ValueError(f"Target column '{target_column}' is missing from the dataset")
-        dataframe[target_column] = pd.to_numeric(dataframe[target_column], errors="coerce")
+
+        numeric_target = pd.to_numeric(dataframe[target_column], errors="coerce")
+        if numeric_target.notna().sum() == 0:
+            raise ValueError(f"Target column '{target_column}' contains no usable numeric values")
+
+        dataframe[target_column] = numeric_target
         dataframe = dataframe.dropna(subset=[target_column])
         logger.info("Prepared training frame: rows=%s target=%s", len(dataframe), target_column)
         return dataframe
