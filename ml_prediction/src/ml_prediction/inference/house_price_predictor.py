@@ -20,7 +20,7 @@ class HousePricePredictor(Predictor[pd.Series]):
     ) -> None:
         self._model_path = model_path
         self._feature_builder_factory = feature_builder_factory
-        self.model = model_repository.load(model_path)
+        self.pipeline = model_repository.load(model_path)
 
     @property
     def model_path(self) -> Path:
@@ -28,6 +28,6 @@ class HousePricePredictor(Predictor[pd.Series]):
 
     def predict(self, dataframe: pd.DataFrame) -> pd.Series:
         features = self._feature_builder_factory(dataframe).build()
-        predictions = self.model.predict(features)
+        predictions = self.pipeline.predict(features)
         logger.info(f"Generated house price predictions: rows={len(predictions)}")
         return pd.Series(predictions, index=dataframe.index, name="predicted_total_price")

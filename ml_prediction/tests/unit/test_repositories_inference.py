@@ -171,10 +171,10 @@ def test_prediction_service_rejects_dataset_path_mismatch(mocker, tmp_path: Path
 
 
 def test_house_price_predictor_builds_features_and_returns_named_series(mocker) -> None:
-    model = mocker.Mock()
-    model.predict.return_value = [101.0, 202.0]
+    pipeline = mocker.Mock()
+    pipeline.predict.return_value = [101.0, 202.0]
     repository = mocker.Mock()
-    repository.load.return_value = model
+    repository.load.return_value = pipeline
     predictor = HousePricePredictor(
         Path("model.joblib"),
         repository,
@@ -185,4 +185,5 @@ def test_house_price_predictor_builds_features_and_returns_named_series(mocker) 
 
     assert predictions.tolist() == [101.0, 202.0]
     assert predictions.name == "predicted_total_price"
-    model.predict.assert_called_once()
+    repository.load.assert_called_once_with(Path("model.joblib"))
+    pipeline.predict.assert_called_once()
