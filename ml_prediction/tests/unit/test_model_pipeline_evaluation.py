@@ -20,6 +20,9 @@ def test_pipeline_builder_is_abstract_and_builds_pipeline() -> None:
     assert issubclass(HousePricePipelineBuilder, PipelineBuilder)
     pipeline = builder.build()
     assert list(pipeline.named_steps) == ["preprocessor", "regressor"]
+    assert pipeline.named_steps["preprocessor"].transformers[0][0] == "numeric"
+    assert pipeline.named_steps["preprocessor"].transformers[1][0] == "categorical"
+    assert pipeline.named_steps["regressor"].n_estimators == 200
 
 
 def test_regressor_builder_builds_configured_random_forest() -> None:
