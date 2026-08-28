@@ -1,5 +1,7 @@
 import logging
 
+from sklearn.pipeline import Pipeline
+
 from ml_prediction.model.model import Model
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 
@@ -17,3 +19,7 @@ class HousePriceModel(Model):
 
     def predict(self, features):
         return self._pipeline.predict(features)
+
+    @property
+    def pipeline(self) -> Pipeline:
+        return self._pipeline

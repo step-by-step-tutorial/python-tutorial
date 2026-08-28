@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from sklearn.pipeline import Pipeline
 
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel
@@ -51,6 +52,8 @@ def test_house_price_model_fits_and_predicts() -> None:
 
     assert isinstance(model, Model)
     assert model.fit(features, target) is model
+    assert isinstance(model.pipeline, Pipeline)
+    assert list(model.pipeline.named_steps) == ["preprocessor", "regressor"]
     assert len(model.predict(features)) == 2
 
 

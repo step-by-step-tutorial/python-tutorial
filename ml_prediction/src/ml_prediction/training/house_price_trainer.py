@@ -167,7 +167,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
 
     def save_model(self, model: HousePriceModel, metadata: ModelMetadata) -> Path:
         return self.model_repository.save(
-            model,
+            model.pipeline,
             self.settings.model_dir / "house_price_model.joblib",
             metadata,
         )
