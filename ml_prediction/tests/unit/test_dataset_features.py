@@ -67,3 +67,31 @@ def test_house_feature_builder_rejects_missing_columns() -> None:
 
     with pytest.raises(ValueError, match="missing feature columns"):
         HouseFeatureBuilder(dataframe, HouseFeatureModel()).build()
+
+
+def test_house_feature_builder_rejects_empty_dataframe() -> None:
+    with pytest.raises(ValueError, match="must not be empty"):
+        HouseFeatureBuilder(pd.DataFrame(), HouseFeatureModel()).build()
+
+
+def test_house_feature_builder_rejects_duplicated_dataframe_columns() -> None:
+    dataframe = pd.DataFrame([[1, 2]], columns=["latitude", "latitude"])
+
+    with pytest.raises(ValueError, match="latitude"):
+        HouseFeatureBuilder(dataframe, HouseFeatureModel()).build()
+
+
+def test_house_feature_builder_rejects_invalid_feature_definition() -> None:
+    model = HouseFeatureModel()
+    model.get_numeric_features = lambda: ("",)
+
+    with pytest.raises(ValueError, match="''"):
+        HouseFeatureBuilder(house_dataframe(), model).build()
+
+
+def test_house_feature_builder_rejects_duplicated_feature_definition() -> None:
+    model = HouseFeatureModel()
+    model.get_boolean_features = lambda: ("latitude",)
+
+    with pytest.raises(ValueError, match="latitude"):
+        HouseFeatureBuilder(house_dataframe(), model).build()
