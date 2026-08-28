@@ -22,6 +22,10 @@ def test_house_price_trainer_splits_dataset_into_train_validation_and_test(tmp_p
         ),
         mocker.Mock(),
         mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
     )
     features = pd.DataFrame({"value": range(10)})
     target = pd.Series(range(10), name="target")
@@ -48,7 +52,15 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
         report_dir=tmp_path / "reports",
     )
-    trainer = HousePriceTrainer(settings, mocker.Mock(), mocker.Mock())
+    trainer = HousePriceTrainer(
+        settings,
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+        mocker.Mock(),
+    )
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
     partition = DatasetPartition(dataframe, dataframe["target"])
@@ -92,12 +104,16 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.LOCAL,
         ),
+        mocker.Mock(),
+        mocker.Mock(),
         storage_repository,
+        mocker.Mock(),
+        mocker.Mock(),
         mocker.Mock(),
     )
 
     assert trainer.download_dataset() == tmp_path / "data" / "house.csv"
-    storage_repository.return_value.download_latest_csv.assert_not_called()
+    storage_repository.download_latest_csv.assert_not_called()
 
 
 def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, mocker) -> None:
@@ -113,7 +129,11 @@ def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, m
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.DOWNLOAD,
         ),
+        mocker.Mock(),
+        mocker.Mock(),
         storage_repository,
+        mocker.Mock(),
+        mocker.Mock(),
         mocker.Mock(),
     )
 

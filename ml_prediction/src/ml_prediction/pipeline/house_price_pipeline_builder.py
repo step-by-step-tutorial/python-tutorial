@@ -12,18 +12,10 @@ class HousePricePipelineBuilder(PipelineBuilder):
     def __init__(
             self,
             feature_model: HouseFeatureModel,
-            model_type: str,
-            n_estimators: int,
-            n_jobs: int,
-            random_state: int,
+            regressor_builder: RegressorBuilder,
     ) -> None:
         self._feature_model = feature_model
-        self._regressor_builder = RegressorBuilder(
-            model_type,
-            n_estimators,
-            n_jobs,
-            random_state,
-        )
+        self._regressor_builder = regressor_builder
 
     def build(self) -> Pipeline:
         return Pipeline([

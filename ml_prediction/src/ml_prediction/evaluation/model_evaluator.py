@@ -14,15 +14,11 @@ class RegressionMetrics:
 
 
 class ModelEvaluator:
-    def __init__(self, actual, predicted) -> None:
-        self.actual = actual
-        self.predicted = predicted
-
-    def evaluate(self) -> RegressionMetrics:
+    def evaluate(self, actual, predicted) -> RegressionMetrics:
         metrics = RegressionMetrics(
-            mean_absolute_error=float(mean_absolute_error(self.actual, self.predicted)),
-            root_mean_squared_error=float(mean_squared_error(self.actual, self.predicted) ** 0.5),
-            r2_score=float(r2_score(self.actual, self.predicted)),
+            mean_absolute_error=float(mean_absolute_error(actual, predicted)),
+            root_mean_squared_error=float(mean_squared_error(actual, predicted) ** 0.5),
+            r2_score=float(r2_score(actual, predicted)),
         )
         logger.info(
             f"Model evaluation: mae={metrics.mean_absolute_error:.2f} "

@@ -1,11 +1,15 @@
 import argparse
 import logging
 import sys
+from functools import partial
 from collections.abc import Sequence
 
 from ml_prediction.application.application import Application
 from ml_prediction.config.settings import house_settings
 from ml_prediction.dataset.house_dataset import HouseDataset
+from ml_prediction.evaluation.model_evaluator import ModelEvaluator
+from ml_prediction.features.house_feature_model import HouseFeatureModel
+from ml_prediction.features.house_features import HouseFeatureBuilder
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
@@ -13,6 +17,8 @@ from ml_prediction.presentation.training_presenter import TrainingPresenter
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.reporting.report_service import ReportService
+from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
+from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
 
 logger = logging.getLogger(__name__)
@@ -35,6 +41,17 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
     report_service = ReportService(house_settings.report_dir)
     data_lake_repository = DataLakeRepository(house_settings.data_lake)
     model_repository = LocalModelRepository()
+    feature_model = HouseFeatureModel()
+    feature_builder_factory = partial(HouseFeatureBuilder, feature_model=feature_model)
+    regressor_builder = RegressorBuilder(
+        house_settings.model_type,
+        house_settings.n_estimators,
+        house_settings.n_jobs,
+        house_settings.random_state,
+    )
+    pipeline_builder = HousePricePipelineBuilder(feature_model, regressor_builder)
+    evaluator = ModelEvaluator()
+    dataset_service = HouseDataset(house_settings.data_dir / "house.csv")
     prediction_service = None
     if include_prediction:
         prediction_service = PredictionService(
@@ -42,14 +59,24 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
             HousePricePredictor(
                 house_settings.model_dir / "house_price_model.joblib",
                 model_repository,
+                feature_builder_factory,
             ),
-            HouseDataset(house_settings.data_dir / "house.csv"),
+            dataset_service,
             data_lake_repository,
             report_service,
         )
     return Application(
         house_settings,
-        HousePriceTrainer(house_settings, data_lake_repository, model_repository, report_service),
+        HousePriceTrainer(
+            house_settings,
+            dataset_service,
+            feature_builder_factory,
+            data_lake_repository,
+            model_repository,
+            pipeline_builder,
+            evaluator,
+            report_service,
+        ),
         prediction_service,
     )
 

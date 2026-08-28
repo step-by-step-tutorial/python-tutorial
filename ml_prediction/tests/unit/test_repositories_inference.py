@@ -6,6 +6,8 @@ import pytest
 from ml_prediction.config.settings import AppSettings, DataLakeSettings, DatasetSource
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
 from ml_prediction.inference.prediction_service import PredictionOutput, PredictionService
+from ml_prediction.features.house_feature_model import HouseFeatureModel
+from ml_prediction.features.house_features import HouseFeatureBuilder
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 
@@ -148,7 +150,11 @@ def test_house_price_predictor_builds_features_and_returns_named_series(mocker) 
     model.predict.return_value = [101.0, 202.0]
     repository = mocker.Mock()
     repository.load.return_value = model
-    predictor = HousePricePredictor(Path("model.joblib"), repository)
+    predictor = HousePricePredictor(
+        Path("model.joblib"),
+        repository,
+        lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
+    )
 
     predictions = predictor.predict(house_dataframe())
 

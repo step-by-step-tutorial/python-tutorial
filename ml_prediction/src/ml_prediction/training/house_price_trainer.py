@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
@@ -7,11 +8,10 @@ from sklearn.model_selection import train_test_split
 from ml_prediction.config.settings import AppSettings, DatasetSource
 from ml_prediction.dataset.house_dataset import HouseDataset, PreparedTrainingData
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
-from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.features.house_features import HouseFeatureBuilder
+from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.model.baseline_model import BaselineModel
 from ml_prediction.model.house_price_model import HousePriceModel
-from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
+from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.reporting.report_service import ReportService
@@ -25,22 +25,22 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
     def __init__(
             self,
             settings: AppSettings,
+            dataset: HouseDataset,
+            feature_builder_factory: Callable[[pd.DataFrame], FeatureBuilder],
             data_lake_repository: DataLakeRepository,
             model_repository: LocalModelRepository,
+            pipeline_builder: PipelineBuilder,
+            evaluator: ModelEvaluator,
             report_service: ReportService | None = None,
     ) -> None:
         self.settings = settings
+        self.dataset = dataset
+        self.feature_builder_factory = feature_builder_factory
         self.report_service = report_service or ReportService(settings.report_dir)
         self.data_lake_repository = data_lake_repository
         self.model_repository = model_repository
-        self.feature_model = HouseFeatureModel()
-        self.pipeline_builder = HousePricePipelineBuilder(
-            self.feature_model,
-            settings.model_type,
-            settings.n_estimators,
-            settings.n_jobs,
-            settings.random_state,
-        )
+        self.pipeline_builder = pipeline_builder
+        self.evaluator = evaluator
 
     def train(self) -> TrainingOutput:
         model_path = self.settings.model_dir / "house_price_model.joblib"
@@ -113,9 +113,11 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         return dataset_path
 
     def prepare_dataset(self, dataset_path: Path) -> PreparedTrainingData:
-        return HouseDataset(dataset_path).prepare_training_data(
+        if self.dataset.path != dataset_path:
+            raise ValueError(f"Dataset path does not match configured path: {self.dataset.path}")
+        return self.dataset.prepare_training_data(
             self.settings.target_column,
-            lambda dataframe: HouseFeatureBuilder(dataframe, self.feature_model),
+            self.feature_builder_factory,
         )
 
     def split_dataset(self, features: pd.DataFrame, target: pd.Series) -> DatasetPartitions:
@@ -151,7 +153,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         return HousePriceModel(self.pipeline_builder).fit(partitions.train.features, partitions.train.target)
 
     def evaluate_model(self, model, dataset: DatasetPartition) -> RegressionMetrics:
-        return ModelEvaluator(dataset.target, model.predict(dataset.features)).evaluate()
+        return self.evaluator.evaluate(dataset.target, model.predict(dataset.features))
 
     def save_model(self, model: HousePriceModel) -> Path:
         return self.model_repository.save(model, self.settings.model_dir / "house_price_model.joblib")
