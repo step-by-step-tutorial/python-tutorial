@@ -9,11 +9,24 @@ from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 
 
 class HousePricePipelineBuilder(PipelineBuilder):
-    def __init__(self, feature_model: FeatureModel, random_state: int) -> None:
+    def __init__(
+            self,
+            feature_model: FeatureModel,
+            model_type: str,
+            n_estimators: int,
+            n_jobs: int,
+            random_state: int,
+    ) -> None:
         self._feature_model = feature_model
+        self._model_type = model_type
+        self._n_estimators = n_estimators
+        self._n_jobs = n_jobs
         self._random_state = random_state
 
     def build(self) -> Pipeline:
+        if self._model_type != "random_forest":
+            raise ValueError(f"Unsupported model type: {self._model_type}")
+
         return Pipeline([
             (
                 "preprocessor",
@@ -45,9 +58,9 @@ class HousePricePipelineBuilder(PipelineBuilder):
             (
                 "regressor",
                 RandomForestRegressor(
-                    n_estimators=200,
+                    n_estimators=self._n_estimators,
                     random_state=self._random_state,
-                    n_jobs=-1,
+                    n_jobs=self._n_jobs,
                 ),
             ),
         ])

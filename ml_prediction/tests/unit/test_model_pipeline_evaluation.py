@@ -13,7 +13,7 @@ from test_dataset_features import house_dataframe
 
 def test_pipeline_builder_is_abstract_and_builds_pipeline() -> None:
     feature_model = HouseFeatureModel()
-    builder = HousePricePipelineBuilder(feature_model, 42)
+    builder = HousePricePipelineBuilder(feature_model, "random_forest", 200, -1, 42)
 
     assert issubclass(HousePricePipelineBuilder, PipelineBuilder)
     pipeline = builder.build()
@@ -24,7 +24,7 @@ def test_house_price_model_fits_and_predicts() -> None:
     dataframe = house_dataframe()
     features = HouseFeatureBuilder(dataframe, HouseFeatureModel()).build()
     target = pd.Series([100, 200])
-    model = HousePriceModel(HousePricePipelineBuilder(HouseFeatureModel(), 42))
+    model = HousePriceModel(HousePricePipelineBuilder(HouseFeatureModel(), "random_forest", 200, -1, 42))
 
     assert isinstance(model, Model)
     assert model.fit(features, target) is model

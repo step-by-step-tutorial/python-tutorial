@@ -28,7 +28,13 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         self.storage_repository = DataLakeRepository(settings.data_lake)
         self.local_repository = LocalRepository()
         self.feature_model = HouseFeatureModel()
-        self.pipeline_builder = HousePricePipelineBuilder(self.feature_model, settings.random_state)
+        self.pipeline_builder = HousePricePipelineBuilder(
+            self.feature_model,
+            settings.model_type,
+            settings.n_estimators,
+            settings.n_jobs,
+            settings.random_state,
+        )
 
     def train(self) -> TrainingOutput:
         model_path = self.settings.model_dir / "house_price_model.joblib"

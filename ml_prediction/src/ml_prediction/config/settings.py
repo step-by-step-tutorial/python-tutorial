@@ -29,6 +29,9 @@ class AppSettings:
     test_size: float
     random_state: int
     data_lake: DataLakeSettings
+    model_type: str = "random_forest"
+    n_estimators: int = 200
+    n_jobs: int = -1
     dataset_source: DatasetSource = DatasetSource.LOCAL
     report_dir: Path = PROJECT_ROOT / "reports"
 
@@ -41,6 +44,9 @@ house_settings = AppSettings(
     test_size=float(os.getenv("ML_PREDICTION_TEST_SIZE", "0.2")),
     random_state=int(os.getenv("ML_PREDICTION_RANDOM_STATE", "42")),
     dataset_source=DatasetSource(os.getenv("ML_PREDICTION_DATASET_SOURCE", DatasetSource.LOCAL)),
+    model_type=os.getenv("ML_PREDICTION_MODEL_TYPE", "random_forest"),
+    n_estimators=int(os.getenv("ML_PREDICTION_N_ESTIMATORS", "200")),
+    n_jobs=int(os.getenv("ML_PREDICTION_N_JOBS", "-1")),
     report_dir=Path(os.getenv("ML_PREDICTION_REPORT_DIR", PROJECT_ROOT / "reports")),
     data_lake=DataLakeSettings(
         endpoint=os.getenv("ML_PREDICTION_DATALAKE_ENDPOINT", "http://localhost:9000"),
