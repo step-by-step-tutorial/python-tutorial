@@ -17,14 +17,6 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    def build_features(self, dataframe):
-        ...
-
-    @abstractmethod
-    def get_target(self, dataframe):
-        ...
-
-    @abstractmethod
     def split_dataset(self, features, target):
         ...
 

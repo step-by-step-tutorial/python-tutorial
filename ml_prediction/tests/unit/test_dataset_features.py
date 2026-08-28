@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from ml_prediction.dataset.dataset import Dataset
-from ml_prediction.dataset.house_dataset import HouseDataset
+from ml_prediction.dataset.house_dataset import HouseDataset, PreparedTrainingData
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.features.house_feature_model import HouseFeatureModel
@@ -42,6 +42,30 @@ def test_house_dataset_loads_csv_and_prepares_numeric_target(tmp_path: Path) -> 
     assert dataset.load().shape == (2, 2)
     frame = dataset.training_frame("total_price")
     assert frame["total_price"].tolist() == [100]
+
+
+def test_house_dataset_prepares_features_and_target(tmp_path: Path) -> None:
+    dataframe = house_dataframe()
+    dataframe["total_price"] = [100, 200]
+    path = tmp_path / "house.csv"
+    dataframe.to_csv(path, index=False)
+
+    prepared = HouseDataset(path).prepare_training_data(
+        "total_price",
+        lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
+    )
+
+    assert isinstance(prepared, PreparedTrainingData)
+    assert prepared.target.tolist() == [100, 200]
+    assert "total_price" not in prepared.features.columns
+
+
+def test_house_dataset_rejects_missing_target_column(tmp_path: Path) -> None:
+    path = tmp_path / "house.csv"
+    path.write_text("city\nParis\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="total_price"):
+        HouseDataset(path).training_frame("total_price")
 
 
 def test_house_feature_model_combines_feature_groups() -> None:

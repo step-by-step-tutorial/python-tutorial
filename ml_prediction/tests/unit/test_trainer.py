@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from ml_prediction.config.settings import AppSettings, DataLakeSettings, DatasetSource
+from ml_prediction.dataset.house_dataset import PreparedTrainingData
 from ml_prediction.evaluation.model_evaluator import RegressionMetrics
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
 from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
@@ -57,9 +58,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     metrics = RegressionMetrics(1.0, 2.0, 0.5)
 
     trainer.download_dataset = mocker.Mock(return_value=dataset_path)
-    trainer.prepare_dataset = mocker.Mock(return_value=dataframe)
-    trainer.build_features = mocker.Mock(return_value=dataframe)
-    trainer.get_target = mocker.Mock(return_value=dataframe["target"])
+    trainer.prepare_dataset = mocker.Mock(return_value=PreparedTrainingData(dataframe, dataframe["target"]))
     trainer.split_dataset = mocker.Mock(return_value=partitions)
     trainer.train_baseline = mocker.Mock(return_value=baseline)
     trainer.train_model = mocker.Mock(return_value=model)
@@ -70,8 +69,6 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
 
     assert isinstance(result, TrainingOutput)
     trainer.prepare_dataset.assert_called_once_with(dataset_path)
-    trainer.build_features.assert_called_once_with(dataframe)
-    trainer.get_target.assert_called_once_with(dataframe)
     trainer.split_dataset.assert_called_once()
     trainer.train_baseline.assert_called_once_with(partitions)
     trainer.train_model.assert_called_once_with(partitions)

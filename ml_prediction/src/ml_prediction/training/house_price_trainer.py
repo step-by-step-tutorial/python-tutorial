@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from ml_prediction.config.settings import AppSettings, DatasetSource
-from ml_prediction.dataset.house_dataset import HouseDataset
+from ml_prediction.dataset.house_dataset import HouseDataset, PreparedTrainingData
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.house_features import HouseFeatureBuilder
@@ -35,16 +35,14 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         report = self.report_service.start("house", "training", model_path)
         dataset_path = self.download_dataset()
         report.record("dataset_downloaded", details=str(dataset_path))
-        dataframe = self.prepare_dataset(dataset_path)
-        report.record("dataset_prepared", rows=len(dataframe), details=f"target={self.settings.target_column}")
-        features = self.build_features(dataframe)
-        report.record("features_built", rows=len(features), details=f"columns={len(features.columns)}")
-        target = self.get_target(dataframe)
-        report.record("target_extracted", rows=len(target), details=f"column={self.settings.target_column}")
-        dataset_split = self.split_dataset(features, target)
+        prepared_data = self.prepare_dataset(dataset_path)
+        report.record("dataset_prepared", rows=len(prepared_data.features), details=f"target={self.settings.target_column}")
+        report.record("features_built", rows=len(prepared_data.features), details=f"columns={len(prepared_data.features.columns)}")
+        report.record("target_extracted", rows=len(prepared_data.target), details=f"column={self.settings.target_column}")
+        dataset_split = self.split_dataset(prepared_data.features, prepared_data.target)
         report.record(
             "dataset_split",
-            rows=len(features),
+            rows=len(prepared_data.features),
             details=(
                 f"train={len(dataset_split.train.features)} "
                 f"validation={len(dataset_split.validation.features)} "
@@ -102,14 +100,11 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             logger.info("Using local dataset: path=%s", dataset_path)
         return dataset_path
 
-    def prepare_dataset(self, dataset_path: Path) -> pd.DataFrame:
-        return HouseDataset(dataset_path).training_frame(self.settings.target_column)
-
-    def build_features(self, dataframe: pd.DataFrame) -> pd.DataFrame:
-        return HouseFeatureBuilder(dataframe, self.feature_model).build()
-
-    def get_target(self, dataframe: pd.DataFrame) -> pd.Series:
-        return dataframe[self.settings.target_column]
+    def prepare_dataset(self, dataset_path: Path) -> PreparedTrainingData:
+        return HouseDataset(dataset_path).prepare_training_data(
+            self.settings.target_column,
+            lambda dataframe: HouseFeatureBuilder(dataframe, self.feature_model),
+        )
 
     def split_dataset(self, features: pd.DataFrame, target: pd.Series) -> DatasetPartitions:
         train_features, remaining_features, train_target, remaining_target = train_test_split(
