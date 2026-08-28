@@ -21,4 +21,4 @@ COPY data ./data
 RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install .
 
-CMD ["python", "-m", "ml_prediction"]
+CMD ["python", "-m", "ml_prediction.main"]
