@@ -9,9 +9,9 @@ from ml_prediction.evaluation.model_evaluator import RegressionMetrics
 @dataclass(frozen=True)
 class TrainingOutput:
     model_path: Path
-    baseline_metrics: RegressionMetrics
+    baseline_validation_metrics: RegressionMetrics
     validation_metrics: RegressionMetrics
-    model_metrics: RegressionMetrics
+    test_metrics: RegressionMetrics
     report_path: Path | None = None
 
 

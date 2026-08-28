@@ -66,14 +66,18 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
 
         baseline = self.train_baseline(dataset_split)
         report.record("baseline_trained", partition="train", rows=len(dataset_split.train.features), model="baseline")
-        logger.info("Evaluating model: model=baseline partition=test rows=%s", len(dataset_split.test.features))
-        baseline_metrics = self.evaluate_model(baseline, dataset_split.test)
+        # Validation is the intermediate set for comparing the baseline and trained model.
+        logger.info(
+            "Evaluating model: model=baseline partition=validation rows=%s",
+            len(dataset_split.validation.features),
+        )
+        baseline_validation_metrics = self.evaluate_model(baseline, dataset_split.validation)
         report.record(
             "model_evaluated",
-            partition="test",
-            rows=len(dataset_split.test.features),
+            partition="validation",
+            rows=len(dataset_split.validation.features),
             model="baseline",
-            metrics=baseline_metrics,
+            metrics=baseline_validation_metrics,
         )
 
         model = self.train_model(dataset_split)
@@ -91,20 +95,27 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             metrics=validation_metrics,
         )
         logger.info("Evaluating model: model=house_price partition=test rows=%s", len(dataset_split.test.features))
-        model_metrics = self.evaluate_model(model, dataset_split.test)
+        # Test is held back until this final evaluation and does not guide selection.
+        final_test_metrics = self.evaluate_model(model, dataset_split.test)
         report.record(
             "model_evaluated",
             partition="test",
             rows=len(dataset_split.test.features),
             model="house_price",
-            metrics=model_metrics,
+            metrics=final_test_metrics,
         )
         model_path = self.save_model(model)
         report.record("model_saved", model_path=model_path, details=str(model_path))
         report.record("training_completed", details=str(report.path))
 
         logger.info("House price training completed: model=%s", model_path)
-        return TrainingOutput(model_path, baseline_metrics, validation_metrics, model_metrics, report.path)
+        return TrainingOutput(
+            model_path,
+            baseline_validation_metrics,
+            validation_metrics,
+            final_test_metrics,
+            report.path,
+        )
 
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / "house.csv"

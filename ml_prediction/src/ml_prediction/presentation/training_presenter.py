@@ -15,10 +15,10 @@ class TrainingPresenter(Presenter):
         logger.info("Training report: path=%s", result.report_path)
         logger.info("Training report: path=%s", result.report_path)
         logger.info(
-            "Baseline test metrics: mae=%.2f rmse=%.2f r2=%.4f",
-            result.baseline_metrics.mean_absolute_error,
-            result.baseline_metrics.root_mean_squared_error,
-            result.baseline_metrics.r2_score,
+            "Baseline validation metrics: mae=%.2f rmse=%.2f r2=%.4f",
+            result.baseline_validation_metrics.mean_absolute_error,
+            result.baseline_validation_metrics.root_mean_squared_error,
+            result.baseline_validation_metrics.r2_score,
         )
         logger.info(
             "Validation metrics: mae=%.2f rmse=%.2f r2=%.4f",
@@ -27,8 +27,8 @@ class TrainingPresenter(Presenter):
             result.validation_metrics.r2_score,
         )
         logger.info(
-            "Test metrics: mae=%.2f rmse=%.2f r2=%.4f",
-            result.model_metrics.mean_absolute_error,
-            result.model_metrics.root_mean_squared_error,
-            result.model_metrics.r2_score,
+            "Final test metrics: mae=%.2f rmse=%.2f r2=%.4f",
+            result.test_metrics.mean_absolute_error,
+            result.test_metrics.root_mean_squared_error,
+            result.test_metrics.r2_score,
         )
