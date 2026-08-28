@@ -7,7 +7,7 @@ from ml_prediction.config.settings import AppSettings, DataLakeSettings, Dataset
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
 from ml_prediction.inference.prediction_service import PredictionOutput, PredictionService
 from ml_prediction.repository.datalake_repository import DataLakeRepository
-from ml_prediction.repository.local_repository import LocalRepository
+from ml_prediction.repository.local_model_repository import LocalModelRepository
 
 from test_dataset_features import house_dataframe
 
@@ -26,8 +26,8 @@ def settings(tmp_path: Path) -> AppSettings:
     )
 
 
-def test_local_repository_saves_and_loads(tmp_path: Path) -> None:
-    repository = LocalRepository()
+def test_local_model_repository_saves_and_loads(tmp_path: Path) -> None:
+    repository = LocalModelRepository()
     path = tmp_path / "models" / "model.joblib"
 
     assert repository.save({"value": 1}, path) == path

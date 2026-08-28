@@ -10,7 +10,7 @@ from ml_prediction.inference.house_price_predictor import HousePricePredictor
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
 from ml_prediction.presentation.training_presenter import TrainingPresenter
-from ml_prediction.repository.local_repository import LocalRepository
+from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
 
@@ -34,7 +34,7 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
     report_service = ReportService(house_settings.report_dir)
     prediction_service = None
     if include_prediction:
-        model_repository = LocalRepository()
+        model_repository = LocalModelRepository()
         prediction_service = PredictionService(
             house_settings,
             HousePricePredictor(

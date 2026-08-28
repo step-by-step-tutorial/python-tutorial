@@ -47,7 +47,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         report_dir=tmp_path / "reports",
     )
     mocker.patch("ml_prediction.training.house_price_trainer.DataLakeRepository")
-    mocker.patch("ml_prediction.training.house_price_trainer.LocalRepository")
+    mocker.patch("ml_prediction.training.house_price_trainer.LocalModelRepository")
     trainer = HousePriceTrainer(settings)
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})

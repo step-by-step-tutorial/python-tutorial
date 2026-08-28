@@ -7,7 +7,7 @@ import joblib
 logger = logging.getLogger(__name__)
 
 
-class LocalRepository:
+class LocalModelRepository:
     def save(self, model: Any, path: Path) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(model, path)

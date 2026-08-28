@@ -13,7 +13,7 @@ from ml_prediction.model.baseline_model import BaselineModel
 from ml_prediction.model.house_price_model import HousePriceModel
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.repository.datalake_repository import DataLakeRepository
-from ml_prediction.repository.local_repository import LocalRepository
+from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.trainer import Trainer
 from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
@@ -26,7 +26,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         self.settings = settings
         self.report_service = report_service or ReportService(settings.report_dir)
         self.storage_repository = DataLakeRepository(settings.data_lake)
-        self.local_repository = LocalRepository()
+        self.local_model_repository = LocalModelRepository()
         self.feature_model = HouseFeatureModel()
         self.pipeline_builder = HousePricePipelineBuilder(
             self.feature_model,
@@ -148,4 +148,4 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         return ModelEvaluator(dataset.target, model.predict(dataset.features)).evaluate()
 
     def save_model(self, model: HousePriceModel) -> Path:
-        return self.local_repository.save(model, self.settings.model_dir / "house_price_model.joblib")
+        return self.local_model_repository.save(model, self.settings.model_dir / "house_price_model.joblib")
