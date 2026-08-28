@@ -27,13 +27,14 @@ class PredictionService:
             settings: AppSettings,
             predictor: Predictor[pd.Series],
             dataset: Dataset,
+            data_lake_repository: DataLakeRepository,
             report_service: ReportService | None = None,
     ) -> None:
         self.settings = settings
         self.predictor = predictor
         self.dataset = dataset
+        self.data_lake_repository = data_lake_repository
         self.report_service = report_service or ReportService(settings.report_dir)
-        self.repository = DataLakeRepository(settings.data_lake)
 
     def predict(self) -> PredictionOutput:
         model_path = self.predictor.model_path
@@ -55,7 +56,7 @@ class PredictionService:
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / "house.csv"
         if self.settings.dataset_source == DatasetSource.DOWNLOAD:
-            self.repository.download_latest_csv(dataset_path)
+            self.data_lake_repository.download_latest_csv(dataset_path)
         else:
             logger.info("Using local dataset: path=%s", dataset_path)
         return dataset_path

@@ -22,11 +22,17 @@ logger = logging.getLogger(__name__)
 
 
 class HousePriceTrainer(Trainer[TrainingOutput]):
-    def __init__(self, settings: AppSettings, report_service: ReportService | None = None) -> None:
+    def __init__(
+            self,
+            settings: AppSettings,
+            data_lake_repository: DataLakeRepository,
+            model_repository: LocalModelRepository,
+            report_service: ReportService | None = None,
+    ) -> None:
         self.settings = settings
         self.report_service = report_service or ReportService(settings.report_dir)
-        self.storage_repository = DataLakeRepository(settings.data_lake)
-        self.local_model_repository = LocalModelRepository()
+        self.data_lake_repository = data_lake_repository
+        self.model_repository = model_repository
         self.feature_model = HouseFeatureModel()
         self.pipeline_builder = HousePricePipelineBuilder(
             self.feature_model,
@@ -101,7 +107,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / "house.csv"
         if self.settings.dataset_source == DatasetSource.DOWNLOAD:
-            self.storage_repository.download_latest_csv(dataset_path)
+            self.data_lake_repository.download_latest_csv(dataset_path)
         else:
             logger.info("Using local dataset: path=%s", dataset_path)
         return dataset_path
@@ -148,4 +154,4 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         return ModelEvaluator(dataset.target, model.predict(dataset.features)).evaluate()
 
     def save_model(self, model: HousePriceModel) -> Path:
-        return self.local_model_repository.save(model, self.settings.model_dir / "house_price_model.joblib")
+        return self.model_repository.save(model, self.settings.model_dir / "house_price_model.joblib")

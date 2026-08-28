@@ -81,6 +81,8 @@ def test_cli_run_train_and_predict(mocker) -> None:
 
 def test_create_application_does_not_load_model_for_training(mocker) -> None:
     predictor = mocker.patch.object(main, "HousePricePredictor")
+    mocker.patch.object(main, "DataLakeRepository")
+    mocker.patch.object(main, "LocalModelRepository")
 
     application = main.create_application("house", include_prediction=False)
 

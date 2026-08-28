@@ -10,6 +10,7 @@ from ml_prediction.inference.house_price_predictor import HousePricePredictor
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
 from ml_prediction.presentation.training_presenter import TrainingPresenter
+from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
@@ -32,9 +33,10 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
         raise ValueError(f"Unsupported dataset: {dataset}")
 
     report_service = ReportService(house_settings.report_dir)
+    data_lake_repository = DataLakeRepository(house_settings.data_lake)
+    model_repository = LocalModelRepository()
     prediction_service = None
     if include_prediction:
-        model_repository = LocalModelRepository()
         prediction_service = PredictionService(
             house_settings,
             HousePricePredictor(
@@ -42,11 +44,12 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
                 model_repository,
             ),
             HouseDataset(house_settings.data_dir / "house.csv"),
+            data_lake_repository,
             report_service,
         )
     return Application(
         house_settings,
-        HousePriceTrainer(house_settings, report_service),
+        HousePriceTrainer(house_settings, data_lake_repository, model_repository, report_service),
         prediction_service,
     )
 

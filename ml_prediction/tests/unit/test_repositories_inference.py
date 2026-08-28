@@ -82,7 +82,7 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
     dataset.load.return_value = dataframe
     predictor = mocker.Mock()
     predictor.predict.return_value = pd.Series([110])
-    service = PredictionService(settings(tmp_path), predictor, dataset)
+    service = PredictionService(settings(tmp_path), predictor, dataset, mocker.Mock())
     mocker.patch.object(service, "download_dataset", return_value=dataset_path)
 
     result = service.predict()
@@ -97,7 +97,7 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
 
 
 def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path: Path) -> None:
-    repository = mocker.patch("ml_prediction.inference.prediction_service.DataLakeRepository")
+    repository = mocker.Mock()
     service = PredictionService(
         AppSettings(
             data_dir=tmp_path / "data",
@@ -111,6 +111,7 @@ def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path
         ),
         mocker.Mock(),
         mocker.Mock(),
+        repository,
     )
 
     assert service.download_dataset() == tmp_path / "data" / "house.csv"
@@ -118,11 +119,11 @@ def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path
 
 
 def test_prediction_service_downloads_dataset_when_configured(mocker, tmp_path: Path) -> None:
-    repository = mocker.patch("ml_prediction.inference.prediction_service.DataLakeRepository")
-    service = PredictionService(settings(tmp_path), mocker.Mock(), mocker.Mock())
+    repository = mocker.Mock()
+    service = PredictionService(settings(tmp_path), mocker.Mock(), mocker.Mock(), repository)
 
     assert service.download_dataset() == tmp_path / "data" / "house.csv"
-    repository.return_value.download_latest_csv.assert_called_once_with(
+    repository.download_latest_csv.assert_called_once_with(
         tmp_path / "data" / "house.csv"
     )
 
@@ -133,6 +134,7 @@ def test_prediction_service_rejects_dataset_path_mismatch(mocker, tmp_path: Path
         settings(tmp_path),
         mocker.Mock(),
         dataset,
+        mocker.Mock(),
     )
     downloaded_path = tmp_path / "data" / "house.csv"
     mocker.patch.object(service, "download_dataset", return_value=downloaded_path)
