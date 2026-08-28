@@ -1,4 +1,5 @@
 from typing import Any
+from pathlib import Path
 
 from test_data.config import settings as env_config
 from test_data.model.schemas import ColumnModel, ConfigModel
@@ -42,4 +43,8 @@ def convert_to_config(raw_config: dict[str, Any], name: str = "") -> ConfigModel
 
 
 def read_config(file_name: str) -> ConfigModel:
-    return convert_to_config(read_json_file(env_config.CONFIG_DIR / file_name), file_name)
+    config_name = Path(file_name)
+    if config_name.suffix == "":
+        config_name = config_name.with_suffix(".json")
+
+    return convert_to_config(read_json_file(env_config.CONFIG_DIR / config_name), config_name.name)

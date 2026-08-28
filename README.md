@@ -26,7 +26,8 @@ docker --version
 ## Test
 
 ```shell
-pytest ./data_platform 
+pytest ./data_platform
+pytest ./ml_prediction
 pytest ./test_data
 ```
 
@@ -59,6 +60,11 @@ Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
 python -m data_platform.main
 ```
 
+```shell
+Set-Location C:\Users\saman\IdeaProjects\python-tutorial\ml_prediction
+python -m ml_prediction.main
+```
+
 
 ```shell
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
@@ -74,6 +80,7 @@ docker compose --file docker-compose.yml --project-name dev --env-file ./.env.de
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
 docker rmi samanalishiri/data-platform:latest
 docker rmi samanalishiri/test-data:latest
+docker rmi samanalishiri/ml_prediction:latest
 ```
 
 ## Services
@@ -114,4 +121,6 @@ rm ./test_data/output/*
 rm -rf ./test_data/report
 rm -rf ./test_data/src/test_data.egg-info
 rm ./test_data/.coverage
+rm -rf ./ml_prediction/.coverage
+rm -rf ./ml_prediction/*.egg-info
 ```

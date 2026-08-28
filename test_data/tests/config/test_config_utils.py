@@ -122,3 +122,9 @@ def test_online_shopping_config_includes_extended_fields() -> None:
     assert "payment_status" in config.column_names
     assert "fulfillment_status" in config.column_names
     assert "estimated_delivery_date" in config.column_names
+
+
+def test_read_config_resolves_dataset_name_without_json_suffix() -> None:
+    config = read_config("online_shopping")
+
+    assert config.output_name == "online_shopping"
