@@ -175,10 +175,26 @@ def test_house_price_predictor_builds_features_and_returns_named_series(mocker) 
     pipeline.predict.return_value = [101.0, 202.0]
     repository = mocker.Mock()
     repository.load.return_value = pipeline
+    repository.load_metadata.return_value = ModelMetadata(
+        model_type="random_forest",
+        model_parameters={"n_estimators": 200, "n_jobs": -1, "random_state": 42},
+        target_column="total_price",
+        numeric_features=HouseFeatureModel().get_numeric_features(),
+        boolean_features=HouseFeatureModel().get_boolean_features(),
+        categorical_features=HouseFeatureModel().get_categorical_features(),
+        training_timestamp=datetime.now(timezone.utc),
+        validation_metrics=RegressionMetrics(1.0, 2.0, 0.5),
+        final_test_metrics=RegressionMetrics(1.5, 2.5, 0.4),
+        schema_version="1",
+        model_version="1",
+    )
     predictor = HousePricePredictor(
         Path("model.joblib"),
         repository,
         lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
+        HouseFeatureModel(),
+        "random_forest",
+        "total_price",
     )
 
     predictions = predictor.predict(house_dataframe())
@@ -187,3 +203,32 @@ def test_house_price_predictor_builds_features_and_returns_named_series(mocker) 
     assert predictions.name == "predicted_total_price"
     repository.load.assert_called_once_with(Path("model.joblib"))
     pipeline.predict.assert_called_once()
+
+
+def test_house_price_predictor_rejects_incompatible_schema(mocker) -> None:
+    repository = mocker.Mock()
+    repository.load_metadata.return_value = ModelMetadata(
+        model_type="random_forest",
+        model_parameters={},
+        target_column="total_price",
+        numeric_features=("unknown_feature",),
+        boolean_features=(),
+        categorical_features=(),
+        training_timestamp=datetime.now(timezone.utc),
+        validation_metrics=RegressionMetrics(1.0, 2.0, 0.5),
+        final_test_metrics=RegressionMetrics(1.5, 2.5, 0.4),
+        schema_version="1",
+        model_version="1",
+    )
+
+    with pytest.raises(ValueError, match="unknown_feature"):
+        HousePricePredictor(
+            Path("model.joblib"),
+            repository,
+            lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
+            HouseFeatureModel(),
+            "random_forest",
+            "total_price",
+        )
+
+    repository.load.assert_not_called()

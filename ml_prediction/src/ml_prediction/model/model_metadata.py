@@ -4,6 +4,9 @@ from typing import Any
 
 from ml_prediction.evaluation.model_evaluator import RegressionMetrics
 
+CURRENT_SCHEMA_VERSION = "1"
+CURRENT_MODEL_VERSION = "1"
+
 
 @dataclass(frozen=True)
 class ModelMetadata:

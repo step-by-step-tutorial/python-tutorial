@@ -12,7 +12,7 @@ from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.baseline_model import BaselineModel
 from ml_prediction.model.house_price_model import HousePriceModel
-from ml_prediction.model.model_metadata import ModelMetadata
+from ml_prediction.model.model_metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION, ModelMetadata
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -123,8 +123,8 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             training_timestamp=datetime.now(timezone.utc),
             validation_metrics=validation_metrics,
             final_test_metrics=final_test_metrics,
-            schema_version="1",
-            model_version="1",
+            schema_version=CURRENT_SCHEMA_VERSION,
+            model_version=CURRENT_MODEL_VERSION,
         )
         model_path = self.save_model(model, metadata)
         report.record("model_saved", model_path=model_path, details=str(model_path))
