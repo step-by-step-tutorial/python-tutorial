@@ -5,32 +5,17 @@ import pandas as pd
 from ml_prediction.config.settings import AppSettings, DataLakeSettings, DatasetSource
 from ml_prediction.dataset.house_dataset import PreparedTrainingData
 from ml_prediction.evaluation.model_evaluator import RegressionMetrics
+from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
 from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
 
 
-def test_house_price_trainer_splits_dataset_into_train_validation_and_test(tmp_path: Path, mocker) -> None:
-    trainer = HousePriceTrainer(
-        AppSettings(
-            data_dir=tmp_path / "data",
-            model_dir=tmp_path / "models",
-            target_column="target",
-            validation_size=0.2,
-            test_size=0.2,
-            random_state=42,
-            data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
-        ),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-    )
+def test_dataset_splitter_splits_dataset_into_train_validation_and_test() -> None:
+    splitter = DatasetSplitter(0.2, 0.2, 42)
     features = pd.DataFrame({"value": range(10)})
     target = pd.Series(range(10), name="target")
 
-    partitions = trainer.split_dataset(features, target)
+    partitions = splitter.split(features, target)
 
     assert isinstance(partitions, DatasetPartitions)
     assert len(partitions.train.features) == 6
@@ -52,6 +37,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
         report_dir=tmp_path / "reports",
     )
+    dataset_splitter = mocker.Mock()
     trainer = HousePriceTrainer(
         settings,
         mocker.Mock(),
@@ -60,6 +46,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),
+        dataset_splitter,
     )
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
@@ -71,7 +58,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
 
     trainer.download_dataset = mocker.Mock(return_value=dataset_path)
     trainer.prepare_dataset = mocker.Mock(return_value=PreparedTrainingData(dataframe, dataframe["target"]))
-    trainer.split_dataset = mocker.Mock(return_value=partitions)
+    dataset_splitter.split.return_value = partitions
     trainer.train_baseline = mocker.Mock(return_value=baseline)
     trainer.train_model = mocker.Mock(return_value=model)
     trainer.evaluate_model = mocker.Mock(side_effect=[metrics, metrics, metrics])
@@ -81,7 +68,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
 
     assert isinstance(result, TrainingOutput)
     trainer.prepare_dataset.assert_called_once_with(dataset_path)
-    trainer.split_dataset.assert_called_once()
+    dataset_splitter.split.assert_called_once_with(dataframe, dataframe["target"])
     trainer.train_baseline.assert_called_once_with(partitions)
     trainer.train_model.assert_called_once_with(partitions)
     assert trainer.evaluate_model.call_count == 3
@@ -110,6 +97,7 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
         mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),
+        mocker.Mock(),
     )
 
     assert trainer.download_dataset() == tmp_path / "data" / "house.csv"
@@ -132,6 +120,7 @@ def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, m
         mocker.Mock(),
         mocker.Mock(),
         storage_repository,
+        mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),

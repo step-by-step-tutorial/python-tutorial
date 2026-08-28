@@ -3,7 +3,6 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
 
 from ml_prediction.config.settings import AppSettings, DatasetSource
 from ml_prediction.dataset.house_dataset import HouseDataset, PreparedTrainingData
@@ -16,6 +15,7 @@ from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.trainer import Trainer
+from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             model_repository: LocalModelRepository,
             pipeline_builder: PipelineBuilder,
             evaluator: ModelEvaluator,
+            dataset_splitter: DatasetSplitter,
             report_service: ReportService | None = None,
     ) -> None:
         self.settings = settings
@@ -41,6 +42,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         self.model_repository = model_repository
         self.pipeline_builder = pipeline_builder
         self.evaluator = evaluator
+        self.dataset_splitter = dataset_splitter
 
     def train(self) -> TrainingOutput:
         model_path = self.settings.model_dir / "house_price_model.joblib"
@@ -51,7 +53,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         report.record("dataset_prepared", rows=len(prepared_data.features), details=f"target={self.settings.target_column}")
         report.record("features_built", rows=len(prepared_data.features), details=f"columns={len(prepared_data.features.columns)}")
         report.record("target_extracted", rows=len(prepared_data.target), details=f"column={self.settings.target_column}")
-        dataset_split = self.split_dataset(prepared_data.features, prepared_data.target)
+        dataset_split = self.dataset_splitter.split(prepared_data.features, prepared_data.target)
         report.record(
             "dataset_split",
             rows=len(prepared_data.features),
@@ -118,32 +120,6 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         return self.dataset.prepare_training_data(
             self.settings.target_column,
             self.feature_builder_factory,
-        )
-
-    def split_dataset(self, features: pd.DataFrame, target: pd.Series) -> DatasetPartitions:
-        train_features, remaining_features, train_target, remaining_target = train_test_split(
-            features,
-            target,
-            test_size=self.settings.validation_size + self.settings.test_size,
-            random_state=self.settings.random_state,
-        )
-
-        validation_ratio = self.settings.validation_size / (self.settings.validation_size + self.settings.test_size)
-        validation_features, test_features, validation_target, test_target = train_test_split(
-            remaining_features,
-            remaining_target,
-            test_size=1 - validation_ratio,
-            random_state=self.settings.random_state,
-        )
-
-        logger.info(f"Split house dataset: train_rows={len(train_features)} "
-                    f"validation_rows={len(validation_features)}"
-                    f"test_rows={len(test_features)}")
-
-        return DatasetPartitions(
-            train=DatasetPartition(train_features, train_target),
-            validation=DatasetPartition(validation_features, validation_target),
-            test=DatasetPartition(test_features, test_target),
         )
 
     def train_baseline(self, partitions: DatasetPartitions) -> BaselineModel:

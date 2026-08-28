@@ -17,10 +17,6 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    def split_dataset(self, features, target):
-        ...
-
-    @abstractmethod
     def train_baseline(self, partitions):
         ...
 

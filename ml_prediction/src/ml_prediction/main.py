@@ -20,6 +20,7 @@ from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
+from ml_prediction.training.dataset_splitter import DatasetSplitter
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,11 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
     )
     pipeline_builder = HousePricePipelineBuilder(feature_model, regressor_builder)
     evaluator = ModelEvaluator()
+    dataset_splitter = DatasetSplitter(
+        house_settings.validation_size,
+        house_settings.test_size,
+        house_settings.random_state,
+    )
     dataset_service = HouseDataset(house_settings.data_dir / "house.csv")
     prediction_service = None
     if include_prediction:
@@ -75,6 +81,7 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
             model_repository,
             pipeline_builder,
             evaluator,
+            dataset_splitter,
             report_service,
         ),
         prediction_service,
