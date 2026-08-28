@@ -53,6 +53,10 @@ house_settings = AppSettings(
         access_key=os.getenv("ML_PREDICTION_DATALAKE_ACCESS_KEY", "admin"),
         secret_key=os.getenv("ML_PREDICTION_DATALAKE_SECRET_KEY", "administrator"),
         bucket_name=os.getenv("ML_PREDICTION_HOUSE_DATALAKE_BUCKET_NAME", "house"),
-        object_prefix=os.getenv("ML_PREDICTION_HOUSE_DATALAKE_PREFIX", "house/"),
+        object_prefix=os.getenv(
+            "ML_PREDICTION_HOUSE_DATALAKE_PREFIX",
+            f"{os.getenv('ML_PREDICTION_DATALAKE_STAGE', 'enriched')}/"
+            f"{os.getenv('ML_PREDICTION_DATASET_NAME', 'house')}/",
+        ),
     ),
 )

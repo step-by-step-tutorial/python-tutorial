@@ -61,36 +61,45 @@ def test_local_model_repository_saves_and_loads_typed_metadata(tmp_path: Path) -
     assert repository.load_metadata(path) == metadata
 
 
-def test_datalake_repository_lists_only_csv_objects(mocker) -> None:
+def test_datalake_repository_lists_only_parquet_objects(mocker) -> None:
     client = mocker.Mock()
     client.list_objects_v2.return_value = {
         "Contents": [
-            {"Key": "prefix/old.csv", "LastModified": 1},
-            {"Key": "prefix/new.CSV", "LastModified": 2},
+            {"Key": "prefix/old.parquet", "LastModified": 1},
+            {"Key": "prefix/new.PARQUET", "LastModified": 2},
             {"Key": "prefix/ignored.json", "LastModified": 3},
         ]
     }
     mocker.patch("ml_prediction.repository.datalake_repository.boto3.client", return_value=client)
     repository = DataLakeRepository(settings(Path("/tmp" )).data_lake)
 
-    assert [item["Key"] for item in repository.get_object_keys()] == ["prefix/old.csv", "prefix/new.CSV"]
+    assert [item["Key"] for item in repository.get_object_keys()] == ["prefix/old.parquet", "prefix/new.PARQUET"]
     client.list_objects_v2.assert_called_once_with(Bucket="house", Prefix="prefix")
 
 
-def test_datalake_repository_downloads_latest_csv(tmp_path: Path, mocker) -> None:
+def test_datalake_repository_downloads_latest_partition_as_csv(tmp_path: Path, mocker) -> None:
     client = mocker.Mock()
     client.list_objects_v2.return_value = {
         "Contents": [
-            {"Key": "old.csv", "LastModified": 1, "Size": 1},
-            {"Key": "new.csv", "LastModified": 2, "Size": 2},
+            {"Key": "enriched/house/old/part-1.parquet", "LastModified": 1},
+            {"Key": "enriched/house/new/part-1.parquet", "LastModified": 2},
+            {"Key": "enriched/house/new/part-2.parquet", "LastModified": 3},
         ]
     }
     mocker.patch("ml_prediction.repository.datalake_repository.boto3.client", return_value=client)
+    mocker.patch("ml_prediction.repository.datalake_repository.pd.read_parquet", side_effect=[
+        pd.DataFrame({"value": [1]}),
+        pd.DataFrame({"value": [2]}),
+    ])
     repository = DataLakeRepository(settings(tmp_path).data_lake)
     output = tmp_path / "data" / "house.csv"
 
     assert repository.download_latest_csv(output) == output
-    client.download_file.assert_called_once_with("house", "new.csv", str(output))
+    assert output.read_text(encoding="utf-8") == "value\n1\n2\n"
+    assert [call.args[1] for call in client.download_fileobj.call_args_list] == [
+        "enriched/house/new/part-1.parquet",
+        "enriched/house/new/part-2.parquet",
+    ]
 
 
 def test_datalake_repository_rejects_empty_bucket(tmp_path: Path, mocker) -> None:
@@ -98,7 +107,7 @@ def test_datalake_repository_rejects_empty_bucket(tmp_path: Path, mocker) -> Non
     client.list_objects_v2.return_value = {}
     mocker.patch("ml_prediction.repository.datalake_repository.boto3.client", return_value=client)
 
-    with pytest.raises(FileNotFoundError, match="No CSV files found"):
+    with pytest.raises(FileNotFoundError, match="No Parquet files found"):
         DataLakeRepository(settings(tmp_path).data_lake).download_latest_csv(tmp_path / "house.csv")
 
 

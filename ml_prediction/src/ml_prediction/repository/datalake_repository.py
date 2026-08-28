@@ -1,7 +1,9 @@
 import logging
+from io import BytesIO
 from pathlib import Path
 
 import boto3
+import pandas as pd
 
 from ml_prediction.config.settings import DataLakeSettings
 
@@ -23,19 +25,40 @@ class DataLakeRepository:
     def download_latest_csv(self, output_path: Path) -> Path:
         objects = self.get_object_keys()
         if not objects:
-            raise FileNotFoundError(
-                f"No CSV files found in bucket '{self.bucket_name}' with prefix '{self.object_prefix}'."
-            )
+            raise FileNotFoundError(f"No Parquet files found in bucket '{self.bucket_name}' with prefix '{self.object_prefix}'.")
 
-        source = max(objects, key=lambda item: item.get("LastModified"))
+        latest_partition = max(
+            self._partition_objects(objects).items(),
+            key=lambda item: max(source.get("LastModified") for source in item[1]),
+        )[1]
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Downloading house dataset: bucket={self.bucket_name} key={source['Key']} output={output_path}")
-        self._client.download_file(self.bucket_name, source["Key"], str(output_path))
-        logger.info(f"House dataset downloaded: bytes={source.get('Size', 0)} output={output_path}")
+        dataframes = []
+        for source in latest_partition:
+            parquet_buffer = BytesIO()
+            self._client.download_fileobj(self.bucket_name, source["Key"], parquet_buffer)
+            parquet_buffer.seek(0)
+            dataframes.append(pd.read_parquet(parquet_buffer))
+
+        pd.concat(dataframes, ignore_index=True).to_csv(output_path, index=False)
+        logger.info(
+            "Enriched dataset downloaded: bucket=%s prefix=%s files=%s output=%s",
+            self.bucket_name,
+            self.object_prefix,
+            len(latest_partition),
+            output_path,
+        )
         return output_path
 
     def get_object_keys(self) -> list[dict]:
         response = self._client.list_objects_v2(Bucket=self.bucket_name, Prefix=self.object_prefix)
-        objects = [item for item in response.get("Contents", []) if item["Key"].lower().endswith(".csv")]
-        logger.info(f"Found CSV objects: bucket={self.bucket_name} prefix={self.object_prefix} count={len(objects)}")
+        objects = [item for item in response.get("Contents", []) if item["Key"].lower().endswith(".parquet")]
+        logger.info(f"Found Parquet objects: bucket={self.bucket_name} prefix={self.object_prefix} count={len(objects)}")
         return objects
+
+    @staticmethod
+    def _partition_objects(objects: list[dict]) -> dict[str, list[dict]]:
+        partitions: dict[str, list[dict]] = {}
+        for item in objects:
+            partition = item["Key"].rsplit("/", 1)[0]
+            partitions.setdefault(partition, []).append(item)
+        return partitions
