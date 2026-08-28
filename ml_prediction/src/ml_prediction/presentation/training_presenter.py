@@ -13,7 +13,6 @@ class TrainingPresenter(Presenter):
             result.model_path,
         )
         logger.info("Training report: path=%s", result.report_path)
-        logger.info("Training report: path=%s", result.report_path)
         logger.info(
             "Baseline validation metrics: mae=%.2f rmse=%.2f r2=%.4f",
             result.baseline_validation_metrics.mean_absolute_error,
