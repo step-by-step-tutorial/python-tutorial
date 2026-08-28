@@ -67,3 +67,10 @@ python -m ml_prediction.main house train
 cd ./ml_prediction
 python -m ml_prediction.main house predict
 ```
+
+## Clean Project
+
+```shell
+rm -rf ./ml_prediction/.coverage
+rm -rf ./ml_prediction/*.egg-info
+```

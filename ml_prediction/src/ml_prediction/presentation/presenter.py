@@ -4,5 +4,5 @@ from typing import Any
 
 class Presenter(ABC):
     @abstractmethod
-    def present(self, result: Any) -> Any:
+    def present(self, output: Any) -> Any:
         raise NotImplementedError

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generic, TypeVar
 
+from ml_prediction.model.model_metadata import ModelMetadata
 from ml_prediction.training.training_models import DatasetPartition
 
 TrainingResultType = TypeVar("TrainingResultType")
@@ -29,7 +30,7 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    def save_model(self, trained_model) -> Path:
+    def save_model(self, trained_model, metadata: ModelMetadata) -> Path:
         ...
 
     @abstractmethod
