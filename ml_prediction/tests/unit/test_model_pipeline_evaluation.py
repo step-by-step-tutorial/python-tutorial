@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel
@@ -7,6 +8,7 @@ from ml_prediction.model.house_price_model import HousePriceModel
 from ml_prediction.model.model import Model
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
+from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 
 from test_dataset_features import house_dataframe
 
@@ -18,6 +20,19 @@ def test_pipeline_builder_is_abstract_and_builds_pipeline() -> None:
     assert issubclass(HousePricePipelineBuilder, PipelineBuilder)
     pipeline = builder.build()
     assert list(pipeline.named_steps) == ["preprocessor", "regressor"]
+
+
+def test_regressor_builder_builds_configured_random_forest() -> None:
+    regressor = RegressorBuilder("random_forest", 17, 3, 42).build()
+
+    assert regressor.n_estimators == 17
+    assert regressor.n_jobs == 3
+    assert regressor.random_state == 42
+
+
+def test_regressor_builder_rejects_unsupported_model_type() -> None:
+    with pytest.raises(ValueError, match="Unsupported model type: linear"):
+        RegressorBuilder("linear", 200, -1, 42).build()
 
 
 def test_house_price_model_fits_and_predicts() -> None:
