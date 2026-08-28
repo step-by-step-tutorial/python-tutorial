@@ -134,6 +134,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         )
 
     def train_baseline(self, partitions: DatasetPartitions) -> BaselineModel:
+        # The baseline is a validation-only comparator and is never persisted or inferred with.
         return BaselineModel().fit(partitions.train.features, partitions.train.target)
 
     def train_model(self, partitions: DatasetPartitions) -> HousePriceModel:

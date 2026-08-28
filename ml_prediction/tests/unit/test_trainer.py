@@ -5,6 +5,7 @@ import pandas as pd
 from ml_prediction.config.settings import AppSettings, DataLakeSettings, DatasetSource
 from ml_prediction.dataset.house_dataset import PreparedTrainingData
 from ml_prediction.evaluation.model_evaluator import RegressionMetrics
+from ml_prediction.model.baseline_model import BaselineModel
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
 from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
@@ -24,6 +25,17 @@ def test_dataset_splitter_splits_dataset_into_train_validation_and_test() -> Non
     assert set(partitions.train.features.index) == set(partitions.train.target.index)
     assert set(partitions.validation.features.index) == set(partitions.validation.target.index)
     assert set(partitions.test.features.index) == set(partitions.test.target.index)
+
+
+def test_baseline_model_is_fitted_on_training_partition_only() -> None:
+    train = DatasetPartition(pd.DataFrame({"value": [1, 2]}), pd.Series([10, 20]))
+    validation = DatasetPartition(pd.DataFrame({"value": [3]}), pd.Series([100]))
+    test = DatasetPartition(pd.DataFrame({"value": [4]}), pd.Series([200]))
+
+    baseline = BaselineModel().fit(train.features, train.target)
+
+    assert baseline.predict(validation.features).tolist() == [15.0]
+    assert baseline.predict(test.features).tolist() == [15.0]
 
 
 def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: Path, mocker) -> None:
