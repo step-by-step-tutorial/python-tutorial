@@ -7,27 +7,27 @@ logger = logging.getLogger(__name__)
 
 
 class TrainingPresenter(Presenter):
-    def present(self, result: TrainingOutput) -> None:
+    def present(self, training_output: TrainingOutput) -> None:
         logger.info(
             "Training result: model=%s",
-            result.model_path,
+            training_output.model_path,
         )
-        logger.info("Training report: path=%s", result.report_path)
+        logger.info("Training report: path=%s", training_output.report_path)
         logger.info(
             "Baseline validation metrics: mae=%.2f rmse=%.2f r2=%.4f",
-            result.baseline_validation_metrics.mean_absolute_error,
-            result.baseline_validation_metrics.root_mean_squared_error,
-            result.baseline_validation_metrics.r2_score,
+            training_output.baseline_validation_metrics.mean_absolute_error,
+            training_output.baseline_validation_metrics.root_mean_squared_error,
+            training_output.baseline_validation_metrics.r2_score,
         )
         logger.info(
             "Validation metrics: mae=%.2f rmse=%.2f r2=%.4f",
-            result.validation_metrics.mean_absolute_error,
-            result.validation_metrics.root_mean_squared_error,
-            result.validation_metrics.r2_score,
+            training_output.validation_metrics.mean_absolute_error,
+            training_output.validation_metrics.root_mean_squared_error,
+            training_output.validation_metrics.r2_score,
         )
         logger.info(
             "Final test metrics: mae=%.2f rmse=%.2f r2=%.4f",
-            result.test_metrics.mean_absolute_error,
-            result.test_metrics.root_mean_squared_error,
-            result.test_metrics.r2_score,
+            training_output.test_metrics.mean_absolute_error,
+            training_output.test_metrics.root_mean_squared_error,
+            training_output.test_metrics.r2_score,
         )

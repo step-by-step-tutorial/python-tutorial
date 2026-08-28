@@ -54,59 +54,62 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
         report = self.report_service.start("house", "training", model_path)
         dataset_path = self.download_dataset()
         report.record("dataset_downloaded", details=str(dataset_path))
-        prepared_data = self.prepare_dataset(dataset_path)
-        report.record("dataset_prepared", rows=len(prepared_data.features), details=f"target={self.settings.target_column}")
-        report.record("features_built", rows=len(prepared_data.features), details=f"columns={len(prepared_data.features.columns)}")
-        report.record("target_extracted", rows=len(prepared_data.target), details=f"column={self.settings.target_column}")
-        dataset_split = self.dataset_splitter.split(prepared_data.features, prepared_data.target)
+        prepared_training_data = self.prepare_dataset(dataset_path)
+        report.record("dataset_prepared", rows=len(prepared_training_data.features), details=f"target={self.settings.target_column}")
+        report.record("features_built", rows=len(prepared_training_data.features), details=f"columns={len(prepared_training_data.features.columns)}")
+        report.record("target_extracted", rows=len(prepared_training_data.target), details=f"column={self.settings.target_column}")
+        dataset_partitions = self.dataset_splitter.split(
+            prepared_training_data.features,
+            prepared_training_data.target,
+        )
         report.record(
             "dataset_split",
-            rows=len(prepared_data.features),
+            rows=len(prepared_training_data.features),
             details=(
-                f"train={len(dataset_split.train.features)} "
-                f"validation={len(dataset_split.validation.features)} "
-                f"test={len(dataset_split.test.features)}"
+                f"train={len(dataset_partitions.train.features)} "
+                f"validation={len(dataset_partitions.validation.features)} "
+                f"test={len(dataset_partitions.test.features)}"
             ),
         )
 
-        baseline = self.train_baseline(dataset_split)
-        report.record("baseline_trained", partition="train", rows=len(dataset_split.train.features), model="baseline")
+        baseline_model = self.train_baseline(dataset_partitions)
+        report.record("baseline_trained", partition="train", rows=len(dataset_partitions.train.features), model_name="baseline")
         # Validation is the intermediate set for comparing the baseline and trained model.
         logger.info(
             "Evaluating model: model=baseline partition=validation rows=%s",
-            len(dataset_split.validation.features),
+            len(dataset_partitions.validation.features),
         )
-        baseline_validation_metrics = self.evaluate_model(baseline, dataset_split.validation)
+        baseline_validation_metrics = self.evaluate_model(baseline_model, dataset_partitions.validation)
         report.record(
             "model_evaluated",
             partition="validation",
-            rows=len(dataset_split.validation.features),
-            model="baseline",
+            rows=len(dataset_partitions.validation.features),
+            model_name="baseline",
             metrics=baseline_validation_metrics,
         )
 
-        model = self.train_model(dataset_split)
-        report.record("model_trained", partition="train", rows=len(dataset_split.train.features), model="house_price")
+        house_price_model = self.train_model(dataset_partitions)
+        report.record("model_trained", partition="train", rows=len(dataset_partitions.train.features), model_name="house_price")
         logger.info(
             "Evaluating model: model=house_price partition=validation rows=%s",
-            len(dataset_split.validation.features),
+            len(dataset_partitions.validation.features),
         )
-        validation_metrics = self.evaluate_model(model, dataset_split.validation)
+        validation_metrics = self.evaluate_model(house_price_model, dataset_partitions.validation)
         report.record(
             "model_evaluated",
             partition="validation",
-            rows=len(dataset_split.validation.features),
-            model="house_price",
+            rows=len(dataset_partitions.validation.features),
+            model_name="house_price",
             metrics=validation_metrics,
         )
-        logger.info("Evaluating model: model=house_price partition=test rows=%s", len(dataset_split.test.features))
+        logger.info("Evaluating model: model=house_price partition=test rows=%s", len(dataset_partitions.test.features))
         # Test is held back until this final evaluation and does not guide selection.
-        final_test_metrics = self.evaluate_model(model, dataset_split.test)
+        final_test_metrics = self.evaluate_model(house_price_model, dataset_partitions.test)
         report.record(
             "model_evaluated",
             partition="test",
-            rows=len(dataset_split.test.features),
-            model="house_price",
+            rows=len(dataset_partitions.test.features),
+            model_name="house_price",
             metrics=final_test_metrics,
         )
         metadata = ModelMetadata(
@@ -126,7 +129,7 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
             schema_version=CURRENT_SCHEMA_VERSION,
             model_version=CURRENT_MODEL_VERSION,
         )
-        model_path = self.save_model(model, metadata)
+        model_path = self.save_model(house_price_model, metadata)
         report.record("model_saved", model_path=model_path, details=str(model_path))
         report.record("training_completed", details=str(report.path))
 
@@ -162,12 +165,15 @@ class HousePriceTrainer(Trainer[TrainingOutput]):
     def train_model(self, partitions: DatasetPartitions) -> HousePriceModel:
         return HousePriceModel(self.pipeline_builder).fit(partitions.train.features, partitions.train.target)
 
-    def evaluate_model(self, model, dataset: DatasetPartition) -> RegressionMetrics:
-        return self.evaluator.evaluate(dataset.target, model.predict(dataset.features))
+    def evaluate_model(self, trained_model, dataset_partition: DatasetPartition) -> RegressionMetrics:
+        return self.evaluator.evaluate(
+            dataset_partition.target,
+            trained_model.predict(dataset_partition.features),
+        )
 
-    def save_model(self, model: HousePriceModel, metadata: ModelMetadata) -> Path:
+    def save_model(self, trained_model: HousePriceModel, metadata: ModelMetadata) -> Path:
         return self.model_repository.save(
-            model.pipeline,
+            trained_model.pipeline,
             self.settings.model_dir / "house_price_model.joblib",
             metadata,
         )

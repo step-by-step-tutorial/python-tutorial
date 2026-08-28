@@ -11,17 +11,19 @@ class PredictionPresenter(Presenter):
     def __init__(self, output_path: Path) -> None:
         self.output_path = output_path
 
-    def present(self, result: PredictionOutput) -> Path:
+    def present(self, prediction_output: PredictionOutput) -> Path:
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
-        result.dataframe.assign(predicted_total_price=result.predictions).to_csv(self.output_path, index=False)
+        prediction_output.dataframe.assign(
+            predicted_total_price=prediction_output.predictions
+        ).to_csv(self.output_path, index=False)
         logger.info(
             "Prediction result: source=%s output=%s report=%s rows=%s min=%.2f max=%.2f average=%.2f",
-            result.source_path,
+            prediction_output.source_path,
             self.output_path,
-            result.report_path,
-            len(result.predictions),
-            result.predictions.min(),
-            result.predictions.max(),
-            result.predictions.mean(),
+            prediction_output.report_path,
+            len(prediction_output.predictions),
+            prediction_output.predictions.min(),
+            prediction_output.predictions.max(),
+            prediction_output.predictions.mean(),
         )
         return self.output_path

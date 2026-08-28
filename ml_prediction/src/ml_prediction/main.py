@@ -125,12 +125,12 @@ def select_prediction() -> str | None:
 def run(dataset: str, prediction: str) -> None:
     application = create_application(dataset, include_prediction=prediction == "predict")
     if prediction == "train":
-        result = application.train()
-        TrainingPresenter().present(result)
+        training_output = application.train()
+        TrainingPresenter().present(training_output)
         return
 
-    result = application.predict()
-    PredictionPresenter(house_settings.data_dir / "house_predictions.csv").present(result)
+    prediction_output = application.predict()
+    PredictionPresenter(house_settings.data_dir / "house_predictions.csv").present(prediction_output)
 
 
 def main(argv: Sequence[str] | None = None) -> None:

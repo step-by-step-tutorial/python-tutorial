@@ -25,11 +25,11 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    def evaluate_model(self, model, dataset: DatasetPartition):
+    def evaluate_model(self, trained_model, dataset_partition: DatasetPartition):
         ...
 
     @abstractmethod
-    def save_model(self, model) -> Path:
+    def save_model(self, trained_model) -> Path:
         ...
 
     @abstractmethod
