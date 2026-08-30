@@ -141,7 +141,8 @@ class GeometryUtils:
         try:
             point = wkb.loads(geometry)
             return point.y, point.x
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Failed to parse geometry: {e}")
             return None, None
 
 
@@ -197,7 +198,8 @@ class RecordConverter:
         )
 
     @staticmethod
-    def convert_address(row: dict[str, Any], target: Target, city: str, geoname: dict[str, str] | None) -> dict[str, Any]:
+    def convert_address(row: dict[str, Any], target: Target, city: str, geoname: dict[str, str] | None) -> dict[
+        str, Any]:
         latitude, longitude = GeometryUtils.get_coordinates(row)
 
         return asdict(AddressRecord(
@@ -283,6 +285,7 @@ class GeoDataRepository:
 
         logger.info("Loaded %s postal-code records for countries=%s", loaded, sorted(self.postal_codes))
 
+
 class AddressResolver:
     def __init__(self, repository: GeoDataRepository) -> None:
         self.repository = repository
@@ -327,7 +330,7 @@ class Pipeline:
         state = target.state
         state_code = target.state_code
 
-        logger.info("Processing target state=%s input=%s output=%s", state_code, input_file, output_file)
+        logger.info(f"Processing target state={state_code}: input={input_file}, output={output_file}")
 
         parquet_file = pq.ParquetFile(input_file)
         processed = 0
@@ -366,24 +369,14 @@ class Pipeline:
                             written,
                         )
 
-        logger.info(
-            "Finished target state=%s scanned=%s written=%s output=%s",
-            state_code,
-            processed,
-            written,
-            output_file,
-        )
+        logger.info(f"Finished target state={state_code} scanned={processed} written={written} output={output_file}")
 
     def run(self) -> None:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
         for target in self.targets:
             if not target.input_file.is_file():
-                logger.warning(
-                    "Skipping target state=%s: input file does not exist: %s",
-                    target.state_code,
-                    target.input_file,
-                )
+                logger.info(f"For target state={target.state_code}: input file does not exist: {target.input_file}")
                 continue
 
             self.process_city(target)

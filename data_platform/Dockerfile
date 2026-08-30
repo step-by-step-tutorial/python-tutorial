@@ -13,7 +13,7 @@ ENV JAVA_HOME=/opt/java
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 WORKDIR /app
 
-COPY requirements-docker.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 COPY pyproject.toml ./
 COPY src ./src
 COPY scripts ./scripts

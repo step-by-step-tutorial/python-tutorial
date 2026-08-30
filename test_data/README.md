@@ -3,6 +3,7 @@
 ## Prerequisites
 
 * Python
+* Docker
 
 ## Prepare Environment
 
@@ -30,10 +31,10 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 
 ```shell
 cd ./test_data
-#python -m test_data --config ./config/online_shopping.json
+python -m test_data --config ./config/online_shopping.json
 python -m test_data --config ./config/house.json
-#python -m test_data --config ./config/house_los_angeles.json
-#python -m test_data --help
+python -m test_data --config ./config/house_los_angeles.json
+python -m test_data --help
 ```
 
 ```shell

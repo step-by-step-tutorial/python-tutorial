@@ -14,8 +14,6 @@ Data Platform Pipeline
     cleanup
 ```
 
-The pipeline prepares the dataset configuration, ingests data from its source, cleans and validates the records, enriches the accepted data, exposes it to downstream storage systems, and produces analytical reports. Cleanup runs after completion or failure so resources and pipeline state are finalized consistently.
-
 ## Prerequisite
 
 * Python
@@ -64,7 +62,6 @@ cd ./data_platform
 Set-Location C:\Users\saman\IdeaProjects\python-tutorial\data_platform
 python -m data_platform.main house
 ```
-
 
 ```shell
 docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v

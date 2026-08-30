@@ -1,5 +1,3 @@
 pytest
-pytest-cov
-pytest-html
 pytest-mock
 confluent-kafka>=2.5

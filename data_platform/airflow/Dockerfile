@@ -28,7 +28,7 @@ RUN mkdir -p /opt/spark-ivy \
 
 USER airflow
 
-COPY requirements-docker.txt /tmp/requirements.txt
+COPY requirements.txt /tmp/requirements.txt
 
 RUN --mount=type=cache,target=/home/airflow/.cache/pip \
     python -m pip install -r /tmp/requirements.txt \
