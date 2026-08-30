@@ -115,12 +115,11 @@ docker rmi samanalishiri/ml_prediction:latest
 ```shell
 rm ./data_platform/output/*
 rm -rf ./data_platform/report
-rm -rf ./data_platform/src/data_platform.egg-info
-rm ./data_platform/.coverage
-rm ./test_data/output/*
-rm -rf ./test_data/report
-rm -rf ./test_data/src/test_data.egg-info
-rm ./test_data/.coverage
-rm -rf ./ml_prediction/.coverage
-rm -rf ./ml_prediction/*.egg-info
+rm -rf ./data_platform/src/*.egg-info
+rm -rf ./data_platform/.coverage
+rm -rf ./ml_prediction/src/*.egg-info
+rm -rf ./ml_prediction/models/*
+rm -rf ./ml_prediction/reports/*
+rm -rf ./test_data/src/*.egg-info
+rm -rf ./test_data/output_test/*
 ```

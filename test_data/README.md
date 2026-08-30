@@ -64,3 +64,10 @@ cd ./test_data
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
 docker rmi samanalishiri/test-data:latest
 ```
+
+## Clean
+
+```shell
+rm -rf ./test_data/src/*.egg-info
+rm -rf ./test_data/output_test/*
+```

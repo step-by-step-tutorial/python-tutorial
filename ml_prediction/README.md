@@ -62,6 +62,7 @@ python -m ml_prediction.main house predict
 ## Clean Project
 
 ```shell
-rm -rf ./ml_prediction/.coverage
-rm -rf ./ml_prediction/*.egg-info
+rm -rf ./ml_prediction/src/*.egg-info
+rm -rf ./ml_prediction/models/*
+rm -rf ./ml_prediction/reports/*
 ```

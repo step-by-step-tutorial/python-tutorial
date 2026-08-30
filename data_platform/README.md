@@ -107,8 +107,8 @@ docker rmi samanalishiri/data-platform:latest
 ## Clean Directory
 
 ```shell
-rm ./output/*
-rm -rf ./report
-rm -rf ./src/data_platform.egg-info
-rm -rf ./.coverage
+rm ./data_platform/output/*
+rm -rf ./data_platform/report
+rm -rf ./data_platform/src/*.egg-info
+rm -rf ./data_platform/.coverage
 ```
