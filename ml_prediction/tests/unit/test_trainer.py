@@ -1,11 +1,15 @@
 from pathlib import Path
+from unittest.mock import call
 
 import pandas as pd
 
 from ml_prediction.config.settings import AppSettings, DataLakeSettings, DatasetSource
 from ml_prediction.dataset.house_dataset import PreparedTrainingData
 from ml_prediction.evaluation.model_evaluator import RegressionMetrics
+from ml_prediction.evaluation.model_evaluator import EvaluationResult
 from ml_prediction.model.baseline_model import BaselineModel
+from ml_prediction.model.experiment_result import ExperimentResult
+from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
 from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
@@ -50,6 +54,9 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         report_dir=tmp_path / "reports",
     )
     dataset_splitter = mocker.Mock()
+    experiment_repository = mocker.Mock()
+    training_visualizer = mocker.Mock()
+    experiment_visualizer = mocker.Mock()
     trainer = HousePriceTrainer(
         settings,
         mocker.Mock(),
@@ -60,6 +67,10 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         mocker.Mock(),
         mocker.Mock(),
         dataset_splitter,
+        report_service=ReportService(settings.report_dir),
+        experiment_repository=experiment_repository,
+        training_visualizer=training_visualizer,
+        experiment_visualizer=experiment_visualizer,
     )
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
@@ -75,17 +86,48 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     trainer.train_baseline = mocker.Mock(return_value=baseline)
     trainer.train_model = mocker.Mock(return_value=model)
     trainer.evaluate_model = mocker.Mock(side_effect=[metrics, metrics, metrics])
+    trainer.evaluate_model_with_predictions = mocker.Mock(
+        return_value=EvaluationResult([100], [100], metrics)
+    )
     trainer.save_model = mocker.Mock(return_value=tmp_path / "models" / "house.joblib")
 
     result = trainer.train()
 
     assert isinstance(result, TrainingOutput)
+    assert isinstance(result, ExperimentResult)
+    assert result.experiment_id
+    assert result.timestamp.tzinfo is not None
+    assert result.dataset_name == "house"
+    assert result.model_type == settings.model_type
+    assert result.model_parameters["n_estimators"] == settings.n_estimators
+    assert result.baseline_validation_metrics == metrics
+    assert result.validation_metrics == metrics
+    assert result.test_metrics == metrics
+    assert result.model_path == tmp_path / "models" / "house.joblib"
+    experiment_repository.save.assert_called_once_with(result)
+    experiment_visualizer.save_validation_mae_comparison.assert_called_once_with()
+    experiment_visualizer.save_validation_rmse_comparison.assert_called_once_with()
+    experiment_visualizer.save_validation_r2_comparison.assert_called_once_with()
     trainer.prepare_dataset.assert_called_once_with(dataset_path)
     dataset_splitter.split.assert_called_once_with(dataframe, dataframe["target"])
     trainer.train_baseline.assert_called_once_with(partitions)
     trainer.train_model.assert_called_once_with(partitions)
-    assert trainer.evaluate_model.call_count == 3
+    assert trainer.evaluate_model.call_count == 2
+    trainer.evaluate_model_with_predictions.assert_called_once_with(model, partitions.test)
+    assert trainer.evaluate_model.call_args_list == [
+        call(baseline, partitions.validation),
+        call(model, partitions.validation),
+    ]
     trainer.save_model.assert_called_once()
+    training_visualizer.save_actual_vs_predicted.assert_called_once_with(
+        [100], [100], result.experiment_id, settings.report_dir
+    )
+    training_visualizer.save_residual_vs_predicted.assert_called_once_with(
+        [100], [100], result.experiment_id, settings.report_dir
+    )
+    training_visualizer.save_feature_importance.assert_called_once_with(
+        model, result.experiment_id, settings.report_dir
+    )
     assert result.report_path is not None
     assert result.report_path.exists()
     assert "training_completed" in result.report_path.read_text(encoding="utf-8")
@@ -112,6 +154,10 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
         mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),
+        report_service=mocker.Mock(),
+        experiment_repository=mocker.Mock(),
+        training_visualizer=mocker.Mock(),
+        experiment_visualizer=mocker.Mock(),
     )
 
     assert trainer.download_dataset() == tmp_path / "data" / "house.csv"
@@ -139,6 +185,10 @@ def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, m
         mocker.Mock(),
         mocker.Mock(),
         mocker.Mock(),
+        report_service=mocker.Mock(),
+        experiment_repository=mocker.Mock(),
+        training_visualizer=mocker.Mock(),
+        experiment_visualizer=mocker.Mock(),
     )
 
     assert trainer.download_dataset() == tmp_path / "data" / "house.csv"

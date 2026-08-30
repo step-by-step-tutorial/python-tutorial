@@ -8,11 +8,12 @@ logger = logging.getLogger(__name__)
 
 class TrainingPresenter(Presenter):
     def present(self, output: TrainingOutput) -> None:
-        logger.info(
-            "Training result: model=%s",
-            output.model_path,
+        experiment_history_path = (
+            output.report_path.parent / "experiments.csv"
+            if output.report_path is not None
+            else None
         )
-        logger.info("Training report: path=%s", output.report_path)
+        logger.info("Training experiment completed: experiment_id=%s", output.experiment_id)
         logger.info(
             "Baseline validation metrics: mae=%.2f rmse=%.2f r2=%.4f",
             output.baseline_validation_metrics.mean_absolute_error,
@@ -31,3 +32,5 @@ class TrainingPresenter(Presenter):
             output.test_metrics.root_mean_squared_error,
             output.test_metrics.r2_score,
         )
+        logger.info("Saved model: path=%s", output.model_path)
+        logger.info("Experiment history: path=%s", experiment_history_path)

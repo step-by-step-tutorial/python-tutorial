@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from ml_prediction.application.application import Application
 from ml_prediction.config.settings import house_settings
+from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
 from ml_prediction.dataset.house_dataset import HouseDataset
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.features.house_feature_model import HouseFeatureModel
@@ -17,10 +18,13 @@ from ml_prediction.presentation.training_presenter import TrainingPresenter
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.reporting.report_service import ReportService
+from ml_prediction.reporting.experiment_repository import ExperimentRepository
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
 from ml_prediction.training.dataset_splitter import DatasetSplitter
+from ml_prediction.visualization.training_visualizer import TrainingVisualizer
+from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 
 DATASETS = ("house",)
 PREDICTIONS = ("train", "predict")
@@ -38,6 +42,13 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
         raise ValueError(f"Unsupported dataset: {dataset}")
 
     report_service = ReportService(house_settings.report_dir)
+    experiment_repository = ExperimentRepository(house_settings.report_dir / "experiments.csv")
+    experiment_comparison_service = ExperimentComparisonService(experiment_repository)
+    training_visualizer = TrainingVisualizer()
+    experiment_visualizer = ExperimentVisualizer(
+        experiment_repository,
+        house_settings.report_dir / "comparison",
+    )
     data_lake_repository = DataLakeRepository(house_settings.data_lake)
     model_repository = LocalModelRepository()
     feature_model = HouseFeatureModel()
@@ -47,6 +58,11 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
         house_settings.n_estimators,
         house_settings.n_jobs,
         house_settings.random_state,
+        house_settings.max_depth,
+        house_settings.min_samples_split,
+        house_settings.min_samples_leaf,
+        house_settings.max_features,
+        house_settings.bootstrap,
     )
     pipeline_builder = HousePricePipelineBuilder(feature_model, regressor_builder)
     evaluator = ModelEvaluator()
@@ -85,8 +101,12 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
             evaluator,
             dataset_splitter,
             report_service,
+            experiment_repository,
+            training_visualizer,
+            experiment_visualizer,
         ),
         prediction_service,
+        experiment_comparison_service,
     )
 
 

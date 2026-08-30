@@ -5,3 +5,4 @@ joblib
 pyarrow
 pytest
 pytest-mock
+matplotlib

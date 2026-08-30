@@ -1,8 +1,14 @@
 import pandas as pd
 import pytest
+from sklearn.ensemble import (
+    ExtraTreesRegressor,
+    GradientBoostingRegressor,
+    HistGradientBoostingRegressor,
+    RandomForestRegressor,
+)
 from sklearn.pipeline import Pipeline
 
-from ml_prediction.evaluation.model_evaluator import ModelEvaluator, RegressionMetrics
+from ml_prediction.evaluation.model_evaluator import EvaluationResult, ModelEvaluator, RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.house_features import HouseFeatureBuilder
 from ml_prediction.model.house_price_model import HousePriceModel
@@ -27,10 +33,51 @@ def test_pipeline_builder_is_abstract_and_builds_pipeline() -> None:
 
 
 def test_regressor_builder_builds_configured_random_forest() -> None:
-    regressor = RegressorBuilder("random_forest", 17, 3, 42).build()
+    regressor = RegressorBuilder(
+        "random_forest",
+        17,
+        3,
+        42,
+        max_depth=8,
+        min_samples_split=4,
+        min_samples_leaf=2,
+        max_features=0.7,
+        bootstrap=False,
+    ).build()
 
     assert regressor.n_estimators == 17
     assert regressor.n_jobs == 3
+    assert regressor.random_state == 42
+    assert regressor.max_depth == 8
+    assert regressor.min_samples_split == 4
+    assert regressor.min_samples_leaf == 2
+    assert regressor.max_features == 0.7
+    assert regressor.bootstrap is False
+
+
+@pytest.mark.parametrize(
+    ("model_type", "expected_type"),
+    [
+        ("random_forest", RandomForestRegressor),
+        ("extra_trees", ExtraTreesRegressor),
+        ("gradient_boosting", GradientBoostingRegressor),
+        ("hist_gradient_boosting", HistGradientBoostingRegressor),
+    ],
+)
+def test_regressor_builder_supports_configured_model_types(model_type, expected_type) -> None:
+    regressor = RegressorBuilder(
+        model_type,
+        17,
+        3,
+        42,
+        max_depth=8,
+        min_samples_split=4,
+        min_samples_leaf=2,
+        max_features=0.7,
+        bootstrap=False,
+    ).build()
+
+    assert isinstance(regressor, expected_type)
     assert regressor.random_state == 42
 
 
@@ -64,3 +111,15 @@ def test_model_evaluator_returns_regression_metrics() -> None:
     assert metrics.mean_absolute_error == 15.0
     assert metrics.root_mean_squared_error == 15.811388300841896
     assert metrics.r2_score == 0.9
+
+
+def test_model_evaluator_exposes_predictions_and_metrics() -> None:
+    actual = [100, 200]
+    predicted = [110, 180]
+
+    result = ModelEvaluator().evaluate_with_predictions(actual, predicted)
+
+    assert isinstance(result, EvaluationResult)
+    assert result.y_true == actual
+    assert result.y_pred == predicted
+    assert result.metrics == RegressionMetrics(15.0, 15.811388300841896, 0.9)

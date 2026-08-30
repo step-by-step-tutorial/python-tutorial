@@ -11,6 +11,31 @@ class DatasetSource(StrEnum):
     DOWNLOAD = "download"
 
 
+def _optional_int_from_env(name: str) -> int | None:
+    value = os.getenv(name)
+    return None if value is None or value.lower() == "none" else int(value)
+
+
+def _max_features_from_env() -> int | float | str | None:
+    value = os.getenv("ML_PREDICTION_MAX_FEATURES", "1.0")
+    if value.lower() == "none":
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        try:
+            return float(value)
+        except ValueError:
+            return value
+
+
+def _bool_from_env(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
 @dataclass(frozen=True)
 class DataLakeSettings:
     endpoint: str
@@ -32,6 +57,11 @@ class AppSettings:
     model_type: str = "random_forest"
     n_estimators: int = 200
     n_jobs: int = -1
+    max_depth: int | None = None
+    min_samples_split: int = 2
+    min_samples_leaf: int = 1
+    max_features: int | float | str | None = 1.0
+    bootstrap: bool = True
     dataset_source: DatasetSource = DatasetSource.LOCAL
     report_dir: Path = PROJECT_ROOT / "reports"
 
@@ -47,6 +77,11 @@ house_settings = AppSettings(
     model_type=os.getenv("ML_PREDICTION_MODEL_TYPE", "random_forest"),
     n_estimators=int(os.getenv("ML_PREDICTION_N_ESTIMATORS", "200")),
     n_jobs=int(os.getenv("ML_PREDICTION_N_JOBS", "-1")),
+    max_depth=_optional_int_from_env("ML_PREDICTION_MAX_DEPTH"),
+    min_samples_split=int(os.getenv("ML_PREDICTION_MIN_SAMPLES_SPLIT", "2")),
+    min_samples_leaf=int(os.getenv("ML_PREDICTION_MIN_SAMPLES_LEAF", "1")),
+    max_features=_max_features_from_env(),
+    bootstrap=_bool_from_env("ML_PREDICTION_BOOTSTRAP", True),
     report_dir=Path(os.getenv("ML_PREDICTION_REPORT_DIR", PROJECT_ROOT / "reports")),
     data_lake=DataLakeSettings(
         endpoint=os.getenv("ML_PREDICTION_DATALAKE_ENDPOINT", "http://localhost:9000"),

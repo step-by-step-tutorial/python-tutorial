@@ -1,18 +1,11 @@
 from dataclasses import dataclass
-from pathlib import Path
-
 import pandas as pd
 
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
+from ml_prediction.model.experiment_result import ExperimentResult
 
 
-@dataclass(frozen=True)
-class TrainingOutput:
-    model_path: Path
-    baseline_validation_metrics: RegressionMetrics
-    validation_metrics: RegressionMetrics
-    test_metrics: RegressionMetrics
-    report_path: Path | None = None
+# Kept as an alias so existing training and presentation callers retain their API.
+TrainingOutput = ExperimentResult
 
 
 @dataclass(frozen=True)
