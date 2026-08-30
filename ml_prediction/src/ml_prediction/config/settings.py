@@ -64,6 +64,10 @@ class AppSettings:
     bootstrap: bool = True
     dataset_source: DatasetSource = DatasetSource.LOCAL
     report_dir: Path = PROJECT_ROOT / "reports"
+    dataset_name: str = "house"
+    dataset_filename: str = "house.csv"
+    model_filename: str = "house_price_model.joblib"
+    prediction_filename: str = "house_predictions.csv"
 
 
 house_settings = AppSettings(
@@ -83,6 +87,10 @@ house_settings = AppSettings(
     max_features=_max_features_from_env(),
     bootstrap=_bool_from_env("ML_PREDICTION_BOOTSTRAP", True),
     report_dir=Path(os.getenv("ML_PREDICTION_REPORT_DIR", PROJECT_ROOT / "reports")),
+    dataset_name=os.getenv("ML_PREDICTION_DATASET_NAME", "house"),
+    dataset_filename=os.getenv("ML_PREDICTION_DATASET_FILENAME", "house.csv"),
+    model_filename=os.getenv("ML_PREDICTION_MODEL_FILENAME", "house_price_model.joblib"),
+    prediction_filename=os.getenv("ML_PREDICTION_PREDICTION_FILENAME", "house_predictions.csv"),
     data_lake=DataLakeSettings(
         endpoint=os.getenv("ML_PREDICTION_DATALAKE_ENDPOINT", "http://localhost:9000"),
         access_key=os.getenv("ML_PREDICTION_DATALAKE_ACCESS_KEY", "admin"),

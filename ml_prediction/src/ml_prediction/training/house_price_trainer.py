@@ -66,7 +66,7 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
         def record_report(step: str, **details: object) -> None:
             report_events.append((step, details))
 
-        model_path = self.settings.model_dir / "house_price_model.joblib"
+        model_path = self.settings.model_dir / self.settings.model_filename
         dataset_path = self.download_dataset()
         prepared_training_data = self.prepare_dataset(dataset_path)
         record_report("dataset_downloaded", details=str(dataset_path))
@@ -187,7 +187,7 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
             model_version=CURRENT_MODEL_VERSION,
         )
         model_path = self.save_model(house_price_model, metadata)
-        report = self.report_service.start("house", "training", model_path)
+        report = self.report_service.start(self.settings.dataset_name, "training", model_path)
         for step, details in report_events:
             report.record(step, **details)
         report.record("model_saved", model_path=model_path, details=str(model_path))
@@ -196,7 +196,7 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
         result = ExperimentResult(
             experiment_id=experiment_id,
             timestamp=experiment_timestamp,
-            dataset_name="house",
+            dataset_name=self.settings.dataset_name,
             model_type=self.settings.model_type,
             model_parameters=metadata.model_parameters,
             baseline_validation_metrics=baseline_validation_metrics,
@@ -229,7 +229,7 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
         return result
 
     def download_dataset(self) -> Path:
-        dataset_path = self.settings.data_dir / "house.csv"
+        dataset_path = self.settings.data_dir / self.settings.dataset_filename
         if self.settings.dataset_source == DatasetSource.DOWNLOAD:
             self.data_lake_repository.download_latest_csv(dataset_path)
         else:
@@ -279,6 +279,6 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
     def save_model(self, trained_model: HousePriceModel, metadata: ModelMetadata) -> Path:
         return self.model_repository.save(
             trained_model.pipeline,
-            self.settings.model_dir / "house_price_model.joblib",
+            self.settings.model_dir / self.settings.model_filename,
             metadata,
         )

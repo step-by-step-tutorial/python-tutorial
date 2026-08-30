@@ -52,6 +52,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         random_state=42,
         data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
         report_dir=tmp_path / "reports",
+        dataset_name="custom_dataset",
     )
     dataset_splitter = mocker.Mock()
     experiment_repository = mocker.Mock()
@@ -97,7 +98,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     assert isinstance(result, ExperimentResult)
     assert result.experiment_id
     assert result.timestamp.tzinfo is not None
-    assert result.dataset_name == "house"
+    assert result.dataset_name == settings.dataset_name
     assert result.model_type == settings.model_type
     assert result.model_parameters["n_estimators"] == settings.n_estimators
     assert result.baseline_validation_metrics == metrics

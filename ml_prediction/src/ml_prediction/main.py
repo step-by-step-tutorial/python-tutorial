@@ -26,7 +26,7 @@ from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 
-DATASETS = ("house",)
+DATASETS = (house_settings.dataset_name,)
 PREDICTIONS = ("train", "predict")
 
 
@@ -38,7 +38,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def create_application(dataset: str, include_prediction: bool = True) -> Application:
-    if dataset != "house":
+    if dataset != house_settings.dataset_name:
         raise ValueError(f"Unsupported dataset: {dataset}")
 
     report_service = ReportService(house_settings.report_dir)
@@ -71,13 +71,13 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
         house_settings.test_size,
         house_settings.random_state,
     )
-    dataset_service = HouseDataset(house_settings.data_dir / "house.csv")
+    dataset_service = HouseDataset(house_settings.data_dir / house_settings.dataset_filename)
     prediction_service = None
     if include_prediction:
         prediction_service = PredictionService(
             house_settings,
             HousePricePredictor(
-                house_settings.model_dir / "house_price_model.joblib",
+                house_settings.model_dir / house_settings.model_filename,
                 model_repository,
                 feature_builder_factory,
                 feature_model,
@@ -148,7 +148,7 @@ def run(dataset: str, prediction: str) -> None:
         return
 
     prediction_output = application.predict()
-    PredictionPresenter(house_settings.data_dir / "house_predictions.csv").present(prediction_output)
+    PredictionPresenter(house_settings.data_dir / house_settings.prediction_filename).present(prediction_output)
 
 
 def main(argv: Sequence[str] | None = None) -> None:

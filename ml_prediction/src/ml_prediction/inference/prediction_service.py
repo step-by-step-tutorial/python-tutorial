@@ -40,7 +40,7 @@ class PredictionService:
         model_path = self.predictor.model_path
         if not isinstance(model_path, Path):
             model_path = None
-        report = self.report_service.start("house", "prediction", model_path)
+        report = self.report_service.start(self.settings.dataset_name, "prediction", model_path)
         dataset_path = self.download_dataset()
         report.record("dataset_ready", details=str(dataset_path))
         report.record("model_loaded", model_path=self.predictor.model_path)
@@ -54,7 +54,7 @@ class PredictionService:
         return PredictionOutput(dataframe, predictions, dataset_path, report.path)
 
     def download_dataset(self) -> Path:
-        dataset_path = self.settings.data_dir / "house.csv"
+        dataset_path = self.settings.data_dir / self.settings.dataset_filename
         if self.settings.dataset_source == DatasetSource.DOWNLOAD:
             self.data_lake_repository.download_latest_csv(dataset_path)
         else:
