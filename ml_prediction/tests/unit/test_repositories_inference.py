@@ -28,6 +28,7 @@ def settings(tmp_path: Path) -> AppSettings:
         data_lake=DataLakeSettings("http://localhost:9000", "key", "secret", "house", "prefix"),
         dataset_source=DatasetSource.DOWNLOAD,
         report_dir=tmp_path / "reports",
+        dataset_filename="house.csv",
     )
 
 
@@ -115,7 +116,8 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
     dataset_path = tmp_path / "data" / "house.csv"
     dataset = mocker.Mock(path=dataset_path)
     dataframe = pd.DataFrame({"total_price": [100]})
-    dataset.load.return_value = dataframe
+    dataset_path.parent.mkdir(parents=True)
+    dataframe.to_csv(dataset_path, index=False)
     predictor = mocker.Mock()
     predictor.predict.return_value = pd.Series([110])
     service = PredictionService(settings(tmp_path), predictor, dataset, mocker.Mock())
@@ -124,12 +126,13 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
     result = service.predict()
 
     assert isinstance(result, PredictionOutput)
-    assert result.dataframe is dataframe
+    pd.testing.assert_frame_equal(result.dataframe, dataframe)
     assert result.predictions.tolist() == [110]
     assert result.report_path is not None
     assert result.report_path.exists()
     assert "prediction_completed" in result.report_path.read_text(encoding="utf-8")
-    predictor.predict.assert_called_once_with(dataframe)
+    predictor.predict.assert_called_once()
+    pd.testing.assert_frame_equal(predictor.predict.call_args.args[0], dataframe)
 
 
 def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path: Path) -> None:
@@ -144,6 +147,7 @@ def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path
             random_state=42,
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "house", ""),
             dataset_source=DatasetSource.LOCAL,
+            dataset_filename="house.csv",
         ),
         mocker.Mock(),
         mocker.Mock(),

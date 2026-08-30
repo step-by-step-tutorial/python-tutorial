@@ -16,15 +16,15 @@ from ml_prediction.model.experiment_result import ExperimentResult
 from ml_prediction.model.house_price_model import HousePriceModel
 from ml_prediction.model.model_metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION, ModelMetadata
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
+from ml_prediction.reporting.experiment_repository import ExperimentRepository
+from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
-from ml_prediction.reporting.report_service import ReportService
-from ml_prediction.reporting.experiment_repository import ExperimentRepository
-from ml_prediction.training.trainer import Trainer
 from ml_prediction.training.dataset_splitter import DatasetSplitter
+from ml_prediction.training.trainer import Trainer
 from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions
-from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
+from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 
 logger = logging.getLogger(__name__)
 

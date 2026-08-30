@@ -2,4 +2,4 @@ from ml_prediction.dataset.tabular_dataset import PreparedTrainingData, TabularD
 
 
 class HouseDataset(TabularDataset):
-    target_is_numeric = True
+    pass

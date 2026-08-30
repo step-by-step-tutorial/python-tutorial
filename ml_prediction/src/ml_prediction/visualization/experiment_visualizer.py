@@ -1,10 +1,10 @@
 from collections.abc import Callable
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+
 from ml_prediction.reporting.experiment_repository import ExperimentRepository
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
-
-import matplotlib.pyplot as plt
 
 
 class ExperimentVisualizer:

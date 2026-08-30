@@ -3,19 +3,13 @@ from ml_prediction.reporting.experiment_repository import ExperimentRepository
 
 
 class ExperimentComparisonService:
-    def __init__(
-            self,
-            experiment_repository: ExperimentRepository,
-            dataset_name: str | None = None,
-    ) -> None:
-        self.experiment_repository = experiment_repository
+    def __init__(self, experiment_repository: ExperimentRepository, dataset_name: str) -> None:
+        self.repository = experiment_repository
         self.dataset_name = dataset_name
 
-    def _read_experiments(self) -> list[ExperimentResult]:
-        return self.experiment_repository.read_all(self.dataset_name)
 
     def best_by_validation_mae(self) -> ExperimentResult | None:
-        experiments = self._read_experiments()
+        experiments = self.repository.read_all(self.dataset_name)
         return min(
             experiments,
             key=lambda experiment: experiment.validation_metrics.mean_absolute_error,
@@ -23,7 +17,7 @@ class ExperimentComparisonService:
         )
 
     def best_by_validation_rmse(self) -> ExperimentResult | None:
-        experiments = self._read_experiments()
+        experiments = self.repository.read_all(self.dataset_name)
         return min(
             experiments,
             key=lambda experiment: experiment.validation_metrics.root_mean_squared_error,
@@ -31,7 +25,7 @@ class ExperimentComparisonService:
         )
 
     def best_by_validation_r2(self) -> ExperimentResult | None:
-        experiments = self._read_experiments()
+        experiments = self.repository.read_all(self.dataset_name)
         return max(
             experiments,
             key=lambda experiment: experiment.validation_metrics.r2_score,

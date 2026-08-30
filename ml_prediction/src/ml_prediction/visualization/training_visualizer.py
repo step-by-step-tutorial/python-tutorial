@@ -50,7 +50,7 @@ class TrainingVisualizer:
             y_true,
             y_pred,
             experiment_id: str,
-        report_dir: Path,
+            report_dir: Path,
     ) -> Path:
         """Save a residual-versus-predicted plot for an existing evaluation."""
         display = PredictionErrorDisplay.from_predictions(

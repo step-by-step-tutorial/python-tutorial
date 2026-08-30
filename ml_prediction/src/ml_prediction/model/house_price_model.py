@@ -1,5 +1,4 @@
 from ml_prediction.model.sklearn_pipeline_model import SklearnPipelineModel
-from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 
 
 class HousePriceModel(SklearnPipelineModel):

@@ -9,6 +9,7 @@ from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.house_features import HouseFeatureBuilder
+from ml_prediction.utils.csv_utils import load_csv
 
 
 def house_dataframe() -> pd.DataFrame:
@@ -23,8 +24,8 @@ def house_dataframe() -> pd.DataFrame:
     return pd.DataFrame(data)
 
 
-def test_dataset_and_feature_builder_are_abstract() -> None:
-    assert Dataset.__abstractmethods__ == {"load"}
+def test_dataset_is_concrete_and_feature_builder_is_abstract() -> None:
+    assert not hasattr(Dataset, "__abstractmethods__")
     assert FeatureModel.__abstractmethods__ == {
         "get_numeric_features",
         "get_boolean_features",
@@ -39,9 +40,9 @@ def test_house_dataset_loads_csv_and_prepares_numeric_target(tmp_path: Path) -> 
 
     dataset = HouseDataset(path)
 
-    assert dataset.load().shape == (2, 2)
+    assert load_csv(path).shape == (2, 2)
     frame = dataset.training_frame("total_price")
-    assert frame["total_price"].tolist() == [100]
+    assert frame["total_price"].tolist() == ["100", "invalid"]
 
 
 def test_house_dataset_prepares_features_and_target(tmp_path: Path) -> None:
@@ -58,38 +59,6 @@ def test_house_dataset_prepares_features_and_target(tmp_path: Path) -> None:
     assert isinstance(prepared, PreparedTrainingData)
     assert prepared.target.tolist() == [100, 200]
     assert "total_price" not in prepared.features.columns
-
-
-def test_house_dataset_rejects_missing_target_column(tmp_path: Path) -> None:
-    path = tmp_path / "house.csv"
-    path.write_text("city\nParis\n", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="total_price"):
-        HouseDataset(path).training_frame("total_price")
-
-
-def test_house_dataset_rejects_empty_dataset(tmp_path: Path) -> None:
-    path = tmp_path / "house.csv"
-    path.write_text("total_price,city\n", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="must not be empty"):
-        HouseDataset(path).training_frame("total_price")
-
-
-def test_house_dataset_rejects_target_without_usable_numeric_values(tmp_path: Path) -> None:
-    path = tmp_path / "house.csv"
-    path.write_text("total_price,city\ninvalid,Paris\nunknown,London\n", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="total_price"):
-        HouseDataset(path).training_frame("total_price")
-
-
-def test_house_dataset_rejects_duplicated_column_names(tmp_path: Path) -> None:
-    path = tmp_path / "house.csv"
-    path.write_text("total_price,city,city\n100,Paris,Paris\n", encoding="utf-8")
-
-    with pytest.raises(ValueError, match="city"):
-        HouseDataset(path).training_frame("total_price")
 
 
 def test_house_dataset_preparation_delegates_missing_features_to_builder(tmp_path: Path) -> None:

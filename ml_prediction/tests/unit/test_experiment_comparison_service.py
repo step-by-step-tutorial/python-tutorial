@@ -32,7 +32,7 @@ def test_comparison_service_returns_best_experiment_for_each_validation_metric(t
     for result in experiments:
         repository.save(result)
 
-    service = ExperimentComparisonService(repository)
+    service = ExperimentComparisonService(repository, "house")
 
     assert service.best_by_validation_mae() == experiments[1]
     assert service.best_by_validation_rmse() == experiments[2]
@@ -41,7 +41,10 @@ def test_comparison_service_returns_best_experiment_for_each_validation_metric(t
 
 
 def test_comparison_service_returns_none_for_empty_history(tmp_path: Path) -> None:
-    service = ExperimentComparisonService(ExperimentRepository(tmp_path / "experiments.csv"))
+    service = ExperimentComparisonService(
+        ExperimentRepository(tmp_path / "experiments.csv"),
+        "house",
+    )
 
     assert service.best_by_validation_mae() is None
     assert service.best_by_validation_rmse() is None

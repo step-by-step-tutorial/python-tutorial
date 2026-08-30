@@ -25,7 +25,8 @@ class DataLakeRepository:
     def download_latest_csv(self, output_path: Path) -> Path:
         objects = self.get_object_keys()
         if not objects:
-            raise FileNotFoundError(f"No Parquet files found in bucket '{self.bucket_name}' with prefix '{self.object_prefix}'.")
+            raise FileNotFoundError(
+                f"No Parquet files found in bucket '{self.bucket_name}' with prefix '{self.object_prefix}'.")
 
         latest_partition = max(
             self._partition_objects(objects).items(),
@@ -52,7 +53,8 @@ class DataLakeRepository:
     def get_object_keys(self) -> list[dict]:
         response = self._client.list_objects_v2(Bucket=self.bucket_name, Prefix=self.object_prefix)
         objects = [item for item in response.get("Contents", []) if item["Key"].lower().endswith(".parquet")]
-        logger.info(f"Found Parquet objects: bucket={self.bucket_name} prefix={self.object_prefix} count={len(objects)}")
+        logger.info(
+            f"Found Parquet objects: bucket={self.bucket_name} prefix={self.object_prefix} count={len(objects)}")
         return objects
 
     @staticmethod

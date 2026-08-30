@@ -82,9 +82,9 @@ class SklearnPredictor(Predictor[pd.Series]):
             )
 
         saved_features = (
-            metadata.numeric_features
-            + metadata.boolean_features
-            + metadata.categorical_features
+                metadata.numeric_features
+                + metadata.boolean_features
+                + metadata.categorical_features
         )
         duplicated_saved_features = sorted(
             {column for column in saved_features if saved_features.count(column) > 1}

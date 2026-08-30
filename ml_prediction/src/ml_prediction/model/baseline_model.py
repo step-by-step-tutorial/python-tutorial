@@ -1,5 +1,7 @@
 from sklearn.dummy import DummyRegressor
+
 from ml_prediction.model.model import Model
+
 
 class BaselineModel(Model):
     """Mean-target reference model used only for validation comparison."""

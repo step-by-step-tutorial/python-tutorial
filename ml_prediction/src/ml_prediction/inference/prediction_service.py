@@ -7,8 +7,9 @@ import pandas as pd
 from ml_prediction.config.settings import AppSettings, DatasetSource
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.inference.predictor import Predictor
-from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.reporting.report_service import ReportService
+from ml_prediction.repository.datalake_repository import DataLakeRepository
+from ml_prediction.utils.csv_utils import load_csv
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class PredictionService:
         report.record("model_loaded", model_path=self.predictor.model_path)
         if self.dataset.path != dataset_path:
             raise ValueError(f"Dataset path does not match downloaded path: {self.dataset.path}")
-        dataframe = self.dataset.load()
+        dataframe = load_csv(self.dataset.path)
         report.record("dataset_loaded", rows=len(dataframe), details=str(dataset_path))
         predictions = self.predictor.predict(dataframe)
         report.record("predictions_generated", rows=len(predictions), details=f"columns={len(dataframe.columns)}")

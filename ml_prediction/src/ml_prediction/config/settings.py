@@ -1,5 +1,4 @@
 import os
-from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -86,6 +85,7 @@ def load_settings(dataset_name: str) -> AppSettings:
         prediction_filename=environment.get("ML_PREDICTION_PREDICTION_FILENAME", profile.prediction_filename),
         prediction_column=environment.get("ML_PREDICTION_PREDICTION_COLUMN", profile.prediction_column),
     )
+
 
 DATASET_SETTINGS: dict[str, AppSettings] = {
     "house": load_settings("house"),

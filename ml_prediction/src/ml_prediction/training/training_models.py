@@ -1,8 +1,8 @@
 from dataclasses import dataclass
+
 import pandas as pd
 
 from ml_prediction.model.experiment_result import ExperimentResult
-
 
 # Kept as an alias so existing training and presentation callers retain their API.
 TrainingOutput = ExperimentResult

@@ -52,10 +52,6 @@ python -m ml_prediction.main
 ```shell
 cd ./ml_prediction
 python -m ml_prediction.main house train
-```
-
-```shell
-cd ./ml_prediction
 python -m ml_prediction.main house predict
 ```
 
