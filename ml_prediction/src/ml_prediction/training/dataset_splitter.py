@@ -31,7 +31,7 @@ class DatasetSplitter:
         )
 
         logger.info(
-            "Split house dataset: train_rows=%s validation_rows=%s test_rows=%s",
+            "Split dataset: train_rows=%s validation_rows=%s test_rows=%s",
             len(train_features),
             len(validation_features),
             len(test_features),

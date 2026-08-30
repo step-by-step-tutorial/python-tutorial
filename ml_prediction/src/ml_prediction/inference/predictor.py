@@ -12,6 +12,10 @@ class Predictor(ABC, Generic[PredictionType]):
     def model_path(self) -> Path | None:
         return None
 
+    @property
+    def prediction_column(self) -> str:
+        return "predicted_total_price"
+
     @abstractmethod
     def predict(self, dataframe: pd.DataFrame) -> PredictionType:
         ...

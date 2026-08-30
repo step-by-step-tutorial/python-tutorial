@@ -6,10 +6,6 @@ the text and logging concerns in ``ml_prediction.presentation``.
 
 from pathlib import Path
 
-import matplotlib
-
-matplotlib.use("Agg")
-
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
 from matplotlib.figure import Figure  # noqa: E402

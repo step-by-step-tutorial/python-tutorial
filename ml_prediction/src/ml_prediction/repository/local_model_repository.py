@@ -7,7 +7,7 @@ from typing import Any
 
 import joblib
 
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
+from ml_prediction.evaluation.model_evaluator import ClassificationMetrics, RegressionMetrics
 from ml_prediction.model.model_metadata import ModelMetadata
 
 logger = logging.getLogger(__name__)
@@ -40,8 +40,10 @@ class LocalModelRepository:
         data["numeric_features"] = tuple(data["numeric_features"])
         data["boolean_features"] = tuple(data["boolean_features"])
         data["categorical_features"] = tuple(data["categorical_features"])
-        data["validation_metrics"] = RegressionMetrics(**data["validation_metrics"])
-        data["final_test_metrics"] = RegressionMetrics(**data["final_test_metrics"])
+        metric_type = data.get("task_type", "regression")
+        metrics_model = ClassificationMetrics if metric_type == "classification" else RegressionMetrics
+        data["validation_metrics"] = metrics_model(**data["validation_metrics"])
+        data["final_test_metrics"] = metrics_model(**data["final_test_metrics"])
         return ModelMetadata(
             **data,
         )

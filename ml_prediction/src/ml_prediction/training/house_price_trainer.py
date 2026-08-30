@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pandas as pd
 
-from ml_prediction.config.settings import AppSettings, DatasetSource
+from ml_prediction.config.settings import AppSettings, DatasetSource, TaskType
 from ml_prediction.dataset.house_dataset import HouseDataset, PreparedTrainingData
 from ml_prediction.evaluation.model_evaluator import EvaluationResult, ModelEvaluator, RegressionMetrics
 from ml_prediction.features.feature_builder import FeatureBuilder
@@ -61,6 +61,10 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
         self.dataset_splitter = dataset_splitter
 
     def train(self) -> ExperimentResult:
+        if self.settings.task_type != TaskType.REGRESSION:
+            raise ValueError(
+                f"HousePriceTrainer supports only regression tasks, got '{self.settings.task_type}'"
+            )
         report_events: list[tuple[str, dict[str, object]]] = []
 
         def record_report(step: str, **details: object) -> None:
@@ -139,29 +143,34 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
             metrics=baseline_validation_metrics,
         )
 
-        house_price_model = self.train_model(dataset_partitions)
+        trained_model = self.train_model(dataset_partitions)
         record_report(
             "model_trained",
             partition="train",
             rows=len(dataset_partitions.train.features),
-            model_name="house_price",
+            model_name=self.settings.model_type,
         )
         logger.info(
-            "Evaluating model: model=house_price partition=validation rows=%s",
+            "Evaluating model: model=%s partition=validation rows=%s",
+            self.settings.model_type,
             len(dataset_partitions.validation.features),
         )
-        validation_metrics = self.evaluate_model(house_price_model, dataset_partitions.validation)
+        validation_metrics = self.evaluate_model(trained_model, dataset_partitions.validation)
         record_report(
             "model_evaluated",
             partition="validation",
             rows=len(dataset_partitions.validation.features),
-            model_name="house_price",
+            model_name=self.settings.model_type,
             metrics=validation_metrics,
         )
-        logger.info("Evaluating model: model=house_price partition=test rows=%s", len(dataset_partitions.test.features))
+        logger.info(
+            "Evaluating model: model=%s partition=test rows=%s",
+            self.settings.model_type,
+            len(dataset_partitions.test.features),
+        )
         # Test is held back until this final evaluation and does not guide selection.
         final_test_evaluation = self.evaluate_model_with_predictions(
-            house_price_model,
+            trained_model,
             dataset_partitions.test,
         )
         final_test_metrics = final_test_evaluation.metrics
@@ -169,10 +178,10 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
             "model_evaluated",
             partition="test",
             rows=len(dataset_partitions.test.features),
-            model_name="house_price",
+            model_name=self.settings.model_type,
             metrics=final_test_metrics,
         )
-        model_parameters = self._fitted_model_parameters(house_price_model, model_parameters)
+        model_parameters = self._fitted_model_parameters(trained_model, model_parameters)
         metadata = ModelMetadata(
             model_type=self.settings.model_type,
             model_parameters=model_parameters,
@@ -185,8 +194,11 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
             final_test_metrics=final_test_metrics,
             schema_version=CURRENT_SCHEMA_VERSION,
             model_version=CURRENT_MODEL_VERSION,
+            dataset_name=self.settings.dataset_name,
+            task_type=self.settings.task_type.value,
+            prediction_column=self.settings.prediction_column,
         )
-        model_path = self.save_model(house_price_model, metadata)
+        model_path = self.save_model(trained_model, metadata)
         report = self.report_service.start(self.settings.dataset_name, "training", model_path)
         for step, details in report_events:
             report.record(step, **details)
@@ -219,7 +231,7 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
             self.settings.report_dir,
         )
         self.training_visualizer.save_feature_importance(
-            house_price_model,
+            trained_model,
             experiment_id,
             self.settings.report_dir,
         )

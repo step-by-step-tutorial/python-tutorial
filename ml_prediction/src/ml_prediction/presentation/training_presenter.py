@@ -1,5 +1,6 @@
 import logging
 
+from ml_prediction.evaluation.model_evaluator import ClassificationMetrics, RegressionMetrics
 from ml_prediction.training.training_models import TrainingOutput
 from ml_prediction.presentation.presenter import Presenter
 
@@ -13,24 +14,34 @@ class TrainingPresenter(Presenter):
             if output.report_path is not None
             else None
         )
-        logger.info("Training experiment completed: experiment_id=%s", output.experiment_id)
         logger.info(
-            "Baseline validation metrics: mae=%.2f rmse=%.2f r2=%.4f",
-            output.baseline_validation_metrics.mean_absolute_error,
-            output.baseline_validation_metrics.root_mean_squared_error,
-            output.baseline_validation_metrics.r2_score,
+            "Training experiment completed: experiment_id=%s dataset=%s model_type=%s",
+            output.experiment_id,
+            output.dataset_name,
+            output.model_type,
         )
-        logger.info(
-            "Validation metrics: mae=%.2f rmse=%.2f r2=%.4f",
-            output.validation_metrics.mean_absolute_error,
-            output.validation_metrics.root_mean_squared_error,
-            output.validation_metrics.r2_score,
-        )
-        logger.info(
-            "Final test metrics: mae=%.2f rmse=%.2f r2=%.4f",
-            output.test_metrics.mean_absolute_error,
-            output.test_metrics.root_mean_squared_error,
-            output.test_metrics.r2_score,
-        )
+        self._log_metrics("Baseline validation", output.baseline_validation_metrics)
+        self._log_metrics("Validation", output.validation_metrics)
+        self._log_metrics("Final test", output.test_metrics)
         logger.info("Saved model: path=%s", output.model_path)
         logger.info("Experiment history: path=%s", experiment_history_path)
+
+    @staticmethod
+    def _log_metrics(label: str, metrics: RegressionMetrics | ClassificationMetrics) -> None:
+        if isinstance(metrics, RegressionMetrics):
+            logger.info(
+                "%s metrics: mae=%.2f rmse=%.2f r2=%.4f",
+                label,
+                metrics.mean_absolute_error,
+                metrics.root_mean_squared_error,
+                metrics.r2_score,
+            )
+        else:
+            logger.info(
+                "%s metrics: accuracy=%.4f precision=%.4f recall=%.4f f1=%.4f",
+                label,
+                metrics.accuracy,
+                metrics.precision,
+                metrics.recall,
+                metrics.f1_score,
+            )

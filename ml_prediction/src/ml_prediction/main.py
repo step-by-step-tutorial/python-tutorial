@@ -5,7 +5,7 @@ from functools import partial
 from collections.abc import Sequence
 
 from ml_prediction.application.application import Application
-from ml_prediction.config.settings import house_settings
+from ml_prediction.config.settings import get_settings
 from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
 from ml_prediction.dataset.house_dataset import HouseDataset
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator
@@ -26,7 +26,6 @@ from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 
-DATASETS = (house_settings.dataset_name,)
 PREDICTIONS = ("train", "predict")
 
 
@@ -37,61 +36,63 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def create_application(dataset: str, include_prediction: bool = True) -> Application:
-    if dataset != house_settings.dataset_name:
-        raise ValueError(f"Unsupported dataset: {dataset}")
-
-    report_service = ReportService(house_settings.report_dir)
-    experiment_repository = ExperimentRepository(house_settings.report_dir / "experiments.csv")
-    experiment_comparison_service = ExperimentComparisonService(experiment_repository)
+def _create_house_application(settings, include_prediction: bool = True) -> Application:
+    report_service = ReportService(settings.report_dir)
+    experiment_repository = ExperimentRepository(settings.report_dir / "experiments.csv")
+    experiment_comparison_service = ExperimentComparisonService(
+        experiment_repository,
+        settings.dataset_name,
+    )
     training_visualizer = TrainingVisualizer()
     experiment_visualizer = ExperimentVisualizer(
         experiment_repository,
-        house_settings.report_dir / "comparison",
+        settings.report_dir / "comparison",
+        settings.dataset_name,
     )
-    data_lake_repository = DataLakeRepository(house_settings.data_lake)
+    data_lake_repository = DataLakeRepository(settings.data_lake)
     model_repository = LocalModelRepository()
     feature_model = HouseFeatureModel()
     feature_builder_factory = partial(HouseFeatureBuilder, feature_model=feature_model)
     regressor_builder = RegressorBuilder(
-        house_settings.model_type,
-        house_settings.n_estimators,
-        house_settings.n_jobs,
-        house_settings.random_state,
-        house_settings.max_depth,
-        house_settings.min_samples_split,
-        house_settings.min_samples_leaf,
-        house_settings.max_features,
-        house_settings.bootstrap,
+        settings.model_type,
+        settings.n_estimators,
+        settings.n_jobs,
+        settings.random_state,
+        settings.max_depth,
+        settings.min_samples_split,
+        settings.min_samples_leaf,
+        settings.max_features,
+        settings.bootstrap,
     )
     pipeline_builder = HousePricePipelineBuilder(feature_model, regressor_builder)
     evaluator = ModelEvaluator()
     dataset_splitter = DatasetSplitter(
-        house_settings.validation_size,
-        house_settings.test_size,
-        house_settings.random_state,
+        settings.validation_size,
+        settings.test_size,
+        settings.random_state,
     )
-    dataset_service = HouseDataset(house_settings.data_dir / house_settings.dataset_filename)
+    dataset_service = HouseDataset(settings.data_dir / settings.dataset_filename)
     prediction_service = None
     if include_prediction:
         prediction_service = PredictionService(
-            house_settings,
+            settings,
             HousePricePredictor(
-                house_settings.model_dir / house_settings.model_filename,
+                settings.model_dir / settings.model_filename,
                 model_repository,
                 feature_builder_factory,
                 feature_model,
-                house_settings.model_type,
-                house_settings.target_column,
+                settings.model_type,
+                settings.target_column,
+                settings.prediction_column,
             ),
             dataset_service,
             data_lake_repository,
             report_service,
         )
     return Application(
-        house_settings,
+        settings,
         HousePriceTrainer(
-            house_settings,
+                settings,
             dataset_service,
             feature_model,
             feature_builder_factory,
@@ -108,6 +109,24 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
         prediction_service,
         experiment_comparison_service,
     )
+
+
+DATASET_COMPOSERS = {
+    "house": _create_house_application,
+}
+DATASETS = tuple(DATASET_COMPOSERS)
+
+
+def create_application(dataset: str, include_prediction: bool = True) -> Application:
+    settings = get_settings(dataset)
+    try:
+        compose = DATASET_COMPOSERS[dataset]
+    except KeyError as error:
+        supported = ", ".join(sorted(DATASET_COMPOSERS))
+        raise ValueError(
+            f"Dataset '{dataset}' has no application composer. Supported datasets: {supported}"
+        ) from error
+    return compose(settings, include_prediction)
 
 
 def select_dataset() -> str | None:
@@ -148,7 +167,8 @@ def run(dataset: str, prediction: str) -> None:
         return
 
     prediction_output = application.predict()
-    PredictionPresenter(house_settings.data_dir / house_settings.prediction_filename).present(prediction_output)
+    settings = get_settings(dataset)
+    PredictionPresenter(settings.data_dir / settings.prediction_filename).present(prediction_output)
 
 
 def main(argv: Sequence[str] | None = None) -> None:

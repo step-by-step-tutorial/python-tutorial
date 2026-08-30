@@ -39,11 +39,16 @@ class ExperimentRepository:
                 writer.writeheader()
             writer.writerow(self._to_row(result))
 
-    def read_all(self) -> list[ExperimentResult]:
+    def read_all(self, dataset_name: str | None = None) -> list[ExperimentResult]:
         if not self.path.exists():
             return []
         with self.path.open(newline="", encoding="utf-8") as history_file:
-            return [self._from_row(row) for row in csv.DictReader(history_file)]
+            rows = csv.DictReader(history_file)
+            return [
+                self._from_row(row)
+                for row in rows
+                if dataset_name is None or row["dataset_name"] == dataset_name
+            ]
 
     @staticmethod
     def _to_row(result: ExperimentResult) -> dict[str, str]:

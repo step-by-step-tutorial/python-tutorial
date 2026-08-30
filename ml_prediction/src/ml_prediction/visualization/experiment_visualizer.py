@@ -10,9 +10,15 @@ import matplotlib.pyplot as plt
 class ExperimentVisualizer:
     """Creates separate comparison charts from persisted experiment history."""
 
-    def __init__(self, experiment_repository: ExperimentRepository, report_dir: Path) -> None:
+    def __init__(
+            self,
+            experiment_repository: ExperimentRepository,
+            report_dir: Path,
+            dataset_name: str | None = None,
+    ) -> None:
         self.experiment_repository = experiment_repository
         self.report_dir = report_dir
+        self.dataset_name = dataset_name
 
     def save_validation_mae_comparison(self) -> Path | None:
         return self._save_comparison(
@@ -41,7 +47,7 @@ class ExperimentVisualizer:
             metric_label: str,
             metric_value: Callable,
     ) -> Path | None:
-        experiments = self.experiment_repository.read_all()
+        experiments = self.experiment_repository.read_all(self.dataset_name)
         if not experiments:
             return None
 

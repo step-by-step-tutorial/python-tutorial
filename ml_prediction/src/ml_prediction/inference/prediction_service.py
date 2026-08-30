@@ -19,6 +19,7 @@ class PredictionOutput:
     predictions: pd.Series
     source_path: Path
     report_path: Path | None = None
+    prediction_column: str = "predicted_total_price"
 
 
 class PredictionService:
@@ -51,7 +52,13 @@ class PredictionService:
         predictions = self.predictor.predict(dataframe)
         report.record("predictions_generated", rows=len(predictions), details=f"columns={len(dataframe.columns)}")
         report.record("prediction_completed", details=str(report.path))
-        return PredictionOutput(dataframe, predictions, dataset_path, report.path)
+        return PredictionOutput(
+            dataframe,
+            predictions,
+            dataset_path,
+            report.path,
+            self.predictor.prediction_column,
+        )
 
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / self.settings.dataset_filename

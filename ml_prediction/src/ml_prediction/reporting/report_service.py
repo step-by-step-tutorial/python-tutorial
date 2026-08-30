@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
+from ml_prediction.evaluation.model_evaluator import EvaluationMetrics
 
 
 @dataclass
@@ -44,7 +44,7 @@ class Report:
             rows: int | None = None,
             model_name: str = "",
             model_path: Path | None = None,
-            metrics: RegressionMetrics | None = None,
+            metrics: EvaluationMetrics | None = None,
             details: str = "",
     ) -> None:
         selected_model_path = model_path if isinstance(model_path, Path) else self.model_path
@@ -58,9 +58,9 @@ class Report:
             "model": model_name,
             "model_path": selected_model_path or "",
             "model_id": self.model_id(selected_model_path),
-            "mae": metrics.mean_absolute_error if metrics else "",
-            "rmse": metrics.root_mean_squared_error if metrics else "",
-            "r2": metrics.r2_score if metrics else "",
+            "mae": getattr(metrics, "mean_absolute_error", ""),
+            "rmse": getattr(metrics, "root_mean_squared_error", ""),
+            "r2": getattr(metrics, "r2_score", ""),
             "details": details,
         }
         with self.path.open("a", newline="", encoding="utf-8") as report_file:

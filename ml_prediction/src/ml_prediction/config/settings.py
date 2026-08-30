@@ -11,6 +11,11 @@ class DatasetSource(StrEnum):
     DOWNLOAD = "download"
 
 
+class TaskType(StrEnum):
+    REGRESSION = "regression"
+    CLASSIFICATION = "classification"
+
+
 def _optional_int_from_env(name: str) -> int | None:
     value = os.getenv(name)
     return None if value is None or value.lower() == "none" else int(value)
@@ -54,6 +59,7 @@ class AppSettings:
     test_size: float
     random_state: int
     data_lake: DataLakeSettings
+    task_type: TaskType = TaskType.REGRESSION
     model_type: str = "random_forest"
     n_estimators: int = 200
     n_jobs: int = -1
@@ -68,6 +74,7 @@ class AppSettings:
     dataset_filename: str = "house.csv"
     model_filename: str = "house_price_model.joblib"
     prediction_filename: str = "house_predictions.csv"
+    prediction_column: str = "predicted_total_price"
 
 
 house_settings = AppSettings(
@@ -77,6 +84,7 @@ house_settings = AppSettings(
     validation_size=float(os.getenv("ML_PREDICTION_VALIDATION_SIZE", "0.2")),
     test_size=float(os.getenv("ML_PREDICTION_TEST_SIZE", "0.2")),
     random_state=int(os.getenv("ML_PREDICTION_RANDOM_STATE", "42")),
+    task_type=TaskType(os.getenv("ML_PREDICTION_TASK_TYPE", TaskType.REGRESSION)),
     dataset_source=DatasetSource(os.getenv("ML_PREDICTION_DATASET_SOURCE", DatasetSource.LOCAL)),
     model_type=os.getenv("ML_PREDICTION_MODEL_TYPE", "random_forest"),
     n_estimators=int(os.getenv("ML_PREDICTION_N_ESTIMATORS", "200")),
@@ -91,6 +99,7 @@ house_settings = AppSettings(
     dataset_filename=os.getenv("ML_PREDICTION_DATASET_FILENAME", "house.csv"),
     model_filename=os.getenv("ML_PREDICTION_MODEL_FILENAME", "house_price_model.joblib"),
     prediction_filename=os.getenv("ML_PREDICTION_PREDICTION_FILENAME", "house_predictions.csv"),
+    prediction_column=os.getenv("ML_PREDICTION_PREDICTION_COLUMN", "predicted_total_price"),
     data_lake=DataLakeSettings(
         endpoint=os.getenv("ML_PREDICTION_DATALAKE_ENDPOINT", "http://localhost:9000"),
         access_key=os.getenv("ML_PREDICTION_DATALAKE_ACCESS_KEY", "admin"),
@@ -103,3 +112,18 @@ house_settings = AppSettings(
         ),
     ),
 )
+
+
+DATASET_SETTINGS: dict[str, AppSettings] = {
+    house_settings.dataset_name: house_settings,
+}
+
+
+def get_settings(dataset_name: str) -> AppSettings:
+    try:
+        return DATASET_SETTINGS[dataset_name]
+    except KeyError as error:
+        supported = ", ".join(sorted(DATASET_SETTINGS))
+        raise ValueError(
+            f"Unsupported dataset: {dataset_name}. Supported datasets: {supported}"
+        ) from error
