@@ -3,7 +3,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from ml_prediction.config.settings_types import TaskType
-from ml_prediction.data_model.data_lake_settings import DataLakeSettings
+from ml_prediction.data_model.datalake_settings import DataLakeSettings
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -38,3 +38,4 @@ class AppSettings:
     model_filename: str = ""
     prediction_filename: str = ""
     prediction_column: str = ""
+    experiment_filename: str = "experiments.csv"

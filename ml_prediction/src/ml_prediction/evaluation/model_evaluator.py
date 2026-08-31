@@ -12,7 +12,7 @@ from sklearn.metrics import (
 
 from ml_prediction.config.settings import TaskType
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
-from ml_prediction.data_model.evaluation_result import Evaluation
+from ml_prediction.data_model.evaluation import Evaluation
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 logger = logging.getLogger(__name__)

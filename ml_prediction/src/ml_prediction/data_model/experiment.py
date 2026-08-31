@@ -1,0 +1,66 @@
+from dataclasses import asdict, dataclass
+from datetime import datetime
+import json
+from pathlib import Path
+from typing import Any
+
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
+
+
+@dataclass(frozen=True)
+class Experiment:
+    fieldnames = (
+        "experiment_id",
+        "timestamp",
+        "dataset_name",
+        "model_type",
+        "model_parameters",
+        "baseline_validation_metrics",
+        "validation_metrics",
+        "test_metrics",
+        "model_path",
+        "report_path",
+    )
+
+    experiment_id: str
+    timestamp: datetime
+    dataset_name: str
+    model_type: str
+    model_parameters: dict[str, Any]
+    baseline_validation_metrics: RegressionMetrics
+    validation_metrics: RegressionMetrics
+    test_metrics: RegressionMetrics
+    model_path: Path
+    report_path: Path | None
+
+    def to_row(self) -> dict[str, str]:
+        return {
+            "experiment_id": self.experiment_id,
+            "timestamp": self.timestamp.isoformat(),
+            "dataset_name": self.dataset_name,
+            "model_type": self.model_type,
+            "model_parameters": json.dumps(self.model_parameters, sort_keys=True, separators=(",", ":")),
+            "baseline_validation_metrics": json.dumps(asdict(self.baseline_validation_metrics)),
+            "validation_metrics": json.dumps(asdict(self.validation_metrics)),
+            "test_metrics": json.dumps(asdict(self.test_metrics)),
+            "model_path": str(self.model_path),
+            "report_path": str(self.report_path) if self.report_path is not None else "",
+        }
+
+    @staticmethod
+    def from_row(row: dict[str, str]) -> "Experiment":
+        def metrics(name: str) -> RegressionMetrics:
+            return RegressionMetrics(**json.loads(row[f"{name}_metrics"]))
+
+        return Experiment(
+            experiment_id=row["experiment_id"],
+            timestamp=datetime.fromisoformat(row["timestamp"]),
+            dataset_name=row["dataset_name"],
+            model_type=row["model_type"],
+            model_parameters=json.loads(row["model_parameters"]),
+            baseline_validation_metrics=metrics("baseline_validation"),
+            validation_metrics=metrics("validation"),
+            test_metrics=metrics("test"),
+            model_path=Path(row["model_path"]),
+            report_path=Path(row["report_path"]) if row["report_path"] else None,
+        )

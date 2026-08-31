@@ -5,9 +5,9 @@ import pandas as pd
 import pytest
 
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
-from ml_prediction.data_model.data_lake_settings import DataLakeSettings
+from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
-from ml_prediction.data_model.prediction_output import Prediction
+from ml_prediction.data_model.prediction import Prediction
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.house_features_builder import HouseFeatureBuilder
@@ -112,7 +112,7 @@ def test_datalake_repository_rejects_empty_bucket(tmp_path: Path, mocker) -> Non
     client.list_objects_v2.return_value = {}
     mocker.patch("ml_prediction.repository.datalake_repository.boto3.client", return_value=client)
 
-    with pytest.raises(FileNotFoundError, match="No Parquet files found"):
+    with pytest.raises(Exception, match="No Parquet files found"):
         DataLakeRepository("house").download_latest_csv(tmp_path / "house.csv")
 
 

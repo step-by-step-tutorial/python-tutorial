@@ -4,9 +4,9 @@ from unittest.mock import call
 import pandas as pd
 
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
-from ml_prediction.data_model.data_lake_settings import DataLakeSettings
-from ml_prediction.data_model.evaluation_result import Evaluation
-from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.data_model.evaluation import Evaluation
+from ml_prediction.data_model.experiment import Experiment
 from ml_prediction.data_model.prepared_training_data import PreparedTrainingData
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.data_model.dataset_partition import DatasetPartition
@@ -92,7 +92,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         return_value=mocker.Mock(),
     ).return_value
     experiment_repository = mocker.patch(
-        "ml_prediction.training.house_price_trainer.ExperimentRepository",
+        "ml_prediction.training.house_price_trainer.ExperimentService",
         return_value=mocker.Mock(),
     ).return_value
     training_visualizer = mocker.patch(

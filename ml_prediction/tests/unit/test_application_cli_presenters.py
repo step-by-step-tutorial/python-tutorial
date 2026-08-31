@@ -34,7 +34,7 @@ def test_presenters_implement_presenter_contract(tmp_path: Path) -> None:
 
 
 def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None:
-    from ml_prediction.data_model.prediction_output import Prediction
+    from ml_prediction.data_model.prediction import Prediction
 
     output_path = tmp_path / "output" / "predictions.csv"
     result = Prediction(

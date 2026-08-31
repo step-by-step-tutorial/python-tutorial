@@ -20,18 +20,18 @@ class LocalModelRepository:
         joblib.dump(model, path)
         if metadata is not None:
             self.save_metadata(metadata, path)
-        logger.info("Saved model: path=%s", path)
+        logger.info(f"Saved model: path={path}")
         return path
 
     def load(self, path: Path) -> Any:
-        logger.info("Loading model: path=%s", path)
+        logger.info(f"Loading model: path={path}")
         return joblib.load(path)
 
-    def save_metadata(self, metadata: ModelMetadata, model_path: Path) -> Path:
-        metadata_path = self.metadata_path(model_path)
+    def save_metadata(self, metadata: ModelMetadata, path: Path) -> Path:
+        metadata_path = self.metadata_path(path)
         with metadata_path.open("w", encoding="utf-8") as metadata_file:
             json.dump(asdict(metadata), metadata_file, default=self._json_default, indent=2)
-        logger.info("Saved model metadata: path=%s", metadata_path)
+        logger.info(f"Saved model metadata: path={metadata_path}")
         return metadata_path
 
     def load_metadata(self, path: Path) -> ModelMetadata:
@@ -45,13 +45,11 @@ class LocalModelRepository:
         metrics_model = ClassificationMetrics if metric_type == "classification" else RegressionMetrics
         data["validation_metrics"] = metrics_model(**data["validation_metrics"])
         data["final_test_metrics"] = metrics_model(**data["final_test_metrics"])
-        return ModelMetadata(
-            **data,
-        )
+        return ModelMetadata(**data)
 
     @staticmethod
-    def metadata_path(model_path: Path) -> Path:
-        return model_path.with_suffix(".metadata.json")
+    def metadata_path(path: Path) -> Path:
+        return path.with_suffix(".metadata.json")
 
     @staticmethod
     def _json_default(value: Any) -> str:

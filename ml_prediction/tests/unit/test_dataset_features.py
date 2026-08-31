@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from ml_prediction.dataset.dataset import Dataset
-from ml_prediction.dataset.house_dataset import HouseDataset
+from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.features.house_feature_model import HouseFeatureModel
@@ -34,11 +34,11 @@ def test_dataset_and_feature_builder_are_concrete() -> None:
     assert not hasattr(FeatureBuilder, "__abstractmethods__")
 
 
-def test_house_dataset_loads_csv_and_prepares_numeric_target(tmp_path: Path) -> None:
+def test_dataset_loads_csv_and_prepares_numeric_target(tmp_path: Path) -> None:
     path = tmp_path / "house.csv"
     path.write_text("total_price,city\n100,Paris\ninvalid,London\n", encoding="utf-8")
 
-    dataset = HouseDataset(path, "house")
+    dataset = Dataset(path, "house")
 
     assert load_csv(path).shape == (2, 2)
     frame = dataset.training_frame("total_price")

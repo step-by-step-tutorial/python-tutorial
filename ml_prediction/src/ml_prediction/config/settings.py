@@ -4,7 +4,7 @@ from pathlib import Path
 from ml_prediction.config.dataset_profiles import DATASET_PROFILES
 from ml_prediction.config.settings_types import TaskType
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
-from ml_prediction.data_model.data_lake_settings import DataLakeSettings
+from ml_prediction.data_model.datalake_settings import DataLakeSettings
 
 PROJECT_ROOT = os.getenv("PROJECT_ROOT", Path(__file__).resolve().parents[3])
 
@@ -42,6 +42,7 @@ def load_settings(dataset_name: str) -> AppSettings:
         model_filename=os.getenv("ML_PREDICTION_MODEL_FILENAME", profile.model_filename),
         prediction_filename=os.getenv("ML_PREDICTION_PREDICTION_FILENAME", profile.prediction_filename),
         prediction_column=os.getenv("ML_PREDICTION_PREDICTION_COLUMN", profile.prediction_column),
+        experiment_filename=os.getenv("ML_PREDICTION_EXPERIMENT_FILENAME", "experiments.csv"),
     )
 
 

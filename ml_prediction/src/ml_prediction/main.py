@@ -5,7 +5,7 @@ from collections.abc import Sequence
 
 from ml_prediction.application.application import Application
 from ml_prediction.config.settings import get_settings
-from ml_prediction.dataset.house_dataset import HouseDataset
+from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
@@ -25,7 +25,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 def _create_house_application(settings, include_prediction: bool = True) -> Application:
     feature_model = HouseFeatureModel()
-    dataset_service = HouseDataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
+    dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
     predictor = None
     if include_prediction:
         predictor = HousePricePredictor(

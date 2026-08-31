@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.experiment import Experiment
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.reporting.experiment_repository import ExperimentRepository
+from ml_prediction.reporting.experiment_service import ExperimentService
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 
 
@@ -23,7 +23,7 @@ def make_experiment(experiment_id: str, model_type: str) -> Experiment:
 
 
 def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path) -> None:
-    repository = ExperimentRepository()
+    repository = ExperimentService("house")
     repository.path = tmp_path / "experiments.csv"
     repository.save(make_experiment("experiment-123456", "random_forest"))
     repository.save(make_experiment("experiment-abcdef", "extra_trees"))
@@ -40,7 +40,7 @@ def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path) ->
 
 
 def test_experiment_visualizer_skips_empty_history(tmp_path: Path) -> None:
-    repository = ExperimentRepository()
+    repository = ExperimentService("house")
     repository.path = tmp_path / "experiments.csv"
     visualizer = ExperimentVisualizer(repository, tmp_path / "reports")
 

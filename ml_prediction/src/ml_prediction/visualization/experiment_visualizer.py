@@ -3,7 +3,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from ml_prediction.reporting.experiment_repository import ExperimentRepository
+from ml_prediction.reporting.experiment_service import ExperimentService
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 
 
@@ -12,7 +12,7 @@ class ExperimentVisualizer:
 
     def __init__(
             self,
-            experiment_repository: ExperimentRepository,
+            experiment_repository: ExperimentService,
             report_dir: Path,
             dataset_name: str | None = None,
     ) -> None:
@@ -47,7 +47,7 @@ class ExperimentVisualizer:
             metric_label: str,
             metric_value: Callable,
     ) -> Path | None:
-        experiments = self.experiment_repository.read_all(self.dataset_name)
+        experiments = self.experiment_repository.read_all()
         if not experiments:
             return None
 

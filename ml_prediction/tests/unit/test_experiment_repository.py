@@ -3,13 +3,13 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.experiment import Experiment
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.reporting.experiment_repository import ExperimentRepository
+from ml_prediction.reporting.experiment_service import ExperimentService
 
 
 def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -> None:
-    repository = ExperimentRepository()
+    repository = ExperimentService("house")
     repository.path = tmp_path / "reports" / "experiments.csv"
     result = Experiment(
         experiment_id="experiment-1",
@@ -32,12 +32,24 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
     assert len((tmp_path / "reports" / "experiments.csv").read_text().splitlines()) == 3
     with (tmp_path / "reports" / "experiments.csv").open(newline="") as history_file:
         rows = list(csv.DictReader(history_file))
-    assert list(rows[0]) == list(ExperimentRepository.fieldnames)
+    assert list(rows[0]) == list(Experiment.fieldnames)
     assert rows[0]["model_parameters"] == json.dumps(
         {"bootstrap": True, "n_estimators": 200},
         sort_keys=True,
         separators=(",", ":"),
     )
-    assert rows[0]["baseline_validation_mae"] == "1.0"
-    assert rows[0]["validation_rmse"] == "1.5"
-    assert rows[0]["test_r2"] == "0.65"
+    assert rows[0]["baseline_validation_metrics"] == json.dumps({
+        "mean_absolute_error": 1.0,
+        "root_mean_squared_error": 2.0,
+        "r2_score": 0.5,
+    })
+    assert rows[0]["validation_metrics"] == json.dumps({
+        "mean_absolute_error": 0.8,
+        "root_mean_squared_error": 1.5,
+        "r2_score": 0.7,
+    })
+    assert rows[0]["test_metrics"] == json.dumps({
+        "mean_absolute_error": 0.9,
+        "root_mean_squared_error": 1.6,
+        "r2_score": 0.65,
+    })

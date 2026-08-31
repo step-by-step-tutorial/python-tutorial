@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from ml_prediction.data_model.evaluation_metrics import EvaluationMetrics
+from ml_prediction.data_model.classification_metrics import ClassificationMetrics
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 CURRENT_SCHEMA_VERSION = "1"
 CURRENT_MODEL_VERSION = "1"
@@ -17,8 +18,8 @@ class ModelMetadata:
     boolean_features: tuple[str, ...]
     categorical_features: tuple[str, ...]
     training_timestamp: datetime
-    validation_metrics: EvaluationMetrics
-    final_test_metrics: EvaluationMetrics
+    validation_metrics: RegressionMetrics | ClassificationMetrics
+    final_test_metrics: RegressionMetrics | ClassificationMetrics
     schema_version: str
     model_version: str
     dataset_name: str = "house"

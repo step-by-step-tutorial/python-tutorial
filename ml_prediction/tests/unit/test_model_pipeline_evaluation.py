@@ -8,7 +8,7 @@ from sklearn.ensemble import (
 )
 from sklearn.pipeline import Pipeline
 
-from ml_prediction.data_model.evaluation_result import Evaluation
+from ml_prediction.data_model.evaluation import Evaluation
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel

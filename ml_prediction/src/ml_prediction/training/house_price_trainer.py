@@ -6,9 +6,9 @@ from uuid import uuid4
 from ml_prediction.config.settings import DatasetSource, TaskType, get_settings
 from ml_prediction.data_model.dataset_partition import DatasetPartition
 from ml_prediction.data_model.dataset_partitions import DatasetPartitions
-from ml_prediction.data_model.evaluation_result import Evaluation
+from ml_prediction.data_model.evaluation import Evaluation
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator
-from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.experiment import Experiment
 from ml_prediction.data_model.model_metadata import (
     CURRENT_MODEL_VERSION,
     CURRENT_SCHEMA_VERSION,
@@ -16,14 +16,14 @@ from ml_prediction.data_model.model_metadata import (
 )
 from ml_prediction.data_model.prepared_training_data import PreparedTrainingData
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.dataset.house_dataset import HouseDataset
+from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.baseline_model import BaselineModel
 from ml_prediction.model.house_price_model import HousePriceModel
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
-from ml_prediction.reporting.experiment_repository import ExperimentRepository
+from ml_prediction.reporting.experiment_service import ExperimentService
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -38,11 +38,11 @@ logger = logging.getLogger(__name__)
 class HousePriceTrainer(Trainer[Experiment]):
     def __init__(
             self,
-            dataset: HouseDataset,
+            dataset: Dataset,
     ) -> None:
         settings = get_settings(dataset.dataset_name)
         feature_model = HouseFeatureModel()
-        experiment_repository = ExperimentRepository()
+        experiment_repository = ExperimentService(dataset.dataset_name)
         self.settings = settings
         self.dataset = dataset
         self.feature_model = feature_model
