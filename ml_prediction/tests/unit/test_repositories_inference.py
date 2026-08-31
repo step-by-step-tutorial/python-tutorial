@@ -31,6 +31,8 @@ def settings(tmp_path: Path) -> AppSettings:
         dataset_source=DatasetSource.DOWNLOAD,
         report_dir=tmp_path / "reports",
         dataset_filename="house.csv",
+        model_filename="model.joblib",
+        prediction_column="predicted_total_price",
     )
 
 
@@ -226,20 +228,24 @@ def test_house_price_predictor_builds_features_and_returns_named_series(mocker) 
         schema_version="1",
         model_version="1",
     )
+    mocker.patch(
+        "ml_prediction.inference.sklearn_predictor.get_settings",
+        return_value=settings(Path(".")),
+    )
+    mocker.patch(
+        "ml_prediction.inference.sklearn_predictor.LocalModelRepository",
+        return_value=repository,
+    )
     predictor = HousePricePredictor(
-        Path("model.joblib"),
-        repository,
-        lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
+        "house",
         HouseFeatureModel(),
-        "random_forest",
-        "total_price",
     )
 
     predictions = predictor.predict(house_dataframe())
 
     assert predictions.tolist() == [101.0, 202.0]
     assert predictions.name == "predicted_total_price"
-    repository.load.assert_called_once_with(Path("model.joblib"))
+    repository.load.assert_called_once_with(Path("models") / "model.joblib")
     pipeline.predict.assert_called_once()
 
 
@@ -260,13 +266,17 @@ def test_house_price_predictor_rejects_incompatible_schema(mocker) -> None:
     )
 
     with pytest.raises(ValueError, match="unknown_feature"):
+        mocker.patch(
+            "ml_prediction.inference.sklearn_predictor.get_settings",
+            return_value=settings(Path(".")),
+        )
+        mocker.patch(
+            "ml_prediction.inference.sklearn_predictor.LocalModelRepository",
+            return_value=repository,
+        )
         HousePricePredictor(
-            Path("model.joblib"),
-            repository,
-            lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
+            "house",
             HouseFeatureModel(),
-            "random_forest",
-            "total_price",
         )
 
     repository.load.assert_not_called()

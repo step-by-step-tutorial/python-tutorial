@@ -1,12 +1,9 @@
 import logging
-from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-import pandas as pd
-
-from ml_prediction.config.settings import DatasetSource, TaskType
+from ml_prediction.config.settings import DatasetSource, TaskType, get_settings
 from ml_prediction.data_model.dataset_partition import DatasetPartition
 from ml_prediction.data_model.dataset_partitions import DatasetPartitions
 from ml_prediction.data_model.evaluation_result import Evaluation
@@ -17,7 +14,6 @@ from ml_prediction.data_model.model_metadata import (
     CURRENT_SCHEMA_VERSION,
     ModelMetadata,
 )
-from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.data_model.prepared_training_data import PreparedTrainingData
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.house_dataset import HouseDataset
@@ -25,7 +21,8 @@ from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.baseline_model import BaselineModel
 from ml_prediction.model.house_price_model import HousePriceModel
-from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
+from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
+from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.reporting.experiment_repository import ExperimentRepository
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.datalake_repository import DataLakeRepository
@@ -41,33 +38,44 @@ logger = logging.getLogger(__name__)
 class HousePriceTrainer(Trainer[Experiment]):
     def __init__(
             self,
-            settings: AppSettings,
             dataset: HouseDataset,
-            feature_model: HouseFeatureModel,
-            feature_builder_factory: Callable[[pd.DataFrame], FeatureBuilder],
-            data_lake_repository: DataLakeRepository,
-            model_repository: LocalModelRepository,
-            pipeline_builder: PipelineBuilder,
-            evaluator: ModelEvaluator,
-            dataset_splitter: DatasetSplitter,
-            report_service: ReportService,
-            experiment_repository: ExperimentRepository,
-            training_visualizer: TrainingVisualizer,
-            experiment_visualizer: ExperimentVisualizer,
     ) -> None:
+        settings = get_settings(dataset.dataset_name)
+        feature_model = HouseFeatureModel()
+        experiment_repository = ExperimentRepository()
         self.settings = settings
         self.dataset = dataset
         self.feature_model = feature_model
-        self.feature_builder_factory = feature_builder_factory
-        self.report_service = report_service
+        self.report_service = ReportService(settings.report_dir)
         self.experiment_repository = experiment_repository
-        self.training_visualizer = training_visualizer
-        self.experiment_visualizer = experiment_visualizer
-        self.data_lake_repository = data_lake_repository
-        self.model_repository = model_repository
-        self.pipeline_builder = pipeline_builder
-        self.evaluator = evaluator
-        self.dataset_splitter = dataset_splitter
+        self.training_visualizer = TrainingVisualizer()
+        self.experiment_visualizer = ExperimentVisualizer(
+            experiment_repository,
+            settings.report_dir / "comparison",
+            settings.dataset_name,
+        )
+        self.data_lake_repository = DataLakeRepository(dataset.dataset_name)
+        self.model_repository = LocalModelRepository()
+        self.pipeline_builder = HousePricePipelineBuilder(
+            feature_model,
+            RegressorBuilder(
+                settings.model_type,
+                settings.n_estimators,
+                settings.n_jobs,
+                settings.random_state,
+                settings.max_depth,
+                settings.min_samples_split,
+                settings.min_samples_leaf,
+                settings.max_features,
+                settings.bootstrap,
+            ),
+        )
+        self.evaluator = ModelEvaluator()
+        self.dataset_splitter = DatasetSplitter(
+            settings.validation_size,
+            settings.test_size,
+            settings.random_state,
+        )
 
     def train(self) -> Experiment:
         if self.settings.task_type != TaskType.REGRESSION:
@@ -262,7 +270,7 @@ class HousePriceTrainer(Trainer[Experiment]):
             raise ValueError(f"Dataset path does not match configured path: {self.dataset.path}")
         dataframe = self.dataset.training_frame(self.settings.target_column)
         target = dataframe.pop(self.settings.target_column)
-        features = self.feature_builder_factory(dataframe).build()
+        features = FeatureBuilder(dataframe, self.feature_model).build()
         logger.info(
             f"Prepared training data: rows={len(dataframe)} features={len(features.columns)} target={self.settings.target_column}"
         )

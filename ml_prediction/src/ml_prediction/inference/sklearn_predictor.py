@@ -1,9 +1,9 @@
 import logging
-from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
 
+from ml_prediction.config.settings import get_settings
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.inference.predictor import Predictor
@@ -14,26 +14,23 @@ logger = logging.getLogger(__name__)
 
 
 class SklearnPredictor(Predictor[pd.Series]):
-    """Load a persisted sklearn pipeline and predict from tabular input."""
 
     def __init__(
             self,
-            model_path: Path,
-            model_repository: LocalModelRepository,
-            feature_builder_factory: Callable[[pd.DataFrame], FeatureBuilder],
+            dataset_name: str,
             feature_model: FeatureModel,
-            model_type: str,
-            target_column: str,
-            prediction_column: str,
     ) -> None:
+        settings = get_settings(dataset_name)
+        model_path = settings.model_dir / settings.model_filename
+        model_repository = LocalModelRepository()
         self._model_path = model_path
-        self._feature_builder_factory = feature_builder_factory
-        self._prediction_column = prediction_column
+        self._feature_model = feature_model
+        self._prediction_column = settings.prediction_column
         try:
             metadata = model_repository.load_metadata(model_path)
         except FileNotFoundError as error:
             raise ValueError(f"Persisted model metadata is missing for '{model_path}'") from error
-        self._validate_metadata(metadata, feature_model, model_type, target_column)
+        self._validate_metadata(metadata, feature_model, settings.model_type, settings.target_column)
         self.pipeline = model_repository.load(model_path)
 
     @property
@@ -45,7 +42,7 @@ class SklearnPredictor(Predictor[pd.Series]):
         return self._prediction_column
 
     def predict(self, dataframe: pd.DataFrame) -> pd.Series:
-        features = self._feature_builder_factory(dataframe).build()
+        features = FeatureBuilder(dataframe, self._feature_model).build()
         predictions = self.pipeline.predict(features)
         logger.info(
             "Generated predictions: rows=%s prediction_column=%s",

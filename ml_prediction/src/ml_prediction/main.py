@@ -2,27 +2,16 @@ import argparse
 import logging
 import sys
 from collections.abc import Sequence
-from functools import partial
 
 from ml_prediction.application.application import Application
 from ml_prediction.config.settings import get_settings
 from ml_prediction.dataset.house_dataset import HouseDataset
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.features.house_features_builder import HouseFeatureBuilder
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
-from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
-from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
 from ml_prediction.presentation.training_presenter import TrainingPresenter
-from ml_prediction.reporting.experiment_repository import ExperimentRepository
-from ml_prediction.reporting.report_service import ReportService
-from ml_prediction.repository.datalake_repository import DataLakeRepository
-from ml_prediction.repository.local_model_repository import LocalModelRepository
-from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
-from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
-from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 
 PREDICTIONS = ("train", "predict")
 
@@ -35,65 +24,17 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def _create_house_application(settings, include_prediction: bool = True) -> Application:
-    report_service = ReportService(settings.report_dir)
-    experiment_repository = ExperimentRepository()
-    training_visualizer = TrainingVisualizer()
-    experiment_visualizer = ExperimentVisualizer(
-        experiment_repository,
-        settings.report_dir / "comparison",
-        settings.dataset_name,
-    )
-    model_repository = LocalModelRepository()
     feature_model = HouseFeatureModel()
-    feature_builder_factory = partial(HouseFeatureBuilder, feature_model=feature_model)
-    regressor_builder = RegressorBuilder(
-        settings.model_type,
-        settings.n_estimators,
-        settings.n_jobs,
-        settings.random_state,
-        settings.max_depth,
-        settings.min_samples_split,
-        settings.min_samples_leaf,
-        settings.max_features,
-        settings.bootstrap,
-    )
-    pipeline_builder = HousePricePipelineBuilder(feature_model, regressor_builder)
-    evaluator = ModelEvaluator()
-    dataset_splitter = DatasetSplitter(
-        settings.validation_size,
-        settings.test_size,
-        settings.random_state,
-    )
     dataset_service = HouseDataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
-    data_lake_repository = DataLakeRepository(dataset_service.dataset_name)
     predictor = None
     if include_prediction:
         predictor = HousePricePredictor(
-            settings.model_dir / settings.model_filename,
-            model_repository,
-            feature_builder_factory,
+            dataset_service.dataset_name,
             feature_model,
-            settings.model_type,
-            settings.target_column,
-            settings.prediction_column,
         )
     return Application(
         dataset_service,
-        HousePriceTrainer(
-            settings,
-            dataset_service,
-            feature_model,
-            feature_builder_factory,
-            data_lake_repository,
-            model_repository,
-            pipeline_builder,
-            evaluator,
-            dataset_splitter,
-            report_service,
-            experiment_repository,
-            training_visualizer,
-            experiment_visualizer,
-        ),
+        HousePriceTrainer(dataset_service),
         predictor,
     )
 

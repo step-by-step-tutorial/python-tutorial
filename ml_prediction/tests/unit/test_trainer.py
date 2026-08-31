@@ -58,15 +58,20 @@ def test_house_price_trainer_prepares_features_and_target(mocker) -> None:
     trainer.dataset = mocker.Mock(path=path)
     trainer.dataset.training_frame.return_value = dataframe
     trainer.settings = mocker.Mock(target_column="target")
-    trainer.feature_builder_factory = mocker.Mock(return_value=feature_builder)
+    trainer.feature_model = mocker.Mock()
+    feature_builder_class = mocker.patch(
+        "ml_prediction.training.house_price_trainer.FeatureBuilder",
+        return_value=feature_builder,
+    )
 
     prepared = trainer.prepare_dataset(path)
 
     assert isinstance(prepared, PreparedTrainingData)
     assert prepared.features.equals(features)
     assert prepared.target.equals(target)
-    trainer.feature_builder_factory.assert_called_once()
-    assert trainer.feature_builder_factory.call_args.args[0].equals(expected_features)
+    assert feature_builder_class.call_count == 1
+    assert feature_builder_class.call_args.args[0].equals(expected_features)
+    assert feature_builder_class.call_args.args[1] is trainer.feature_model
 
 
 def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: Path, mocker) -> None:
@@ -82,25 +87,26 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         dataset_name="custom_dataset",
         dataset_filename="house.csv",
     )
-    dataset_splitter = mocker.Mock()
-    experiment_repository = mocker.Mock()
-    training_visualizer = mocker.Mock()
-    experiment_visualizer = mocker.Mock()
-    trainer = HousePriceTrainer(
-        settings,
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        dataset_splitter,
-        report_service=ReportService(settings.report_dir),
-        experiment_repository=experiment_repository,
-        training_visualizer=training_visualizer,
-        experiment_visualizer=experiment_visualizer,
-    )
+    dataset_splitter = mocker.patch(
+        "ml_prediction.training.house_price_trainer.DatasetSplitter",
+        return_value=mocker.Mock(),
+    ).return_value
+    experiment_repository = mocker.patch(
+        "ml_prediction.training.house_price_trainer.ExperimentRepository",
+        return_value=mocker.Mock(),
+    ).return_value
+    training_visualizer = mocker.patch(
+        "ml_prediction.training.house_price_trainer.TrainingVisualizer",
+        return_value=mocker.Mock(),
+    ).return_value
+    experiment_visualizer = mocker.patch(
+        "ml_prediction.training.house_price_trainer.ExperimentVisualizer",
+        return_value=mocker.Mock(),
+    ).return_value
+    mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
+    mocker.patch("ml_prediction.training.house_price_trainer.DataLakeRepository")
+    dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
+    trainer = HousePriceTrainer(dataset)
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
     partition = DatasetPartition(dataframe, dataframe["target"])
@@ -164,8 +170,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
 
 def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path, mocker) -> None:
     storage_repository = mocker.Mock()
-    trainer = HousePriceTrainer(
-        AppSettings(
+    settings = AppSettings(
             data_dir=tmp_path / "data",
             model_dir=tmp_path / "models",
             target_column="target",
@@ -175,19 +180,14 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.LOCAL,
             dataset_filename="house.csv",
-        ),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        storage_repository,
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        report_service=mocker.Mock(),
-        experiment_repository=mocker.Mock(),
-        training_visualizer=mocker.Mock(),
-        experiment_visualizer=mocker.Mock(),
+    )
+    mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
+    mocker.patch(
+        "ml_prediction.training.house_price_trainer.DataLakeRepository",
+        return_value=storage_repository,
+    )
+    trainer = HousePriceTrainer(
+        mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name),
     )
 
     assert trainer.download_dataset() == tmp_path / "data" / "house.csv"
@@ -196,8 +196,7 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
 
 def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, mocker) -> None:
     storage_repository = mocker.Mock()
-    trainer = HousePriceTrainer(
-        AppSettings(
+    settings = AppSettings(
             data_dir=tmp_path / "data",
             model_dir=tmp_path / "models",
             target_column="target",
@@ -207,19 +206,14 @@ def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, m
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.DOWNLOAD,
             dataset_filename="house.csv",
-        ),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        storage_repository,
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        mocker.Mock(),
-        report_service=mocker.Mock(),
-        experiment_repository=mocker.Mock(),
-        training_visualizer=mocker.Mock(),
-        experiment_visualizer=mocker.Mock(),
+    )
+    mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
+    mocker.patch(
+        "ml_prediction.training.house_price_trainer.DataLakeRepository",
+        return_value=storage_repository,
+    )
+    trainer = HousePriceTrainer(
+        mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name),
     )
 
     assert trainer.download_dataset() == tmp_path / "data" / "house.csv"

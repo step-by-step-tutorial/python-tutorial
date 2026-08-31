@@ -13,8 +13,9 @@ class Predictor(ABC, Generic[PredictionType]):
         return None
 
     @property
+    @abstractmethod
     def prediction_column(self) -> str:
-        return "predicted_total_price"
+        ...
 
     @abstractmethod
     def predict(self, dataframe: pd.DataFrame) -> PredictionType:
