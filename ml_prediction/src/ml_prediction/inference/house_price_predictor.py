@@ -1,5 +1,5 @@
-from ml_prediction.inference.sklearn_predictor import SklearnPredictor
+from ml_prediction.inference.model_predictor import ModelPredictor
 
 
-class HousePricePredictor(SklearnPredictor):
+class HousePricePredictor(ModelPredictor):
     pass

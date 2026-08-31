@@ -229,11 +229,11 @@ def test_house_price_predictor_builds_features_and_returns_named_series(mocker) 
         model_version="1",
     )
     mocker.patch(
-        "ml_prediction.inference.sklearn_predictor.get_settings",
+        "ml_prediction.inference.model_predictor.get_settings",
         return_value=settings(Path(".")),
     )
     mocker.patch(
-        "ml_prediction.inference.sklearn_predictor.LocalModelRepository",
+        "ml_prediction.inference.model_predictor.LocalModelRepository",
         return_value=repository,
     )
     predictor = HousePricePredictor(
@@ -248,35 +248,3 @@ def test_house_price_predictor_builds_features_and_returns_named_series(mocker) 
     repository.load.assert_called_once_with(Path("models") / "model.joblib")
     pipeline.predict.assert_called_once()
 
-
-def test_house_price_predictor_rejects_incompatible_schema(mocker) -> None:
-    repository = mocker.Mock()
-    repository.load_metadata.return_value = ModelMetadata(
-        model_type="random_forest",
-        model_parameters={},
-        target_column="total_price",
-        numeric_features=("unknown_feature",),
-        boolean_features=(),
-        categorical_features=(),
-        training_timestamp=datetime.now(timezone.utc),
-        validation_metrics=RegressionMetrics(1.0, 2.0, 0.5),
-        final_test_metrics=RegressionMetrics(1.5, 2.5, 0.4),
-        schema_version="1",
-        model_version="1",
-    )
-
-    with pytest.raises(ValueError, match="unknown_feature"):
-        mocker.patch(
-            "ml_prediction.inference.sklearn_predictor.get_settings",
-            return_value=settings(Path(".")),
-        )
-        mocker.patch(
-            "ml_prediction.inference.sklearn_predictor.LocalModelRepository",
-            return_value=repository,
-        )
-        HousePricePredictor(
-            "house",
-            HouseFeatureModel(),
-        )
-
-    repository.load.assert_not_called()

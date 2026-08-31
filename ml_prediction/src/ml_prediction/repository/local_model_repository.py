@@ -34,8 +34,8 @@ class LocalModelRepository:
         logger.info("Saved model metadata: path=%s", metadata_path)
         return metadata_path
 
-    def load_metadata(self, model_path: Path) -> ModelMetadata:
-        with self.metadata_path(model_path).open(encoding="utf-8") as metadata_file:
+    def load_metadata(self, path: Path) -> ModelMetadata:
+        with self.metadata_path(path).open(encoding="utf-8") as metadata_file:
             data = json.load(metadata_file)
         data["training_timestamp"] = datetime.fromisoformat(data["training_timestamp"])
         data["numeric_features"] = tuple(data["numeric_features"])
