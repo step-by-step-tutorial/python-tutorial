@@ -21,15 +21,13 @@ class FeatureBuilder:
 
     def build(self) -> pd.DataFrame:
         should_have_unique_columns(self._dataframe)
+        require_not_blank(self._feature_model.get_feature_columns(), "No feature columns were defined")
+        should_not_have_duplication(list(self._feature_model.get_feature_columns()))
 
-        feature_columns = self._feature_model.get_feature_columns()
-        require_not_blank(feature_columns, "No feature columns were defined")
-        should_not_have_duplication(list(feature_columns))
+        missing_columns = sorted(set(self._feature_model.get_feature_columns()).difference(self._dataframe.columns))
+        require_blank(missing_columns, f"Feature DataFrame is missing feature columns: {missing_columns}")
 
-        missing_columns = sorted(set(feature_columns).difference(self._dataframe.columns))
-        require_blank(missing_columns,f"Feature DataFrame is missing feature columns: {missing_columns}")
-
-        features = self._dataframe.loc[:, feature_columns].copy()
+        features = self._dataframe.loc[:, self._feature_model.get_feature_columns()].copy()
         boolean_to_numeric(features, self._feature_model.get_boolean_features())
 
         logger.info(f"Built features: rows={len(features)} columns={len(features.columns)}")
