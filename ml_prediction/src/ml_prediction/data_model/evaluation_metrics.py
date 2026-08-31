@@ -1,0 +1,4 @@
+from ml_prediction.data_model.classification_metrics import ClassificationMetrics
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
+
+EvaluationMetrics = RegressionMetrics | ClassificationMetrics

@@ -7,8 +7,9 @@ from typing import Any
 
 import joblib
 
-from ml_prediction.evaluation.model_evaluator import ClassificationMetrics, RegressionMetrics
-from ml_prediction.model.model_metadata import ModelMetadata
+from ml_prediction.data_model.classification_metrics import ClassificationMetrics
+from ml_prediction.data_model.model_metadata import ModelMetadata
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 logger = logging.getLogger(__name__)
 

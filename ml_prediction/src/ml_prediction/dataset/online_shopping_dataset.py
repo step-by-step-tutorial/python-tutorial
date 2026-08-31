@@ -1,5 +1,5 @@
-from ml_prediction.dataset.tabular_dataset import TabularDataset
+from ml_prediction.dataset.dataset import Dataset
 
 
-class OnlineShoppingDataset(TabularDataset):
+class OnlineShoppingDataset(Dataset):
     pass

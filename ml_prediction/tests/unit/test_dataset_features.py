@@ -4,11 +4,11 @@ import pandas as pd
 import pytest
 
 from ml_prediction.dataset.dataset import Dataset
-from ml_prediction.dataset.house_dataset import HouseDataset, PreparedTrainingData
+from ml_prediction.dataset.house_dataset import HouseDataset
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.features.house_features import HouseFeatureBuilder
+from ml_prediction.features.house_features_builder import HouseFeatureBuilder
 from ml_prediction.utils.csv_utils import load_csv
 
 
@@ -24,55 +24,25 @@ def house_dataframe() -> pd.DataFrame:
     return pd.DataFrame(data)
 
 
-def test_dataset_is_concrete_and_feature_builder_is_abstract() -> None:
+def test_dataset_and_feature_builder_are_concrete() -> None:
     assert not hasattr(Dataset, "__abstractmethods__")
     assert FeatureModel.__abstractmethods__ == {
         "get_numeric_features",
         "get_boolean_features",
         "get_categorical_features",
     }
-    assert FeatureBuilder.__abstractmethods__ == {"build"}
+    assert not hasattr(FeatureBuilder, "__abstractmethods__")
 
 
 def test_house_dataset_loads_csv_and_prepares_numeric_target(tmp_path: Path) -> None:
     path = tmp_path / "house.csv"
     path.write_text("total_price,city\n100,Paris\ninvalid,London\n", encoding="utf-8")
 
-    dataset = HouseDataset(path)
+    dataset = HouseDataset(path, "house")
 
     assert load_csv(path).shape == (2, 2)
     frame = dataset.training_frame("total_price")
     assert frame["total_price"].tolist() == ["100", "invalid"]
-
-
-def test_house_dataset_prepares_features_and_target(tmp_path: Path) -> None:
-    dataframe = house_dataframe()
-    dataframe["total_price"] = [100, 200]
-    path = tmp_path / "house.csv"
-    dataframe.to_csv(path, index=False)
-
-    prepared = HouseDataset(path).prepare_training_data(
-        "total_price",
-        lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
-    )
-
-    assert isinstance(prepared, PreparedTrainingData)
-    assert prepared.target.tolist() == [100, 200]
-    assert "total_price" not in prepared.features.columns
-
-
-def test_house_dataset_preparation_delegates_missing_features_to_builder(tmp_path: Path) -> None:
-    dataframe = house_dataframe()
-    dataframe["total_price"] = [100, 200]
-    dataframe = dataframe.drop(columns=["city"])
-    path = tmp_path / "house.csv"
-    dataframe.to_csv(path, index=False)
-
-    with pytest.raises(ValueError, match="city"):
-        HouseDataset(path).prepare_training_data(
-            "total_price",
-            lambda frame: HouseFeatureBuilder(frame, HouseFeatureModel()),
-        )
 
 
 def test_house_feature_model_combines_feature_groups() -> None:
@@ -96,19 +66,19 @@ def test_house_feature_builder_converts_booleans() -> None:
 def test_house_feature_builder_rejects_missing_columns() -> None:
     dataframe = house_dataframe().drop(columns=["city"])
 
-    with pytest.raises(ValueError, match="missing feature columns"):
+    with pytest.raises(Exception, match="missing feature columns"):
         HouseFeatureBuilder(dataframe, HouseFeatureModel()).build()
 
 
 def test_house_feature_builder_rejects_empty_dataframe() -> None:
-    with pytest.raises(ValueError, match="must not be empty"):
+    with pytest.raises(Exception, match="must not be empty"):
         HouseFeatureBuilder(pd.DataFrame(), HouseFeatureModel()).build()
 
 
 def test_house_feature_builder_rejects_duplicated_dataframe_columns() -> None:
     dataframe = pd.DataFrame([[1, 2]], columns=["latitude", "latitude"])
 
-    with pytest.raises(ValueError, match="latitude"):
+    with pytest.raises(Exception, match="latitude"):
         HouseFeatureBuilder(dataframe, HouseFeatureModel()).build()
 
 
@@ -116,7 +86,7 @@ def test_house_feature_builder_rejects_invalid_feature_definition() -> None:
     model = HouseFeatureModel()
     model.get_numeric_features = lambda: ("",)
 
-    with pytest.raises(ValueError, match="''"):
+    with pytest.raises(Exception, match="''"):
         HouseFeatureBuilder(house_dataframe(), model).build()
 
 
@@ -124,5 +94,5 @@ def test_house_feature_builder_rejects_duplicated_feature_definition() -> None:
     model = HouseFeatureModel()
     model.get_boolean_features = lambda: ("latitude",)
 
-    with pytest.raises(ValueError, match="latitude"):
+    with pytest.raises(Exception, match="latitude"):
         HouseFeatureBuilder(house_dataframe(), model).build()

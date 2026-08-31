@@ -3,16 +3,19 @@ from unittest.mock import call
 
 import pandas as pd
 
-from ml_prediction.config.settings import AppSettings, DataLakeSettings, DatasetSource
-from ml_prediction.dataset.house_dataset import PreparedTrainingData
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
-from ml_prediction.evaluation.model_evaluator import EvaluationResult
+from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
+from ml_prediction.data_model.data_lake_settings import DataLakeSettings
+from ml_prediction.data_model.evaluation_result import Evaluation
+from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.prepared_training_data import PreparedTrainingData
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.data_model.dataset_partition import DatasetPartition
+from ml_prediction.data_model.dataset_partitions import DatasetPartitions
+from ml_prediction.data_model.training import TrainingOutput
 from ml_prediction.model.baseline_model import BaselineModel
-from ml_prediction.model.experiment_result import ExperimentResult
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.house_price_trainer import HousePriceTrainer
-from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions, TrainingOutput
 
 
 def test_dataset_splitter_splits_dataset_into_train_validation_and_test() -> None:
@@ -40,6 +43,30 @@ def test_baseline_model_is_fitted_on_training_partition_only() -> None:
 
     assert baseline.predict(validation.features).tolist() == [15.0]
     assert baseline.predict(test.features).tolist() == [15.0]
+
+
+def test_house_price_trainer_prepares_features_and_target(mocker) -> None:
+    path = Path("house.csv")
+    dataframe = pd.DataFrame({"target": [100, 200], "value": [1, 2]})
+    expected_features = dataframe.drop(columns=["target"])
+    features = pd.DataFrame({"value": [1, 2]})
+    target = dataframe["target"]
+    feature_builder = mocker.Mock()
+    feature_builder.build.return_value = features
+
+    trainer = HousePriceTrainer.__new__(HousePriceTrainer)
+    trainer.dataset = mocker.Mock(path=path)
+    trainer.dataset.training_frame.return_value = dataframe
+    trainer.settings = mocker.Mock(target_column="target")
+    trainer.feature_builder_factory = mocker.Mock(return_value=feature_builder)
+
+    prepared = trainer.prepare_dataset(path)
+
+    assert isinstance(prepared, PreparedTrainingData)
+    assert prepared.features.equals(features)
+    assert prepared.target.equals(target)
+    trainer.feature_builder_factory.assert_called_once()
+    assert trainer.feature_builder_factory.call_args.args[0].equals(expected_features)
 
 
 def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: Path, mocker) -> None:
@@ -89,14 +116,14 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     trainer.train_model = mocker.Mock(return_value=model)
     trainer.evaluate_model = mocker.Mock(side_effect=[metrics, metrics, metrics])
     trainer.evaluate_model_with_predictions = mocker.Mock(
-        return_value=EvaluationResult([100], [100], metrics)
+        return_value=Evaluation([100], [100], metrics)
     )
     trainer.save_model = mocker.Mock(return_value=tmp_path / "models" / "house.joblib")
 
     result = trainer.train()
 
     assert isinstance(result, TrainingOutput)
-    assert isinstance(result, ExperimentResult)
+    assert isinstance(result, Experiment)
     assert result.experiment_id
     assert result.timestamp.tzinfo is not None
     assert result.dataset_name == settings.dataset_name

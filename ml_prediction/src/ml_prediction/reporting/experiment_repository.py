@@ -3,8 +3,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
-from ml_prediction.model.experiment_result import ExperimentResult
+from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 
 class ExperimentRepository:
@@ -27,10 +27,10 @@ class ExperimentRepository:
         "report_path",
     )
 
-    def __init__(self, path: Path) -> None:
-        self.path = path
+    def __init__(self) -> None:
+        self.path = Path("reports") / "experiments.csv"
 
-    def save(self, result: ExperimentResult) -> None:
+    def save(self, result: Experiment) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         write_header = not self.path.exists() or self.path.stat().st_size == 0
         with self.path.open("a", newline="", encoding="utf-8") as history_file:
@@ -39,7 +39,7 @@ class ExperimentRepository:
                 writer.writeheader()
             writer.writerow(self._to_row(result))
 
-    def read_all(self, dataset_name: str | None = None) -> list[ExperimentResult]:
+    def read_all(self, dataset_name: str | None = None) -> list[Experiment]:
         if not self.path.exists():
             return []
         with self.path.open(newline="", encoding="utf-8") as history_file:
@@ -51,7 +51,7 @@ class ExperimentRepository:
             ]
 
     @staticmethod
-    def _to_row(result: ExperimentResult) -> dict[str, str]:
+    def _to_row(result: Experiment) -> dict[str, str]:
         return {
             "experiment_id": result.experiment_id,
             "timestamp": result.timestamp.isoformat(),
@@ -72,8 +72,8 @@ class ExperimentRepository:
         }
 
     @staticmethod
-    def _from_row(row: dict[str, str]) -> ExperimentResult:
-        return ExperimentResult(
+    def _from_row(row: dict[str, str]) -> Experiment:
+        return Experiment(
             experiment_id=row["experiment_id"],
             timestamp=datetime.fromisoformat(row["timestamp"]),
             dataset_name=row["dataset_name"],

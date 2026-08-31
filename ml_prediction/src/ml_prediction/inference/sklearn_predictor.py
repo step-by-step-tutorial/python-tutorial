@@ -7,7 +7,7 @@ import pandas as pd
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.inference.predictor import Predictor
-from ml_prediction.model.model_metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION, ModelMetadata
+from ml_prediction.data_model.model_metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION, ModelMetadata
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 
 logger = logging.getLogger(__name__)

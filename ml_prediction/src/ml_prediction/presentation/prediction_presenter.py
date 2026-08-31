@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from ml_prediction.inference.prediction_service import PredictionOutput
+from ml_prediction.data_model.prediction_output import PredictionOutput
 from ml_prediction.presentation.presenter import Presenter
 
 logger = logging.getLogger(__name__)

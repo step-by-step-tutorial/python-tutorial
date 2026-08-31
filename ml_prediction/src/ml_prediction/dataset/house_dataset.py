@@ -1,5 +1,5 @@
-from ml_prediction.dataset.tabular_dataset import PreparedTrainingData, TabularDataset
+from ml_prediction.dataset.dataset import Dataset
 
 
-class HouseDataset(TabularDataset):
+class HouseDataset(Dataset):
     pass

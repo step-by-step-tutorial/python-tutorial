@@ -15,8 +15,4 @@ class FeatureModel(ABC):
         raise NotImplementedError
 
     def get_feature_columns(self) -> tuple[str, ...]:
-        return (
-                self.get_numeric_features()
-                + self.get_boolean_features()
-                + self.get_categorical_features()
-        )
+        return self.get_numeric_features() + self.get_boolean_features() + self.get_categorical_features()

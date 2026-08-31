@@ -1,14 +1,14 @@
-from ml_prediction.model.experiment_result import ExperimentResult
+from ml_prediction.data_model.experiment_result import Experiment
 from ml_prediction.reporting.experiment_repository import ExperimentRepository
 
 
 class ExperimentComparisonService:
-    def __init__(self, experiment_repository: ExperimentRepository, dataset_name: str) -> None:
-        self.repository = experiment_repository
+    def __init__(self, dataset_name: str) -> None:
         self.dataset_name = dataset_name
+        self.repository = ExperimentRepository()
 
 
-    def best_by_validation_mae(self) -> ExperimentResult | None:
+    def best_by_validation_mae(self) -> Experiment | None:
         experiments = self.repository.read_all(self.dataset_name)
         return min(
             experiments,
@@ -16,7 +16,7 @@ class ExperimentComparisonService:
             default=None,
         )
 
-    def best_by_validation_rmse(self) -> ExperimentResult | None:
+    def best_by_validation_rmse(self) -> Experiment | None:
         experiments = self.repository.read_all(self.dataset_name)
         return min(
             experiments,
@@ -24,7 +24,7 @@ class ExperimentComparisonService:
             default=None,
         )
 
-    def best_by_validation_r2(self) -> ExperimentResult | None:
+    def best_by_validation_r2(self) -> Experiment | None:
         experiments = self.repository.read_all(self.dataset_name)
         return max(
             experiments,

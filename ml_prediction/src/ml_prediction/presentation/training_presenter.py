@@ -1,8 +1,9 @@
 import logging
 
-from ml_prediction.evaluation.model_evaluator import ClassificationMetrics, RegressionMetrics
+from ml_prediction.data_model.classification_metrics import ClassificationMetrics
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.data_model.training import TrainingOutput
 from ml_prediction.presentation.presenter import Presenter
-from ml_prediction.training.training_models import TrainingOutput
 
 logger = logging.getLogger(__name__)
 

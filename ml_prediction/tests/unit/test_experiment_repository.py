@@ -3,14 +3,15 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
-from ml_prediction.model.experiment_result import ExperimentResult
+from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.reporting.experiment_repository import ExperimentRepository
 
 
 def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -> None:
-    repository = ExperimentRepository(tmp_path / "reports" / "experiments.csv")
-    result = ExperimentResult(
+    repository = ExperimentRepository()
+    repository.path = tmp_path / "reports" / "experiments.csv"
+    result = Experiment(
         experiment_id="experiment-1",
         timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
         dataset_name="house",

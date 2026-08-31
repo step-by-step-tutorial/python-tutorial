@@ -1,14 +1,14 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
-from ml_prediction.model.experiment_result import ExperimentResult
+from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.reporting.experiment_repository import ExperimentRepository
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 
 
-def make_experiment(experiment_id: str, model_type: str) -> ExperimentResult:
-    return ExperimentResult(
+def make_experiment(experiment_id: str, model_type: str) -> Experiment:
+    return Experiment(
         experiment_id=experiment_id,
         timestamp=datetime.now(timezone.utc),
         dataset_name="house",
@@ -23,7 +23,8 @@ def make_experiment(experiment_id: str, model_type: str) -> ExperimentResult:
 
 
 def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path) -> None:
-    repository = ExperimentRepository(tmp_path / "experiments.csv")
+    repository = ExperimentRepository()
+    repository.path = tmp_path / "experiments.csv"
     repository.save(make_experiment("experiment-123456", "random_forest"))
     repository.save(make_experiment("experiment-abcdef", "extra_trees"))
     visualizer = ExperimentVisualizer(repository, tmp_path / "reports")
@@ -39,10 +40,9 @@ def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path) ->
 
 
 def test_experiment_visualizer_skips_empty_history(tmp_path: Path) -> None:
-    visualizer = ExperimentVisualizer(
-        ExperimentRepository(tmp_path / "experiments.csv"),
-        tmp_path / "reports",
-    )
+    repository = ExperimentRepository()
+    repository.path = tmp_path / "experiments.csv"
+    visualizer = ExperimentVisualizer(repository, tmp_path / "reports")
 
     assert visualizer.save_validation_mae_comparison() is None
     assert visualizer.save_validation_rmse_comparison() is None

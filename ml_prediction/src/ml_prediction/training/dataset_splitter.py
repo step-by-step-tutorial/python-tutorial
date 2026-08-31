@@ -3,7 +3,8 @@ import logging
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions
+from ml_prediction.data_model.dataset_partition import DatasetPartition
+from ml_prediction.data_model.dataset_partitions import DatasetPartitions
 
 logger = logging.getLogger(__name__)
 

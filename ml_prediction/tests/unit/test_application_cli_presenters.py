@@ -12,8 +12,13 @@ from ml_prediction.presentation.training_presenter import TrainingPresenter
 
 def test_application_delegates_train_and_predict(mocker) -> None:
     trainer = mocker.Mock()
+    dataset = mocker.Mock(dataset_name="house")
     prediction_service = mocker.Mock()
-    application = Application(mocker.Mock(), trainer, prediction_service)
+    mocker.patch(
+        "ml_prediction.application.application.PredictionService",
+        return_value=prediction_service,
+    )
+    application = Application(dataset, trainer, mocker.Mock())
 
     assert application.train() is trainer.train.return_value
     assert application.predict() is prediction_service.predict.return_value
@@ -29,7 +34,7 @@ def test_presenters_implement_presenter_contract(tmp_path: Path) -> None:
 
 
 def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None:
-    from ml_prediction.inference.prediction_service import PredictionOutput
+    from ml_prediction.data_model.prediction_output import PredictionOutput
 
     output_path = tmp_path / "output" / "predictions.csv"
     result = PredictionOutput(

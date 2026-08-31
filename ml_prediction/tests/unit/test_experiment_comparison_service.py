@@ -2,13 +2,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
-from ml_prediction.model.experiment_result import ExperimentResult
+from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.reporting.experiment_repository import ExperimentRepository
 
 
-def experiment(experiment_id: str, mae: float, rmse: float, r2: float) -> ExperimentResult:
-    return ExperimentResult(
+def experiment(experiment_id: str, mae: float, rmse: float, r2: float) -> Experiment:
+    return Experiment(
         experiment_id=experiment_id,
         timestamp=datetime.now(timezone.utc),
         dataset_name="house",
@@ -23,7 +23,9 @@ def experiment(experiment_id: str, mae: float, rmse: float, r2: float) -> Experi
 
 
 def test_comparison_service_returns_best_experiment_for_each_validation_metric(tmp_path: Path) -> None:
-    repository = ExperimentRepository(tmp_path / "experiments.csv")
+    service = ExperimentComparisonService("house")
+    service.repository.path = tmp_path / "experiments.csv"
+    repository = service.repository
     experiments = [
         experiment("first", 3.0, 2.0, 0.7),
         experiment("second", 1.0, 4.0, 0.5),
@@ -32,8 +34,6 @@ def test_comparison_service_returns_best_experiment_for_each_validation_metric(t
     for result in experiments:
         repository.save(result)
 
-    service = ExperimentComparisonService(repository, "house")
-
     assert service.best_by_validation_mae() == experiments[1]
     assert service.best_by_validation_rmse() == experiments[2]
     assert service.best_by_validation_r2() == experiments[2]
@@ -41,10 +41,8 @@ def test_comparison_service_returns_best_experiment_for_each_validation_metric(t
 
 
 def test_comparison_service_returns_none_for_empty_history(tmp_path: Path) -> None:
-    service = ExperimentComparisonService(
-        ExperimentRepository(tmp_path / "experiments.csv"),
-        "house",
-    )
+    service = ExperimentComparisonService("house")
+    service.repository.path = tmp_path / "experiments.csv"
 
     assert service.best_by_validation_mae() is None
     assert service.best_by_validation_rmse() is None

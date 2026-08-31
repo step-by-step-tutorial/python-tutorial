@@ -5,13 +5,14 @@ from pathlib import Path
 import boto3
 import pandas as pd
 
-from ml_prediction.config.settings import DataLakeSettings
+from ml_prediction.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
 
 class DataLakeRepository:
-    def __init__(self, settings: DataLakeSettings) -> None:
+    def __init__(self, dataset_name: str) -> None:
+        settings = get_settings(dataset_name).data_lake
         self._settings = settings
         self.bucket_name = settings.bucket_name
         self.object_prefix = settings.object_prefix

@@ -7,12 +7,10 @@ from functools import partial
 from ml_prediction.application.application import Application
 from ml_prediction.config.settings import get_settings
 from ml_prediction.dataset.house_dataset import HouseDataset
-from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.features.house_features import HouseFeatureBuilder
+from ml_prediction.features.house_features_builder import HouseFeatureBuilder
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
-from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
@@ -38,18 +36,13 @@ def create_parser() -> argparse.ArgumentParser:
 
 def _create_house_application(settings, include_prediction: bool = True) -> Application:
     report_service = ReportService(settings.report_dir)
-    experiment_repository = ExperimentRepository(settings.report_dir / "experiments.csv")
-    experiment_comparison_service = ExperimentComparisonService(
-        experiment_repository,
-        settings.dataset_name,
-    )
+    experiment_repository = ExperimentRepository()
     training_visualizer = TrainingVisualizer()
     experiment_visualizer = ExperimentVisualizer(
         experiment_repository,
         settings.report_dir / "comparison",
         settings.dataset_name,
     )
-    data_lake_repository = DataLakeRepository(settings.data_lake)
     model_repository = LocalModelRepository()
     feature_model = HouseFeatureModel()
     feature_builder_factory = partial(HouseFeatureBuilder, feature_model=feature_model)
@@ -71,26 +64,21 @@ def _create_house_application(settings, include_prediction: bool = True) -> Appl
         settings.test_size,
         settings.random_state,
     )
-    dataset_service = HouseDataset(settings.data_dir / settings.dataset_filename)
-    prediction_service = None
+    dataset_service = HouseDataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
+    data_lake_repository = DataLakeRepository(dataset_service.dataset_name)
+    predictor = None
     if include_prediction:
-        prediction_service = PredictionService(
-            settings,
-            HousePricePredictor(
-                settings.model_dir / settings.model_filename,
-                model_repository,
-                feature_builder_factory,
-                feature_model,
-                settings.model_type,
-                settings.target_column,
-                settings.prediction_column,
-            ),
-            dataset_service,
-            data_lake_repository,
-            report_service,
+        predictor = HousePricePredictor(
+            settings.model_dir / settings.model_filename,
+            model_repository,
+            feature_builder_factory,
+            feature_model,
+            settings.model_type,
+            settings.target_column,
+            settings.prediction_column,
         )
     return Application(
-        settings,
+        dataset_service,
         HousePriceTrainer(
             settings,
             dataset_service,
@@ -106,8 +94,7 @@ def _create_house_application(settings, include_prediction: bool = True) -> Appl
             training_visualizer,
             experiment_visualizer,
         ),
-        prediction_service,
-        experiment_comparison_service,
+        predictor,
     )
 
 

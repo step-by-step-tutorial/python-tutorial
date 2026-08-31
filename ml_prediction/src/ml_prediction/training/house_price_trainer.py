@@ -6,15 +6,25 @@ from uuid import uuid4
 
 import pandas as pd
 
-from ml_prediction.config.settings import AppSettings, DatasetSource, TaskType
-from ml_prediction.dataset.house_dataset import HouseDataset, PreparedTrainingData
-from ml_prediction.evaluation.model_evaluator import EvaluationResult, ModelEvaluator, RegressionMetrics
+from ml_prediction.config.settings import DatasetSource, TaskType
+from ml_prediction.data_model.dataset_partition import DatasetPartition
+from ml_prediction.data_model.dataset_partitions import DatasetPartitions
+from ml_prediction.data_model.evaluation_result import Evaluation
+from ml_prediction.evaluation.model_evaluator import ModelEvaluator
+from ml_prediction.data_model.experiment_result import Experiment
+from ml_prediction.data_model.model_metadata import (
+    CURRENT_MODEL_VERSION,
+    CURRENT_SCHEMA_VERSION,
+    ModelMetadata,
+)
+from ml_prediction.data_model.app_settings import AppSettings
+from ml_prediction.data_model.prepared_training_data import PreparedTrainingData
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.dataset.house_dataset import HouseDataset
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.baseline_model import BaselineModel
-from ml_prediction.model.experiment_result import ExperimentResult
 from ml_prediction.model.house_price_model import HousePriceModel
-from ml_prediction.model.model_metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION, ModelMetadata
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 from ml_prediction.reporting.experiment_repository import ExperimentRepository
 from ml_prediction.reporting.report_service import ReportService
@@ -22,14 +32,13 @@ from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.trainer import Trainer
-from ml_prediction.training.training_models import DatasetPartition, DatasetPartitions
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 
 logger = logging.getLogger(__name__)
 
 
-class HousePriceTrainer(Trainer[ExperimentResult]):
+class HousePriceTrainer(Trainer[Experiment]):
     def __init__(
             self,
             settings: AppSettings,
@@ -60,7 +69,7 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
         self.evaluator = evaluator
         self.dataset_splitter = dataset_splitter
 
-    def train(self) -> ExperimentResult:
+    def train(self) -> Experiment:
         if self.settings.task_type != TaskType.REGRESSION:
             raise ValueError(
                 f"HousePriceTrainer supports only regression tasks, got '{self.settings.task_type}'"
@@ -205,7 +214,7 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
         report.record("model_saved", model_path=model_path, details=str(model_path))
         report.record("training_completed", details=str(report.path))
 
-        result = ExperimentResult(
+        result = Experiment(
             experiment_id=experiment_id,
             timestamp=experiment_timestamp,
             dataset_name=self.settings.dataset_name,
@@ -251,10 +260,13 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
     def prepare_dataset(self, dataset_path: Path) -> PreparedTrainingData:
         if self.dataset.path != dataset_path:
             raise ValueError(f"Dataset path does not match configured path: {self.dataset.path}")
-        return self.dataset.prepare_training_data(
-            self.settings.target_column,
-            self.feature_builder_factory,
+        dataframe = self.dataset.training_frame(self.settings.target_column)
+        target = dataframe.pop(self.settings.target_column)
+        features = self.feature_builder_factory(dataframe).build()
+        logger.info(
+            f"Prepared training data: rows={len(dataframe)} features={len(features.columns)} target={self.settings.target_column}"
         )
+        return PreparedTrainingData(features, target)
 
     def train_baseline(self, partitions: DatasetPartitions) -> BaselineModel:
         return BaselineModel().fit(partitions.train.features, partitions.train.target)
@@ -266,16 +278,16 @@ class HousePriceTrainer(Trainer[ExperimentResult]):
         return self.evaluator.evaluate(
             dataset_partition.target,
             trained_model.predict(dataset_partition.features),
-        )
+        ).metrics
 
     def evaluate_model_with_predictions(
             self,
             trained_model,
             dataset_partition: DatasetPartition,
-    ) -> EvaluationResult:
+    ) -> Evaluation:
         y_true = dataset_partition.target
         y_pred = trained_model.predict(dataset_partition.features)
-        return self.evaluator.evaluate_with_predictions(y_true, y_pred)
+        return self.evaluator.evaluate(y_true, y_pred)
 
     @staticmethod
     def _fitted_model_parameters(trained_model, configured_parameters: dict[str, object]) -> dict[str, object]:

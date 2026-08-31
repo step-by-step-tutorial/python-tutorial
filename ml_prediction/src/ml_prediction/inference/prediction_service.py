@@ -1,10 +1,11 @@
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 
-from ml_prediction.config.settings import AppSettings, DatasetSource
+from ml_prediction.config.settings import get_settings
+from ml_prediction.data_model.app_settings import DatasetSource
+from ml_prediction.data_model.prediction_output import PredictionOutput
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.inference.predictor import Predictor
 from ml_prediction.reporting.report_service import ReportService
@@ -14,29 +15,17 @@ from ml_prediction.utils.csv_utils import load_csv
 logger = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PredictionOutput:
-    dataframe: pd.DataFrame
-    predictions: pd.Series
-    source_path: Path
-    report_path: Path | None = None
-    prediction_column: str = "predicted_total_price"
-
-
 class PredictionService:
     def __init__(
             self,
-            settings: AppSettings,
             predictor: Predictor[pd.Series],
             dataset: Dataset,
-            data_lake_repository: DataLakeRepository,
-            report_service: ReportService | None = None,
     ) -> None:
-        self.settings = settings
+        self.settings = get_settings(dataset.dataset_name)
         self.predictor = predictor
         self.dataset = dataset
-        self.data_lake_repository = data_lake_repository
-        self.report_service = report_service or ReportService(settings.report_dir)
+        self.datalake_repository = DataLakeRepository(dataset.dataset_name)
+        self.report_service = ReportService(self.settings.report_dir)
 
     def predict(self) -> PredictionOutput:
         model_path = self.predictor.model_path
@@ -64,7 +53,7 @@ class PredictionService:
     def download_dataset(self) -> Path:
         dataset_path = self.settings.data_dir / self.settings.dataset_filename
         if self.settings.dataset_source == DatasetSource.DOWNLOAD:
-            self.data_lake_repository.download_latest_csv(dataset_path)
+            self.datalake_repository.download_latest_csv(dataset_path)
         else:
             logger.info("Using local dataset: path=%s", dataset_path)
         return dataset_path

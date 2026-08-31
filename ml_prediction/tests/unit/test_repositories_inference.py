@@ -4,13 +4,15 @@ from datetime import datetime, timezone
 import pandas as pd
 import pytest
 
-from ml_prediction.config.settings import AppSettings, DataLakeSettings, DatasetSource
+from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
+from ml_prediction.data_model.data_lake_settings import DataLakeSettings
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
-from ml_prediction.inference.prediction_service import PredictionOutput, PredictionService
+from ml_prediction.data_model.prediction_output import PredictionOutput
+from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.features.house_features import HouseFeatureBuilder
-from ml_prediction.evaluation.model_evaluator import RegressionMetrics
-from ml_prediction.model.model_metadata import ModelMetadata
+from ml_prediction.features.house_features_builder import HouseFeatureBuilder
+from ml_prediction.data_model.model_metadata import ModelMetadata
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 
@@ -72,10 +74,10 @@ def test_datalake_repository_lists_only_parquet_objects(mocker) -> None:
         ]
     }
     mocker.patch("ml_prediction.repository.datalake_repository.boto3.client", return_value=client)
-    repository = DataLakeRepository(settings(Path("/tmp" )).data_lake)
+    repository = DataLakeRepository("house")
 
     assert [item["Key"] for item in repository.get_object_keys()] == ["prefix/old.parquet", "prefix/new.PARQUET"]
-    client.list_objects_v2.assert_called_once_with(Bucket="house", Prefix="prefix")
+    client.list_objects_v2.assert_called_once_with(Bucket="house", Prefix="enriched/house/")
 
 
 def test_datalake_repository_downloads_latest_partition_as_csv(tmp_path: Path, mocker) -> None:
@@ -92,7 +94,7 @@ def test_datalake_repository_downloads_latest_partition_as_csv(tmp_path: Path, m
         pd.DataFrame({"value": [1]}),
         pd.DataFrame({"value": [2]}),
     ])
-    repository = DataLakeRepository(settings(tmp_path).data_lake)
+    repository = DataLakeRepository("house")
     output = tmp_path / "data" / "house.csv"
 
     assert repository.download_latest_csv(output) == output
@@ -109,18 +111,23 @@ def test_datalake_repository_rejects_empty_bucket(tmp_path: Path, mocker) -> Non
     mocker.patch("ml_prediction.repository.datalake_repository.boto3.client", return_value=client)
 
     with pytest.raises(FileNotFoundError, match="No Parquet files found"):
-        DataLakeRepository(settings(tmp_path).data_lake).download_latest_csv(tmp_path / "house.csv")
+        DataLakeRepository("house").download_latest_csv(tmp_path / "house.csv")
 
 
 def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path) -> None:
     dataset_path = tmp_path / "data" / "house.csv"
-    dataset = mocker.Mock(path=dataset_path)
+    dataset = mocker.Mock(path=dataset_path, dataset_name="house")
     dataframe = pd.DataFrame({"total_price": [100]})
     dataset_path.parent.mkdir(parents=True)
     dataframe.to_csv(dataset_path, index=False)
     predictor = mocker.Mock()
     predictor.predict.return_value = pd.Series([110])
-    service = PredictionService(settings(tmp_path), predictor, dataset, mocker.Mock())
+    mocker.patch(
+        "ml_prediction.inference.prediction_service.get_settings",
+        return_value=settings(tmp_path),
+    )
+    mocker.patch("ml_prediction.inference.prediction_service.DataLakeRepository")
+    service = PredictionService(predictor, dataset)
     mocker.patch.object(service, "download_dataset", return_value=dataset_path)
 
     result = service.predict()
@@ -137,21 +144,28 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
 
 def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path: Path) -> None:
     repository = mocker.Mock()
+    local_settings = AppSettings(
+        data_dir=tmp_path / "data",
+        model_dir=tmp_path / "models",
+        target_column="total_price",
+        validation_size=0.2,
+        test_size=0.2,
+        random_state=42,
+        data_lake=DataLakeSettings("http://localhost", "key", "secret", "house", ""),
+        dataset_source=DatasetSource.LOCAL,
+        dataset_filename="house.csv",
+    )
+    mocker.patch(
+        "ml_prediction.inference.prediction_service.get_settings",
+        return_value=local_settings,
+    )
+    mocker.patch(
+        "ml_prediction.inference.prediction_service.DataLakeRepository",
+        return_value=repository,
+    )
     service = PredictionService(
-        AppSettings(
-            data_dir=tmp_path / "data",
-            model_dir=tmp_path / "models",
-            target_column="total_price",
-            validation_size=0.2,
-            test_size=0.2,
-            random_state=42,
-            data_lake=DataLakeSettings("http://localhost", "key", "secret", "house", ""),
-            dataset_source=DatasetSource.LOCAL,
-            dataset_filename="house.csv",
-        ),
+        mocker.Mock(dataset_name="house"),
         mocker.Mock(),
-        mocker.Mock(),
-        repository,
     )
 
     assert service.download_dataset() == tmp_path / "data" / "house.csv"
@@ -160,7 +174,15 @@ def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path
 
 def test_prediction_service_downloads_dataset_when_configured(mocker, tmp_path: Path) -> None:
     repository = mocker.Mock()
-    service = PredictionService(settings(tmp_path), mocker.Mock(), mocker.Mock(), repository)
+    mocker.patch(
+        "ml_prediction.inference.prediction_service.get_settings",
+        return_value=settings(tmp_path),
+    )
+    mocker.patch(
+        "ml_prediction.inference.prediction_service.DataLakeRepository",
+        return_value=repository,
+    )
+    service = PredictionService(mocker.Mock(), mocker.Mock(dataset_name="house"))
 
     assert service.download_dataset() == tmp_path / "data" / "house.csv"
     repository.download_latest_csv.assert_called_once_with(
@@ -169,12 +191,15 @@ def test_prediction_service_downloads_dataset_when_configured(mocker, tmp_path: 
 
 
 def test_prediction_service_rejects_dataset_path_mismatch(mocker, tmp_path: Path) -> None:
-    dataset = mocker.Mock(path=tmp_path / "different.csv")
+    dataset = mocker.Mock(path=tmp_path / "different.csv", dataset_name="house")
+    mocker.patch(
+        "ml_prediction.inference.prediction_service.get_settings",
+        return_value=settings(tmp_path),
+    )
+    mocker.patch("ml_prediction.inference.prediction_service.DataLakeRepository")
     service = PredictionService(
-        settings(tmp_path),
         mocker.Mock(),
         dataset,
-        mocker.Mock(),
     )
     downloaded_path = tmp_path / "data" / "house.csv"
     mocker.patch.object(service, "download_dataset", return_value=downloaded_path)
