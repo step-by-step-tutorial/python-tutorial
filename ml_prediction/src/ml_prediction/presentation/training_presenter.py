@@ -21,7 +21,6 @@ class TrainingPresenter(Presenter):
             output.dataset_name,
             output.model_type,
         )
-        self._log_metrics("Baseline validation", output.baseline_validation_metrics)
         self._log_metrics("Validation", output.validation_metrics)
         self._log_metrics("Final test", output.test_metrics)
         logger.info("Saved model: path=%s", output.model_path)

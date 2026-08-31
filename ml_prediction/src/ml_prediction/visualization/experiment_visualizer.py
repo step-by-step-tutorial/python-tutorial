@@ -3,21 +3,20 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from ml_prediction.config.settings import get_settings
 from ml_prediction.reporting.experiment_service import ExperimentService
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 
 
 class ExperimentVisualizer:
-    """Creates separate comparison charts from persisted experiment history."""
 
     def __init__(
             self,
-            experiment_repository: ExperimentService,
-            report_dir: Path,
-            dataset_name: str | None = None,
+            dataset_name: str,
     ) -> None:
-        self.experiment_repository = experiment_repository
-        self.report_dir = report_dir
+        settings = get_settings(dataset_name)
+        self.experiment_service = ExperimentService(dataset_name)
+        self.report_dir = settings.report_dir / "comparison"
         self.dataset_name = dataset_name
 
     def save_validation_mae_comparison(self) -> Path | None:
@@ -47,7 +46,7 @@ class ExperimentVisualizer:
             metric_label: str,
             metric_value: Callable,
     ) -> Path | None:
-        experiments = self.experiment_repository.read_all()
+        experiments = self.experiment_service.read_all()
         if not experiments:
             return None
 

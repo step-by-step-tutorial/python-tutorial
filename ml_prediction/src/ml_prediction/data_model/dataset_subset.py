@@ -4,6 +4,6 @@ import pandas as pd
 
 
 @dataclass(frozen=True)
-class PreparedTrainingData:
+class DatasetSubset:
     features: pd.DataFrame
     target: pd.Series

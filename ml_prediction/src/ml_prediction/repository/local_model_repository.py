@@ -30,7 +30,7 @@ class LocalModelRepository:
     def save_metadata(self, metadata: ModelMetadata, path: Path) -> Path:
         metadata_path = self.metadata_path(path)
         with metadata_path.open("w", encoding="utf-8") as metadata_file:
-            json.dump(asdict(metadata), metadata_file, default=self._json_default, indent=2)
+            json.dump(asdict(metadata), metadata_file, default=self.json_default, indent=2)
         logger.info(f"Saved model metadata: path={metadata_path}")
         return metadata_path
 
@@ -52,7 +52,5 @@ class LocalModelRepository:
         return path.with_suffix(".metadata.json")
 
     @staticmethod
-    def _json_default(value: Any) -> str:
-        if hasattr(value, "isoformat"):
-            return value.isoformat()
-        raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+    def json_default(value: Any) -> str:
+        return value.isoformat()

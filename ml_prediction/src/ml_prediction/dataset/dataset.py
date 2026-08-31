@@ -15,12 +15,6 @@ class Dataset:
         self.path = path
         self.dataset_name = dataset_name
 
-    def training_frame(self, target_column: str) -> pd.DataFrame:
-        dataframe = load_csv(self.path).copy()
-        dataframe = dataframe.dropna(subset=[target_column])
-        logger.info(f"Prepared training frame: rows={len(dataframe)} target={target_column}")
-        return dataframe
-
     def download(self) -> tuple[pd.DataFrame, Path]:
         settings = get_settings(self.dataset_name)
         if settings.dataset_source == DatasetSource.DOWNLOAD:

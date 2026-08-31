@@ -4,6 +4,6 @@ import pandas as pd
 
 
 @dataclass(frozen=True)
-class DatasetPartition:
+class FeaturesAndTarget:
     features: pd.DataFrame
     target: pd.Series

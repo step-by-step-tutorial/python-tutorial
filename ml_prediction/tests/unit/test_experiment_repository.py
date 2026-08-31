@@ -17,7 +17,6 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
         dataset_name="house",
         model_type="random_forest",
         model_parameters={"n_estimators": 200, "bootstrap": True},
-        baseline_validation_metrics=RegressionMetrics(1.0, 2.0, 0.5),
         validation_metrics=RegressionMetrics(0.8, 1.5, 0.7),
         test_metrics=RegressionMetrics(0.9, 1.6, 0.65),
         model_path=tmp_path / "models" / "house.joblib",
@@ -38,11 +37,6 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
         sort_keys=True,
         separators=(",", ":"),
     )
-    assert rows[0]["baseline_validation_metrics"] == json.dumps({
-        "mean_absolute_error": 1.0,
-        "root_mean_squared_error": 2.0,
-        "r2_score": 0.5,
-    })
     assert rows[0]["validation_metrics"] == json.dumps({
         "mean_absolute_error": 0.8,
         "root_mean_squared_error": 1.5,

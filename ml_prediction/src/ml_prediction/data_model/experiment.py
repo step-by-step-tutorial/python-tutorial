@@ -15,7 +15,6 @@ class Experiment:
         "dataset_name",
         "model_type",
         "model_parameters",
-        "baseline_validation_metrics",
         "validation_metrics",
         "test_metrics",
         "model_path",
@@ -27,7 +26,6 @@ class Experiment:
     dataset_name: str
     model_type: str
     model_parameters: dict[str, Any]
-    baseline_validation_metrics: RegressionMetrics
     validation_metrics: RegressionMetrics
     test_metrics: RegressionMetrics
     model_path: Path
@@ -40,7 +38,6 @@ class Experiment:
             "dataset_name": self.dataset_name,
             "model_type": self.model_type,
             "model_parameters": json.dumps(self.model_parameters, sort_keys=True, separators=(",", ":")),
-            "baseline_validation_metrics": json.dumps(asdict(self.baseline_validation_metrics)),
             "validation_metrics": json.dumps(asdict(self.validation_metrics)),
             "test_metrics": json.dumps(asdict(self.test_metrics)),
             "model_path": str(self.model_path),
@@ -55,7 +52,6 @@ class Experiment:
             dataset_name=row["dataset_name"],
             model_type=row["model_type"],
             model_parameters=json.loads(row["model_parameters"]),
-            baseline_validation_metrics=RegressionMetrics(**json.loads(row["baseline_validation_metrics"])),
             validation_metrics=RegressionMetrics(**json.loads(row["validation_metrics"])),
             test_metrics=RegressionMetrics(**json.loads(row["test_metrics"])),
             model_path=Path(row["model_path"]),

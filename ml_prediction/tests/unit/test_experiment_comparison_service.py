@@ -14,7 +14,6 @@ def experiment(experiment_id: str, mae: float, rmse: float, r2: float) -> Experi
         dataset_name="house",
         model_type="random_forest",
         model_parameters={},
-        baseline_validation_metrics=RegressionMetrics(10.0, 11.0, 0.1),
         validation_metrics=RegressionMetrics(mae, rmse, r2),
         test_metrics=RegressionMetrics(12.0, 13.0, 0.2),
         model_path=Path(f"models/{experiment_id}.joblib"),

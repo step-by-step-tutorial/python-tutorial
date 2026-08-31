@@ -3,9 +3,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from ml_prediction.config.settings import DatasetSource, TaskType, get_settings
-from ml_prediction.data_model.dataset_partition import DatasetPartition
-from ml_prediction.data_model.dataset_partitions import DatasetPartitions
+import pandas as pd
+
+from ml_prediction.config.settings import TaskType, get_settings
+from ml_prediction.data_model.dataset_subset import DatasetSubset
+from ml_prediction.data_model.dataset_split import DatasetSplit
 from ml_prediction.data_model.evaluation import Evaluation
 from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.data_model.experiment import Experiment
@@ -14,199 +16,185 @@ from ml_prediction.data_model.model_metadata import (
     CURRENT_SCHEMA_VERSION,
     ModelMetadata,
 )
-from ml_prediction.data_model.prepared_training_data import PreparedTrainingData
+from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.model.baseline_model import BaselineModel
 from ml_prediction.model.house_price_model import HousePriceModel
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.reporting.experiment_service import ExperimentService
 from ml_prediction.reporting.report_service import ReportService
-from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.trainer import Trainer
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
+from ml_prediction.utils.data_validator_utils import should_be_same
 
 logger = logging.getLogger(__name__)
 
 
 class HousePriceTrainer(Trainer[Experiment]):
-    def __init__(
-            self,
-            dataset: Dataset,
-    ) -> None:
-        settings = get_settings(dataset.dataset_name)
-        feature_model = HouseFeatureModel()
-        experiment_repository = ExperimentService(dataset.dataset_name)
-        self.settings = settings
-        self.dataset = dataset
-        self.feature_model = feature_model
-        self.report_service = ReportService(settings.report_dir)
-        self.experiment_repository = experiment_repository
-        self.training_visualizer = TrainingVisualizer()
-        self.experiment_visualizer = ExperimentVisualizer(
-            experiment_repository,
-            settings.report_dir / "comparison",
-            settings.dataset_name,
-        )
-        self.data_lake_repository = DataLakeRepository(dataset.dataset_name)
-        self.model_repository = LocalModelRepository()
-        self.pipeline_builder = HousePricePipelineBuilder(
-            feature_model,
-            RegressorBuilder(dataset.dataset_name),
-        )
-        self.evaluator = ModelEvaluator()
-        self.dataset_splitter = DatasetSplitter(
-            settings.validation_size,
-            settings.test_size,
-            settings.random_state,
-        )
+    def __init__(self, dataset: Dataset) -> None:
+        self._settings = get_settings(dataset.dataset_name)
+        self._dataset = dataset
+        self._feature_model = HouseFeatureModel()
+        self._report_service = ReportService(self._settings.report_dir)
+        self._experiment_service = ExperimentService(dataset.dataset_name)
+        self._training_visualizer = TrainingVisualizer()
+        self._experiment_visualizer = ExperimentVisualizer(dataset.dataset_name)
+        self._model_repository = LocalModelRepository()
+        self._pipeline_builder = HousePricePipelineBuilder(self._feature_model, RegressorBuilder(dataset.dataset_name))
+        self._evaluator = ModelEvaluator()
+        self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
 
     def train(self) -> Experiment:
-        if self.settings.task_type != TaskType.REGRESSION:
-            raise ValueError(
-                f"HousePriceTrainer supports only regression tasks, got '{self.settings.task_type}'"
-            )
+        should_be_same(
+            first=self._settings.task_type,
+            second=TaskType.REGRESSION,
+            error_message=f"HousePriceTrainer supports only regression tasks, got '{self._settings.task_type}'",
+        )
+
         report_events: list[tuple[str, dict[str, object]]] = []
 
-        def record_report(step: str, **details: object) -> None:
-            report_events.append((step, details))
+        dataframe, dataset_path = self.download_dataset()
+        features_and_target = self.build_features_and_target(dataframe)
 
-        model_path = self.settings.model_dir / self.settings.model_filename
-        dataset_path = self.download_dataset()
-        prepared_training_data = self.prepare_dataset(dataset_path)
-        record_report("dataset_downloaded", details=str(dataset_path))
-        record_report(
+        report_events.append((
+            "dataset_downloaded",
+            {
+                "details": str(dataset_path)
+            }
+        ))
+        report_events.append((
             "dataset_prepared",
-            rows=len(prepared_training_data.features),
-            details=f"target={self.settings.target_column}",
-        )
-        record_report(
+            {
+                "rows": len(features_and_target.features),
+                "details": f"target={self._settings.target_column}",
+            },
+        ))
+        report_events.append((
             "features_built",
-            rows=len(prepared_training_data.features),
-            details=f"columns={len(prepared_training_data.features.columns)}",
-        )
-        record_report(
+            {
+                "rows": len(features_and_target.features),
+                "details": f"columns={len(features_and_target.features.columns)}",
+            },
+        ))
+        report_events.append((
             "target_extracted",
-            rows=len(prepared_training_data.target),
-            details=f"column={self.settings.target_column}",
-        )
-        dataset_partitions = self.dataset_splitter.split(
-            prepared_training_data.features,
-            prepared_training_data.target,
-        )
-        record_report(
+            {
+                "rows": len(features_and_target.target),
+                "details": f"column={self._settings.target_column}",
+            },
+        ))
+
+        dataset_subsets = self._dataset_splitter.split(features_and_target.features, features_and_target.target)
+
+        report_events.append((
             "dataset_split",
-            rows=len(prepared_training_data.features),
-            details=(
-                f"train={len(dataset_partitions.train.features)} "
-                f"validation={len(dataset_partitions.validation.features)} "
-                f"test={len(dataset_partitions.test.features)}"
-            ),
-        )
+            {
+                "rows": len(features_and_target.features),
+                "details": (
+                    f"train={len(dataset_subsets.train.features)} "
+                    f"validation={len(dataset_subsets.validation.features)} "
+                    f"test={len(dataset_subsets.test.features)}"
+                ),
+            },
+        ))
 
         experiment_id = str(uuid4())
         experiment_timestamp = datetime.now(timezone.utc)
+
         model_parameters = {
-            "n_estimators": self.settings.n_estimators,
-            "n_jobs": self.settings.n_jobs,
-            "max_depth": self.settings.max_depth,
-            "min_samples_split": self.settings.min_samples_split,
-            "min_samples_leaf": self.settings.min_samples_leaf,
-            "max_features": self.settings.max_features,
-            "bootstrap": self.settings.bootstrap,
-            "random_state": self.settings.random_state,
+            "n_estimators": self._settings.n_estimators,
+            "n_jobs": self._settings.n_jobs,
+            "max_depth": self._settings.max_depth,
+            "min_samples_split": self._settings.min_samples_split,
+            "min_samples_leaf": self._settings.min_samples_leaf,
+            "max_features": self._settings.max_features,
+            "bootstrap": self._settings.bootstrap,
+            "random_state": self._settings.random_state,
         }
+
         logger.info(
-            "Starting training experiment: experiment_id=%s model_type=%s model_parameters=%s",
-            experiment_id,
-            self.settings.model_type,
-            model_parameters,
+            f"Starting training experiment: "
+            f"experiment_id={experiment_id} "
+            f"model_type={self._settings.model_type} "
+            f"model_parameters={model_parameters}",
         )
 
-        baseline_model = self.train_baseline(dataset_partitions)
-        record_report(
-            "baseline_trained",
-            partition="train",
-            rows=len(dataset_partitions.train.features),
-            model_name="baseline",
-        )
-        # Validation is the intermediate set for comparing the baseline and trained model.
         logger.info(
-            "Evaluating model: model=baseline partition=validation rows=%s",
-            len(dataset_partitions.validation.features),
-        )
-        baseline_validation_metrics = self.evaluate_model(baseline_model, dataset_partitions.validation)
-        record_report(
-            "model_evaluated",
-            partition="validation",
-            rows=len(dataset_partitions.validation.features),
-            model_name="baseline",
-            metrics=baseline_validation_metrics,
+            f"Evaluating model: "
+            f"model={self._settings.model_type} "
+            f"partition=validation rows={len(dataset_subsets.validation.features)}",
         )
 
-        trained_model = self.train_model(dataset_partitions)
-        record_report(
+        trained_model = self.train_model(dataset_subsets)
+
+        report_events.append((
             "model_trained",
-            partition="train",
-            rows=len(dataset_partitions.train.features),
-            model_name=self.settings.model_type,
-        )
+            {
+                "partition": "train",
+                "rows": len(dataset_subsets.train.features),
+                "model_name": self._settings.model_type,
+            },
+        ))
         logger.info(
-            "Evaluating model: model=%s partition=validation rows=%s",
-            self.settings.model_type,
-            len(dataset_partitions.validation.features),
+            f"Evaluating model: "
+            f"model={self._settings.model_type} "
+            f"partition=validation rows={len(dataset_subsets.validation.features)}",
         )
-        validation_metrics = self.evaluate_model(trained_model, dataset_partitions.validation)
-        record_report(
+        validation_metrics = self.evaluate_model(trained_model, dataset_subsets.validation)
+        report_events.append((
             "model_evaluated",
-            partition="validation",
-            rows=len(dataset_partitions.validation.features),
-            model_name=self.settings.model_type,
-            metrics=validation_metrics,
-        )
+            {
+                "partition": "validation",
+                "rows": len(dataset_subsets.validation.features),
+                "model_name": self._settings.model_type,
+                "metrics": validation_metrics,
+            },
+        ))
         logger.info(
-            "Evaluating model: model=%s partition=test rows=%s",
-            self.settings.model_type,
-            len(dataset_partitions.test.features),
+            f"Evaluating model: "
+            f"model={self._settings.model_type} "
+            f"partition=test rows={len(dataset_subsets.test.features)}",
         )
-        # Test is held back until this final evaluation and does not guide selection.
+
         final_test_evaluation = self.evaluate_model_with_predictions(
             trained_model,
-            dataset_partitions.test,
+            dataset_subsets.test,
         )
         final_test_metrics = final_test_evaluation.metrics
-        record_report(
+        report_events.append((
             "model_evaluated",
-            partition="test",
-            rows=len(dataset_partitions.test.features),
-            model_name=self.settings.model_type,
-            metrics=final_test_metrics,
-        )
+            {
+                "partition": "test",
+                "rows": len(dataset_subsets.test.features),
+                "model_name": self._settings.model_type,
+                "metrics": final_test_metrics,
+            },
+        ))
         model_parameters = self._fitted_model_parameters(trained_model, model_parameters)
         metadata = ModelMetadata(
-            model_type=self.settings.model_type,
+            model_type=self._settings.model_type,
             model_parameters=model_parameters,
-            target_column=self.settings.target_column,
-            numeric_features=self.feature_model.get_numeric_features(),
-            boolean_features=self.feature_model.get_boolean_features(),
-            categorical_features=self.feature_model.get_categorical_features(),
+            target_column=self._settings.target_column,
+            numeric_features=self._feature_model.get_numeric_features(),
+            boolean_features=self._feature_model.get_boolean_features(),
+            categorical_features=self._feature_model.get_categorical_features(),
             training_timestamp=experiment_timestamp,
             validation_metrics=validation_metrics,
             final_test_metrics=final_test_metrics,
             schema_version=CURRENT_SCHEMA_VERSION,
             model_version=CURRENT_MODEL_VERSION,
-            dataset_name=self.settings.dataset_name,
-            task_type=self.settings.task_type.value,
-            prediction_column=self.settings.prediction_column,
+            dataset_name=self._settings.dataset_name,
+            task_type=self._settings.task_type.value,
+            prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(trained_model, metadata)
-        report = self.report_service.start(self.settings.dataset_name, "training", model_path)
+        report = self._report_service.start(self._settings.dataset_name, "training", model_path)
         for step, details in report_events:
             report.record(step, **details)
         report.record("model_saved", model_path=model_path, details=str(model_path))
@@ -215,65 +203,58 @@ class HousePriceTrainer(Trainer[Experiment]):
         result = Experiment(
             experiment_id=experiment_id,
             timestamp=experiment_timestamp,
-            dataset_name=self.settings.dataset_name,
-            model_type=self.settings.model_type,
+            dataset_name=self._settings.dataset_name,
+            model_type=self._settings.model_type,
             model_parameters=metadata.model_parameters,
-            baseline_validation_metrics=baseline_validation_metrics,
             validation_metrics=validation_metrics,
             test_metrics=final_test_metrics,
             model_path=model_path,
             report_path=report.path,
         )
-        self.experiment_repository.save(result)
-        self.training_visualizer.save_actual_vs_predicted(
+        self._experiment_service.save(result)
+        self._training_visualizer.save_actual_vs_predicted(
             final_test_evaluation.y_true,
             final_test_evaluation.y_pred,
             experiment_id,
-            self.settings.report_dir,
+            self._settings.report_dir,
         )
-        self.training_visualizer.save_residual_vs_predicted(
+        self._training_visualizer.save_residual_vs_predicted(
             final_test_evaluation.y_true,
             final_test_evaluation.y_pred,
             experiment_id,
-            self.settings.report_dir,
+            self._settings.report_dir,
         )
-        self.training_visualizer.save_feature_importance(
+        self._training_visualizer.save_feature_importance(
             trained_model,
             experiment_id,
-            self.settings.report_dir,
+            self._settings.report_dir,
         )
-        self.experiment_visualizer.save_validation_mae_comparison()
-        self.experiment_visualizer.save_validation_rmse_comparison()
-        self.experiment_visualizer.save_validation_r2_comparison()
+        self._experiment_visualizer.save_validation_mae_comparison()
+        self._experiment_visualizer.save_validation_rmse_comparison()
+        self._experiment_visualizer.save_validation_r2_comparison()
         return result
 
-    def download_dataset(self) -> Path:
-        dataset_path = self.settings.data_dir / self.settings.dataset_filename
-        if self.settings.dataset_source == DatasetSource.DOWNLOAD:
-            self.data_lake_repository.download_latest_csv(dataset_path)
-        else:
-            logger.info("Using local dataset: path=%s", dataset_path)
-        return dataset_path
+    def download_dataset(self) -> tuple[pd.DataFrame, Path]:
+        return self._dataset.download()
 
-    def prepare_dataset(self, dataset_path: Path) -> PreparedTrainingData:
-        if self.dataset.path != dataset_path:
-            raise ValueError(f"Dataset path does not match configured path: {self.dataset.path}")
-        dataframe = self.dataset.training_frame(self.settings.target_column)
-        target = dataframe.pop(self.settings.target_column)
-        features = FeatureBuilder(dataframe, self.feature_model).build()
+    def build_features_and_target(self, dataframe: pd.DataFrame) -> FeaturesAndTarget:
+        dataframe = dataframe.dropna(subset=[self._settings.target_column]).copy()
+
+        target = dataframe.pop(self._settings.target_column)
+        features = FeatureBuilder(dataframe, self._feature_model).build()
         logger.info(
-            f"Prepared training data: rows={len(dataframe)} features={len(features.columns)} target={self.settings.target_column}"
+            f"Prepared training data: "
+            f"rows={len(dataframe)} "
+            f"features={len(features.columns)} "
+            f"target={self._settings.target_column}"
         )
-        return PreparedTrainingData(features, target)
+        return FeaturesAndTarget(features, target)
 
-    def train_baseline(self, partitions: DatasetPartitions) -> BaselineModel:
-        return BaselineModel().fit(partitions.train.features, partitions.train.target)
+    def train_model(self, partitions: DatasetSplit) -> HousePriceModel:
+        return HousePriceModel(self._pipeline_builder).fit(partitions.train.features, partitions.train.target)
 
-    def train_model(self, partitions: DatasetPartitions) -> HousePriceModel:
-        return HousePriceModel(self.pipeline_builder).fit(partitions.train.features, partitions.train.target)
-
-    def evaluate_model(self, trained_model, dataset_partition: DatasetPartition) -> RegressionMetrics:
-        return self.evaluator.evaluate(
+    def evaluate_model(self, trained_model, dataset_partition: DatasetSubset) -> RegressionMetrics:
+        return self._evaluator.evaluate(
             dataset_partition.target,
             trained_model.predict(dataset_partition.features),
         ).metrics
@@ -281,11 +262,11 @@ class HousePriceTrainer(Trainer[Experiment]):
     def evaluate_model_with_predictions(
             self,
             trained_model,
-            dataset_partition: DatasetPartition,
+            dataset_partition: DatasetSubset,
     ) -> Evaluation:
         y_true = dataset_partition.target
         y_pred = trained_model.predict(dataset_partition.features)
-        return self.evaluator.evaluate(y_true, y_pred)
+        return self._evaluator.evaluate(y_true, y_pred)
 
     @staticmethod
     def _fitted_model_parameters(trained_model, configured_parameters: dict[str, object]) -> dict[str, object]:
@@ -299,8 +280,8 @@ class HousePriceTrainer(Trainer[Experiment]):
         return parameters if isinstance(parameters, dict) else configured_parameters
 
     def save_model(self, trained_model: HousePriceModel, metadata: ModelMetadata) -> Path:
-        return self.model_repository.save(
+        return self._model_repository.save(
             trained_model.pipeline,
-            self.settings.model_dir / self.settings.model_filename,
+            self._settings.model_dir / self._settings.model_filename,
             metadata,
         )

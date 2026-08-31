@@ -37,7 +37,7 @@ def require_not_blank(obj: Any, error_message="Object cannot be None.") -> Any:
     return obj
 
 
-def must_be_same(first: Any, second: Any, error_message: str = "Values must be the same.") -> None:
+def should_be_same(first: Any, second: Any, error_message: str = "Values must be the same.") -> None:
     if first != second:
         raise Exception(error_message)
 
