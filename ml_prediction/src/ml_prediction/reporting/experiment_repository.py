@@ -30,14 +30,14 @@ class ExperimentRepository:
     def __init__(self) -> None:
         self.path = Path("reports") / "experiments.csv"
 
-    def save(self, result: Experiment) -> None:
+    def save(self, experiment: Experiment) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         write_header = not self.path.exists() or self.path.stat().st_size == 0
         with self.path.open("a", newline="", encoding="utf-8") as history_file:
             writer = csv.DictWriter(history_file, fieldnames=self.fieldnames)
             if write_header:
                 writer.writeheader()
-            writer.writerow(self._to_row(result))
+            writer.writerow(self._to_row(experiment))
 
     def read_all(self, dataset_name: str | None = None) -> list[Experiment]:
         if not self.path.exists():

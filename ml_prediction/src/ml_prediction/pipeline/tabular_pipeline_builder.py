@@ -10,35 +10,30 @@ from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 
 class TabularPipelineBuilder(PipelineBuilder):
 
-    def __init__(
-            self,
-            feature_model: FeatureModel,
-            regressor_builder: RegressorBuilder,
-    ) -> None:
+    def __init__(self, feature_model: FeatureModel, regressor_builder: RegressorBuilder) -> None:
         self._feature_model = feature_model
         self._regressor_builder = regressor_builder
 
     def build(self) -> Pipeline:
-        numeric_features = list(
-            self._feature_model.get_numeric_features()
-            + self._feature_model.get_boolean_features()
-        )
-        categorical_features = list(self._feature_model.get_categorical_features())
+        numeric_features = list(self._feature_model.get_numeric_features() + self._feature_model.get_boolean_features())
+        numeric_transformer = Pipeline([
+            ("imputer", SimpleImputer(strategy="median")),
+        ])
 
-        return Pipeline([
-            (
-                "preprocessor",
-                ColumnTransformer([
-                    ("numeric", SimpleImputer(strategy="median"), numeric_features),
-                    (
-                        "categorical",
-                        Pipeline([
-                            ("imputer", SimpleImputer(strategy="most_frequent")),
-                            ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-                        ]),
-                        categorical_features,
-                    ),
-                ]),
-            ),
+        categorical_features = list(self._feature_model.get_categorical_features())
+        categorical_transformer = Pipeline([
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+        ])
+
+        preprocessor = ColumnTransformer([
+            ("numeric", numeric_transformer, numeric_features),
+            ("categorical", categorical_transformer, categorical_features),
+        ])
+
+        pipeline = Pipeline([
+            ("preprocessor", preprocessor),
             ("regressor", self._regressor_builder.build()),
         ])
+
+        return pipeline

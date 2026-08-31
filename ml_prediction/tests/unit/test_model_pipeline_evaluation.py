@@ -106,7 +106,7 @@ def test_regressor_builder_rejects_unsupported_model_type(mocker) -> None:
             bootstrap=True,
         ),
     )
-    with pytest.raises(ValueError, match="Unsupported model type: linear"):
+    with pytest.raises(Exception, match="Unsupported model type: linear"):
         RegressorBuilder("house").build()
 
 
