@@ -1,3 +1,4 @@
+from ml_prediction.config.settings import get_settings
 from sklearn.base import RegressorMixin
 from sklearn.ensemble import (
     ExtraTreesRegressor,
@@ -10,25 +11,18 @@ from sklearn.ensemble import (
 class RegressorBuilder:
     def __init__(
             self,
-            model_type: str,
-            n_estimators: int,
-            n_jobs: int,
-            random_state: int,
-            max_depth: int | None = None,
-            min_samples_split: int = 2,
-            min_samples_leaf: int = 1,
-            max_features: int | float | str | None = 1.0,
-            bootstrap: bool = True,
+            dataset_name: str,
     ) -> None:
-        self._model_type = model_type
-        self._n_estimators = n_estimators
-        self._n_jobs = n_jobs
-        self._random_state = random_state
-        self._max_depth = max_depth
-        self._min_samples_split = min_samples_split
-        self._min_samples_leaf = min_samples_leaf
-        self._max_features = max_features
-        self._bootstrap = bootstrap
+        settings = get_settings(dataset_name)
+        self._model_type = settings.model_type
+        self._n_estimators = settings.n_estimators
+        self._n_jobs = settings.n_jobs
+        self._random_state = settings.random_state
+        self._max_depth = settings.max_depth
+        self._min_samples_split = settings.min_samples_split
+        self._min_samples_leaf = settings.min_samples_leaf
+        self._max_features = settings.max_features
+        self._bootstrap = settings.bootstrap
 
     def build(self) -> RegressorMixin:
         if self._model_type == "random_forest":

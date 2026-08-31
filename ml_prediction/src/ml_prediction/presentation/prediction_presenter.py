@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from ml_prediction.data_model.prediction_output import PredictionOutput
+from ml_prediction.data_model.prediction_output import Prediction
 from ml_prediction.presentation.presenter import Presenter
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ class PredictionPresenter(Presenter):
     def __init__(self, output_path: Path) -> None:
         self.output_path = output_path
 
-    def present(self, output: PredictionOutput) -> Path:
+    def present(self, output: Prediction) -> Path:
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         output.dataframe.assign(
             **{output.prediction_column: output.predictions}

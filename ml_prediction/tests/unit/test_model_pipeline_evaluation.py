@@ -24,7 +24,7 @@ from test_dataset_features import house_dataframe
 
 def test_pipeline_builder_is_abstract_and_builds_pipeline() -> None:
     feature_model = HouseFeatureModel()
-    builder = HousePricePipelineBuilder(feature_model, RegressorBuilder("random_forest", 200, -1, 42))
+    builder = HousePricePipelineBuilder(feature_model, RegressorBuilder("house"))
 
     assert issubclass(HousePricePipelineBuilder, PipelineBuilder)
     pipeline = builder.build()
@@ -34,18 +34,22 @@ def test_pipeline_builder_is_abstract_and_builds_pipeline() -> None:
     assert pipeline.named_steps["regressor"].n_estimators == 200
 
 
-def test_regressor_builder_builds_configured_random_forest() -> None:
-    regressor = RegressorBuilder(
-        "random_forest",
-        17,
-        3,
-        42,
-        max_depth=8,
-        min_samples_split=4,
-        min_samples_leaf=2,
-        max_features=0.7,
-        bootstrap=False,
-    ).build()
+def test_regressor_builder_builds_configured_random_forest(mocker) -> None:
+    mocker.patch(
+        "ml_prediction.pipeline.regressor_builder.get_settings",
+        return_value=mocker.Mock(
+            model_type="random_forest",
+            n_estimators=17,
+            n_jobs=3,
+            random_state=42,
+            max_depth=8,
+            min_samples_split=4,
+            min_samples_leaf=2,
+            max_features=0.7,
+            bootstrap=False,
+        ),
+    )
+    regressor = RegressorBuilder("house").build()
 
     assert regressor.n_estimators == 17
     assert regressor.n_jobs == 3
@@ -66,26 +70,44 @@ def test_regressor_builder_builds_configured_random_forest() -> None:
         ("hist_gradient_boosting", HistGradientBoostingRegressor),
     ],
 )
-def test_regressor_builder_supports_configured_model_types(model_type, expected_type) -> None:
-    regressor = RegressorBuilder(
-        model_type,
-        17,
-        3,
-        42,
-        max_depth=8,
-        min_samples_split=4,
-        min_samples_leaf=2,
-        max_features=0.7,
-        bootstrap=False,
-    ).build()
+def test_regressor_builder_supports_configured_model_types(model_type, expected_type, mocker) -> None:
+    mocker.patch(
+        "ml_prediction.pipeline.regressor_builder.get_settings",
+        return_value=mocker.Mock(
+            model_type=model_type,
+            n_estimators=17,
+            n_jobs=3,
+            random_state=42,
+            max_depth=8,
+            min_samples_split=4,
+            min_samples_leaf=2,
+            max_features=0.7,
+            bootstrap=False,
+        ),
+    )
+    regressor = RegressorBuilder("house").build()
 
     assert isinstance(regressor, expected_type)
     assert regressor.random_state == 42
 
 
-def test_regressor_builder_rejects_unsupported_model_type() -> None:
+def test_regressor_builder_rejects_unsupported_model_type(mocker) -> None:
+    mocker.patch(
+        "ml_prediction.pipeline.regressor_builder.get_settings",
+        return_value=mocker.Mock(
+            model_type="linear",
+            n_estimators=200,
+            n_jobs=-1,
+            random_state=42,
+            max_depth=None,
+            min_samples_split=2,
+            min_samples_leaf=1,
+            max_features=1.0,
+            bootstrap=True,
+        ),
+    )
     with pytest.raises(ValueError, match="Unsupported model type: linear"):
-        RegressorBuilder("linear", 200, -1, 42).build()
+        RegressorBuilder("house").build()
 
 
 def test_house_price_model_fits_and_predicts() -> None:
@@ -95,7 +117,7 @@ def test_house_price_model_fits_and_predicts() -> None:
     model = HousePriceModel(
         HousePricePipelineBuilder(
             HouseFeatureModel(),
-            RegressorBuilder("random_forest", 200, -1, 42),
+            RegressorBuilder("house"),
         )
     )
 

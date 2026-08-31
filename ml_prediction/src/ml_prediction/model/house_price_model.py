@@ -1,8 +1,7 @@
-from ml_prediction.model.sklearn_pipeline_model import SklearnPipelineModel
+from ml_prediction.model.trained_model import TrainedModel
 
 
-class HousePriceModel(SklearnPipelineModel):
-    """Backward-compatible name for the house dataset's sklearn model."""
+class HousePriceModel(TrainedModel):
 
     def fit(self, features, target) -> "HousePriceModel":
         super().fit(features, target)

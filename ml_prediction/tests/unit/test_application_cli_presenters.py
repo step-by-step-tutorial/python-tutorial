@@ -34,10 +34,10 @@ def test_presenters_implement_presenter_contract(tmp_path: Path) -> None:
 
 
 def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None:
-    from ml_prediction.data_model.prediction_output import PredictionOutput
+    from ml_prediction.data_model.prediction_output import Prediction
 
     output_path = tmp_path / "output" / "predictions.csv"
-    result = PredictionOutput(
+    result = Prediction(
         pd.DataFrame({"city": ["Paris"]}),
         pd.Series([123.5]),
         tmp_path / "house.csv",

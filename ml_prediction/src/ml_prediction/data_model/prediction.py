@@ -1,1 +1,1 @@
-from ml_prediction.data_model.prediction_output import PredictionOutput
+from ml_prediction.data_model.prediction_output import Prediction

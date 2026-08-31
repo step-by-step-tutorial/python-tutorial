@@ -9,7 +9,6 @@ from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 
 
 class TabularPipelineBuilder(PipelineBuilder):
-    """Build the shared preprocessing and regression pipeline for tabular data."""
 
     def __init__(
             self,
@@ -30,19 +29,12 @@ class TabularPipelineBuilder(PipelineBuilder):
             (
                 "preprocessor",
                 ColumnTransformer([
-                    (
-                        "numeric",
-                        SimpleImputer(strategy="median"),
-                        numeric_features,
-                    ),
+                    ("numeric", SimpleImputer(strategy="median"), numeric_features),
                     (
                         "categorical",
                         Pipeline([
                             ("imputer", SimpleImputer(strategy="most_frequent")),
-                            ("encoder", OneHotEncoder(
-                                handle_unknown="ignore",
-                                sparse_output=False,
-                            )),
+                            ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
                         ]),
                         categorical_features,
                     ),

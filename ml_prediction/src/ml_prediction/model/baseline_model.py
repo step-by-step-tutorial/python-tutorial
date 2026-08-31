@@ -4,7 +4,6 @@ from ml_prediction.model.model import Model
 
 
 class BaselineModel(Model):
-    """Mean-target reference model used only for validation comparison."""
 
     def __init__(self) -> None:
         self.dummy_regressor = DummyRegressor(strategy="mean")

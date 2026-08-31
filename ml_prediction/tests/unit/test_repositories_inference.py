@@ -7,7 +7,7 @@ import pytest
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.data_lake_settings import DataLakeSettings
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
-from ml_prediction.data_model.prediction_output import PredictionOutput
+from ml_prediction.data_model.prediction_output import Prediction
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.house_features_builder import HouseFeatureBuilder
@@ -128,24 +128,23 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
         "ml_prediction.inference.prediction_service.get_settings",
         return_value=settings(tmp_path),
     )
-    mocker.patch("ml_prediction.inference.prediction_service.DataLakeRepository")
+    dataset.download.return_value = (dataframe, dataset_path)
     service = PredictionService(predictor, dataset)
-    mocker.patch.object(service, "download_dataset", return_value=dataset_path)
 
     result = service.predict()
 
-    assert isinstance(result, PredictionOutput)
+    assert isinstance(result, Prediction)
     pd.testing.assert_frame_equal(result.dataframe, dataframe)
     assert result.predictions.tolist() == [110]
     assert result.report_path is not None
     assert result.report_path.exists()
     assert "prediction_completed" in result.report_path.read_text(encoding="utf-8")
     predictor.predict.assert_called_once()
+    dataset.download.assert_called_once_with()
     pd.testing.assert_frame_equal(predictor.predict.call_args.args[0], dataframe)
 
 
 def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path: Path) -> None:
-    repository = mocker.Mock()
     local_settings = AppSettings(
         data_dir=tmp_path / "data",
         model_dir=tmp_path / "models",
@@ -161,53 +160,28 @@ def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path
         "ml_prediction.inference.prediction_service.get_settings",
         return_value=local_settings,
     )
-    mocker.patch(
-        "ml_prediction.inference.prediction_service.DataLakeRepository",
-        return_value=repository,
-    )
+    dataset = mocker.Mock(dataset_name="house")
+    dataset.download.return_value = (pd.DataFrame(), tmp_path / "data" / "house.csv")
     service = PredictionService(
         mocker.Mock(dataset_name="house"),
-        mocker.Mock(),
+        dataset,
     )
 
-    assert service.download_dataset() == tmp_path / "data" / "house.csv"
-    repository.return_value.download_latest_csv.assert_not_called()
+    assert service.dataset.download()[1] == tmp_path / "data" / "house.csv"
+    dataset.download.assert_called_once_with()
 
 
 def test_prediction_service_downloads_dataset_when_configured(mocker, tmp_path: Path) -> None:
-    repository = mocker.Mock()
     mocker.patch(
         "ml_prediction.inference.prediction_service.get_settings",
         return_value=settings(tmp_path),
     )
-    mocker.patch(
-        "ml_prediction.inference.prediction_service.DataLakeRepository",
-        return_value=repository,
-    )
-    service = PredictionService(mocker.Mock(), mocker.Mock(dataset_name="house"))
+    dataset = mocker.Mock(dataset_name="house")
+    dataset.download.return_value = (pd.DataFrame(), tmp_path / "data" / "house.csv")
+    service = PredictionService(mocker.Mock(), dataset)
 
-    assert service.download_dataset() == tmp_path / "data" / "house.csv"
-    repository.download_latest_csv.assert_called_once_with(
-        tmp_path / "data" / "house.csv"
-    )
-
-
-def test_prediction_service_rejects_dataset_path_mismatch(mocker, tmp_path: Path) -> None:
-    dataset = mocker.Mock(path=tmp_path / "different.csv", dataset_name="house")
-    mocker.patch(
-        "ml_prediction.inference.prediction_service.get_settings",
-        return_value=settings(tmp_path),
-    )
-    mocker.patch("ml_prediction.inference.prediction_service.DataLakeRepository")
-    service = PredictionService(
-        mocker.Mock(),
-        dataset,
-    )
-    downloaded_path = tmp_path / "data" / "house.csv"
-    mocker.patch.object(service, "download_dataset", return_value=downloaded_path)
-
-    with pytest.raises(ValueError, match="does not match downloaded path"):
-        service.predict()
+    assert service.dataset.download()[1] == tmp_path / "data" / "house.csv"
+    dataset.download.assert_called_once_with()
 
 
 def test_house_price_predictor_builds_features_and_returns_named_series(mocker) -> None:
@@ -247,4 +221,3 @@ def test_house_price_predictor_builds_features_and_returns_named_series(mocker) 
     assert predictions.name == "predicted_total_price"
     repository.load.assert_called_once_with(Path("models") / "model.joblib")
     pipeline.predict.assert_called_once()
-

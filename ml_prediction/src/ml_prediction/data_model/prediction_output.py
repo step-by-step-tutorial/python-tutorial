@@ -5,7 +5,7 @@ import pandas as pd
 
 
 @dataclass(frozen=True)
-class PredictionOutput:
+class Prediction:
     dataframe: pd.DataFrame
     predictions: pd.Series
     source_path: Path

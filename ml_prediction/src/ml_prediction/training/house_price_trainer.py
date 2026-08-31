@@ -58,17 +58,7 @@ class HousePriceTrainer(Trainer[Experiment]):
         self.model_repository = LocalModelRepository()
         self.pipeline_builder = HousePricePipelineBuilder(
             feature_model,
-            RegressorBuilder(
-                settings.model_type,
-                settings.n_estimators,
-                settings.n_jobs,
-                settings.random_state,
-                settings.max_depth,
-                settings.min_samples_split,
-                settings.min_samples_leaf,
-                settings.max_features,
-                settings.bootstrap,
-            ),
+            RegressorBuilder(dataset.dataset_name),
         )
         self.evaluator = ModelEvaluator()
         self.dataset_splitter = DatasetSplitter(

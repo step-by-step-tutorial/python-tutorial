@@ -104,6 +104,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         return_value=mocker.Mock(),
     ).return_value
     mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
+    mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
     mocker.patch("ml_prediction.training.house_price_trainer.DataLakeRepository")
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
     trainer = HousePriceTrainer(dataset)
@@ -180,6 +181,7 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.LOCAL,
             dataset_filename="house.csv",
+            dataset_name="house",
     )
     mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
     mocker.patch(
@@ -206,6 +208,7 @@ def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, m
             data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.DOWNLOAD,
             dataset_filename="house.csv",
+            dataset_name="house",
     )
     mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
     mocker.patch(

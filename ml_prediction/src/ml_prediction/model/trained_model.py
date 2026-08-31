@@ -8,14 +8,13 @@ from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 logger = logging.getLogger(__name__)
 
 
-class SklearnPipelineModel(Model):
-    """Model wrapper for a fitted sklearn preprocessing/regression pipeline."""
+class TrainedModel(Model):
 
-    def __init__(self, pipeline_builder: PipelineBuilder) -> None:
-        self._pipeline = pipeline_builder.build()
+    def __init__(self, builder: PipelineBuilder) -> None:
+        self._pipeline = builder.build()
 
-    def fit(self, features, target) -> "SklearnPipelineModel":
-        logger.info("Training sklearn pipeline model: rows=%s", len(features))
+    def fit(self, features, target) -> "TrainedModel":
+        logger.info(f"Training sklearn pipeline model: rows={len(features)}")
         self._pipeline.fit(features, target)
         return self
 
