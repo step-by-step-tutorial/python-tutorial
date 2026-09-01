@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 
@@ -26,8 +27,8 @@ class Experiment:
     dataset_name: str
     model_type: str
     model_parameters: dict[str, Any]
-    validation_metrics: RegressionMetrics
-    test_metrics: RegressionMetrics
+    validation_metrics: RegressionMetrics | ClassificationMetrics
+    test_metrics: RegressionMetrics | ClassificationMetrics
     model_path: Path
     report_path: Path | None
 

@@ -6,19 +6,20 @@ from uuid import uuid4
 import pandas as pd
 
 from ml_prediction.config.settings import TaskType, get_settings
-from ml_prediction.data_model.dataset_subset import DatasetSubset
+from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.dataset_split import DatasetSplit
+from ml_prediction.data_model.dataset_subset import DatasetSubset
 from ml_prediction.data_model.evaluation import Evaluation
-from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.data_model.experiment import Experiment
+from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.model_metadata import (
     CURRENT_MODEL_VERSION,
     CURRENT_SCHEMA_VERSION,
     ModelMetadata,
 )
-from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.dataset import Dataset
+from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.house_price_model import HousePriceModel
@@ -29,9 +30,9 @@ from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.trainer import Trainer
+from ml_prediction.utils.data_validator_utils import should_be_same
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
-from ml_prediction.utils.data_validator_utils import should_be_same
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,9 @@ class HousePriceTrainer(Trainer[Experiment]):
             f"model={self._settings.model_type} "
             f"partition=validation rows={len(dataset_subsets.validation.features)}",
         )
+
         validation_metrics = self.evaluate_model(trained_model, dataset_subsets.validation)
+
         report_events.append((
             "model_evaluated",
             {
@@ -156,17 +159,16 @@ class HousePriceTrainer(Trainer[Experiment]):
                 "metrics": validation_metrics,
             },
         ))
+
         logger.info(
             f"Evaluating model: "
             f"model={self._settings.model_type} "
             f"partition=test rows={len(dataset_subsets.test.features)}",
         )
 
-        final_test_evaluation = self.evaluate_model_with_predictions(
-            trained_model,
-            dataset_subsets.test,
-        )
+        final_test_evaluation = self.evaluate_model_with_predictions(trained_model, dataset_subsets.test)
         final_test_metrics = final_test_evaluation.metrics
+
         report_events.append((
             "model_evaluated",
             {
@@ -176,6 +178,7 @@ class HousePriceTrainer(Trainer[Experiment]):
                 "metrics": final_test_metrics,
             },
         ))
+
         model_parameters = self._fitted_model_parameters(trained_model, model_parameters)
         metadata = ModelMetadata(
             model_type=self._settings.model_type,
@@ -194,6 +197,7 @@ class HousePriceTrainer(Trainer[Experiment]):
             prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(trained_model, metadata)
+
         report = self._report_service.start(self._settings.dataset_name, "training", model_path)
         for step, details in report_events:
             report.record(step, **details)
@@ -253,17 +257,17 @@ class HousePriceTrainer(Trainer[Experiment]):
     def train_model(self, partitions: DatasetSplit) -> HousePriceModel:
         return HousePriceModel(self._pipeline_builder).fit(partitions.train.features, partitions.train.target)
 
-    def evaluate_model(self, trained_model, dataset_partition: DatasetSubset) -> RegressionMetrics:
+    def evaluate_model(
+            self,
+            trained_model,
+            dataset_partition: DatasetSubset
+    ) -> RegressionMetrics | ClassificationMetrics:
         return self._evaluator.evaluate(
             dataset_partition.target,
             trained_model.predict(dataset_partition.features),
         ).metrics
 
-    def evaluate_model_with_predictions(
-            self,
-            trained_model,
-            dataset_partition: DatasetSubset,
-    ) -> Evaluation:
+    def evaluate_model_with_predictions(self, trained_model, dataset_partition: DatasetSubset) -> Evaluation:
         y_true = dataset_partition.target
         y_pred = trained_model.predict(dataset_partition.features)
         return self._evaluator.evaluate(y_true, y_pred)

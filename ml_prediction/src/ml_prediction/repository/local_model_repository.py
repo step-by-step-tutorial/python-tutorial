@@ -1,4 +1,3 @@
-import json
 import logging
 from dataclasses import asdict
 from datetime import datetime
@@ -10,6 +9,7 @@ import joblib
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.model_metadata import ModelMetadata
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.utils.json_utils import read_json, write_json
 
 logger = logging.getLogger(__name__)
 
@@ -28,15 +28,13 @@ class LocalModelRepository:
         return joblib.load(path)
 
     def save_metadata(self, metadata: ModelMetadata, path: Path) -> Path:
-        metadata_path = self.metadata_path(path)
-        with metadata_path.open("w", encoding="utf-8") as metadata_file:
-            json.dump(asdict(metadata), metadata_file, default=self.json_default, indent=2)
+        metadata_path = path.with_suffix(".metadata.json")
+        write_json(metadata_path, asdict(metadata))
         logger.info(f"Saved model metadata: path={metadata_path}")
         return metadata_path
 
     def load_metadata(self, path: Path) -> ModelMetadata:
-        with self.metadata_path(path).open(encoding="utf-8") as metadata_file:
-            data = json.load(metadata_file)
+        data = read_json(path.with_suffix(".metadata.json"))
         data["training_timestamp"] = datetime.fromisoformat(data["training_timestamp"])
         data["numeric_features"] = tuple(data["numeric_features"])
         data["boolean_features"] = tuple(data["boolean_features"])
@@ -46,11 +44,3 @@ class LocalModelRepository:
         data["validation_metrics"] = metrics_model(**data["validation_metrics"])
         data["final_test_metrics"] = metrics_model(**data["final_test_metrics"])
         return ModelMetadata(**data)
-
-    @staticmethod
-    def metadata_path(path: Path) -> Path:
-        return path.with_suffix(".metadata.json")
-
-    @staticmethod
-    def json_default(value: Any) -> str:
-        return value.isoformat()
