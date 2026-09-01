@@ -108,7 +108,7 @@ class HousePriceTrainer(Trainer[Experiment]):
         experiment_id = str(uuid4())
         experiment_timestamp = datetime.now(timezone.utc)
 
-        model_parameters = {
+        configured_parameters = {
             "n_estimators": self._settings.n_estimators,
             "n_jobs": self._settings.n_jobs,
             "max_depth": self._settings.max_depth,
@@ -123,7 +123,7 @@ class HousePriceTrainer(Trainer[Experiment]):
             f"Starting training experiment: "
             f"experiment_id={experiment_id} "
             f"model_type={self._settings.model_type} "
-            f"model_parameters={model_parameters}",
+            f"model_parameters={configured_parameters}",
         )
 
         logger.info(
@@ -179,7 +179,7 @@ class HousePriceTrainer(Trainer[Experiment]):
             },
         ))
 
-        model_parameters = self._fitted_model_parameters(trained_model, model_parameters)
+        model_parameters = configured_parameters
         metadata = ModelMetadata(
             model_type=self._settings.model_type,
             model_parameters=model_parameters,
@@ -271,17 +271,6 @@ class HousePriceTrainer(Trainer[Experiment]):
         y_true = dataset_partition.target
         y_pred = trained_model.predict(dataset_partition.features)
         return self._evaluator.evaluate(y_true, y_pred)
-
-    @staticmethod
-    def _fitted_model_parameters(trained_model, configured_parameters: dict[str, object]) -> dict[str, object]:
-        pipeline = getattr(trained_model, "pipeline", None)
-        if pipeline is None or not hasattr(pipeline, "named_steps"):
-            return configured_parameters
-        regressor = pipeline.named_steps.get("regressor")
-        if regressor is None or not hasattr(regressor, "get_params"):
-            return configured_parameters
-        parameters = regressor.get_params(deep=False)
-        return parameters if isinstance(parameters, dict) else configured_parameters
 
     def save_model(self, trained_model: HousePriceModel, metadata: ModelMetadata) -> Path:
         return self._model_repository.save(
