@@ -5,7 +5,7 @@ import pandas as pd
 
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
-from ml_prediction.data_model.evaluation import Evaluation
+from ml_prediction.data_model.evaluation import RegressionEvaluation
 from ml_prediction.data_model.experiment import Experiment
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
@@ -14,7 +14,7 @@ from ml_prediction.data_model.dataset_split import DatasetSplit
 from ml_prediction.data_model.training import TrainingOutput
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.dataset_splitter import DatasetSplitter
-from ml_prediction.training.house_price_trainer import HousePriceTrainer
+from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
 
 
 def test_dataset_splitter_splits_dataset_into_train_validation_and_test() -> None:
@@ -42,12 +42,12 @@ def test_house_price_trainer_prepares_features_and_target(mocker) -> None:
     feature_builder = mocker.Mock()
     feature_builder.build.return_value = features
 
-    trainer = HousePriceTrainer.__new__(HousePriceTrainer)
+    trainer = HousePriceRegressionTrainer.__new__(HousePriceRegressionTrainer)
     trainer._dataset = mocker.Mock(path=path)
     trainer._settings = mocker.Mock(target_column="target")
     trainer._feature_model = mocker.Mock()
     feature_builder_class = mocker.patch(
-        "ml_prediction.training.house_price_trainer.FeatureBuilder",
+        "ml_prediction.training.house_price_regression_trainer.FeatureBuilder",
         return_value=feature_builder,
     )
 
@@ -75,25 +75,25 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         dataset_filename="house.csv",
     )
     dataset_splitter = mocker.patch(
-        "ml_prediction.training.house_price_trainer.DatasetSplitter",
+        "ml_prediction.training.house_price_regression_trainer.DatasetSplitter",
         return_value=mocker.Mock(),
     ).return_value
     experiment_repository = mocker.patch(
-        "ml_prediction.training.house_price_trainer.ExperimentService",
+        "ml_prediction.training.house_price_regression_trainer.ExperimentService",
         return_value=mocker.Mock(),
     ).return_value
     training_visualizer = mocker.patch(
-        "ml_prediction.training.house_price_trainer.TrainingVisualizer",
+        "ml_prediction.training.house_price_regression_trainer.TrainingVisualizer",
         return_value=mocker.Mock(),
     ).return_value
     experiment_visualizer = mocker.patch(
-        "ml_prediction.training.house_price_trainer.ExperimentVisualizer",
+        "ml_prediction.training.house_price_regression_trainer.ExperimentVisualizer",
         return_value=mocker.Mock(),
     ).return_value
-    mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
+    mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
     mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
-    trainer = HousePriceTrainer(dataset)
+    trainer = HousePriceRegressionTrainer(dataset)
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
     partition = DatasetSubset(dataframe, dataframe["target"])
@@ -107,7 +107,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     trainer.train_model = mocker.Mock(return_value=model)
     trainer.evaluate_model = mocker.Mock(side_effect=[metrics, metrics])
     trainer.evaluate_model_with_predictions = mocker.Mock(
-        return_value=Evaluation([100], [100], metrics)
+        return_value=RegressionEvaluation([100], [100], metrics)
     )
     trainer.save_model = mocker.Mock(return_value=tmp_path / "models" / "house.joblib")
 
@@ -163,11 +163,11 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
             dataset_filename="house.csv",
             dataset_name="house",
     )
-    mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
+    mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
     dataframe = pd.DataFrame()
     dataset.download.return_value = (dataframe, dataset.path)
-    trainer = HousePriceTrainer(dataset)
+    trainer = HousePriceRegressionTrainer(dataset)
 
     downloaded_dataframe, downloaded_path = trainer.download_dataset()
     assert downloaded_dataframe is dataframe
@@ -188,11 +188,11 @@ def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, m
             dataset_filename="house.csv",
             dataset_name="house",
     )
-    mocker.patch("ml_prediction.training.house_price_trainer.get_settings", return_value=settings)
+    mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
     dataframe = pd.DataFrame()
     dataset.download.return_value = (dataframe, dataset.path)
-    trainer = HousePriceTrainer(dataset)
+    trainer = HousePriceRegressionTrainer(dataset)
 
     downloaded_dataframe, downloaded_path = trainer.download_dataset()
     assert downloaded_dataframe is dataframe

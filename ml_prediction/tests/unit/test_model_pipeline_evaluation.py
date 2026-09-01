@@ -8,8 +8,8 @@ from sklearn.ensemble import (
 )
 from sklearn.pipeline import Pipeline
 
-from ml_prediction.data_model.evaluation import Evaluation
-from ml_prediction.evaluation.model_evaluator import ModelEvaluator
+from ml_prediction.data_model.evaluation import RegressionEvaluation
+from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.house_features_builder import HouseFeatureBuilder
@@ -129,7 +129,7 @@ def test_house_price_model_fits_and_predicts() -> None:
 
 
 def test_model_evaluator_returns_regression_metrics() -> None:
-    metrics = ModelEvaluator().evaluate([100, 200], [110, 180]).metrics
+    metrics = RegressionEvaluator().evaluate([100, 200], [110, 180]).metrics
 
     assert isinstance(metrics, RegressionMetrics)
     assert metrics.mean_absolute_error == 15.0
@@ -141,9 +141,9 @@ def test_model_evaluator_exposes_predictions_and_metrics() -> None:
     actual = [100, 200]
     predicted = [110, 180]
 
-    result = ModelEvaluator().evaluate(actual, predicted)
+    result = RegressionEvaluator().evaluate(actual, predicted)
 
-    assert isinstance(result, Evaluation)
+    assert isinstance(result, RegressionEvaluation)
     assert result.y_true == actual
     assert result.y_pred == predicted
     assert result.metrics == RegressionMetrics(15.0, 15.811388300841896, 0.9)

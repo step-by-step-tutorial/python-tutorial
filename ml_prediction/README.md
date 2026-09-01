@@ -51,14 +51,21 @@ python -m ml_prediction.main
 ### Inline command
 ```shell
 cd ./ml_prediction
+# Test
+pytest
+# House
 python -m ml_prediction.main house train
 python -m ml_prediction.main house predict
+# Online Shopping
+python -m ml_prediction.main online_shopping train
+python -m ml_prediction.main online_shopping predict
 ```
 
 ## Clean Project
 
 ```shell
-rm -rf ./ml_prediction/src/*.egg-info
-rm -rf ./ml_prediction/models/*
-rm -rf ./ml_prediction/reports/*
+cd ./ml_prediction
+rm -rf ./src/*.egg-info
+rm -rf ./models/*
+rm -rf ./reports/*
 ```

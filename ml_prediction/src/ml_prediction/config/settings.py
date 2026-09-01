@@ -42,7 +42,7 @@ def load_settings(dataset_name: str) -> AppSettings:
         model_filename=os.getenv("ML_PREDICTION_MODEL_FILENAME", profile.model_filename),
         prediction_filename=os.getenv("ML_PREDICTION_PREDICTION_FILENAME", profile.prediction_filename),
         prediction_column=os.getenv("ML_PREDICTION_PREDICTION_COLUMN", profile.prediction_column),
-        experiment_filename=os.getenv("ML_PREDICTION_EXPERIMENT_FILENAME", "experiments.csv"),
+        experiment_filename=os.getenv("ML_PREDICTION_EXPERIMENT_FILENAME", profile.experiment_filename),
     )
 
 

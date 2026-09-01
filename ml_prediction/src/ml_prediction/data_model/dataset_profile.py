@@ -11,5 +11,6 @@ class DatasetProfile:
     model_filename: str
     prediction_filename: str
     prediction_column: str
+    experiment_filename: str
     data_lake_bucket: str
     data_lake_prefix: str

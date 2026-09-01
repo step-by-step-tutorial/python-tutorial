@@ -6,12 +6,14 @@ from collections.abc import Sequence
 from ml_prediction.application.application import Application
 from ml_prediction.config.settings import get_settings
 from ml_prediction.dataset.dataset import Dataset
-from ml_prediction.evaluation.model_evaluator import ModelEvaluator
 from ml_prediction.features.house_feature_model import HouseFeatureModel
+from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
 from ml_prediction.inference.house_price_predictor import HousePricePredictor
+from ml_prediction.inference.model_predictor import ModelPredictor
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
 from ml_prediction.presentation.training_presenter import TrainingPresenter
-from ml_prediction.training.house_price_trainer import HousePriceTrainer
+from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
+from ml_prediction.training.online_shopping_classification_trainer import OnlineShoppingClassificationTrainer
 
 PREDICTIONS = ("train", "predict")
 
@@ -34,13 +36,25 @@ def _create_house_application(settings, include_prediction: bool = True) -> Appl
         )
     return Application(
         dataset_service,
-        HousePriceTrainer(dataset_service),
+        HousePriceRegressionTrainer(dataset_service),
         predictor,
     )
 
 
+def _create_online_shopping_application(settings, include_prediction: bool = True) -> Application:
+    feature_model = OnlineShoppingFeatureModel()
+    dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
+    predictor = (
+        ModelPredictor(dataset_service.dataset_name, feature_model)
+        if include_prediction
+        else None
+    )
+    return Application(dataset_service, OnlineShoppingClassificationTrainer(dataset_service), predictor)
+
+
 DATASET_COMPOSERS = {
     "house": _create_house_application,
+    "online_shopping": _create_online_shopping_application,
 }
 DATASETS = tuple(DATASET_COMPOSERS)
 

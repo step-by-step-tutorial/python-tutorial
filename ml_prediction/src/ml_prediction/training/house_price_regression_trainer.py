@@ -6,10 +6,9 @@ from uuid import uuid4
 import pandas as pd
 
 from ml_prediction.config.settings import TaskType, get_settings
-from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.dataset_split import DatasetSplit
 from ml_prediction.data_model.dataset_subset import DatasetSubset
-from ml_prediction.data_model.evaluation import Evaluation
+from ml_prediction.data_model.evaluation import RegressionEvaluation
 from ml_prediction.data_model.experiment import Experiment
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.model_metadata import (
@@ -19,7 +18,7 @@ from ml_prediction.data_model.model_metadata import (
 )
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.dataset import Dataset
-from ml_prediction.evaluation.model_evaluator import ModelEvaluator
+from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.house_price_model import HousePriceModel
@@ -37,7 +36,7 @@ from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 logger = logging.getLogger(__name__)
 
 
-class HousePriceTrainer(Trainer[Experiment]):
+class HousePriceRegressionTrainer(Trainer[Experiment]):
     def __init__(self, dataset: Dataset) -> None:
         self._settings = get_settings(dataset.dataset_name)
         self._dataset = dataset
@@ -48,14 +47,17 @@ class HousePriceTrainer(Trainer[Experiment]):
         self._experiment_visualizer = ExperimentVisualizer(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
         self._pipeline_builder = HousePricePipelineBuilder(self._feature_model, RegressorBuilder(dataset.dataset_name))
-        self._evaluator = ModelEvaluator()
+        self._evaluator = RegressionEvaluator()
         self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
 
     def train(self) -> Experiment:
         should_be_same(
             first=self._settings.task_type,
             second=TaskType.REGRESSION,
-            error_message=f"HousePriceTrainer supports only regression tasks, got '{self._settings.task_type}'",
+            error_message=(
+                f"HousePriceRegressionTrainer supports only regression tasks, "
+                f"got '{self._settings.task_type}'"
+            ),
         )
 
         report_events: list[tuple[str, dict[str, object]]] = []
@@ -261,13 +263,17 @@ class HousePriceTrainer(Trainer[Experiment]):
             self,
             trained_model,
             dataset_partition: DatasetSubset
-    ) -> RegressionMetrics | ClassificationMetrics:
+    ) -> RegressionMetrics:
         return self._evaluator.evaluate(
             dataset_partition.target,
             trained_model.predict(dataset_partition.features),
         ).metrics
 
-    def evaluate_model_with_predictions(self, trained_model, dataset_partition: DatasetSubset) -> Evaluation:
+    def evaluate_model_with_predictions(
+            self,
+            trained_model,
+            dataset_partition: DatasetSubset,
+    ) -> RegressionEvaluation:
         y_true = dataset_partition.target
         y_pred = trained_model.predict(dataset_partition.features)
         return self._evaluator.evaluate(y_true, y_pred)
