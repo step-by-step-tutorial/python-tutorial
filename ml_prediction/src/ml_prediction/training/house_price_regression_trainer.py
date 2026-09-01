@@ -22,6 +22,7 @@ from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.house_price_model import HousePriceModel
+from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.reporting.experiment_service import ExperimentService
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 class HousePriceRegressionTrainer(Trainer[Experiment]):
-    def __init__(self, dataset: Dataset) -> None:
+    def __init__(self, dataset: Dataset, search_enabled: bool = False) -> None:
         self._settings = get_settings(dataset.dataset_name)
         self._dataset = dataset
         self._feature_model = HouseFeatureModel()
@@ -49,6 +50,10 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         self._pipeline_builder = HousePricePipelineBuilder(self._feature_model, RegressorBuilder(dataset.dataset_name))
         self._evaluator = RegressionEvaluator()
         self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
+        self._search_enabled = search_enabled
+        self._model_selector = RegressionModelSelector()
+        self._selected_model_parameters: dict[str, object] | None = None
+        self._selected_model_score: float | None = None
 
     def train(self) -> Experiment:
         should_be_same(
@@ -181,7 +186,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             },
         ))
 
-        model_parameters = configured_parameters
+        model_parameters = self._selected_model_parameters or configured_parameters
         metadata = ModelMetadata(
             model_type=self._settings.model_type,
             model_parameters=model_parameters,
@@ -216,6 +221,8 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             test_metrics=final_test_metrics,
             model_path=model_path,
             report_path=report.path,
+            model_selection_metric="mean_absolute_error" if self._search_enabled else None,
+            model_selection_score=self._selected_model_score,
         )
         self._experiment_service.save(result)
         self._training_visualizer.save_actual_vs_predicted(
@@ -257,7 +264,21 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         return FeaturesAndTarget(features, target)
 
     def train_model(self, partitions: DatasetSplit) -> HousePriceModel:
-        return HousePriceModel(self._pipeline_builder).fit(partitions.train.features, partitions.train.target)
+        if not self._search_enabled:
+            return HousePriceModel(self._pipeline_builder).fit(partitions.train.features, partitions.train.target)
+
+        pipeline = HousePriceModel(self._pipeline_builder).pipeline
+        selection = self._model_selector.select(
+            pipeline,
+            partitions.train.features,
+            partitions.train.target,
+        )
+        self._selected_model_parameters = {
+            key.removeprefix("regressor__"): value
+            for key, value in selection.parameters.items()
+        }
+        self._selected_model_score = selection.mean_absolute_error
+        return HousePriceModel.from_pipeline(selection.pipeline)
 
     def evaluate_model(
             self,

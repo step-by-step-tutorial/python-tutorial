@@ -99,3 +99,11 @@ def test_cli_main_dispatches_direct_operation(mocker) -> None:
     main.main(["house", "predict"])
 
     run.assert_called_once_with("house", "predict")
+
+
+def test_cli_main_passes_search_flag(mocker) -> None:
+    run = mocker.patch.object(main, "run")
+
+    main.main(["house", "train", "--search"])
+
+    run.assert_called_once_with("house", "train", True)

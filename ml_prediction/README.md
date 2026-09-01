@@ -61,6 +61,18 @@ python -m ml_prediction.main online_shopping train
 python -m ml_prediction.main online_shopping predict
 ```
 
+```shell
+cd ./ml_prediction
+# Test
+pytest
+# House
+python -m ml_prediction.main house train --search
+python -m ml_prediction.main house predict
+# Online Shopping
+python -m ml_prediction.main online_shopping train --search
+python -m ml_prediction.main online_shopping predict
+```
+
 ## Clean Project
 
 ```shell

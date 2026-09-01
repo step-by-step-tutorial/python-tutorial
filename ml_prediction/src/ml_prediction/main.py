@@ -22,10 +22,11 @@ def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run a machine learning application.")
     parser.add_argument("dataset", nargs="?", choices=DATASETS, help="Dataset name.")
     parser.add_argument("prediction", nargs="?", choices=PREDICTIONS, help="Operation to run.")
+    parser.add_argument("--search", action="store_true", help="Search hyperparameters before saving the model.")
     return parser
 
 
-def _create_house_application(settings, include_prediction: bool = True) -> Application:
+def _create_house_application(settings, include_prediction: bool = True, search_enabled: bool = False) -> Application:
     feature_model = HouseFeatureModel()
     dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
     predictor = None
@@ -36,12 +37,16 @@ def _create_house_application(settings, include_prediction: bool = True) -> Appl
         )
     return Application(
         dataset_service,
-        HousePriceRegressionTrainer(dataset_service),
+        HousePriceRegressionTrainer(dataset_service, search_enabled),
         predictor,
     )
 
 
-def _create_online_shopping_application(settings, include_prediction: bool = True) -> Application:
+def _create_online_shopping_application(
+        settings,
+        include_prediction: bool = True,
+        search_enabled: bool = False,
+) -> Application:
     feature_model = OnlineShoppingFeatureModel()
     dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
     predictor = (
@@ -49,7 +54,11 @@ def _create_online_shopping_application(settings, include_prediction: bool = Tru
         if include_prediction
         else None
     )
-    return Application(dataset_service, OnlineShoppingClassificationTrainer(dataset_service), predictor)
+    return Application(
+        dataset_service,
+        OnlineShoppingClassificationTrainer(dataset_service, search_enabled),
+        predictor,
+    )
 
 
 DATASET_COMPOSERS = {
@@ -59,7 +68,11 @@ DATASET_COMPOSERS = {
 DATASETS = tuple(DATASET_COMPOSERS)
 
 
-def create_application(dataset: str, include_prediction: bool = True) -> Application:
+def create_application(
+        dataset: str,
+        include_prediction: bool = True,
+        search_enabled: bool = False,
+) -> Application:
     settings = get_settings(dataset)
     try:
         compose = DATASET_COMPOSERS[dataset]
@@ -68,7 +81,7 @@ def create_application(dataset: str, include_prediction: bool = True) -> Applica
         raise ValueError(
             f"Dataset '{dataset}' has no application composer. Supported datasets: {supported}"
         ) from error
-    return compose(settings, include_prediction)
+    return compose(settings, include_prediction, search_enabled)
 
 
 def select_dataset() -> str | None:
@@ -101,8 +114,12 @@ def select_prediction() -> str | None:
         print(f"Select a number between 1 and {len(PREDICTIONS)}, or 0 to exit.")
 
 
-def run(dataset: str, prediction: str) -> None:
-    application = create_application(dataset, include_prediction=prediction == "predict")
+def run(dataset: str, prediction: str, search_enabled: bool = False) -> None:
+    application = create_application(
+        dataset,
+        include_prediction=prediction == "predict",
+        search_enabled=search_enabled,
+    )
     if prediction == "train":
         training_output = application.train()
         TrainingPresenter().present(training_output)
@@ -121,7 +138,10 @@ def main(argv: Sequence[str] | None = None) -> None:
         raise SystemExit("dataset and prediction must be provided together")
 
     if args.dataset is not None:
-        run(args.dataset, args.prediction)
+        if args.search:
+            run(args.dataset, args.prediction, True)
+        else:
+            run(args.dataset, args.prediction)
         return
 
     if not sys.stdin.isatty():

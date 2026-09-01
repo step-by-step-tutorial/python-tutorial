@@ -19,6 +19,7 @@ from ml_prediction.evaluation.classification_evaluator import ClassificationEval
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
 from ml_prediction.model.classification_model import ClassificationModel
+from ml_prediction.model_selection.classification_model_selector import ClassificationModelSelector
 from ml_prediction.pipeline.classification_pipeline_builder import ClassificationPipelineBuilder
 from ml_prediction.pipeline.classifier_builder import ClassifierBuilder
 from ml_prediction.reporting.experiment_service import ExperimentService
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
-    def __init__(self, dataset: Dataset) -> None:
+    def __init__(self, dataset: Dataset, search_enabled: bool = False) -> None:
         self._settings = get_settings(dataset.dataset_name)
         self._dataset = dataset
         self._feature_model = OnlineShoppingFeatureModel()
@@ -44,6 +45,10 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         self._model_repository = LocalModelRepository()
         self._experiment_service = ExperimentService(dataset.dataset_name)
         self._report_service = ReportService(self._settings.report_dir)
+        self._search_enabled = search_enabled
+        self._model_selector = ClassificationModelSelector()
+        self._selected_model_parameters: dict[str, object] | None = None
+        self._selected_model_score: float | None = None
 
     def train(self) -> Experiment:
         if self._settings.task_type != TaskType.CLASSIFICATION:
@@ -67,7 +72,7 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         }
         metadata = ModelMetadata(
             model_type=self._settings.model_type,
-            model_parameters=model_parameters,
+            model_parameters=self._selected_model_parameters or model_parameters,
             target_column=self._settings.target_column,
             numeric_features=self._feature_model.get_numeric_features(),
             boolean_features=self._feature_model.get_boolean_features(),
@@ -89,6 +94,8 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
             model_type=self._settings.model_type, model_parameters=metadata.model_parameters,
             validation_metrics=validation, test_metrics=final.metrics,
             model_path=model_path, report_path=report.path,
+            model_selection_metric="f1_weighted" if self._search_enabled else None,
+            model_selection_score=self._selected_model_score,
         )
         self._experiment_service.save(result)
         return result
@@ -102,7 +109,24 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         return FeaturesAndTarget(FeatureBuilder(dataframe, self._feature_model).build(), target)
 
     def train_model(self, partitions: DatasetSplit) -> ClassificationModel:
-        return ClassificationModel(self._pipeline_builder).fit(partitions.train.features, partitions.train.target)
+        if not self._search_enabled:
+            return ClassificationModel(self._pipeline_builder).fit(
+                partitions.train.features,
+                partitions.train.target,
+            )
+
+        pipeline = ClassificationModel(self._pipeline_builder).pipeline
+        selection = self._model_selector.select(
+            pipeline,
+            partitions.train.features,
+            partitions.train.target,
+        )
+        self._selected_model_parameters = {
+            key.removeprefix("classifier__"): value
+            for key, value in selection.parameters.items()
+        }
+        self._selected_model_score = selection.f1_score
+        return ClassificationModel.from_pipeline(selection.pipeline)
 
     def evaluate_model(self, trained_model, dataset_partition: DatasetSubset) -> ClassificationMetrics:
         return self._evaluator.evaluate(

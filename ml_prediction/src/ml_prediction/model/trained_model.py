@@ -1,4 +1,5 @@
 import logging
+from typing import Self
 
 from sklearn.pipeline import Pipeline
 
@@ -9,6 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class TrainedModel(Model):
+
+    @classmethod
+    def from_pipeline(cls, pipeline: Pipeline) -> Self:
+        model = cls.__new__(cls)
+        model._pipeline = pipeline
+        return model
 
     def __init__(self, builder: PipelineBuilder) -> None:
         self._pipeline = builder.build()
