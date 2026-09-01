@@ -62,6 +62,7 @@ python -m ml_prediction.main online_shopping predict
 ```
 
 ```shell
+# Multi training
 cd ./ml_prediction
 # Test
 pytest

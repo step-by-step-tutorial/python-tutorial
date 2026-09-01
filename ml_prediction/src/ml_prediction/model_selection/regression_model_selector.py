@@ -1,10 +1,13 @@
+import logging
 from dataclasses import dataclass
 from typing import Any
 
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, ParameterGrid
 from sklearn.pipeline import Pipeline
 
 from ml_prediction.config.regression_search import REGRESSION_PARAMETER_GRID
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -20,6 +23,12 @@ class RegressionModelSelector:
         self._n_jobs = n_jobs
 
     def select(self, pipeline: Pipeline, features, target) -> RegressionSelection:
+        candidate_count = len(list(ParameterGrid(REGRESSION_PARAMETER_GRID)))
+        logger.info(
+            "Regression model search started: candidates=%s cross_validation_folds=%s metric=mean_absolute_error",
+            candidate_count,
+            self._cross_validation_folds,
+        )
         search = GridSearchCV(
             estimator=pipeline,
             param_grid=REGRESSION_PARAMETER_GRID,
@@ -29,6 +38,29 @@ class RegressionModelSelector:
             refit=True,
         )
         search.fit(features, target)
+        for index, (parameters, score) in enumerate(
+                zip(search.cv_results_["params"], search.cv_results_["mean_test_score"], strict=True),
+                start=1,
+        ):
+            readable_parameters = {
+                key.removeprefix("regressor__"): value
+                for key, value in parameters.items()
+            }
+            logger.info(
+                "Regression model search candidate %s/%s: parameters=%s validation_mae=%.4f",
+                index,
+                candidate_count,
+                readable_parameters,
+                -score,
+            )
+        logger.info(
+            "Regression model search completed: best_parameters=%s cross_validation_mae=%.4f",
+            {
+                key.removeprefix("regressor__"): value
+                for key, value in search.best_params_.items()
+            },
+            -search.best_score_,
+        )
         return RegressionSelection(
             pipeline=search.best_estimator_,
             parameters=dict(search.best_params_),

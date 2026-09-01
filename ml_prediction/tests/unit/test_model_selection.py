@@ -12,6 +12,10 @@ def test_regression_model_selector_uses_regression_grid_and_mae(mocker) -> None:
     search.best_estimator_ = mocker.Mock()
     search.best_params_ = {"regressor__n_estimators": 300}
     search.best_score_ = -12.5
+    search.cv_results_ = {
+        "params": [{"regressor__n_estimators": 300}],
+        "mean_test_score": [-12.5],
+    }
 
     result = RegressionModelSelector().select(mocker.Mock(), [1], [2])
 
@@ -35,6 +39,10 @@ def test_classification_model_selector_uses_classification_grid_and_f1(mocker) -
     search.best_estimator_ = mocker.Mock()
     search.best_params_ = {"classifier__n_estimators": 300}
     search.best_score_ = 0.82
+    search.cv_results_ = {
+        "params": [{"classifier__n_estimators": 300}],
+        "mean_test_score": [0.82],
+    }
 
     result = ClassificationModelSelector().select(mocker.Mock(), [1], [2])
 
