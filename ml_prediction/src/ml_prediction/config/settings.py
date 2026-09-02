@@ -43,6 +43,8 @@ def load_settings(dataset_name: str) -> AppSettings:
         prediction_filename=os.getenv("ML_PREDICTION_PREDICTION_FILENAME", profile.prediction_filename),
         prediction_column=os.getenv("ML_PREDICTION_PREDICTION_COLUMN", profile.prediction_column),
         experiment_filename=os.getenv("ML_PREDICTION_EXPERIMENT_FILENAME", profile.experiment_filename),
+        mlflow_tracking_uri=os.getenv("MLFLOW_TRACKING_URI", "sqlite:///./mlflow.db"),
+        mlflow_experiment_prefix=os.getenv("MLFLOW_EXPERIMENT_PREFIX", "ml_prediction"),
     )
 
 

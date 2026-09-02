@@ -13,6 +13,7 @@ dependencies = [
     "scikit-learn",
     "joblib",
     "pyarrow",
+    "mlflow",
 ]
 
 [tool.setuptools.packages.find]

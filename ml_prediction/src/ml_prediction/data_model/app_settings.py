@@ -39,3 +39,5 @@ class AppSettings:
     prediction_filename: str = ""
     prediction_column: str = ""
     experiment_filename: str = "experiments.csv"
+    mlflow_tracking_uri: str = "sqlite:///./mlflow.db"
+    mlflow_experiment_prefix: str = "ml_prediction"

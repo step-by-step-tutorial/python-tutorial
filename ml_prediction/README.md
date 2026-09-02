@@ -7,7 +7,6 @@ Machine Learning Layer
     dataset preparation
     feature engineering
     train/validation/test split
-    baseline model
     model training
     evaluation
     model persistence
@@ -42,6 +41,21 @@ pytest
 
 ## LocalHost
 
+## MLflow
+
+```shell
+cd ./ml_prediction
+docker compose --file docker-compose.yml --project-name test up --build -d
+```
+
+```shell
+cd ./ml_prediction
+docker compose --file docker-compose.yml --project-name test down -v
+rm ./mlflow.db
+```
+
+MLflow: [http://localhost:5000](http://localhost:5000)
+
 ### Interactive
 ```shell
 cd ./ml_prediction
@@ -60,6 +74,7 @@ python -m ml_prediction.main house predict
 python -m ml_prediction.main online_shopping train
 python -m ml_prediction.main online_shopping predict
 ```
+
 
 ```shell
 # Multi training
@@ -81,4 +96,6 @@ cd ./ml_prediction
 rm -rf ./src/*.egg-info
 rm -rf ./models/*
 rm -rf ./reports/*
+rm -rf ./mlruns/*
+rm ./mlflow.db
 ```

@@ -23,6 +23,7 @@ from ml_prediction.model_selection.classification_model_selector import Classifi
 from ml_prediction.pipeline.classification_pipeline_builder import ClassificationPipelineBuilder
 from ml_prediction.pipeline.classifier_builder import ClassifierBuilder
 from ml_prediction.reporting.experiment_service import ExperimentService
+from ml_prediction.reporting.mlflow_tracker import MlflowTracker
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
@@ -44,6 +45,7 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
         self._experiment_service = ExperimentService(dataset.dataset_name)
+        self._mlflow_tracker = MlflowTracker(self._settings)
         self._report_service = ReportService(self._settings.report_dir)
         self._search_enabled = search_enabled
         self._model_selector = ClassificationModelSelector()
@@ -56,9 +58,23 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         dataframe, dataset_path = self.download_dataset()
         prepared = self.build_features_and_target(dataframe)
         partitions = self._dataset_splitter.split(prepared.features, prepared.target)
+        experiment_id = str(uuid4())
+        self._mlflow_tracker.start(experiment_id, {
+            "n_estimators": self._settings.n_estimators,
+            "n_jobs": self._settings.n_jobs,
+            "max_depth": self._settings.max_depth,
+            "min_samples_split": self._settings.min_samples_split,
+            "min_samples_leaf": self._settings.min_samples_leaf,
+            "max_features": self._settings.max_features,
+            "bootstrap": self._settings.bootstrap,
+            "random_state": self._settings.random_state,
+        })
+        self._mlflow_tracker.log_artifact(dataset_path, "dataset")
         model = self.train_model(partitions)
         validation = self.evaluate_model(model, partitions.validation)
+        self._mlflow_tracker.log_metrics("validation", validation)
         final = self.evaluate_model_with_predictions(model, partitions.test)
+        self._mlflow_tracker.log_metrics("test", final.metrics)
         timestamp = datetime.now(timezone.utc)
         model_parameters = {
             "n_estimators": self._settings.n_estimators,
@@ -87,10 +103,12 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
             prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(model, metadata)
+        self._mlflow_tracker.log_model(model.pipeline)
+        self._mlflow_tracker.log_artifact(model_path.with_suffix(".metadata.json"), "model")
         report = self._report_service.start(self._settings.dataset_name, "training", model_path)
         report.record("training_completed", rows=len(dataframe), details=str(dataset_path))
         result = Experiment(
-            experiment_id=str(uuid4()), timestamp=timestamp, dataset_name=self._settings.dataset_name,
+            experiment_id=experiment_id, timestamp=timestamp, dataset_name=self._settings.dataset_name,
             model_type=self._settings.model_type, model_parameters=metadata.model_parameters,
             validation_metrics=validation, test_metrics=final.metrics,
             model_path=model_path, report_path=report.path,
@@ -98,6 +116,8 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
             model_selection_score=self._selected_model_score,
         )
         self._experiment_service.save(result)
+        self._mlflow_tracker.log_artifact(report.path, "reports")
+        self._mlflow_tracker.end()
         return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:

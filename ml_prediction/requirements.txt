@@ -6,3 +6,4 @@ pyarrow
 pytest
 pytest-mock
 matplotlib
+mlflow

@@ -26,6 +26,7 @@ from ml_prediction.model_selection.regression_model_selector import RegressionMo
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.reporting.experiment_service import ExperimentService
+from ml_prediction.reporting.mlflow_tracker import MlflowTracker
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
@@ -44,6 +45,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         self._feature_model = HouseFeatureModel()
         self._report_service = ReportService(self._settings.report_dir)
         self._experiment_service = ExperimentService(dataset.dataset_name)
+        self._mlflow_tracker = MlflowTracker(self._settings)
         self._training_visualizer = TrainingVisualizer()
         self._experiment_visualizer = ExperimentVisualizer(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
@@ -132,6 +134,8 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             f"model_type={self._settings.model_type} "
             f"model_parameters={configured_parameters}",
         )
+        self._mlflow_tracker.start(experiment_id, configured_parameters)
+        self._mlflow_tracker.log_artifact(dataset_path, "dataset")
 
         logger.info(
             f"Evaluating model: "
@@ -156,6 +160,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         )
 
         validation_metrics = self.evaluate_model(trained_model, dataset_subsets.validation)
+        self._mlflow_tracker.log_metrics("validation", validation_metrics)
 
         report_events.append((
             "model_evaluated",
@@ -175,6 +180,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
 
         final_test_evaluation = self.evaluate_model_with_predictions(trained_model, dataset_subsets.test)
         final_test_metrics = final_test_evaluation.metrics
+        self._mlflow_tracker.log_metrics("test", final_test_metrics)
 
         report_events.append((
             "model_evaluated",
@@ -204,6 +210,8 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(trained_model, metadata)
+        self._mlflow_tracker.log_model(trained_model.pipeline)
+        self._mlflow_tracker.log_artifact(model_path.with_suffix(".metadata.json"), "model")
 
         report = self._report_service.start(self._settings.dataset_name, "training", model_path)
         for step, details in report_events:
@@ -242,9 +250,13 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             experiment_id,
             self._settings.report_dir,
         )
+        self._mlflow_tracker.log_artifact(report.path, "reports")
+        for artifact in (self._settings.report_dir / experiment_id).glob("*.png"):
+            self._mlflow_tracker.log_artifact(artifact, "plots")
         self._experiment_visualizer.save_validation_mae_comparison()
         self._experiment_visualizer.save_validation_rmse_comparison()
         self._experiment_visualizer.save_validation_r2_comparison()
+        self._mlflow_tracker.end()
         return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:
