@@ -4,7 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from ml_prediction.config.settings import get_settings
-from ml_prediction.reporting.experiment_service import ExperimentService
+from ml_prediction.offline_tracking.experiment_reader import ExperimentReader
 from ml_prediction.visualization.training_visualizer import TrainingVisualizer
 
 
@@ -15,7 +15,7 @@ class ExperimentVisualizer:
             dataset_name: str,
     ) -> None:
         settings = get_settings(dataset_name)
-        self.experiment_service = ExperimentService(dataset_name)
+        self.experiment_service = ExperimentReader(dataset_name)
         self.report_dir = settings.report_dir / "comparison"
         self.dataset_name = dataset_name
 

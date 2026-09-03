@@ -9,7 +9,7 @@ from ml_prediction.config.settings import TaskType, get_settings
 from ml_prediction.data_model.dataset_split import DatasetSplit
 from ml_prediction.data_model.dataset_subset import DatasetSubset
 from ml_prediction.data_model.evaluation import RegressionEvaluation
-from ml_prediction.data_model.experiment import Experiment
+from ml_prediction.offline_tracking.models import Experiment
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.model_metadata import (
     CURRENT_MODEL_VERSION,
@@ -25,7 +25,7 @@ from ml_prediction.model.house_price_model import HousePriceModel
 from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
 from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
-from ml_prediction.reporting.experiment_service import ExperimentService
+from ml_prediction.offline_tracking.experiment_writer import ExperimentWriter
 from ml_prediction.reporting.mlflow_tracker import MlflowTracker
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -44,7 +44,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         self._dataset = dataset
         self._feature_model = HouseFeatureModel()
         self._report_service = ReportService(self._settings.report_dir)
-        self._experiment_service = ExperimentService(dataset.dataset_name)
+        self._experiment_service = ExperimentWriter(dataset.dataset_name)
         self._mlflow_tracker = MlflowTracker(self._settings)
         self._training_visualizer = TrainingVisualizer()
         self._experiment_visualizer = ExperimentVisualizer(dataset.dataset_name)

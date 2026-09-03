@@ -11,9 +11,10 @@ from ml_prediction.data_model.classification_evaluation import ClassificationEva
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.dataset_split import DatasetSplit
 from ml_prediction.data_model.dataset_subset import DatasetSubset
-from ml_prediction.data_model.experiment import Experiment
+from ml_prediction.offline_tracking.models import Experiment
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
-from ml_prediction.data_model.model_metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION, ModelMetadata
+from ml_prediction.data_model.model_metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION
+from ml_prediction.offline_tracking.models import ModelMetadata
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.classification_evaluator import ClassificationEvaluator
 from ml_prediction.features.feature_builder import FeatureBuilder
@@ -22,7 +23,7 @@ from ml_prediction.model.classification_model import ClassificationModel
 from ml_prediction.model_selection.classification_model_selector import ClassificationModelSelector
 from ml_prediction.pipeline.classification_pipeline_builder import ClassificationPipelineBuilder
 from ml_prediction.pipeline.classifier_builder import ClassifierBuilder
-from ml_prediction.reporting.experiment_service import ExperimentService
+from ml_prediction.offline_tracking.experiment_writer import ExperimentWriter
 from ml_prediction.reporting.mlflow_tracker import MlflowTracker
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -44,7 +45,7 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         self._evaluator = ClassificationEvaluator()
         self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
-        self._experiment_service = ExperimentService(dataset.dataset_name)
+        self._experiment_service = ExperimentWriter(dataset.dataset_name)
         self._mlflow_tracker = MlflowTracker(self._settings)
         self._report_service = ReportService(self._settings.report_dir)
         self._search_enabled = search_enabled

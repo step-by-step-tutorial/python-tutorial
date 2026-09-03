@@ -64,6 +64,7 @@ python -m ml_prediction.main
 
 ### Inline command
 ```shell
+# single training
 cd ./ml_prediction
 # Test
 pytest

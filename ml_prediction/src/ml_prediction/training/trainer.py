@@ -5,7 +5,7 @@ from typing import Generic, TypeVar
 import pandas as pd
 
 from ml_prediction.data_model.dataset_subset import DatasetSubset
-from ml_prediction.data_model.model_metadata import ModelMetadata
+from ml_prediction.offline_tracking.models import ModelMetadata
 
 TrainingResultType = TypeVar("TrainingResultType")
 

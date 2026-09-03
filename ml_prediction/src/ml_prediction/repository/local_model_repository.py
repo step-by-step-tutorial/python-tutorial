@@ -1,15 +1,12 @@
 import logging
-from dataclasses import asdict
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import joblib
 
-from ml_prediction.data_model.classification_metrics import ClassificationMetrics
-from ml_prediction.data_model.model_metadata import ModelMetadata
-from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.utils.json_utils import read_json, write_json
+from ml_prediction.offline_tracking.metadata_reader import MetadataReader
+from ml_prediction.offline_tracking.metadata_writer import MetadataWriter
+from ml_prediction.offline_tracking.models import ModelMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -28,19 +25,9 @@ class LocalModelRepository:
         return joblib.load(path)
 
     def save_metadata(self, metadata: ModelMetadata, path: Path) -> Path:
-        metadata_path = path.with_suffix(".metadata.json")
-        write_json(metadata_path, asdict(metadata))
+        metadata_path = MetadataWriter().save(metadata, path)
         logger.info(f"Saved model metadata: path={metadata_path}")
         return metadata_path
 
     def load_metadata(self, path: Path) -> ModelMetadata:
-        data = read_json(path.with_suffix(".metadata.json"))
-        data["training_timestamp"] = datetime.fromisoformat(data["training_timestamp"])
-        data["numeric_features"] = tuple(data["numeric_features"])
-        data["boolean_features"] = tuple(data["boolean_features"])
-        data["categorical_features"] = tuple(data["categorical_features"])
-        metric_type = data.get("task_type", "regression")
-        metrics_model = ClassificationMetrics if metric_type == "classification" else RegressionMetrics
-        data["validation_metrics"] = metrics_model(**data["validation_metrics"])
-        data["final_test_metrics"] = metrics_model(**data["final_test_metrics"])
-        return ModelMetadata(**data)
+        return MetadataReader().load(path)

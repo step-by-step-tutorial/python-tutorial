@@ -79,7 +79,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         return_value=mocker.Mock(),
     ).return_value
     experiment_repository = mocker.patch(
-        "ml_prediction.training.house_price_regression_trainer.ExperimentService",
+        "ml_prediction.training.house_price_regression_trainer.ExperimentWriter",
         return_value=mocker.Mock(),
     ).return_value
     training_visualizer = mocker.patch(
