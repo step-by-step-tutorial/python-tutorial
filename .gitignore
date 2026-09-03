@@ -165,6 +165,7 @@ report/
 **/output_test/*.*
 **/geodata_pipeline/data/**
 **/geodata_pipeline/output/**
+**/ml_prediction/data/**predictions**
 **/ml_prediction/models/**
 **/ml_prediction/reports/**
 **/ml_prediction/mlruns/**
