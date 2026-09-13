@@ -1,5 +1,5 @@
-from ml_prediction.pipeline.tabular_pipeline_builder import TabularPipelineBuilder
+from ml_prediction.pipeline.regressor_pipeline_builder import RegressorPipelineBuilder
 
 
-class HousePricePipelineBuilder(TabularPipelineBuilder):
+class HousePricePipelineBuilder(RegressorPipelineBuilder):
     pass

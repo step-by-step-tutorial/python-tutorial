@@ -8,7 +8,7 @@ from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 
 
-class TabularPipelineBuilder(PipelineBuilder):
+class RegressorPipelineBuilder(PipelineBuilder):
 
     def __init__(self, feature_model: FeatureModel, regressor_builder: RegressorBuilder) -> None:
         self._feature_model = feature_model
