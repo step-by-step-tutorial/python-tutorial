@@ -25,9 +25,10 @@ class ClassificationModelSelector:
     def select(self, pipeline: Pipeline, features, target) -> ClassificationSelection:
         candidate_count = len(list(ParameterGrid(CLASSIFICATION_PARAMETER_GRID)))
         logger.info(
-            "Classification model search started: candidates=%s cross_validation_folds=%s metric=f1_weighted",
-            candidate_count,
-            self._cross_validation_folds,
+            f"Classification model search started: "
+            f"candidates={candidate_count} "
+            f"cross_validation_folds={self._cross_validation_folds} "
+            f"metric=f1_weighted"
         )
         search = GridSearchCV(
             estimator=pipeline,

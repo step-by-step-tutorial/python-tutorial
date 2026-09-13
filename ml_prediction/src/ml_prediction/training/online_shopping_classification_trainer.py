@@ -10,12 +10,6 @@ from ml_prediction.config.settings_types import TaskType
 from ml_prediction.data_model.classification_evaluation import ClassificationEvaluation
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.dataset_split import DatasetSplit
-from ml_prediction.offline_tracking.models import (
-    CURRENT_MODEL_VERSION,
-    CURRENT_SCHEMA_VERSION,
-    Experiment,
-    ModelMetadata,
-)
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.classification_evaluator import ClassificationEvaluator
@@ -23,9 +17,15 @@ from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
 from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model_selection.classification_model_selector import ClassificationModelSelector
+from ml_prediction.offline_tracking.experiment_writer import ExperimentWriter
+from ml_prediction.offline_tracking.models import (
+    CURRENT_MODEL_VERSION,
+    CURRENT_SCHEMA_VERSION,
+    Experiment,
+    ModelMetadata,
+)
 from ml_prediction.pipeline.classification_pipeline_builder import ClassificationPipelineBuilder
 from ml_prediction.pipeline.classifier_builder import ClassifierBuilder
-from ml_prediction.offline_tracking.experiment_writer import ExperimentWriter
 from ml_prediction.reporting.mlflow_tracker import MlflowTracker
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -40,10 +40,7 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         self._settings = get_settings(dataset.dataset_name)
         self._dataset = dataset
         self._feature_model = OnlineShoppingFeatureModel()
-        self._pipeline_builder = ClassificationPipelineBuilder(
-            self._feature_model,
-            ClassifierBuilder(dataset.dataset_name),
-        )
+        self._pipeline_builder = ClassificationPipelineBuilder(self._feature_model, ClassifierBuilder(dataset.dataset_name))
         self._evaluator = ClassificationEvaluator()
         self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
@@ -151,9 +148,9 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         self._selected_model_score = selection.f1_score
         return TrainedModel.from_pipeline(selection.pipeline)
 
-    def evaluate_model(self, trained_model, dataset_partition: FeaturesAndTarget) -> ClassificationMetrics:
+    def evaluate_model(self, model, data: FeaturesAndTarget) -> ClassificationMetrics:
         return self._evaluator.evaluate(
-            dataset_partition.target, trained_model.predict(dataset_partition.features)
+            data.target, model.predict(data.features)
         ).metrics
 
     def evaluate_model_with_predictions(
@@ -163,9 +160,9 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         y_pred = trained_model.predict(dataset_partition.features)
         return self._evaluator.evaluate(y_true, y_pred)
 
-    def save_model(self, trained_model: TrainedModel, metadata: ModelMetadata) -> Path:
+    def save_model(self, model: TrainedModel, metadata: ModelMetadata) -> Path:
         return self._model_repository.save(
-            trained_model.pipeline,
+            model.pipeline,
             self._settings.model_dir / self._settings.model_filename,
             metadata,
         )

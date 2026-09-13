@@ -8,12 +8,6 @@ import pandas as pd
 from ml_prediction.config.settings import TaskType, get_settings
 from ml_prediction.data_model.dataset_split import DatasetSplit
 from ml_prediction.data_model.evaluation import RegressionEvaluation
-from ml_prediction.offline_tracking.models import (
-    CURRENT_MODEL_VERSION,
-    CURRENT_SCHEMA_VERSION,
-    Experiment,
-    ModelMetadata,
-)
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.dataset import Dataset
@@ -22,9 +16,15 @@ from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
-from ml_prediction.pipeline.regressor_pipeline_builder import RegressorPipelineBuilder
-from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.offline_tracking.experiment_writer import ExperimentWriter
+from ml_prediction.offline_tracking.models import (
+    CURRENT_MODEL_VERSION,
+    CURRENT_SCHEMA_VERSION,
+    Experiment,
+    ModelMetadata,
+)
+from ml_prediction.pipeline.regressor_builder import RegressorBuilder
+from ml_prediction.pipeline.regressor_pipeline_builder import RegressorPipelineBuilder
 from ml_prediction.reporting.mlflow_tracker import MlflowTracker
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -285,34 +285,22 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             partitions.train.target,
         )
         self._selected_model_parameters = {
-            key.removeprefix("regressor__"): value
-            for key, value in selection.parameters.items()
+            key.removeprefix("regressor__"): value for key, value in selection.parameters.items()
         }
         self._selected_model_score = selection.mean_absolute_error
         return TrainedModel.from_pipeline(selection.pipeline)
 
-    def evaluate_model(
-            self,
-            trained_model,
-            dataset_partition: FeaturesAndTarget
-    ) -> RegressionMetrics:
-        return self._evaluator.evaluate(
-            dataset_partition.target,
-            trained_model.predict(dataset_partition.features),
-        ).metrics
+    def evaluate_model(self, model, data: FeaturesAndTarget) -> RegressionMetrics:
+        return self._evaluator.evaluate(data.target, model.predict(data.features)).metrics
 
-    def evaluate_model_with_predictions(
-            self,
-            trained_model,
-            dataset_partition: FeaturesAndTarget,
-    ) -> RegressionEvaluation:
-        y_true = dataset_partition.target
-        y_pred = trained_model.predict(dataset_partition.features)
+    def evaluate_model_with_predictions(self, model, data: FeaturesAndTarget) -> RegressionEvaluation:
+        y_true = data.target
+        y_pred = model.predict(data.features)
         return self._evaluator.evaluate(y_true, y_pred)
 
-    def save_model(self, trained_model: TrainedModel, metadata: ModelMetadata) -> Path:
+    def save_model(self, model: TrainedModel, metadata: ModelMetadata) -> Path:
         return self._model_repository.save(
-            trained_model.pipeline,
+            model.pipeline,
             self._settings.model_dir / self._settings.model_filename,
             metadata,
         )

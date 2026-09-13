@@ -20,16 +20,15 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    @abstractmethod
     def train_model(self, partitions):
         ...
 
     @abstractmethod
-    def evaluate_model(self, trained_model, dataset_partition: FeaturesAndTarget):
+    def evaluate_model(self, model, data: FeaturesAndTarget):
         ...
 
     @abstractmethod
-    def save_model(self, trained_model, metadata: ModelMetadata) -> Path:
+    def save_model(self, model, metadata: ModelMetadata) -> Path:
         ...
 
     @abstractmethod
