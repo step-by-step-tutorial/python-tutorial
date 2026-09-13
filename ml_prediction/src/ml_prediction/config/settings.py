@@ -13,7 +13,7 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
 
 
-def load_settings(dataset_name: str) -> AppSettings:
+def get_settings(dataset_name: str) -> AppSettings:
     profile = DATASET_PROFILES[dataset_name]
 
     return AppSettings(
@@ -52,13 +52,3 @@ def load_settings(dataset_name: str) -> AppSettings:
         mlflow_enabled=_env_bool("MLFLOW_ENABLED"),
         mlflow_required=_env_bool("MLFLOW_REQUIRED"),
     )
-
-
-DATASET_SETTINGS: dict[str, AppSettings] = {
-    "house": load_settings("house"),
-    "online_shopping": load_settings("online_shopping"),
-}
-
-
-def get_settings(dataset_name: str) -> AppSettings:
-    return load_settings(dataset_name)
