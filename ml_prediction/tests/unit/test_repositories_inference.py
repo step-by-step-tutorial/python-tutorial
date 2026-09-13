@@ -11,7 +11,7 @@ from ml_prediction.data_model.prediction import Prediction
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.house_features_builder import HouseFeatureBuilder
-from ml_prediction.data_model.model_metadata import ModelMetadata
+from ml_prediction.offline_tracking.models import ModelMetadata
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository

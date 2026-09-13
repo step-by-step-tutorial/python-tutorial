@@ -10,11 +10,13 @@ from ml_prediction.config.settings_types import TaskType
 from ml_prediction.data_model.classification_evaluation import ClassificationEvaluation
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.dataset_split import DatasetSplit
-from ml_prediction.data_model.dataset_subset import DatasetSubset
-from ml_prediction.offline_tracking.models import Experiment
+from ml_prediction.offline_tracking.models import (
+    CURRENT_MODEL_VERSION,
+    CURRENT_SCHEMA_VERSION,
+    Experiment,
+    ModelMetadata,
+)
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
-from ml_prediction.data_model.model_metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION
-from ml_prediction.offline_tracking.models import ModelMetadata
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.classification_evaluator import ClassificationEvaluator
 from ml_prediction.features.feature_builder import FeatureBuilder
@@ -149,13 +151,13 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         self._selected_model_score = selection.f1_score
         return ClassificationModel.from_pipeline(selection.pipeline)
 
-    def evaluate_model(self, trained_model, dataset_partition: DatasetSubset) -> ClassificationMetrics:
+    def evaluate_model(self, trained_model, dataset_partition: FeaturesAndTarget) -> ClassificationMetrics:
         return self._evaluator.evaluate(
             dataset_partition.target, trained_model.predict(dataset_partition.features)
         ).metrics
 
     def evaluate_model_with_predictions(
-            self, trained_model, dataset_partition: DatasetSubset
+            self, trained_model, dataset_partition: FeaturesAndTarget
     ) -> ClassificationEvaluation:
         y_true = dataset_partition.target
         y_pred = trained_model.predict(dataset_partition.features)

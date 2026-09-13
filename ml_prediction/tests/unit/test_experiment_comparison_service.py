@@ -1,10 +1,9 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
-from ml_prediction.data_model.experiment import Experiment
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.reporting.experiment_service import ExperimentService
+from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
+from ml_prediction.offline_tracking.models import Experiment
 
 
 def experiment(experiment_id: str, mae: float, rmse: float, r2: float) -> Experiment:

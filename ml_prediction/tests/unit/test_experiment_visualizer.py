@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ml_prediction.data_model.experiment import Experiment
+from ml_prediction.offline_tracking.models import Experiment
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
 

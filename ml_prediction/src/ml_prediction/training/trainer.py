@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 import pandas as pd
 
-from ml_prediction.data_model.dataset_subset import DatasetSubset
+from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.offline_tracking.models import ModelMetadata
 
 TrainingResultType = TypeVar("TrainingResultType")
@@ -25,7 +25,7 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    def evaluate_model(self, trained_model, dataset_partition: DatasetSubset):
+    def evaluate_model(self, trained_model, dataset_partition: FeaturesAndTarget):
         ...
 
     @abstractmethod

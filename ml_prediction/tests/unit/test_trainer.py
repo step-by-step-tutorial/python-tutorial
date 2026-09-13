@@ -6,12 +6,10 @@ import pandas as pd
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.evaluation import RegressionEvaluation
-from ml_prediction.data_model.experiment import Experiment
+from ml_prediction.offline_tracking.models import Experiment
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.data_model.dataset_subset import DatasetSubset
 from ml_prediction.data_model.dataset_split import DatasetSplit
-from ml_prediction.data_model.training import TrainingOutput
 from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
@@ -97,7 +95,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     trainer = HousePriceRegressionTrainer(dataset)
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
-    partition = DatasetSubset(dataframe, dataframe["target"])
+    partition = FeaturesAndTarget(dataframe, dataframe["target"])
     partitions = DatasetSplit(partition, partition, partition)
     model = mocker.Mock()
     metrics = RegressionMetrics(1.0, 2.0, 0.5)
@@ -114,7 +112,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
 
     result = trainer.train()
 
-    assert isinstance(result, TrainingOutput)
+    assert isinstance(result, Experiment)
     assert isinstance(result, Experiment)
     assert result.experiment_id
     assert result.timestamp.tzinfo is not None

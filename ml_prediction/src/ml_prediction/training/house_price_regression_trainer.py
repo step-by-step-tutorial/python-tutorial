@@ -7,15 +7,14 @@ import pandas as pd
 
 from ml_prediction.config.settings import TaskType, get_settings
 from ml_prediction.data_model.dataset_split import DatasetSplit
-from ml_prediction.data_model.dataset_subset import DatasetSubset
 from ml_prediction.data_model.evaluation import RegressionEvaluation
-from ml_prediction.offline_tracking.models import Experiment
-from ml_prediction.data_model.features_and_target import FeaturesAndTarget
-from ml_prediction.data_model.model_metadata import (
+from ml_prediction.offline_tracking.models import (
     CURRENT_MODEL_VERSION,
     CURRENT_SCHEMA_VERSION,
+    Experiment,
     ModelMetadata,
 )
+from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
@@ -295,7 +294,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
     def evaluate_model(
             self,
             trained_model,
-            dataset_partition: DatasetSubset
+            dataset_partition: FeaturesAndTarget
     ) -> RegressionMetrics:
         return self._evaluator.evaluate(
             dataset_partition.target,
@@ -305,7 +304,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
     def evaluate_model_with_predictions(
             self,
             trained_model,
-            dataset_partition: DatasetSubset,
+            dataset_partition: FeaturesAndTarget,
     ) -> RegressionEvaluation:
         y_true = dataset_partition.target
         y_pred = trained_model.predict(dataset_partition.features)

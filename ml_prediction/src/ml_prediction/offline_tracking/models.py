@@ -8,6 +8,10 @@ from ml_prediction.data_model.classification_metrics import ClassificationMetric
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 
+CURRENT_SCHEMA_VERSION = "1"
+CURRENT_MODEL_VERSION = "1"
+
+
 Metrics = RegressionMetrics | ClassificationMetrics
 
 

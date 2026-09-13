@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from ml_prediction.data_model.experiment import Experiment
+from ml_prediction.offline_tracking.models import Experiment
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.reporting.experiment_service import ExperimentService
 
