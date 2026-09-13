@@ -17,10 +17,10 @@ class ClassificationEvaluator:
             f1_score=float(f1_score(actual, predicted, average="weighted", zero_division=0)),
         )
         logger.info(
-            "Classification metrics: accuracy=%s precision=%s recall=%s f1=%s",
-            metrics.accuracy,
-            metrics.precision,
-            metrics.recall,
-            metrics.f1_score,
+            f"Classification metrics: "
+            f"accuracy={metrics.accuracy} "
+            f"precision={metrics.precision} "
+            f"recall={metrics.recall} "
+            f"f1={metrics.f1_score}"
         )
         return ClassificationEvaluation(actual, predicted, metrics)

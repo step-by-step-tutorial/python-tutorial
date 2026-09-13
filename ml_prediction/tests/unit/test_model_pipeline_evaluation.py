@@ -12,10 +12,10 @@ from ml_prediction.data_model.evaluation import RegressionEvaluation
 from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.features.house_features_builder import HouseFeatureBuilder
-from ml_prediction.model.house_price_model import HousePriceModel
+from ml_prediction.features.feature_builder import FeatureBuilder
+from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model.model import Model
-from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
+from ml_prediction.pipeline.regressor_pipeline_builder import RegressorPipelineBuilder
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 
@@ -24,9 +24,9 @@ from test_dataset_features import house_dataframe
 
 def test_pipeline_builder_is_abstract_and_builds_pipeline() -> None:
     feature_model = HouseFeatureModel()
-    builder = HousePricePipelineBuilder(feature_model, RegressorBuilder("house"))
+    builder = RegressorPipelineBuilder(feature_model, RegressorBuilder("house"))
 
-    assert issubclass(HousePricePipelineBuilder, PipelineBuilder)
+    assert issubclass(RegressorPipelineBuilder, PipelineBuilder)
     pipeline = builder.build()
     assert list(pipeline.named_steps) == ["preprocessor", "regressor"]
     assert pipeline.named_steps["preprocessor"].transformers[0][0] == "numeric"
@@ -110,12 +110,12 @@ def test_regressor_builder_rejects_unsupported_model_type(mocker) -> None:
         RegressorBuilder("house").build()
 
 
-def test_house_price_model_fits_and_predicts() -> None:
+def test_trained_model_fits_and_predicts() -> None:
     dataframe = house_dataframe()
-    features = HouseFeatureBuilder(dataframe, HouseFeatureModel()).build()
+    features = FeatureBuilder(dataframe, HouseFeatureModel()).build()
     target = pd.Series([100, 200])
-    model = HousePriceModel(
-        HousePricePipelineBuilder(
+    model = TrainedModel(
+        RegressorPipelineBuilder(
             HouseFeatureModel(),
             RegressorBuilder("house"),
         )

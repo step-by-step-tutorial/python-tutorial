@@ -14,11 +14,7 @@ logger = logging.getLogger(__name__)
 
 class ModelPredictor(Predictor[pd.Series]):
 
-    def __init__(
-            self,
-            dataset_name: str,
-            feature_model: FeatureModel,
-    ) -> None:
+    def __init__(self, dataset_name: str, feature_model: FeatureModel) -> None:
         self._settings = get_settings(dataset_name)
         self._model_path = self._settings.model_dir / self._settings.model_filename
         self._model = LocalModelRepository().load(self._model_path)

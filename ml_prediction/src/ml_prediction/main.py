@@ -8,7 +8,6 @@ from ml_prediction.config.settings import get_settings
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
-from ml_prediction.inference.house_price_predictor import HousePricePredictor
 from ml_prediction.inference.model_predictor import ModelPredictor
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
 from ml_prediction.presentation.training_presenter import TrainingPresenter
@@ -31,7 +30,7 @@ def _create_house_application(settings, include_prediction: bool = True, search_
     dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
     predictor = None
     if include_prediction:
-        predictor = HousePricePredictor(
+        predictor = ModelPredictor(
             dataset_service.dataset_name,
             feature_model,
         )

@@ -20,9 +20,9 @@ from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.model.house_price_model import HousePriceModel
+from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
-from ml_prediction.pipeline.house_price_pipeline_builder import HousePricePipelineBuilder
+from ml_prediction.pipeline.regressor_pipeline_builder import RegressorPipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.offline_tracking.experiment_writer import ExperimentWriter
 from ml_prediction.reporting.mlflow_tracker import MlflowTracker
@@ -48,7 +48,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         self._training_visualizer = TrainingVisualizer()
         self._experiment_visualizer = ExperimentVisualizer(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
-        self._pipeline_builder = HousePricePipelineBuilder(self._feature_model, RegressorBuilder(dataset.dataset_name))
+        self._pipeline_builder = RegressorPipelineBuilder(self._feature_model, RegressorBuilder(dataset.dataset_name))
         self._evaluator = RegressionEvaluator()
         self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
         self._search_enabled = search_enabled
@@ -274,11 +274,11 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         )
         return FeaturesAndTarget(features, target)
 
-    def train_model(self, partitions: DatasetSplit) -> HousePriceModel:
+    def train_model(self, partitions: DatasetSplit) -> TrainedModel:
         if not self._search_enabled:
-            return HousePriceModel(self._pipeline_builder).fit(partitions.train.features, partitions.train.target)
+            return TrainedModel(self._pipeline_builder).fit(partitions.train.features, partitions.train.target)
 
-        pipeline = HousePriceModel(self._pipeline_builder).pipeline
+        pipeline = TrainedModel(self._pipeline_builder).pipeline
         selection = self._model_selector.select(
             pipeline,
             partitions.train.features,
@@ -289,7 +289,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             for key, value in selection.parameters.items()
         }
         self._selected_model_score = selection.mean_absolute_error
-        return HousePriceModel.from_pipeline(selection.pipeline)
+        return TrainedModel.from_pipeline(selection.pipeline)
 
     def evaluate_model(
             self,
@@ -310,7 +310,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         y_pred = trained_model.predict(dataset_partition.features)
         return self._evaluator.evaluate(y_true, y_pred)
 
-    def save_model(self, trained_model: HousePriceModel, metadata: ModelMetadata) -> Path:
+    def save_model(self, trained_model: TrainedModel, metadata: ModelMetadata) -> Path:
         return self._model_repository.save(
             trained_model.pipeline,
             self._settings.model_dir / self._settings.model_filename,

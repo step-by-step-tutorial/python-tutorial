@@ -16,9 +16,9 @@ class RegressionEvaluator:
             r2_score=float(r2_score(actual, predicted)),
         )
         logger.info(
-            "Regression metrics: mae=%s rmse=%s r2=%s",
-            metrics.mean_absolute_error,
-            metrics.root_mean_squared_error,
-            metrics.r2_score,
+            f"Regression metrics: "
+            f"mae={metrics.mean_absolute_error} "
+            f"rmse={metrics.root_mean_squared_error} "
+            f"r2={metrics.r2_score}"
         )
         return RegressionEvaluation(actual, predicted, metrics)

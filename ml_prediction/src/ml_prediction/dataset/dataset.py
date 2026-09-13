@@ -18,7 +18,8 @@ class Dataset:
     def download(self) -> tuple[pd.DataFrame, Path]:
         settings = get_settings(self.dataset_name)
         if settings.dataset_source == DatasetSource.DOWNLOAD:
-            DataLakeRepository(self.dataset_name).download_latest_csv(self.path)
+            datalake_repository = DataLakeRepository(self.dataset_name)
+            datalake_repository.download_latest_csv(self.path)
         else:
             logger.info("Using local dataset: path=%s", self.path)
         return load_csv(self.path), self.path

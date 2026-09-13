@@ -21,7 +21,7 @@ from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.classification_evaluator import ClassificationEvaluator
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
-from ml_prediction.model.classification_model import ClassificationModel
+from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model_selection.classification_model_selector import ClassificationModelSelector
 from ml_prediction.pipeline.classification_pipeline_builder import ClassificationPipelineBuilder
 from ml_prediction.pipeline.classifier_builder import ClassifierBuilder
@@ -131,14 +131,14 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         target = dataframe.pop(self._settings.target_column)
         return FeaturesAndTarget(FeatureBuilder(dataframe, self._feature_model).build(), target)
 
-    def train_model(self, partitions: DatasetSplit) -> ClassificationModel:
+    def train_model(self, partitions: DatasetSplit) -> TrainedModel:
         if not self._search_enabled:
-            return ClassificationModel(self._pipeline_builder).fit(
+            return TrainedModel(self._pipeline_builder).fit(
                 partitions.train.features,
                 partitions.train.target,
             )
 
-        pipeline = ClassificationModel(self._pipeline_builder).pipeline
+        pipeline = TrainedModel(self._pipeline_builder).pipeline
         selection = self._model_selector.select(
             pipeline,
             partitions.train.features,
@@ -149,7 +149,7 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
             for key, value in selection.parameters.items()
         }
         self._selected_model_score = selection.f1_score
-        return ClassificationModel.from_pipeline(selection.pipeline)
+        return TrainedModel.from_pipeline(selection.pipeline)
 
     def evaluate_model(self, trained_model, dataset_partition: FeaturesAndTarget) -> ClassificationMetrics:
         return self._evaluator.evaluate(
@@ -163,7 +163,7 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         y_pred = trained_model.predict(dataset_partition.features)
         return self._evaluator.evaluate(y_true, y_pred)
 
-    def save_model(self, trained_model: ClassificationModel, metadata: ModelMetadata) -> Path:
+    def save_model(self, trained_model: TrainedModel, metadata: ModelMetadata) -> Path:
         return self._model_repository.save(
             trained_model.pipeline,
             self._settings.model_dir / self._settings.model_filename,
