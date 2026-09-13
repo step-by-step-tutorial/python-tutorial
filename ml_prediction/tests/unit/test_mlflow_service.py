@@ -4,7 +4,7 @@ from dataclasses import replace
 from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.reporting.mlflow_tracker import MlflowTracker
+from ml_prediction.reporting.mlflow_service import MlflowService
 
 
 def _settings() -> AppSettings:
@@ -22,9 +22,9 @@ def _settings() -> AppSettings:
     )
 
 
-def test_tracker_starts_dataset_experiment_and_logs_parameters(mocker) -> None:
-    mlflow = mocker.patch("ml_prediction.reporting.mlflow_tracker.mlflow")
-    tracker = MlflowTracker(_settings())
+def test_service_starts_dataset_experiment_and_logs_parameters(mocker) -> None:
+    mlflow = mocker.patch("ml_prediction.reporting.mlflow_service.mlflow")
+    tracker = MlflowService(_settings())
 
     tracker.start("experiment-1", {"n_estimators": 200})
 
@@ -34,9 +34,9 @@ def test_tracker_starts_dataset_experiment_and_logs_parameters(mocker) -> None:
     mlflow.log_params.assert_called_once_with({"n_estimators": 200})
 
 
-def test_tracker_logs_dataclass_metrics_and_ends_run(mocker) -> None:
-    mlflow = mocker.patch("ml_prediction.reporting.mlflow_tracker.mlflow")
-    tracker = MlflowTracker(_settings())
+def test_service_logs_dataclass_metrics_and_ends_run(mocker) -> None:
+    mlflow = mocker.patch("ml_prediction.reporting.mlflow_service.mlflow")
+    tracker = MlflowService(_settings())
     tracker.start("experiment-1", {})
 
     tracker.log_metrics("validation", RegressionMetrics(1.0, 2.0, 0.5))
@@ -50,9 +50,9 @@ def test_tracker_logs_dataclass_metrics_and_ends_run(mocker) -> None:
     mlflow.end_run.assert_called_once_with(status="FINISHED")
 
 
-def test_tracker_is_disabled_without_server_configuration(mocker) -> None:
-    mlflow = mocker.patch("ml_prediction.reporting.mlflow_tracker.mlflow")
-    tracker = MlflowTracker(_settings())
+def test_service_is_disabled_without_server_configuration(mocker) -> None:
+    mlflow = mocker.patch("ml_prediction.reporting.mlflow_service.mlflow")
+    tracker = MlflowService(_settings())
     tracker._settings = replace(_settings(), mlflow_enabled=False, mlflow_tracking_uri="")
 
     tracker.start("offline-1", {"n_estimators": 200})

@@ -5,6 +5,13 @@ from ml_prediction.config.settings import get_settings
 from ml_prediction.data_model.prediction import Prediction
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.inference.predictor import Predictor
+from ml_prediction.offline_tracking.report_events import (
+    DatasetLoaded,
+    DatasetReady,
+    ModelLoaded,
+    PredictionCompleted,
+    PredictionsGenerated,
+)
 from ml_prediction.offline_tracking.report_writer import ReportWriter
 
 
@@ -25,13 +32,13 @@ class PredictionService:
             "prediction",
             model_path,
         )
-        report.record("dataset_ready", details=str(dataset_path))
-        report.record("model_loaded", model_path=model_path)
+        report.record(DatasetReady(dataset_path))
+        report.record(ModelLoaded(model_path))
 
-        report.record("dataset_loaded", rows=len(dataframe), details=str(dataset_path))
+        report.record(DatasetLoaded(len(dataframe), dataset_path))
         predictions = self.predictor.predict(dataframe)
-        report.record("predictions_generated", rows=len(predictions), details=f"columns={len(dataframe.columns)}")
-        report.record("prediction_completed", details=str(report.path))
+        report.record(PredictionsGenerated(len(predictions), len(dataframe.columns)))
+        report.record(PredictionCompleted(report.path))
 
         return Prediction(
             dataframe,

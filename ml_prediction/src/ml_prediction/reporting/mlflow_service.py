@@ -12,7 +12,7 @@ from ml_prediction.data_model.app_settings import AppSettings
 logger = logging.getLogger(__name__)
 
 
-class MlflowTracker:
+class MlflowService:
 
     def __init__(self, settings: AppSettings) -> None:
         self._settings = settings

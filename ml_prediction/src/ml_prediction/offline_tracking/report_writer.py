@@ -4,9 +4,9 @@ import json
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 from ml_prediction.offline_tracking.models import ReportEvent
+from ml_prediction.offline_tracking.report_events import ReportEventData
 
 
 class ReportWriter:
@@ -22,13 +22,16 @@ class ReportWriter:
         with self.path.open("w", newline="", encoding="utf-8") as report_file:
             csv.DictWriter(report_file, fieldnames=self.fieldnames).writeheader()
 
-    def record(self, step: str, partition: str = "", rows: int | None = None, model_name: str = "", model_path: Path | None = None, metrics: Any = None, details: str = "") -> None:
-        selected_path = model_path if isinstance(model_path, Path) else self.model_path
+    def record(self, report_event: ReportEventData) -> None:
+        fields = report_event.fields()
+        selected_path = fields.get("model_path", self.model_path)
+        metrics = fields.get("metrics")
         metric_values = asdict(metrics) if metrics is not None and is_dataclass(metrics) else metrics
         event = ReportEvent(
-            datetime.now(timezone.utc), self.run_id, self.dataset, self.operation, step,
-            partition, rows, model_name, str(selected_path or ""), self.model_id(selected_path),
-            metric_values, details,
+            datetime.now(timezone.utc), self.run_id, self.dataset, self.operation, report_event.step,
+            fields.get("partition", ""), fields.get("rows"), fields.get("model_name", ""),
+            str(selected_path or ""), self.model_id(selected_path), metric_values,
+            fields.get("details", ""),
         )
         row = asdict(event)
         row["timestamp"] = event.timestamp.isoformat()

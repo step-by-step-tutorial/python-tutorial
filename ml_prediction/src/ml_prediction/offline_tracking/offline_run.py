@@ -5,6 +5,7 @@ from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.offline_tracking.experiment_writer import ExperimentWriter
 from ml_prediction.offline_tracking.metadata_writer import MetadataWriter
 from ml_prediction.offline_tracking.models import Experiment, ModelMetadata
+from ml_prediction.offline_tracking.report_events import ReportEventData, RunCompleted
 from ml_prediction.offline_tracking.report_writer import ReportWriter
 
 
@@ -23,8 +24,8 @@ class OfflineRun:
         report = ReportWriter(report_path, settings.dataset_name, operation, model_path, run_id)
         return cls(settings, run_id, report)
 
-    def record(self, *args, **kwargs) -> None:
-        self.report.record(*args, **kwargs)
+    def record(self, event: ReportEventData) -> None:
+        self.report.record(event)
 
     def save_metadata(self, metadata: ModelMetadata, model_path: Path) -> Path:
         return self._metadata_writer.save(metadata, model_path)
@@ -33,5 +34,5 @@ class OfflineRun:
         self._experiment_writer.save(experiment)
 
     def finish(self) -> Path:
-        self.record("run_completed", details=str(self.report.path))
+        self.record(RunCompleted(self.report.path))
         return self.report.path

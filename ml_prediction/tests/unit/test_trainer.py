@@ -90,7 +90,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     ).return_value
     mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
     mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
-    mocker.patch("ml_prediction.training.house_price_regression_trainer.MlflowTracker")
+    mocker.patch("ml_prediction.training.house_price_regression_trainer.MlflowService")
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
     trainer = HousePriceRegressionTrainer(dataset)
     dataset_path = tmp_path / "data" / "house.csv"
