@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -19,7 +19,7 @@ from ml_prediction.data_model.dataset_split import DatasetSplit
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.classification_evaluator import ClassificationEvaluator
-from ml_prediction.experiment.experiment_service import ExperimentService
+from ml_prediction.experiment.experiment_coordinator import ExperimentCoordinator
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
 from ml_prediction.model.trained_model import TrainedModel
@@ -35,8 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
-    def __init__(self, dataset: Dataset, search_enabled: bool = False,
-                 experiment_service: ExperimentService | None = None) -> None:
+    def __init__(self, dataset: Dataset) -> None:
         self._settings = get_settings(dataset.dataset_name)
         self._dataset = dataset
         self._feature_model = OnlineShoppingFeatureModel()
@@ -45,14 +44,14 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         self._evaluator = ClassificationEvaluator()
         self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
-        self._experiment_service = experiment_service or ExperimentService(dataset.dataset_name)
-        self._search_enabled = search_enabled
+        self._experiment_coordinator = ExperimentCoordinator(dataset.dataset_name)
+        self._search_enabled = self._settings.search_enabled
         self._model_selector = ClassificationModelSelector()
         self._selected_model_parameters: dict[str, object] | None = None
         self._selected_model_score: float | None = None
 
     def train(self) -> Experiment:
-        with self._experiment_service:
+        with self._experiment_coordinator:
             return self._train()
 
     def _train(self) -> Experiment:
@@ -60,34 +59,34 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
             raise ValueError("OnlineShoppingClassificationTrainer requires a classification dataset")
         dataframe, dataset_path = self.download_dataset()
         configured_parameters = self._settings.model_parameters.as_dict()
-        experiment_id = self._experiment_service.start(configured_parameters)
-        self._experiment_service.log_artifact(dataset_path, "dataset")
-        self._experiment_service.record(DatasetDownloaded(dataset_path))
+        experiment_id = self._experiment_coordinator.start(configured_parameters)
+        self._experiment_coordinator.log_artifact(dataset_path, "dataset")
+        self._experiment_coordinator.record(DatasetDownloaded(dataset_path))
         prepared = self.build_features_and_target(dataframe)
-        self._experiment_service.record(DatasetPrepared(len(prepared.features), self._settings.target_column))
-        self._experiment_service.record(FeaturesBuilt(len(prepared.features), len(prepared.features.columns)))
-        self._experiment_service.record(TargetExtracted(len(prepared.target), self._settings.target_column))
+        self._experiment_coordinator.record(DatasetPrepared(len(prepared.features), self._settings.target_column))
+        self._experiment_coordinator.record(FeaturesBuilt(len(prepared.features), len(prepared.features.columns)))
+        self._experiment_coordinator.record(TargetExtracted(len(prepared.target), self._settings.target_column))
         partitions = self._dataset_splitter.split(prepared.features, prepared.target)
-        self._experiment_service.record(DatasetSplitEvent(
+        self._experiment_coordinator.record(DatasetSplitEvent(
             len(prepared.features),
             len(partitions.train.features),
             len(partitions.validation.features),
             len(partitions.test.features),
         ))
         model = self.train_model(partitions)
-        self._experiment_service.record(
+        self._experiment_coordinator.record(
             ModelTrained("train", len(partitions.train.features), self._settings.model_type))
         validation = self.evaluate_model(model, partitions.validation)
-        self._experiment_service.log_metrics("validation", validation)
-        self._experiment_service.record(ModelEvaluated(
+        self._experiment_coordinator.log_metrics("validation", validation)
+        self._experiment_coordinator.record(ModelEvaluated(
             "validation",
             len(partitions.validation.features),
             self._settings.model_type,
             validation,
         ))
         final = self.evaluate_model_with_predictions(model, partitions.test)
-        self._experiment_service.log_metrics("test", final.metrics)
-        self._experiment_service.record(ModelEvaluated(
+        self._experiment_coordinator.log_metrics("test", final.metrics)
+        self._experiment_coordinator.record(ModelEvaluated(
             "test",
             len(partitions.test.features),
             self._settings.model_type,
@@ -111,23 +110,23 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
             prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(model, metadata)
-        self._experiment_service.log_model(model.pipeline)
-        self._experiment_service.log_artifact(model_path.with_suffix(".metadata.json"), "model")
-        self._experiment_service.record(ModelSaved(model_path))
+        self._experiment_coordinator.log_model(model.pipeline)
+        self._experiment_coordinator.log_artifact(model_path.with_suffix(".metadata.json"), "model")
+        self._experiment_coordinator.record(ModelSaved(model_path))
         result = Experiment(
             experiment_id=experiment_id, timestamp=timestamp, dataset_name=self._settings.dataset_name,
             model_type=self._settings.model_type, model_parameters=metadata.model_parameters,
             validation_metrics=validation, test_metrics=final.metrics,
-            model_path=model_path, report_path=self._experiment_service.report_path,
+            model_path=model_path, report_path=self._experiment_coordinator.report_path,
             model_selection_metric="f1_weighted" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        self._experiment_service.publish(ExperimentData(
+        self._experiment_coordinator.publish(ExperimentData(
             model=model,
             evaluation=final,
             report_dir=self._settings.report_dir,
         ))
-        self._experiment_service.complete(result)
+        self._experiment_coordinator.complete(result)
         return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:

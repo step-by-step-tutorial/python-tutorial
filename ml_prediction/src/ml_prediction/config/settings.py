@@ -51,4 +51,5 @@ def get_settings(dataset_name: str) -> AppSettings:
         mlflow_experiment_prefix=os.getenv("MLFLOW_EXPERIMENT_PREFIX", "ml_prediction"),
         mlflow_enabled=_env_bool("MLFLOW_ENABLED"),
         mlflow_required=_env_bool("MLFLOW_REQUIRED"),
+        search_enabled=_env_bool("ML_PREDICTION_SEARCH_ENABLED"),
     )

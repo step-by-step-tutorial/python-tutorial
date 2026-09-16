@@ -1,16 +1,15 @@
 ﻿import argparse
 import logging
+import os
 import sys
 from collections.abc import Sequence
 
 from ml_prediction.application.application import Application
 from ml_prediction.config.settings import get_settings
 from ml_prediction.dataset.dataset import Dataset
-from ml_prediction.experiment.experiment_service import ExperimentService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
 from ml_prediction.inference.model_predictor import ModelPredictor
-from ml_prediction.presentation.cli_experiment_presenter import CliExperimentPresenter
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
 from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
 from ml_prediction.training.online_shopping_classification_trainer import OnlineShoppingClassificationTrainer
@@ -26,7 +25,7 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _create_house_application(settings, include_prediction: bool = True, search_enabled: bool = False) -> Application:
+def _create_house_application(settings, include_prediction: bool = True) -> Application:
     feature_model = HouseFeatureModel()
     dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
     predictor = None
@@ -35,13 +34,9 @@ def _create_house_application(settings, include_prediction: bool = True, search_
             dataset_service.dataset_name,
             feature_model,
         )
-    experiment_service = ExperimentService(
-        settings.dataset_name,
-        presenters=(CliExperimentPresenter(),),
-    )
     return Application(
         dataset_service,
-        HousePriceRegressionTrainer(dataset_service, search_enabled, experiment_service),
+        HousePriceRegressionTrainer(dataset_service),
         predictor,
     )
 
@@ -49,7 +44,6 @@ def _create_house_application(settings, include_prediction: bool = True, search_
 def _create_online_shopping_application(
         settings,
         include_prediction: bool = True,
-        search_enabled: bool = False,
 ) -> Application:
     feature_model = OnlineShoppingFeatureModel()
     dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
@@ -58,13 +52,9 @@ def _create_online_shopping_application(
         if include_prediction
         else None
     )
-    experiment_service = ExperimentService(
-        settings.dataset_name,
-        presenters=(CliExperimentPresenter(),),
-    )
     return Application(
         dataset_service,
-        OnlineShoppingClassificationTrainer(dataset_service, search_enabled, experiment_service),
+        OnlineShoppingClassificationTrainer(dataset_service),
         predictor,
     )
 
@@ -79,9 +69,12 @@ DATASETS = tuple(DATASET_COMPOSERS)
 def create_application(
         dataset: str,
         include_prediction: bool = True,
-        search_enabled: bool = False,
+        search_enabled: bool | None = None,
 ) -> Application:
     settings = get_settings(dataset)
+    if search_enabled is not None:
+        os.environ["ML_PREDICTION_SEARCH_ENABLED"] = str(search_enabled).lower()
+        settings = get_settings(dataset)
     try:
         compose = DATASET_COMPOSERS[dataset]
     except KeyError as error:
@@ -89,7 +82,7 @@ def create_application(
         raise ValueError(
             f"Dataset '{dataset}' has no application composer. Supported datasets: {supported}"
         ) from error
-    return compose(settings, include_prediction, search_enabled)
+    return compose(settings, include_prediction)
 
 
 def select_dataset() -> str | None:
@@ -122,7 +115,7 @@ def select_prediction() -> str | None:
         print(f"Select a number between 1 and {len(PREDICTIONS)}, or 0 to exit.")
 
 
-def run(dataset: str, prediction: str, search_enabled: bool = False) -> None:
+def run(dataset: str, prediction: str, search_enabled: bool | None = None) -> None:
     application = create_application(
         dataset,
         include_prediction=prediction == "predict",

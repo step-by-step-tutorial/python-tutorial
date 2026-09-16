@@ -2,6 +2,7 @@
 
 from ml_prediction.audit.artifact_data import ArtifactData
 from ml_prediction.audit.mlflow_tracker import MlflowTracker
+from ml_prediction.config.settings import get_settings
 from ml_prediction.presentation.experiment_data import ExperimentData
 from ml_prediction.presentation.presenter import Presenter
 from ml_prediction.presentation.visual.artifact_visualizer import ArtifactVisualizer
@@ -9,20 +10,16 @@ from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVi
 
 
 class VisualizationService(Presenter):
-    def __init__(
-            self,
-            artifact_visualizer: ArtifactVisualizer,
-            experiment_visualizer: ExperimentVisualizer,
-            tracker: MlflowTracker,
-    ) -> None:
-        self._artifact_visualizer = artifact_visualizer
-        self._experiment_visualizer = experiment_visualizer
-        self._tracker = tracker
+    def __init__(self, dataset_name: str) -> None:
+        settings = get_settings(dataset_name)
+        self._artifact_visualizer = ArtifactVisualizer()
+        self._experiment_visualizer = ExperimentVisualizer(dataset_name)
+        self._tracker = MlflowTracker(settings)
 
-    def present(self, data: ExperimentData) -> tuple[ArtifactData, ...]:
-        if data.model is None or data.evaluation is None or data.experiment is None or data.report_dir is None:
+    def present(self, output: ExperimentData) -> tuple[ArtifactData, ...]:
+        if output.model is None or output.evaluation is None or output.experiment is None or output.report_dir is None:
             return ()
-        return self.publish(data.model, data.evaluation, data.experiment.experiment_id, data.report_dir)
+        return self.publish(output.model, output.evaluation, output.experiment.experiment_id, output.report_dir)
 
     def publish(self, model, evaluation, experiment_id: str, report_dir: Path) -> tuple[ArtifactData, ...]:
         artifacts = [

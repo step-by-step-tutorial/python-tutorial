@@ -5,11 +5,11 @@ from pathlib import Path
 
 from ml_prediction.audit.experiment import Experiment
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.experiment.experiment_service import ExperimentService
+from ml_prediction.experiment.experiment_coordinator import ExperimentCoordinator
 
 
 def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -> None:
-    repository = ExperimentService("house")
+    repository = ExperimentCoordinator("house")
     repository.path = tmp_path / "reports" / "experiments.csv"
     result = Experiment(
         experiment_id="experiment-1",

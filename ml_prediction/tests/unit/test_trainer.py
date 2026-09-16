@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from unittest.mock import call
 
 import pandas as pd
@@ -77,12 +77,16 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     ).return_value
     mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
     mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
-    experiment_service = mocker.MagicMock()
-    experiment_service.__enter__.return_value = experiment_service
-    experiment_service.start.return_value = "experiment-1"
-    experiment_service.report_path = tmp_path / "reports" / "training.csv"
+    experiment_coordinator = mocker.MagicMock()
+    experiment_coordinator.__enter__.return_value = experiment_coordinator
+    experiment_coordinator.start.return_value = "experiment-1"
+    experiment_coordinator.report_path = tmp_path / "reports" / "training.csv"
+    mocker.patch(
+        "ml_prediction.training.house_price_regression_trainer.ExperimentCoordinator",
+        return_value=experiment_coordinator,
+    )
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
-    trainer = HousePriceRegressionTrainer(dataset, experiment_service=experiment_service)
+    trainer = HousePriceRegressionTrainer(dataset)
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
     partition = FeaturesAndTarget(dataframe, dataframe["target"])
@@ -112,7 +116,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     assert result.validation_metrics == metrics
     assert result.test_metrics == metrics
     assert result.model_path == tmp_path / "models" / "house.joblib"
-    experiment_service.complete.assert_called_once_with(result)
+    experiment_coordinator.complete.assert_called_once_with(result)
     trainer.build_features_and_target.assert_called_once_with(dataframe)
     dataset_splitter.split.assert_called_once_with(dataframe, dataframe["target"])
     trainer.train_model.assert_called_once_with(partitions)
@@ -122,8 +126,8 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         call(model, partitions.validation),
     ]
     trainer.save_model.assert_called_once()
-    experiment_service.publish.assert_called_once()
-    assert result.report_path == experiment_service.report_path
+    experiment_coordinator.publish.assert_called_once()
+    assert result.report_path == experiment_coordinator.report_path
 
 
 def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path, mocker) -> None:

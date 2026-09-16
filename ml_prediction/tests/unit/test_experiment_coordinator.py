@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
@@ -7,7 +7,7 @@ from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.audit.experiment import Experiment
 from ml_prediction.audit.experiment_completed import ExperimentCompleted
 from ml_prediction.presentation.experiment_data import ExperimentData
-from ml_prediction.experiment.experiment_service import ExperimentService
+from ml_prediction.experiment.experiment_coordinator import ExperimentCoordinator
 from ml_prediction.audit.audit_service import AuditService
 from ml_prediction.audit.experiment_writer import ExperimentWriter
 from ml_prediction.audit.mlflow_tracker import MlflowTracker
@@ -45,13 +45,22 @@ def _experiment(tmp_path: Path) -> Experiment:
     )
 
 
-def test_experiment_service_delegates_completion_to_audit_and_presenters(tmp_path: Path, mocker) -> None:
+def test_experiment_coordinator_delegates_completion_to_audit_and_presenters(tmp_path: Path, mocker) -> None:
     settings = _settings(tmp_path)
-    mocker.patch("ml_prediction.experiment.experiment_service.get_settings", return_value=settings)
+    mocker.patch("ml_prediction.experiment.experiment_coordinator.get_settings", return_value=settings)
     audit = mocker.Mock()
     audit.report_path = tmp_path / "reports" / "experiment.csv"
     presenter = mocker.Mock()
-    service = ExperimentService("house", audit_service=audit, presenters=(presenter,))
+    mocker.patch(
+        "ml_prediction.experiment.experiment_coordinator.AuditService",
+        return_value=audit,
+    )
+    mocker.patch("ml_prediction.experiment.experiment_coordinator.VisualizationService")
+    mocker.patch(
+        "ml_prediction.experiment.experiment_coordinator.CliExperimentPresenter",
+        return_value=presenter,
+    )
+    service = ExperimentCoordinator("house")
     service.start({"n_estimators": 10})
     data = ExperimentData(model=mocker.Mock(), evaluation=mocker.Mock(), report_dir=settings.report_dir)
     service.publish(data)
@@ -68,11 +77,16 @@ def test_experiment_service_delegates_completion_to_audit_and_presenters(tmp_pat
     assert presenter.present.call_args.args[0].experiment == experiment
 
 
-def test_experiment_service_marks_failed_operations(tmp_path: Path, mocker) -> None:
+def test_experiment_coordinator_marks_failed_operations(tmp_path: Path, mocker) -> None:
     settings = _settings(tmp_path)
-    mocker.patch("ml_prediction.experiment.experiment_service.get_settings", return_value=settings)
+    mocker.patch("ml_prediction.experiment.experiment_coordinator.get_settings", return_value=settings)
     audit = mocker.Mock()
-    service = ExperimentService("house", audit_service=audit, presenters=())
+    mocker.patch(
+        "ml_prediction.experiment.experiment_coordinator.AuditService",
+        return_value=audit,
+    )
+    mocker.patch("ml_prediction.experiment.experiment_coordinator.VisualizationService")
+    service = ExperimentCoordinator("house")
 
     try:
         with service:
@@ -117,7 +131,19 @@ def test_visualization_service_returns_logged_artifacts(tmp_path: Path, mocker) 
     artifact_visualizer.save_feature_importance.return_value = None
     experiment_visualizer = mocker.Mock(spec=ExperimentVisualizer)
     tracker = mocker.Mock()
-    service = VisualizationService(artifact_visualizer, experiment_visualizer, tracker)
+    mocker.patch(
+        "ml_prediction.presentation.visualization_service.ArtifactVisualizer",
+        return_value=artifact_visualizer,
+    )
+    mocker.patch(
+        "ml_prediction.presentation.visualization_service.ExperimentVisualizer",
+        return_value=experiment_visualizer,
+    )
+    mocker.patch(
+        "ml_prediction.presentation.visualization_service.MlflowTracker",
+        return_value=tracker,
+    )
+    service = VisualizationService("house")
     evaluation = mocker.Mock()
     evaluation.metrics = mocker.Mock()
 

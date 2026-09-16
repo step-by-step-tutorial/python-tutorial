@@ -6,35 +6,19 @@ from ml_prediction.audit.audit_service import AuditService
 from ml_prediction.audit.experiment import Experiment
 from ml_prediction.audit.experiment_completed import ExperimentCompleted
 from ml_prediction.audit.experiment_reader import ExperimentReader
-from ml_prediction.audit.mlflow_tracker import MlflowTracker
 from ml_prediction.config.settings import get_settings
-from ml_prediction.presentation.visual.artifact_visualizer import ArtifactVisualizer
 from ml_prediction.presentation.cli_experiment_presenter import CliExperimentPresenter
 from ml_prediction.presentation.experiment_data import ExperimentData
-from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
-from ml_prediction.presentation.presenter import Presenter
 from ml_prediction.presentation.visualization_service import VisualizationService
 
 
-class ExperimentService:
-    """Facade for audit, artifact generation, and experiment presentation."""
+class ExperimentCoordinator:
 
-    def __init__(
-            self,
-            dataset_name: str,
-            audit_service: AuditService | None = None,
-            presenters: tuple[Presenter, ...] | None = None,
-            visualization_service: VisualizationService | None = None,
-    ) -> None:
+    def __init__(self, dataset_name: str) -> None:
         self._settings = get_settings(dataset_name)
-        tracker = MlflowTracker(self._settings)
-        self._audit = audit_service or AuditService(dataset_name, mlflow_service=tracker)
-        visual_presenter = visualization_service or VisualizationService(
-            ArtifactVisualizer(),
-            ExperimentVisualizer(dataset_name),
-            tracker,
-        )
-        self._presenters = presenters if presenters is not None else (visual_presenter, CliExperimentPresenter())
+        self._audit = AuditService(dataset_name)
+        visual_presenter = VisualizationService(dataset_name)
+        self._presenters = (visual_presenter, CliExperimentPresenter())
         self._experiment_id: str | None = None
         self._data = ExperimentData()
         self._completed = False
@@ -94,7 +78,7 @@ class ExperimentService:
 
     def complete(self, experiment: Experiment) -> None:
         if self._experiment_id is None:
-            raise RuntimeError("ExperimentService must be started before completing")
+            raise RuntimeError("ExperimentCoordinator must be started before completing")
         if self.report_path is not None:
             self._audit.record(ExperimentCompleted(self.report_path))
         self._audit.save_experiment(experiment)
@@ -117,7 +101,7 @@ class ExperimentService:
     def fail(self) -> None:
         self._audit.finish("FAILED")
 
-    def __enter__(self) -> "ExperimentService":
+    def __enter__(self) -> "ExperimentCoordinator":
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:

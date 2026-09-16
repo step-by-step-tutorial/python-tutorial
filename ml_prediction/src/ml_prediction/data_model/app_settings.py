@@ -44,6 +44,7 @@ class AppSettings:
     mlflow_experiment_prefix: str = "ml_prediction"
     mlflow_enabled: bool = False
     mlflow_required: bool = False
+    search_enabled: bool = False
 
     @property
     def model_parameters(self) -> ModelParameters:

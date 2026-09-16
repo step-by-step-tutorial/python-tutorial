@@ -1,4 +1,4 @@
-﻿from collections.abc import Callable
+from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ class ExperimentVisualizer:
             dataset_name: str,
     ) -> None:
         settings = get_settings(dataset_name)
-        self.experiment_service = ExperimentReader(dataset_name)
+        self._experiment_reader = ExperimentReader(dataset_name)
         self.report_dir = settings.report_dir / "comparison"
         self.dataset_name = dataset_name
 
@@ -46,7 +46,7 @@ class ExperimentVisualizer:
             metric_label: str,
             metric_value: Callable,
     ) -> Path | None:
-        experiments = self.experiment_service.read_all()
+        experiments = self._experiment_reader.read_all()
         if not experiments:
             return None
 

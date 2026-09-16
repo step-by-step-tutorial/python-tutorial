@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ml_prediction.audit.experiment import Experiment
@@ -26,9 +26,9 @@ def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path, mo
         return_value=mocker.Mock(report_dir=tmp_path / "reports"),
     )
     visualizer = ExperimentVisualizer("house")
-    visualizer.experiment_service.path = tmp_path / "experiments.csv"
-    visualizer.experiment_service.save(make_experiment("experiment-123456", "random_forest"))
-    visualizer.experiment_service.save(make_experiment("experiment-abcdef", "extra_trees"))
+    visualizer._experiment_reader.path = tmp_path / "experiments.csv"
+    visualizer._experiment_reader.save(make_experiment("experiment-123456", "random_forest"))
+    visualizer._experiment_reader.save(make_experiment("experiment-abcdef", "extra_trees"))
 
     mae_path = visualizer.save_validation_mae_comparison()
     rmse_path = visualizer.save_validation_rmse_comparison()
@@ -46,7 +46,7 @@ def test_experiment_visualizer_skips_empty_history(tmp_path: Path, mocker) -> No
         return_value=mocker.Mock(report_dir=tmp_path / "reports"),
     )
     visualizer = ExperimentVisualizer("house")
-    visualizer.experiment_service.path = tmp_path / "experiments.csv"
+    visualizer._experiment_reader.path = tmp_path / "experiments.csv"
 
     assert visualizer.save_validation_mae_comparison() is None
     assert visualizer.save_validation_rmse_comparison() is None
