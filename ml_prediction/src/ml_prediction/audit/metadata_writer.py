@@ -1,7 +1,7 @@
-import json
+﻿import json
 from pathlib import Path
 
-from ml_prediction.offline_tracking.models import ModelMetadata
+from ml_prediction.audit.model_metadata import ModelMetadata
 
 
 class MetadataWriter:

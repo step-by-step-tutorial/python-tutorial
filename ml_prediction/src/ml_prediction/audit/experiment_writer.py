@@ -1,5 +1,5 @@
+﻿from ml_prediction.audit.experiment import Experiment
 from ml_prediction.config.settings import get_settings
-from ml_prediction.offline_tracking.models import Experiment
 from ml_prediction.utils.csv_utils import write_csv
 
 

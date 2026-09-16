@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 from unittest.mock import call
 
 import pandas as pd
@@ -6,11 +6,10 @@ import pandas as pd
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.evaluation import RegressionEvaluation
-from ml_prediction.offline_tracking.models import Experiment
+from ml_prediction.audit.experiment import Experiment
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.data_model.dataset_split import DatasetSplit
-from ml_prediction.reporting.report_service import ReportService
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
 
@@ -76,23 +75,14 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         "ml_prediction.training.house_price_regression_trainer.DatasetSplitter",
         return_value=mocker.Mock(),
     ).return_value
-    experiment_repository = mocker.patch(
-        "ml_prediction.training.house_price_regression_trainer.ExperimentWriter",
-        return_value=mocker.Mock(),
-    ).return_value
-    training_visualizer = mocker.patch(
-        "ml_prediction.training.house_price_regression_trainer.TrainingVisualizer",
-        return_value=mocker.Mock(),
-    ).return_value
-    experiment_visualizer = mocker.patch(
-        "ml_prediction.training.house_price_regression_trainer.ExperimentVisualizer",
-        return_value=mocker.Mock(),
-    ).return_value
     mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
     mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
-    mocker.patch("ml_prediction.training.house_price_regression_trainer.MlflowService")
+    experiment_service = mocker.MagicMock()
+    experiment_service.__enter__.return_value = experiment_service
+    experiment_service.start.return_value = "experiment-1"
+    experiment_service.report_path = tmp_path / "reports" / "training.csv"
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
-    trainer = HousePriceRegressionTrainer(dataset)
+    trainer = HousePriceRegressionTrainer(dataset, experiment_service=experiment_service)
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
     partition = FeaturesAndTarget(dataframe, dataframe["target"])
@@ -122,10 +112,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     assert result.validation_metrics == metrics
     assert result.test_metrics == metrics
     assert result.model_path == tmp_path / "models" / "house.joblib"
-    experiment_repository.save.assert_called_once_with(result)
-    experiment_visualizer.save_validation_mae_comparison.assert_called_once_with()
-    experiment_visualizer.save_validation_rmse_comparison.assert_called_once_with()
-    experiment_visualizer.save_validation_r2_comparison.assert_called_once_with()
+    experiment_service.complete.assert_called_once_with(result)
     trainer.build_features_and_target.assert_called_once_with(dataframe)
     dataset_splitter.split.assert_called_once_with(dataframe, dataframe["target"])
     trainer.train_model.assert_called_once_with(partitions)
@@ -135,18 +122,8 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         call(model, partitions.validation),
     ]
     trainer.save_model.assert_called_once()
-    training_visualizer.save_actual_vs_predicted.assert_called_once_with(
-        [100], [100], result.experiment_id, settings.report_dir
-    )
-    training_visualizer.save_residual_vs_predicted.assert_called_once_with(
-        [100], [100], result.experiment_id, settings.report_dir
-    )
-    training_visualizer.save_feature_importance.assert_called_once_with(
-        model, result.experiment_id, settings.report_dir
-    )
-    assert result.report_path is not None
-    assert result.report_path.exists()
-    assert "training_completed" in result.report_path.read_text(encoding="utf-8")
+    experiment_service.publish.assert_called_once()
+    assert result.report_path == experiment_service.report_path
 
 
 def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path, mocker) -> None:
@@ -197,3 +174,5 @@ def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, m
     assert downloaded_dataframe is dataframe
     assert downloaded_path == dataset.path
     dataset.download.assert_called_once_with()
+
+

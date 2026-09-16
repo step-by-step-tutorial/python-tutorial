@@ -1,18 +1,19 @@
-import csv
+﻿import csv
 import hashlib
 import json
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ml_prediction.offline_tracking.models import ReportEvent
-from ml_prediction.offline_tracking.report_events import ReportEventData
+from ml_prediction.audit.models import ReportEvent
+from ml_prediction.audit.report_event_data import ReportEventData
 
 
 class ReportWriter:
     fieldnames = tuple(ReportEvent.__dataclass_fields__)
 
-    def __init__(self, path: Path, dataset_name: str, operation: str, model_path: Path | None = None, run_id: str = "") -> None:
+    def __init__(self, path: Path, dataset_name: str, operation: str, model_path: Path | None = None,
+                 run_id: str = "") -> None:
         self.path = path
         self.dataset = dataset_name
         self.operation = operation

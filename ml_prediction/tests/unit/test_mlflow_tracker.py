@@ -1,10 +1,10 @@
-from pathlib import Path
+﻿from pathlib import Path
 from dataclasses import replace
 
 from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.reporting.mlflow_service import MlflowService
+from ml_prediction.audit.mlflow_tracker import MlflowTracker
 
 
 def _settings() -> AppSettings:
@@ -23,8 +23,8 @@ def _settings() -> AppSettings:
 
 
 def test_service_starts_dataset_experiment_and_logs_parameters(mocker) -> None:
-    mlflow = mocker.patch("ml_prediction.reporting.mlflow_service.mlflow")
-    tracker = MlflowService(_settings())
+    mlflow = mocker.patch("ml_prediction.audit.mlflow_tracker.mlflow")
+    tracker = MlflowTracker(_settings())
 
     tracker.start("experiment-1", {"n_estimators": 200})
 
@@ -35,8 +35,8 @@ def test_service_starts_dataset_experiment_and_logs_parameters(mocker) -> None:
 
 
 def test_service_logs_dataclass_metrics_and_ends_run(mocker) -> None:
-    mlflow = mocker.patch("ml_prediction.reporting.mlflow_service.mlflow")
-    tracker = MlflowService(_settings())
+    mlflow = mocker.patch("ml_prediction.audit.mlflow_tracker.mlflow")
+    tracker = MlflowTracker(_settings())
     tracker.start("experiment-1", {})
 
     tracker.log_metrics("validation", RegressionMetrics(1.0, 2.0, 0.5))
@@ -51,8 +51,8 @@ def test_service_logs_dataclass_metrics_and_ends_run(mocker) -> None:
 
 
 def test_service_is_disabled_without_server_configuration(mocker) -> None:
-    mlflow = mocker.patch("ml_prediction.reporting.mlflow_service.mlflow")
-    tracker = MlflowService(_settings())
+    mlflow = mocker.patch("ml_prediction.audit.mlflow_tracker.mlflow")
+    tracker = MlflowTracker(_settings())
     tracker._settings = replace(_settings(), mlflow_enabled=False, mlflow_tracking_uri="")
 
     tracker.start("offline-1", {"n_estimators": 200})
@@ -61,3 +61,5 @@ def test_service_is_disabled_without_server_configuration(mocker) -> None:
 
     mlflow.set_tracking_uri.assert_not_called()
     mlflow.start_run.assert_not_called()
+
+

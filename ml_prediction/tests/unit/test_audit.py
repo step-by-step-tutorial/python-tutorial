@@ -1,18 +1,18 @@
-from datetime import datetime, timezone
+﻿from datetime import datetime, timezone
 from pathlib import Path
 
 from ml_prediction.config.settings import get_settings
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
-from ml_prediction.offline_tracking.experiment_reader import ExperimentReader
-from ml_prediction.offline_tracking.experiment_writer import ExperimentWriter
-from ml_prediction.offline_tracking.models import Experiment
+from ml_prediction.audit.experiment_reader import ExperimentReader
+from ml_prediction.audit.experiment_writer import ExperimentWriter
+from ml_prediction.audit.experiment import Experiment
 
 
 def test_classification_experiment_round_trip(tmp_path: Path, mocker) -> None:
-    settings = mocker.patch("ml_prediction.offline_tracking.experiment_writer.get_settings")
+    settings = mocker.patch("ml_prediction.audit.experiment_writer.get_settings")
     settings.return_value = mocker.Mock(report_dir=tmp_path, experiment_filename="experiments.csv")
-    reader_settings = mocker.patch("ml_prediction.offline_tracking.experiment_reader.get_settings")
+    reader_settings = mocker.patch("ml_prediction.audit.experiment_reader.get_settings")
     reader_settings.return_value = settings.return_value
     experiment = Experiment(
         experiment_id="classification-1",
@@ -33,3 +33,5 @@ def test_classification_experiment_round_trip(tmp_path: Path, mocker) -> None:
 
     assert loaded == experiment
     assert isinstance(loaded.validation_metrics, ClassificationMetrics)
+
+

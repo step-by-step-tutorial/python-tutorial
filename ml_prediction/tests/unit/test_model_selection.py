@@ -1,4 +1,4 @@
-from ml_prediction.config.classification_search import CLASSIFICATION_PARAMETER_GRID
+﻿from ml_prediction.config.classification_search import CLASSIFICATION_PARAMETER_GRID
 from ml_prediction.config.regression_search import REGRESSION_PARAMETER_GRID
 from ml_prediction.model_selection.classification_model_selector import ClassificationModelSelector
 from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
@@ -56,3 +56,5 @@ def test_classification_model_selector_uses_classification_grid_and_f1(mocker) -
     )
     assert result.parameters == {"classifier__n_estimators": 300}
     assert result.f1_score == 0.82
+
+

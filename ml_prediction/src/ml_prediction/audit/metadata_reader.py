@@ -1,8 +1,8 @@
-import json
+﻿import json
 from datetime import datetime
 from pathlib import Path
 
-from ml_prediction.offline_tracking.models import ModelMetadata, metrics_from_dict
+from ml_prediction.audit.model_metadata import ModelMetadata, metrics_from_dict
 
 
 class MetadataReader:

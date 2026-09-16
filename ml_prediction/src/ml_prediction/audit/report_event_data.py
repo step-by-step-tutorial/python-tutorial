@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, ClassVar
 
-from ml_prediction.offline_tracking.models import Metrics
+from ml_prediction.audit.models import Metrics
 
 
 @dataclass(frozen=True)
@@ -113,9 +113,9 @@ class ModelSaved(ReportEventData):
 
 
 @dataclass(frozen=True)
-class TrainingCompleted(ReportEventData):
+class ExperimentCompleted(ReportEventData):
     report_path: Path
-    step: ClassVar[str] = "training_completed"
+    step: ClassVar[str] = "experiment_completed"
 
     def fields(self) -> dict[str, Any]:
         return {"details": str(self.report_path)}

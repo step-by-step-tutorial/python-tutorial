@@ -1,6 +1,5 @@
+﻿from ml_prediction.config.settings_types import TaskType
 from ml_prediction.data_model.dataset_profile import DatasetProfile
-from ml_prediction.config.settings_types import TaskType
-
 
 DATASET_PROFILES: dict[str, DatasetProfile] = {
     "house": DatasetProfile(

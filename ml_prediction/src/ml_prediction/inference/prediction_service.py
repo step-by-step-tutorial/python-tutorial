@@ -1,18 +1,16 @@
-import pandas as pd
-from uuid import uuid4
+﻿from uuid import uuid4
 
+import pandas as pd
+
+from ml_prediction.audit.report_event_data import (
+    DatasetLoaded, DatasetReady, ModelLoaded, PredictionCompleted,
+    PredictionsGenerated,
+)
+from ml_prediction.audit.report_writer import ReportWriter
 from ml_prediction.config.settings import get_settings
 from ml_prediction.data_model.prediction import Prediction
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.inference.predictor import Predictor
-from ml_prediction.offline_tracking.report_events import (
-    DatasetLoaded,
-    DatasetReady,
-    ModelLoaded,
-    PredictionCompleted,
-    PredictionsGenerated,
-)
-from ml_prediction.offline_tracking.report_writer import ReportWriter
 
 
 class PredictionService:

@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -7,7 +7,7 @@ from ml_prediction import main
 from ml_prediction.application.application import Application
 from ml_prediction.presentation.prediction_presenter import PredictionPresenter
 from ml_prediction.presentation.presenter import Presenter
-from ml_prediction.presentation.training_presenter import TrainingPresenter
+from ml_prediction.presentation.cli_experiment_presenter import CliExperimentPresenter
 
 
 def test_application_delegates_train_and_predict(mocker) -> None:
@@ -27,9 +27,9 @@ def test_application_delegates_train_and_predict(mocker) -> None:
 
 
 def test_presenters_implement_presenter_contract(tmp_path: Path) -> None:
-    assert issubclass(TrainingPresenter, Presenter)
+    assert issubclass(CliExperimentPresenter, Presenter)
     assert issubclass(PredictionPresenter, Presenter)
-    assert not TrainingPresenter.__abstractmethods__
+    assert not CliExperimentPresenter.__abstractmethods__
     assert not PredictionPresenter.__abstractmethods__
 
 
@@ -72,7 +72,6 @@ def test_cli_select_prediction_supports_exit(monkeypatch) -> None:
 def test_cli_run_train_and_predict(mocker) -> None:
     application = mocker.Mock()
     mocker.patch.object(main, "create_application", return_value=application)
-    training_presenter = mocker.patch.object(main, "TrainingPresenter")
     prediction_presenter = mocker.patch.object(main, "PredictionPresenter")
 
     main.run("house", "train")
@@ -80,7 +79,6 @@ def test_cli_run_train_and_predict(mocker) -> None:
 
     application.train.assert_called_once_with()
     application.predict.assert_called_once_with()
-    training_presenter.return_value.present.assert_called_once_with(application.train.return_value)
     prediction_presenter.return_value.present.assert_called_once_with(application.predict.return_value)
 
 
@@ -107,3 +105,5 @@ def test_cli_main_passes_search_flag(mocker) -> None:
     main.main(["house", "train", "--search"])
 
     run.assert_called_once_with("house", "train", True)
+
+

@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from io import BytesIO
 from pathlib import Path
 
@@ -54,5 +54,6 @@ class DataLakeRepository:
     def get_object_keys(self) -> list[dict]:
         response = self._client.list_objects_v2(Bucket=self.bucket_name, Prefix=self.object_prefix)
         objects = [item for item in response.get("Contents", []) if item["Key"].lower().endswith(".parquet")]
-        logger.info(f"Found Parquet objects: bucket={self.bucket_name} prefix={self.object_prefix} count={len(objects)}")
+        logger.info(
+            f"Found Parquet objects: bucket={self.bucket_name} prefix={self.object_prefix} count={len(objects)}")
         return objects

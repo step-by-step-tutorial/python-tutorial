@@ -1,9 +1,10 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
 from ml_prediction.config.settings_types import TaskType
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.data_model.model_parameters import ModelParameters
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -43,3 +44,16 @@ class AppSettings:
     mlflow_experiment_prefix: str = "ml_prediction"
     mlflow_enabled: bool = False
     mlflow_required: bool = False
+
+    @property
+    def model_parameters(self) -> ModelParameters:
+        return ModelParameters(
+            n_estimators=self.n_estimators,
+            n_jobs=self.n_jobs,
+            max_depth=self.max_depth,
+            min_samples_split=self.min_samples_split,
+            min_samples_leaf=self.min_samples_leaf,
+            max_features=self.max_features,
+            bootstrap=self.bootstrap,
+            random_state=self.random_state,
+        )

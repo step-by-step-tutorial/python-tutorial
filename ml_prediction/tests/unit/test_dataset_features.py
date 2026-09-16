@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -95,3 +95,5 @@ def test_house_feature_builder_rejects_duplicated_feature_definition() -> None:
 
     with pytest.raises(Exception, match="latitude"):
         FeatureBuilder(house_dataframe(), model).build()
+
+

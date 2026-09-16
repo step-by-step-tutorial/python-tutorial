@@ -1,18 +1,24 @@
+﻿import logging
 from dataclasses import asdict, is_dataclass
-import logging
 from pathlib import Path
 from typing import Any
 
-import mlflow
-import mlflow.sklearn
-from mlflow.exceptions import MlflowException
+try:
+    import mlflow
+    import mlflow.sklearn
+except ModuleNotFoundError:  # MLflow is optional for offline development.
+    mlflow = None
+try:
+    from mlflow.exceptions import MlflowException
+except ModuleNotFoundError:
+    MlflowException = Exception
 
 from ml_prediction.data_model.app_settings import AppSettings
 
 logger = logging.getLogger(__name__)
 
 
-class MlflowService:
+class MlflowTracker:
 
     def __init__(self, settings: AppSettings) -> None:
         self._settings = settings
@@ -21,6 +27,11 @@ class MlflowService:
 
     def start(self, experiment_id: str, parameters: dict[str, Any]) -> None:
         if not self._settings.mlflow_enabled or not self._settings.mlflow_tracking_uri:
+            return
+        if mlflow is None:
+            if self._settings.mlflow_required:
+                raise RuntimeError("MLflow is enabled but the mlflow package is not installed")
+            logger.warning("MLflow package is unavailable; continuing with offline tracking")
             return
         mlflow.set_tracking_uri(self._settings.mlflow_tracking_uri)
         try:

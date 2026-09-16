@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 import pytest
 from sklearn.ensemble import (
     ExtraTreesRegressor,
@@ -147,3 +147,5 @@ def test_model_evaluator_exposes_predictions_and_metrics() -> None:
     assert result.y_true == actual
     assert result.y_pred == predicted
     assert result.metrics == RegressionMetrics(15.0, 15.811388300841896, 0.9)
+
+

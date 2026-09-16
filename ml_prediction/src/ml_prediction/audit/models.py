@@ -1,16 +1,14 @@
+﻿import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
-import json
 from pathlib import Path
 from typing import Any
 
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
-
 CURRENT_SCHEMA_VERSION = "1"
 CURRENT_MODEL_VERSION = "1"
-
 
 Metrics = RegressionMetrics | ClassificationMetrics
 

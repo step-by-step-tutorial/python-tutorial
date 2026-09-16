@@ -1,12 +1,12 @@
-import logging
+﻿import logging
 from pathlib import Path
 from typing import Any
 
 import joblib
 
-from ml_prediction.offline_tracking.metadata_reader import MetadataReader
-from ml_prediction.offline_tracking.metadata_writer import MetadataWriter
-from ml_prediction.offline_tracking.models import ModelMetadata
+from ml_prediction.audit.metadata_reader import MetadataReader
+from ml_prediction.audit.metadata_writer import MetadataWriter
+from ml_prediction.audit.model_metadata import ModelMetadata
 
 logger = logging.getLogger(__name__)
 

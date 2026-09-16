@@ -1,11 +1,11 @@
-import csv
+﻿import csv
 from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from ml_prediction.offline_tracking.models import Experiment
+from ml_prediction.audit.experiment import Experiment
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.reporting.experiment_service import ExperimentService
+from ml_prediction.experiment.experiment_service import ExperimentService
 
 
 def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -> None:
@@ -47,3 +47,5 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
         "root_mean_squared_error": 1.6,
         "r2_score": 0.65,
     })
+
+

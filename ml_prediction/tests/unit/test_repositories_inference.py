@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -10,7 +10,7 @@ from ml_prediction.inference.model_predictor import ModelPredictor
 from ml_prediction.data_model.prediction import Prediction
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.offline_tracking.models import ModelMetadata
+from ml_prediction.audit.model_metadata import ModelMetadata
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -220,3 +220,5 @@ def test_model_predictor_builds_features_and_returns_named_series(mocker) -> Non
     assert predictions.name == "predicted_total_price"
     repository.load.assert_called_once_with(Path("models") / "model.joblib")
     pipeline.predict.assert_called_once()
+
+

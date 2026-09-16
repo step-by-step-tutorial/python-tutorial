@@ -1,20 +1,12 @@
-import logging
-from dataclasses import dataclass
-from typing import Any
+﻿import logging
 
 from sklearn.model_selection import GridSearchCV, ParameterGrid
 from sklearn.pipeline import Pipeline
 
 from ml_prediction.config.classification_search import CLASSIFICATION_PARAMETER_GRID
+from ml_prediction.model_selection.classification_selection import ClassificationSelection
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class ClassificationSelection:
-    pipeline: Pipeline
-    parameters: dict[str, Any]
-    f1_score: float
 
 
 class ClassificationModelSelector:

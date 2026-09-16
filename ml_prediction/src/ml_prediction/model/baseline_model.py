@@ -1,4 +1,4 @@
-from sklearn.dummy import DummyRegressor
+﻿from sklearn.dummy import DummyRegressor
 
 from ml_prediction.model.model import Model
 

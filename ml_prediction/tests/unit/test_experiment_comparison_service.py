@@ -1,9 +1,9 @@
-from datetime import datetime, timezone
+﻿from datetime import datetime, timezone
 from pathlib import Path
 
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
-from ml_prediction.offline_tracking.models import Experiment
+from ml_prediction.audit.experiment import Experiment
 
 
 def experiment(experiment_id: str, mae: float, rmse: float, r2: float) -> Experiment:
@@ -45,3 +45,5 @@ def test_comparison_service_returns_none_for_empty_history(tmp_path: Path) -> No
     assert service.best_by_validation_mae() is None
     assert service.best_by_validation_rmse() is None
     assert service.best_by_validation_r2() is None
+
+

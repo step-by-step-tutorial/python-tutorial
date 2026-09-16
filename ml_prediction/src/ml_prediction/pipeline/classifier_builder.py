@@ -1,4 +1,4 @@
-from sklearn.base import ClassifierMixin
+﻿from sklearn.base import ClassifierMixin
 from sklearn.ensemble import RandomForestClassifier
 
 from ml_prediction.config.settings import get_settings

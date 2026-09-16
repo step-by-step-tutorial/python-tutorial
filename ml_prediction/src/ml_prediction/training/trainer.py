@@ -1,13 +1,16 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Generic, TypeVar
 
 import pandas as pd
 
+from ml_prediction.audit.model_metadata import ModelMetadata
+from ml_prediction.data_model.classification_evaluation import ClassificationEvaluation
+from ml_prediction.data_model.evaluation import RegressionEvaluation
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
-from ml_prediction.offline_tracking.models import ModelMetadata
 
 TrainingResultType = TypeVar("TrainingResultType")
+EvaluationType = RegressionEvaluation | ClassificationEvaluation
 
 
 class Trainer(ABC, Generic[TrainingResultType]):
@@ -25,6 +28,10 @@ class Trainer(ABC, Generic[TrainingResultType]):
 
     @abstractmethod
     def evaluate_model(self, model, data: FeaturesAndTarget):
+        ...
+
+    @abstractmethod
+    def evaluate_model_with_predictions(self, model, data: FeaturesAndTarget) -> EvaluationType:
         ...
 
     @abstractmethod

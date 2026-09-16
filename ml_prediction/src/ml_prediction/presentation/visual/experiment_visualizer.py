@@ -1,11 +1,11 @@
-from collections.abc import Callable
+﻿from collections.abc import Callable
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from ml_prediction.audit.experiment_reader import ExperimentReader
 from ml_prediction.config.settings import get_settings
-from ml_prediction.offline_tracking.experiment_reader import ExperimentReader
-from ml_prediction.visualization.training_visualizer import TrainingVisualizer
+from ml_prediction.presentation.visual.artifact_visualizer import ArtifactVisualizer
 
 
 class ExperimentVisualizer:
@@ -59,4 +59,4 @@ class ExperimentVisualizer:
         axes.set_title(f"{metric_label} by experiment")
         axes.tick_params(axis="x", labelrotation=45)
         figure.tight_layout()
-        return TrainingVisualizer.save_figure(figure, self.report_dir / filename)
+        return ArtifactVisualizer.save_figure(figure, self.report_dir / filename)

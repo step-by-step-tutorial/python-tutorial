@@ -1,12 +1,11 @@
-from ml_prediction.offline_tracking.experiment_reader import ExperimentReader
-from ml_prediction.offline_tracking.models import Experiment
+﻿from ml_prediction.audit.experiment import Experiment
+from ml_prediction.audit.experiment_reader import ExperimentReader
 
 
 class ExperimentComparisonService:
     def __init__(self, dataset_name: str) -> None:
         self.dataset_name = dataset_name
         self.repository = ExperimentReader(dataset_name)
-
 
     def best_by_validation_mae(self) -> Experiment | None:
         experiments = self.repository.read_all()

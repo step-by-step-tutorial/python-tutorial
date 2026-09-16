@@ -1,4 +1,4 @@
-def find_latest_partition(objects: list[dict]) -> list[dict]:
+﻿def find_latest_partition(objects: list[dict]) -> list[dict]:
     partitions: dict[str, list[dict]] = {}
     for obj in objects:
         partition = obj["Key"].rsplit("/", 1)[0]

@@ -1,9 +1,9 @@
-from datetime import datetime, timezone
+﻿from datetime import datetime, timezone
 from pathlib import Path
 
-from ml_prediction.offline_tracking.models import Experiment
+from ml_prediction.audit.experiment import Experiment
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.visualization.experiment_visualizer import ExperimentVisualizer
+from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
 
 
 def make_experiment(experiment_id: str, model_type: str) -> Experiment:
@@ -22,7 +22,7 @@ def make_experiment(experiment_id: str, model_type: str) -> Experiment:
 
 def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path, mocker) -> None:
     mocker.patch(
-        "ml_prediction.visualization.experiment_visualizer.get_settings",
+        "ml_prediction.presentation.visual.experiment_visualizer.get_settings",
         return_value=mocker.Mock(report_dir=tmp_path / "reports"),
     )
     visualizer = ExperimentVisualizer("house")
@@ -42,7 +42,7 @@ def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path, mo
 
 def test_experiment_visualizer_skips_empty_history(tmp_path: Path, mocker) -> None:
     mocker.patch(
-        "ml_prediction.visualization.experiment_visualizer.get_settings",
+        "ml_prediction.presentation.visual.experiment_visualizer.get_settings",
         return_value=mocker.Mock(report_dir=tmp_path / "reports"),
     )
     visualizer = ExperimentVisualizer("house")
@@ -51,3 +51,5 @@ def test_experiment_visualizer_skips_empty_history(tmp_path: Path, mocker) -> No
     assert visualizer.save_validation_mae_comparison() is None
     assert visualizer.save_validation_rmse_comparison() is None
     assert visualizer.save_validation_r2_comparison() is None
+
+

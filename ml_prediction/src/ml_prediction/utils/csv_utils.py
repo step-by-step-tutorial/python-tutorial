@@ -1,5 +1,5 @@
+﻿import csv
 import logging
-import csv
 from collections.abc import Callable, Collection, Iterable
 from pathlib import Path
 from typing import Any, TypeVar

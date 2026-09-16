@@ -1,20 +1,12 @@
-import logging
-from dataclasses import dataclass
-from typing import Any
+﻿import logging
 
 from sklearn.model_selection import GridSearchCV, ParameterGrid
 from sklearn.pipeline import Pipeline
 
 from ml_prediction.config.regression_search import REGRESSION_PARAMETER_GRID
+from ml_prediction.model_selection.regression_selection import RegressionSelection
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class RegressionSelection:
-    pipeline: Pipeline
-    parameters: dict[str, Any]
-    mean_absolute_error: float
 
 
 class RegressionModelSelector:
