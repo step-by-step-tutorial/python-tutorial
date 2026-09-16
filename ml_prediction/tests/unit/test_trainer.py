@@ -78,8 +78,8 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
     mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
     experiment_coordinator = mocker.MagicMock()
-    experiment_coordinator.__enter__.return_value = experiment_coordinator
-    experiment_coordinator.start.return_value = "experiment-1"
+    experiment_coordinator.execute.side_effect = lambda operation, parameters: operation()
+    experiment_coordinator.experiment_id = "experiment-1"
     experiment_coordinator.report_path = tmp_path / "reports" / "training.csv"
     mocker.patch(
         "ml_prediction.training.house_price_regression_trainer.ExperimentCoordinator",
@@ -116,7 +116,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     assert result.validation_metrics == metrics
     assert result.test_metrics == metrics
     assert result.model_path == tmp_path / "models" / "house.joblib"
-    experiment_coordinator.complete.assert_called_once_with(result)
+    experiment_coordinator.execute.assert_called_once()
     trainer.build_features_and_target.assert_called_once_with(dataframe)
     dataset_splitter.split.assert_called_once_with(dataframe, dataframe["target"])
     trainer.train_model.assert_called_once_with(partitions)

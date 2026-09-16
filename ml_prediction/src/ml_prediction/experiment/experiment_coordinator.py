@@ -1,5 +1,6 @@
 ﻿from pathlib import Path
 from uuid import uuid4
+from collections.abc import Callable
 
 from ml_prediction.audit.audit_event import AuditEvent
 from ml_prediction.audit.audit_service import AuditService
@@ -28,6 +29,12 @@ class ExperimentCoordinator:
         return self._audit.report_path
 
     @property
+    def experiment_id(self) -> str:
+        if self._experiment_id is None:
+            raise RuntimeError("ExperimentCoordinator must be executing an operation")
+        return self._experiment_id
+
+    @property
     def path(self) -> Path:
         return self._audit._experiment_writer.path
 
@@ -43,7 +50,7 @@ class ExperimentCoordinator:
         reader.path = self.path
         return reader.read_all()
 
-    def start(self, parameters: dict[str, object] | None = None) -> str:
+    def execute(self, operation: Callable[[], Experiment], parameters: dict[str, object] | None = None) -> Experiment:
         self._completed = False
         self._experiment_id = str(uuid4())
         self._audit.start(
@@ -52,7 +59,13 @@ class ExperimentCoordinator:
             self._experiment_id,
             parameters or {},
         )
-        return self._experiment_id
+        try:
+            experiment = operation()
+            self._complete(experiment)
+            return experiment
+        except Exception:
+            self._audit.finish("FAILED")
+            raise
 
     def record(self, event: AuditEvent) -> None:
         self._audit.record(event)
@@ -76,9 +89,9 @@ class ExperimentCoordinator:
         if data.experiment is not None:
             self._present(self._data)
 
-    def complete(self, experiment: Experiment) -> None:
+    def _complete(self, experiment: Experiment) -> None:
         if self._experiment_id is None:
-            raise RuntimeError("ExperimentCoordinator must be started before completing")
+            raise RuntimeError("ExperimentCoordinator must be executing an operation")
         if self.report_path is not None:
             self._audit.record(ExperimentCompleted(self.report_path))
         self._audit.save_experiment(experiment)
@@ -97,15 +110,3 @@ class ExperimentCoordinator:
     def _present(self, data: ExperimentData) -> None:
         for presenter in self._presenters:
             presenter.present(data)
-
-    def fail(self) -> None:
-        self._audit.finish("FAILED")
-
-    def __enter__(self) -> "ExperimentCoordinator":
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        if exc_type is not None:
-            self.fail()
-        elif not self._completed:
-            self._audit.finish()

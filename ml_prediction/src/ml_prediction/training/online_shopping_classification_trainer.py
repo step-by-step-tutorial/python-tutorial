@@ -51,15 +51,17 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
         self._selected_model_score: float | None = None
 
     def train(self) -> Experiment:
-        with self._experiment_coordinator:
-            return self._train()
+        return self._experiment_coordinator.execute(
+            self._train,
+            self._settings.model_parameters.as_dict(),
+        )
 
     def _train(self) -> Experiment:
         if self._settings.task_type != TaskType.CLASSIFICATION:
             raise ValueError("OnlineShoppingClassificationTrainer requires a classification dataset")
         dataframe, dataset_path = self.download_dataset()
         configured_parameters = self._settings.model_parameters.as_dict()
-        experiment_id = self._experiment_coordinator.start(configured_parameters)
+        experiment_id = self._experiment_coordinator.experiment_id
         self._experiment_coordinator.log_artifact(dataset_path, "dataset")
         self._experiment_coordinator.record(DatasetDownloaded(dataset_path))
         prepared = self.build_features_and_target(dataframe)
@@ -126,7 +128,6 @@ class OnlineShoppingClassificationTrainer(Trainer[Experiment]):
             evaluation=final,
             report_dir=self._settings.report_dir,
         ))
-        self._experiment_coordinator.complete(result)
         return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:

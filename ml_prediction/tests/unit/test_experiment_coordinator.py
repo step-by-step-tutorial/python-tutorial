@@ -61,12 +61,11 @@ def test_experiment_coordinator_delegates_completion_to_audit_and_presenters(tmp
         return_value=presenter,
     )
     service = ExperimentCoordinator("house")
-    service.start({"n_estimators": 10})
     data = ExperimentData(model=mocker.Mock(), evaluation=mocker.Mock(), report_dir=settings.report_dir)
     service.publish(data)
     experiment = _experiment(tmp_path)
 
-    service.complete(experiment)
+    service.execute(lambda: experiment, {"n_estimators": 10})
 
     audit.start.assert_called_once()
     audit.save_experiment.assert_called_once_with(experiment)
@@ -89,8 +88,7 @@ def test_experiment_coordinator_marks_failed_operations(tmp_path: Path, mocker) 
     service = ExperimentCoordinator("house")
 
     try:
-        with service:
-            raise ValueError("failed")
+        service.execute(lambda: (_ for _ in ()).throw(ValueError("failed")))
     except ValueError:
         pass
 
