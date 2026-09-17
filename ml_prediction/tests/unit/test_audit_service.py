@@ -9,6 +9,7 @@ from ml_prediction.audit.data.trained_model_data import TrainedModelData
 from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
 from ml_prediction.audit.audit_service import AuditService
 from ml_prediction.presentation.visual.artifact_visualizer import ArtifactVisualizer
 from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
@@ -81,8 +82,7 @@ def test_visualization_service_returns_artifacts_without_tracking(tmp_path: Path
     mocker.patch("ml_prediction.presentation.visualization_service.ArtifactVisualizer", return_value=artifact_visualizer)
     mocker.patch("ml_prediction.presentation.visualization_service.ExperimentVisualizer", return_value=experiment_visualizer)
     service = VisualizationService("house")
-    evaluation = mocker.Mock()
-    evaluation.metrics = mocker.Mock()
+    evaluation = RegressionEvaluationData([1.0], [1.0], mocker.Mock())
 
     artifacts = service.publish(mocker.Mock(), evaluation, "experiment-1", tmp_path)
 
