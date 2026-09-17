@@ -72,21 +72,21 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
 
         # Dataset preparation
         dataframe, dataset_path = self.download_dataset()
-        experiment_id = self._audit_service.experiment_id
-        self._audit_service.handle(ArtifactData(dataset_path, "dataset"))
-        self._audit_service.handle(DatasetDownloadedData(dataset_path))
+        run_id = self._audit_service.run_id
+        self._audit_service.write(ArtifactData(dataset_path, "dataset"))
+        self._audit_service.write(DatasetDownloadedData(dataset_path))
 
         # Feature engineering
         features_and_target = self.build_features_and_target(dataframe)
-        self._audit_service.handle(
+        self._audit_service.write(
             DatasetPreparedData(len(features_and_target.features), self._settings.target_column))
-        self._audit_service.handle(
+        self._audit_service.write(
             FeaturesBuiltData(len(features_and_target.features), len(features_and_target.features.columns)))
-        self._audit_service.handle(TargetExtractedData(len(features_and_target.target), self._settings.target_column))
+        self._audit_service.write(TargetExtractedData(len(features_and_target.target), self._settings.target_column))
 
         # Train/validation/test split
         partitions = self._dataset_splitter.split(features_and_target.features, features_and_target.target)
-        self._audit_service.handle(AuditDatasetSplitData(
+        self._audit_service.write(AuditDatasetSplitData(
             len(features_and_target.features),
             len(partitions.train.features),
             len(partitions.validation.features),
@@ -98,7 +98,7 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
         configured_parameters = self._settings.model_parameters.as_dict()
         logger.info(
             f"Starting training experiment: "
-            f"experiment_id={experiment_id} "
+            f"run_id={run_id} "
             f"model_type={self._settings.model_type} "
             f"model_parameters={configured_parameters}",
         )
@@ -109,7 +109,7 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
             f"partition=train rows={len(partitions.train.features)}",
         )
         trained_model = self.train_model(partitions)
-        self._audit_service.handle(
+        self._audit_service.write(
             ModelTrainingData("train", len(partitions.train.features), self._settings.model_type))
 
         # Evaluation
@@ -118,8 +118,8 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
             f"partition=validation rows={len(partitions.validation.features)}",
         )
         validation_metrics = self.evaluate_model(trained_model, partitions.validation)
-        self._audit_service.handle(MetricsData("validation", validation_metrics))
-        self._audit_service.handle(ModelEvaluatedData(
+        self._audit_service.write(MetricsData("validation", validation_metrics))
+        self._audit_service.write(ModelEvaluatedData(
             "validation",
             len(partitions.validation.features),
             self._settings.model_type,
@@ -132,8 +132,8 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
             f"partition=test rows={len(partitions.test.features)}",
         )
         final_test_evaluation = self.evaluate_model_with_predictions(trained_model, partitions.test)
-        self._audit_service.handle(MetricsData("test", final_test_evaluation.metrics))
-        self._audit_service.handle(ModelEvaluatedData(
+        self._audit_service.write(MetricsData("test", final_test_evaluation.metrics))
+        self._audit_service.write(ModelEvaluatedData(
             "test",
             len(partitions.test.features),
             self._settings.model_type,
@@ -158,13 +158,13 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
             prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(trained_model, metadata)
-        self._audit_service.handle(TrainedModelData(trained_model.pipeline))
-        self._audit_service.handle(ArtifactData(model_path.with_suffix(".metadata.json"), "model"))
-        self._audit_service.handle(ModelSavedData(model_path))
+        self._audit_service.write(TrainedModelData(trained_model.pipeline))
+        self._audit_service.write(ArtifactData(model_path.with_suffix(".metadata.json"), "model"))
+        self._audit_service.write(ModelSavedData(model_path))
 
         # Experiments, visualizations, and monitoring
         result = ExperimentData(
-            experiment_id=experiment_id,
+            run_id=run_id,
             timestamp=experiment_timestamp,
             dataset_name=self._settings.dataset_name,
             model_type=self._settings.model_type,
@@ -177,12 +177,13 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
             model_selection_metric="mean_absolute_error" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        return self._audit_service.handle(ExperimentAuditData(
+        self._audit_service.write(ExperimentAuditData(
             experiment=result,
             model=trained_model,
             evaluation=final_test_evaluation,
             audit_dir=self._settings.audit_dir,
         ))
+        return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:
         return self._dataset.download()

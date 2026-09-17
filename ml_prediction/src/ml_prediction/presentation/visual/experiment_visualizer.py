@@ -53,7 +53,7 @@ class ExperimentVisualizer:
         if not experiments:
             return None
 
-        labels = [f"{experiment.model_type}:{experiment.experiment_id[:8]}" for experiment in experiments]
+        labels = [f"{experiment.model_type}:{experiment.run_id[:8]}" for experiment in experiments]
         values = [metric_value(experiment) for experiment in experiments]
         figure, axes = plt.subplots()
         axes.plot(labels, values, marker="o")

@@ -1,12 +1,15 @@
 from dataclasses import asdict, is_dataclass
+import logging
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 try:
     import mlflow
     import mlflow.sklearn
 except ModuleNotFoundError:
-    mlflow = None
+    logger.info("MLflow is not installed; MLflow tracking is unavailable")
 
 from ml_prediction.audit.data.artifact_data import ArtifactData
 from ml_prediction.audit.data.audit_data import AuditData
@@ -41,34 +44,32 @@ class MlflowService(DataService):
         if isinstance(data, TrainedModelData):
             self._model = data.model
             return
-        if not isinstance(data, ExperimentAuditData):
-            return
+        if isinstance(data, ExperimentAuditData) and "mlflow" in globals():
+            mlflow.set_tracking_uri(self._settings.mlflow_tracking_uri)
+            mlflow.set_experiment(
+                f"{self._settings.mlflow_experiment_prefix}/{self._settings.dataset_name}"
+            )
+            mlflow.start_run(run_name=data.experiment.run_id)
+            mlflow.set_tags({
+                "dataset_name": self._settings.dataset_name,
+                "task_type": self._settings.task_type.value,
+                "model_type": self._settings.model_type,
+            })
+            mlflow.log_params(data.experiment.model_parameters)
 
-        mlflow.set_tracking_uri(self._settings.mlflow_tracking_uri)
-        mlflow.set_experiment(
-            f"{self._settings.mlflow_experiment_prefix}/{self._settings.dataset_name}"
-        )
-        mlflow.start_run(run_name=data.experiment.experiment_id)
-        mlflow.set_tags({
-            "dataset_name": self._settings.dataset_name,
-            "task_type": self._settings.task_type.value,
-            "model_type": self._settings.model_type,
-        })
-        mlflow.log_params(data.experiment.model_parameters)
-
-        try:
-            for prefix, values in self._metrics:
-                self._write_metrics(prefix, values)
-            for artifact in self._artifacts + [
-                (item.path, item.category) for item in data.artifacts
-            ]:
-                self._write_artifact(*artifact)
-            self._write_model(self._model)
-        except Exception:
-            mlflow.end_run(status="FAILED")
-            raise
-        else:
-            mlflow.end_run(status="FINISHED")
+            try:
+                for prefix, values in self._metrics:
+                    self._write_metrics(prefix, values)
+                for artifact in self._artifacts + [
+                    (item.path, item.category) for item in data.artifacts
+                ]:
+                    self._write_artifact(*artifact)
+                self._write_model(self._model)
+            except Exception:
+                mlflow.end_run(status="FAILED")
+                raise
+            else:
+                mlflow.end_run(status="FINISHED")
 
     @staticmethod
     def _write_metrics(prefix: str, metrics: Any) -> None:

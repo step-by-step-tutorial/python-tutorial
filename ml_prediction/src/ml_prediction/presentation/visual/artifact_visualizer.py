@@ -33,7 +33,7 @@ class ArtifactVisualizer:
             cls,
             y_true,
             y_pred,
-            experiment_id: str,
+            run_id: str,
             audit_dir: Path,
             output_path: Path | None = None,
     ) -> Path:
@@ -45,7 +45,7 @@ class ArtifactVisualizer:
         )
         return cls.save_figure(
             display.figure_,
-            output_path if output_path is not None else audit_dir / experiment_id / "actual_vs_predicted.png",
+            output_path if output_path is not None else audit_dir / run_id / "actual_vs_predicted.png",
         )
 
     @classmethod
@@ -53,7 +53,7 @@ class ArtifactVisualizer:
             cls,
             y_true,
             y_pred,
-            experiment_id: str,
+            run_id: str,
             audit_dir: Path,
             output_path: Path | None = None,
     ) -> Path:
@@ -65,14 +65,14 @@ class ArtifactVisualizer:
         )
         return cls.save_figure(
             display.figure_,
-            output_path if output_path is not None else audit_dir / experiment_id / "residual_vs_predicted.png",
+            output_path if output_path is not None else audit_dir / run_id / "residual_vs_predicted.png",
         )
 
     @classmethod
     def save_feature_importance(
             cls,
             fitted_model,
-            experiment_id: str,
+            run_id: str,
             audit_dir: Path,
             top_n: int = 20,
             output_path: Path | None = None,
@@ -105,7 +105,7 @@ class ArtifactVisualizer:
         figure.tight_layout()
         return cls.save_figure(
             figure,
-            output_path if output_path is not None else audit_dir / experiment_id / "feature_importance.png",
+            output_path if output_path is not None else audit_dir / run_id / "feature_importance.png",
         )
 
     @staticmethod

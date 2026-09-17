@@ -79,8 +79,8 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
     mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
     audit_service = mocker.MagicMock()
-    audit_service.experiment_id = "experiment-1"
-    audit_service.handle.side_effect = lambda data: data.experiment if hasattr(data, "experiment") else None
+    audit_service.run_id = "experiment-1"
+    audit_service.write.side_effect = lambda data: data.experiment if hasattr(data, "experiment") else None
     mocker.patch(
         "ml_prediction.training.house_price_regression_trainer.AuditService",
         return_value=audit_service,
@@ -107,7 +107,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     result = trainer.train()
 
     assert isinstance(result, ExperimentData)
-    assert result.experiment_id
+    assert result.run_id
     assert result.timestamp.tzinfo is not None
     assert result.dataset_name == settings.dataset_name
     assert result.model_type == settings.model_type
@@ -115,7 +115,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     assert result.validation_metrics == metrics
     assert result.test_metrics == metrics
     assert result.model_path == tmp_path / "models" / "house.joblib"
-    audit_service.handle.assert_called()
+    audit_service.write.assert_called()
     trainer.build_features_and_target.assert_called_once_with(dataframe)
     dataset_splitter.split.assert_called_once_with(dataframe, dataframe["target"])
     trainer.train_model.assert_called_once_with(partitions)
@@ -125,7 +125,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         call(model, partitions.validation),
     ]
     trainer.save_model.assert_called_once()
-    assert any(call_args.args and isinstance(call_args.args[0], ExperimentAuditData) for call_args in audit_service.handle.call_args_list)
+    assert any(call_args.args and isinstance(call_args.args[0], ExperimentAuditData) for call_args in audit_service.write.call_args_list)
     assert result.audit_path is None
 
 

@@ -7,17 +7,17 @@ from ml_prediction.audit.data.experiment_data import ExperimentData
 from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 
 
-def experiment(experiment_id: str, mae: float, rmse: float, r2: float) -> ExperimentData:
+def experiment(run_id: str, mae: float, rmse: float, r2: float) -> ExperimentData:
     return ExperimentData(
-        experiment_id=experiment_id,
+        run_id=run_id,
         timestamp=datetime.now(timezone.utc),
         dataset_name="house",
         model_type="random_forest",
         model_parameters={},
         validation_metrics=RegressionMetrics(mae, rmse, r2),
         test_metrics=RegressionMetrics(12.0, 13.0, 0.2),
-        model_path=Path(f"models/{experiment_id}.joblib"),
-        audit_path=Path(f"reports/{experiment_id}.csv"),
+        model_path=Path(f"models/{run_id}.joblib"),
+        audit_path=Path(f"reports/{run_id}.csv"),
     )
 
 

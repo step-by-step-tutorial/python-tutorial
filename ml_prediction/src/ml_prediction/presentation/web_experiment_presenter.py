@@ -11,7 +11,7 @@ class WebExperimentPresenter(Presenter):
         if data.experiment is None:
             return {}
         return {
-            "experiment_id": data.experiment.experiment_id,
+            "run_id": data.experiment.run_id,
             "dataset_name": data.experiment.dataset_name,
             "model_type": data.experiment.model_type,
             "validation_metrics": data.experiment.validation_metrics.__dict__,

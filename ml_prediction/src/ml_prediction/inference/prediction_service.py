@@ -8,6 +8,7 @@ from ml_prediction.audit.pipeline_step.model_loaded_data import ModelLoadedData
 from ml_prediction.audit.pipeline_step.prediction_completed_data import PredictionCompletedData
 from ml_prediction.audit.pipeline_step.predictions_generated_data import PredictionsGeneratedData
 from ml_prediction.audit.audit_log_service import AuditLogService
+from ml_prediction.audit.data.audit_operation import AuditOperation
 from ml_prediction.config.settings import get_settings
 from ml_prediction.data_model.prediction import Prediction
 from ml_prediction.dataset.dataset import Dataset
@@ -26,7 +27,7 @@ class PredictionService:
         dataframe, dataset_path = self.dataset.download()
 
         audit_path = self.settings.prediction_audit_path(IdGenerator.generate())
-        audit_log_service = AuditLogService(self.settings.dataset_name, "prediction")
+        audit_log_service = AuditLogService(self.settings.dataset_name, AuditOperation.PREDICTION)
         audit_log_service.write(DatasetReadyData(dataset_path), audit_path)
         audit_log_service.write(ModelLoadedData(model_path), audit_path)
 

@@ -12,7 +12,7 @@ from ml_prediction.utils.metrics_utils import create_metrics
 
 @dataclass(frozen=True)
 class ExperimentData(AuditData):
-    experiment_id: str
+    run_id: str
     timestamp: datetime
     dataset_name: str
     model_type: str
@@ -23,12 +23,10 @@ class ExperimentData(AuditData):
     audit_path: Path | None
     model_selection_metric: str | None = None
     model_selection_score: float | None = None
-    run_id: str = ""
     task_type: ExperimentTaskType = ExperimentTaskType.REGRESSION
 
     def to_dict(self) -> dict[str, str | float]:
         return {
-            "experiment_id": self.experiment_id,
             "run_id": self.run_id,
             "timestamp": self.timestamp.isoformat(),
             "dataset_name": self.dataset_name,
@@ -48,8 +46,7 @@ class ExperimentData(AuditData):
         task_type = ExperimentTaskType.value_of(row["task_type"])
         metric_type = task_type.metrics_type
         return ExperimentData(
-            experiment_id=row["experiment_id"],
-            run_id=row.get("run_id", ""),
+            run_id=row["run_id"],
             timestamp=datetime.fromisoformat(row["timestamp"]),
             dataset_name=row["dataset_name"],
             task_type=task_type,

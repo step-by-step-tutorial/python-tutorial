@@ -8,17 +8,17 @@ from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
 
 
-def make_experiment(experiment_id: str, model_type: str) -> ExperimentData:
+def make_experiment(run_id: str, model_type: str) -> ExperimentData:
     return ExperimentData(
-        experiment_id=experiment_id,
+        run_id=run_id,
         timestamp=datetime.now(timezone.utc),
         dataset_name="house",
         model_type=model_type,
         model_parameters={},
         validation_metrics=RegressionMetrics(1.0, 2.0, 0.8),
         test_metrics=RegressionMetrics(3.0, 4.0, 0.5),
-        model_path=Path(f"models/{experiment_id}.joblib"),
-        audit_path=Path(f"reports/{experiment_id}.csv"),
+        model_path=Path(f"models/{run_id}.joblib"),
+        audit_path=Path(f"reports/{run_id}.csv"),
     )
 
 

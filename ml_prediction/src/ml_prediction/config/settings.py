@@ -42,11 +42,11 @@ def get_settings(dataset_name: str) -> AppSettings:
         audit_dir=Path(os.getenv("ML_PREDICTION_AUDIT_DIR", str(PROJECT_ROOT / "audit"))),
         audit_filename_template=os.getenv(
             "ML_PREDICTION_AUDIT_FILENAME_TEMPLATE",
-            "{dataset_name}_{operation}_{experiment_id}.csv",
+            "{dataset_name}_{operation}_{run_id}.csv",
         ),
         prediction_audit_filename_template=os.getenv(
             "ML_PREDICTION_PREDICTION_AUDIT_FILENAME_TEMPLATE",
-            "{dataset_name}_prediction_{experiment_id}.csv",
+            "{dataset_name}_prediction_{run_id}.csv",
         ),
         comparison_dirname=os.getenv("ML_PREDICTION_COMPARISON_DIRNAME", "comparison"),
         actual_vs_predicted_filename=os.getenv(

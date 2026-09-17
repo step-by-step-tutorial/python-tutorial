@@ -15,8 +15,8 @@ class CliExperimentPresenter(Presenter):
         if output is None:
             return
         logger.info(
-            "ExperimentData completed: experiment_id=%s dataset=%s model_type=%s",
-            output.experiment_id,
+            "ExperimentData completed: run_id=%s dataset=%s model_type=%s",
+            output.run_id,
             output.dataset_name,
             output.model_type,
         )

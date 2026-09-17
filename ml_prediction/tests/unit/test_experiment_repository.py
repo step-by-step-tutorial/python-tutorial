@@ -14,7 +14,7 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
     reader = ExperimentService()
     experiment_path = tmp_path / "reports" / "experiments.csv"
     result = ExperimentData(
-        experiment_id="experiment-1",
+        run_id="experiment-1",
         timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
         dataset_name="house",
         model_type="random_forest",

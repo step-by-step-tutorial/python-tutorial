@@ -6,7 +6,6 @@ from ml_prediction.audit.data.experiment_data import ExperimentData
 from ml_prediction.audit.data.artifact_data import ArtifactData
 from ml_prediction.audit.data.metrics_data import MetricsData
 from ml_prediction.audit.data.trained_model_data import TrainedModelData
-from ml_prediction.audit.pipeline_step.experiment_completed_data import ExperimentCompletedData
 from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
@@ -29,14 +28,14 @@ def _settings(tmp_path: Path) -> AppSettings:
 def _experiment(tmp_path: Path) -> ExperimentData:
     metrics = RegressionMetrics(1.0, 2.0, 0.5)
     return ExperimentData(
-        experiment_id="experiment-1", timestamp=datetime.now(timezone.utc),
+        run_id="experiment-1", timestamp=datetime.now(timezone.utc),
         dataset_name="house", model_type="random_forest", model_parameters={},
         validation_metrics=metrics, test_metrics=metrics,
         model_path=tmp_path / "model.joblib", audit_path=None,
     )
 
 
-def test_audit_service_publishes_completed_data_to_services_and_presenters(tmp_path: Path, mocker) -> None:
+def test_audit_service_writes_data_to_services(tmp_path: Path, mocker) -> None:
     settings = _settings(tmp_path)
     mocker.patch("ml_prediction.audit.audit_service.get_settings", return_value=settings)
     report = mocker.Mock()
@@ -47,30 +46,29 @@ def test_audit_service_publishes_completed_data_to_services_and_presenters(tmp_p
     visual.write.return_value = None
     tracker = mocker.Mock()
     tracker.write.return_value = None
-    mocker.patch("ml_prediction.audit.audit_service.mlflow", mocker.Mock())
     mocker.patch("ml_prediction.audit.audit_service.AuditLogService", return_value=report)
     mocker.patch("ml_prediction.audit.audit_service.ExperimentService", return_value=writer)
     mocker.patch("ml_prediction.audit.audit_service.Visualizer", return_value=visual)
     mocker.patch("ml_prediction.audit.audit_service.MlflowService", return_value=tracker)
     audit_service = AuditService("house")
-    audit_service.handle(MetricsData("validation", RegressionMetrics(1.0, 2.0, 0.5)))
-    audit_service.handle(ArtifactData(tmp_path / "dataset.csv", "dataset"))
-    audit_service.handle(TrainedModelData(mocker.Mock()))
+    audit_service.write(MetricsData("validation", RegressionMetrics(1.0, 2.0, 0.5)))
+    audit_service.write(ArtifactData(tmp_path / "dataset.csv", "dataset"))
+    audit_service.write(TrainedModelData(mocker.Mock()))
 
-    result = audit_service.handle(ExperimentAuditData(
+    data = ExperimentAuditData(
         experiment=_experiment(tmp_path), model=mocker.Mock(), evaluation=mocker.Mock(),
         audit_dir=settings.audit_dir,
-    ))
+    )
+    audit_service.write(data)
 
-    assert result.audit_path == settings.audit_path("training", audit_service.experiment_id)
-    assert any(call.args and isinstance(call.args[0], ExperimentCompletedData)
+    assert any(call.args and isinstance(call.args[0], ExperimentAuditData)
                for call in report.write.call_args_list)
     assert any(call.args and hasattr(call.args[0], "experiment")
-               and call.args[0].experiment.experiment_id == result.experiment_id
+               and call.args[0].experiment.run_id == data.experiment.run_id
                for call in writer.write.call_args_list)
     visual.write.assert_called()
     assert any(call.args and hasattr(call.args[0], "experiment")
-               and call.args[0].experiment.experiment_id == result.experiment_id
+               and call.args[0].experiment.run_id == data.experiment.run_id
                for call in tracker.write.call_args_list)
 
 

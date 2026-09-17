@@ -12,8 +12,7 @@ from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 def test_classification_experiment_round_trip(tmp_path: Path, mocker) -> None:
     experiment_path = tmp_path / "online_shopping_experiment_classification-1.csv"
     experiment = ExperimentData(
-        experiment_id="classification-1",
-        run_id="run-1",
+        run_id="classification-1",
         timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
         dataset_name="online_shopping",
         task_type=ExperimentTaskType.CLASSIFICATION,

@@ -18,22 +18,22 @@ class VisualizationService(Presenter):
     def present(self, output: ExperimentAuditData) -> tuple[ArtifactData, ...]:
         if output.model is None or output.evaluation is None or output.experiment is None or output.audit_dir is None:
             return ()
-        return self.publish(output.model, output.evaluation, output.experiment.experiment_id, output.audit_dir)
+        return self.publish(output.model, output.evaluation, output.experiment.run_id, output.audit_dir)
 
-    def publish(self, model, evaluation, experiment_id: str, audit_dir: Path) -> tuple[ArtifactData, ...]:
+    def publish(self, model, evaluation, run_id: str, audit_dir: Path) -> tuple[ArtifactData, ...]:
         artifacts = [
             self._artifact_visualizer.save_actual_vs_predicted(
-                evaluation.y_true, evaluation.y_pred, experiment_id, audit_dir,
-                self._settings.artifact_path(experiment_id, self._settings.actual_vs_predicted_filename),
+                evaluation.y_true, evaluation.y_pred, run_id, audit_dir,
+                self._settings.artifact_path(run_id, self._settings.actual_vs_predicted_filename),
             ),
             self._artifact_visualizer.save_residual_vs_predicted(
-                evaluation.y_true, evaluation.y_pred, experiment_id, audit_dir,
-                self._settings.artifact_path(experiment_id, self._settings.residual_vs_predicted_filename),
+                evaluation.y_true, evaluation.y_pred, run_id, audit_dir,
+                self._settings.artifact_path(run_id, self._settings.residual_vs_predicted_filename),
             ),
             self._artifact_visualizer.save_feature_importance(
-                model, experiment_id, audit_dir,
+                model, run_id, audit_dir,
                 output_path=self._settings.artifact_path(
-                    experiment_id, self._settings.feature_importance_filename,
+                    run_id, self._settings.feature_importance_filename,
                 ),
             ),
         ]
@@ -43,6 +43,6 @@ class VisualizationService(Presenter):
                 self._experiment_visualizer.save_validation_rmse_comparison(),
                 self._experiment_visualizer.save_validation_r2_comparison(),
             ])
-        artifact_dir = audit_dir / experiment_id
+        artifact_dir = audit_dir / run_id
         artifacts.extend(artifact_dir.glob("*.png"))
         return tuple(ArtifactData(path, "plots") for path in {path for path in artifacts if isinstance(path, Path)})

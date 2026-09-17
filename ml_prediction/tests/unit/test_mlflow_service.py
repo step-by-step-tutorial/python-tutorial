@@ -21,14 +21,14 @@ def _settings() -> AppSettings:
 
 
 def test_tracker_publishes_parameters_and_metrics(mocker) -> None:
-    mlflow = mocker.patch("ml_prediction.audit.mlflow_service.mlflow")
+    mlflow = mocker.patch("ml_prediction.audit.mlflow_service.mlflow", create=True)
     mlflow_service = MlflowService(_settings())
 
     path = Path("audit.log")
     mlflow_service.write(MetricsData("validation", RegressionMetrics(1.0, 2.0, 0.5)), path)
     mlflow_service.write(TrainedModelData(mocker.Mock()), path)
     mlflow_service.write(ExperimentAuditData(experiment=ExperimentData(
-        experiment_id="experiment-1", timestamp=datetime.now(timezone.utc),
+        run_id="experiment-1", timestamp=datetime.now(timezone.utc),
         dataset_name="house", model_type="random_forest",
         model_parameters={"n_estimators": 200},
         validation_metrics=RegressionMetrics(1.0, 2.0, 0.5),

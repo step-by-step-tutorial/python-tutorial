@@ -65,34 +65,34 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
             raise ValueError("OnlineShoppingClassificationTrainer requires a classification dataset")
         dataframe, dataset_path = self.download_dataset()
         configured_parameters = self._settings.model_parameters.as_dict()
-        experiment_id = self._audit_service.experiment_id
-        self._audit_service.handle(ArtifactData(dataset_path, "dataset"))
-        self._audit_service.handle(DatasetDownloadedData(dataset_path))
+        run_id = self._audit_service.run_id
+        self._audit_service.write(ArtifactData(dataset_path, "dataset"))
+        self._audit_service.write(DatasetDownloadedData(dataset_path))
         prepared = self.build_features_and_target(dataframe)
-        self._audit_service.handle(DatasetPreparedData(len(prepared.features), self._settings.target_column))
-        self._audit_service.handle(FeaturesBuiltData(len(prepared.features), len(prepared.features.columns)))
-        self._audit_service.handle(TargetExtractedData(len(prepared.target), self._settings.target_column))
+        self._audit_service.write(DatasetPreparedData(len(prepared.features), self._settings.target_column))
+        self._audit_service.write(FeaturesBuiltData(len(prepared.features), len(prepared.features.columns)))
+        self._audit_service.write(TargetExtractedData(len(prepared.target), self._settings.target_column))
         partitions = self._dataset_splitter.split(prepared.features, prepared.target)
-        self._audit_service.handle(AuditDatasetSplitData(
+        self._audit_service.write(AuditDatasetSplitData(
             len(prepared.features),
             len(partitions.train.features),
             len(partitions.validation.features),
             len(partitions.test.features),
         ))
         model = self.train_model(partitions)
-        self._audit_service.handle(
+        self._audit_service.write(
             ModelTrainingData("train", len(partitions.train.features), self._settings.model_type))
         validation = self.evaluate_model(model, partitions.validation)
-        self._audit_service.handle(MetricsData("validation", validation))
-        self._audit_service.handle(ModelEvaluatedData(
+        self._audit_service.write(MetricsData("validation", validation))
+        self._audit_service.write(ModelEvaluatedData(
             "validation",
             len(partitions.validation.features),
             self._settings.model_type,
             validation,
         ))
         final = self.evaluate_model_with_predictions(model, partitions.test)
-        self._audit_service.handle(MetricsData("test", final.metrics))
-        self._audit_service.handle(ModelEvaluatedData(
+        self._audit_service.write(MetricsData("test", final.metrics))
+        self._audit_service.write(ModelEvaluatedData(
             "test",
             len(partitions.test.features),
             self._settings.model_type,
@@ -116,11 +116,11 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
             prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(model, metadata)
-        self._audit_service.handle(TrainedModelData(model.pipeline))
-        self._audit_service.handle(ArtifactData(model_path.with_suffix(".metadata.json"), "model"))
-        self._audit_service.handle(ModelSavedData(model_path))
+        self._audit_service.write(TrainedModelData(model.pipeline))
+        self._audit_service.write(ArtifactData(model_path.with_suffix(".metadata.json"), "model"))
+        self._audit_service.write(ModelSavedData(model_path))
         result = ExperimentData(
-            experiment_id=experiment_id, timestamp=timestamp, dataset_name=self._settings.dataset_name,
+            run_id=run_id, timestamp=timestamp, dataset_name=self._settings.dataset_name,
             model_type=self._settings.model_type, model_parameters=metadata.model_parameters,
             validation_metrics=validation, test_metrics=final.metrics,
             model_path=model_path, audit_path=None,
@@ -128,12 +128,13 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
             model_selection_metric="f1_weighted" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        return self._audit_service.handle(ExperimentAuditData(
+        self._audit_service.write(ExperimentAuditData(
             experiment=result,
             model=model,
             evaluation=final,
             audit_dir=self._settings.audit_dir,
         ))
+        return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:
         return self._dataset.download()

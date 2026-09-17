@@ -34,8 +34,8 @@ class AppSettings:
     bootstrap: bool = True
     dataset_source: DatasetSource = DatasetSource.LOCAL
     audit_dir: Path = PROJECT_ROOT / "audit"
-    audit_filename_template: str = "{dataset_name}_{operation}_{experiment_id}.csv"
-    prediction_audit_filename_template: str = "{dataset_name}_prediction_{experiment_id}.csv"
+    audit_filename_template: str = "{dataset_name}_{operation}_{run_id}.csv"
+    prediction_audit_filename_template: str = "{dataset_name}_prediction_{run_id}.csv"
     comparison_dirname: str = "comparison"
     actual_vs_predicted_filename: str = "actual_vs_predicted.png"
     residual_vs_predicted_filename: str = "residual_vs_predicted.png"
@@ -68,24 +68,24 @@ class AppSettings:
             random_state=self.random_state,
         )
 
-    def audit_path(self, operation: str, experiment_id: str) -> Path:
+    def audit_path(self, operation: str, run_id: str) -> Path:
         return self.audit_dir / self.audit_filename_template.format(
             dataset_name=self.dataset_name,
             operation=operation,
-            experiment_id=experiment_id,
+            run_id=run_id,
         )
 
-    def prediction_audit_path(self, experiment_id: str) -> Path:
+    def prediction_audit_path(self, run_id: str) -> Path:
         return self.audit_dir / self.prediction_audit_filename_template.format(
             dataset_name=self.dataset_name,
-            experiment_id=experiment_id,
+            run_id=run_id,
         )
 
-    def artifact_path(self, experiment_id: str, filename: str) -> Path:
-        return self.audit_dir / experiment_id / filename
+    def artifact_path(self, run_id: str, filename: str) -> Path:
+        return self.audit_dir / run_id / filename
 
-    def experiment_path(self, experiment_id: str) -> Path:
+    def experiment_path(self, run_id: str) -> Path:
         return self.audit_dir / self.experiment_filename.format(
             dataset_name=self.dataset_name,
-            experiment_id=experiment_id,
+            run_id=run_id,
         )
