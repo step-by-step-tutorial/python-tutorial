@@ -1,12 +1,12 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 
-from ml_prediction.config.settings_types import TaskType
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 
 
 @dataclass(frozen=True)
 class DatasetProfile:
     target_column: str
-    task_type: TaskType
+    task_type: ExperimentTaskType
     dataset_filename: str
     model_filename: str
     prediction_filename: str

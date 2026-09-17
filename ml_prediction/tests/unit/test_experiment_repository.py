@@ -1,17 +1,19 @@
-﻿import csv
+import csv
+from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from ml_prediction.audit.experiment import Experiment
+from ml_prediction.audit.data.experiment_data import ExperimentData
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.experiment.experiment_coordinator import ExperimentCoordinator
+from ml_prediction.audit.experiment_service import ExperimentService
 
 
 def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -> None:
-    repository = ExperimentCoordinator("house")
-    repository.path = tmp_path / "reports" / "experiments.csv"
-    result = Experiment(
+    writer = ExperimentService()
+    reader = ExperimentService()
+    experiment_path = tmp_path / "reports" / "experiments.csv"
+    result = ExperimentData(
         experiment_id="experiment-1",
         timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
         dataset_name="house",
@@ -20,18 +22,18 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
         validation_metrics=RegressionMetrics(0.8, 1.5, 0.7),
         test_metrics=RegressionMetrics(0.9, 1.6, 0.65),
         model_path=tmp_path / "models" / "house.joblib",
-        report_path=tmp_path / "reports" / "training.csv",
+        audit_path=tmp_path / "reports" / "training.csv",
     )
 
-    repository.save(result)
-    repository.save(result)
+    writer.write(ExperimentAuditData(experiment=result), experiment_path)
+    writer.write(ExperimentAuditData(experiment=result), experiment_path)
 
-    assert len(repository.read_all()) == 2
-    assert repository.read_all()[0] == result
-    assert len((tmp_path / "reports" / "experiments.csv").read_text().splitlines()) == 3
-    with (tmp_path / "reports" / "experiments.csv").open(newline="") as history_file:
+    assert len(reader.read(experiment_path)) == 2
+    assert reader.read(experiment_path)[0] == result
+    assert len(experiment_path.read_text().splitlines()) == 3
+    with experiment_path.open(newline="") as history_file:
         rows = list(csv.DictReader(history_file))
-    assert list(rows[0]) == list(Experiment.fieldnames)
+    assert list(rows[0]) == list(ExperimentData.fields())
     assert rows[0]["model_parameters"] == json.dumps(
         {"bootstrap": True, "n_estimators": 200},
         sort_keys=True,

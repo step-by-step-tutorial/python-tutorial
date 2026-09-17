@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import pytest
 from sklearn.ensemble import (
     ExtraTreesRegressor,
@@ -8,7 +8,7 @@ from sklearn.ensemble import (
 )
 from sklearn.pipeline import Pipeline
 
-from ml_prediction.data_model.evaluation import RegressionEvaluation
+from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
 from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.features.house_feature_model import HouseFeatureModel
@@ -143,7 +143,7 @@ def test_model_evaluator_exposes_predictions_and_metrics() -> None:
 
     result = RegressionEvaluator().evaluate(actual, predicted)
 
-    assert isinstance(result, RegressionEvaluation)
+    assert isinstance(result, RegressionEvaluationData)
     assert result.y_true == actual
     assert result.y_pred == predicted
     assert result.metrics == RegressionMetrics(15.0, 15.811388300841896, 0.9)

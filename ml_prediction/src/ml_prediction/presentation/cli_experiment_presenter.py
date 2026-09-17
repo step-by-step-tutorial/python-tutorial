@@ -1,21 +1,21 @@
-﻿import logging
+import logging
+from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 
-from ml_prediction.audit.experiment import Experiment
+from ml_prediction.audit.data.experiment_data import ExperimentData
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.presentation.experiment_data import ExperimentData
 from ml_prediction.presentation.presenter import Presenter
 
 logger = logging.getLogger(__name__)
 
 
 class CliExperimentPresenter(Presenter):
-    def present(self, data: ExperimentData) -> None:
-        output: Experiment | None = data.experiment
+    def present(self, data: ExperimentAuditData) -> None:
+        output: ExperimentData | None = data.experiment
         if output is None:
             return
         logger.info(
-            "Experiment completed: experiment_id=%s dataset=%s model_type=%s",
+            "ExperimentData completed: experiment_id=%s dataset=%s model_type=%s",
             output.experiment_id,
             output.dataset_name,
             output.model_type,
@@ -23,7 +23,7 @@ class CliExperimentPresenter(Presenter):
         self._log_metrics("Validation", output.validation_metrics)
         self._log_metrics("Final test", output.test_metrics)
         logger.info("Saved model: path=%s", output.model_path)
-        logger.info("Experiment history: path=%s", output.report_path)
+        logger.info("ExperimentData history: path=%s", output.audit_path)
 
     @staticmethod
     def _log_metrics(label: str, metrics: RegressionMetrics | ClassificationMetrics) -> None:

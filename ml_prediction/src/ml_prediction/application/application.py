@@ -1,4 +1,4 @@
-﻿from typing import Any
+from typing import Any
 
 from ml_prediction.config.settings import get_settings
 from ml_prediction.data_model.prediction import Prediction

@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from io import BytesIO
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 
 from sklearn.model_selection import GridSearchCV, ParameterGrid
 from sklearn.pipeline import Pipeline

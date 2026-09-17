@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from typing import Self
 
 from sklearn.pipeline import Pipeline

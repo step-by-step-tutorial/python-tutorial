@@ -1,4 +1,4 @@
-﻿from sklearn.base import RegressorMixin
+from sklearn.base import RegressorMixin
 from sklearn.ensemble import (
     ExtraTreesRegressor,
     GradientBoostingRegressor,

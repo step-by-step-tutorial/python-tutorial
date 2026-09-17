@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 from pathlib import Path
 
 from ml_prediction.data_model.prediction import Prediction
@@ -20,20 +20,20 @@ class PredictionPresenter(Presenter):
                 lambda value: isinstance(value, (int, float))
         ).all():
             logger.info(
-                "Prediction result: source=%s output=%s report=%s rows=%s prediction_column=%s",
+                "Prediction result: source=%s output=%s audit=%s rows=%s prediction_column=%s",
                 output.source_path,
                 self.output_path,
-                output.report_path,
+                output.audit_path,
                 len(output.predictions),
                 output.prediction_column,
             )
         else:
             logger.info(
-                "Prediction result: source=%s output=%s report=%s rows=%s prediction_column=%s "
+                "Prediction result: source=%s output=%s audit=%s rows=%s prediction_column=%s "
                 "min=%.2f max=%.2f average=%.2f",
                 output.source_path,
                 self.output_path,
-                output.report_path,
+                output.audit_path,
                 len(output.predictions),
                 output.prediction_column,
                 output.predictions.min(),

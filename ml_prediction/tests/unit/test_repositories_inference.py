@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -10,7 +10,7 @@ from ml_prediction.inference.model_predictor import ModelPredictor
 from ml_prediction.data_model.prediction import Prediction
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.audit.model_metadata import ModelMetadata
+from ml_prediction.audit.data.metadata import Metadata
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -28,7 +28,7 @@ def settings(tmp_path: Path) -> AppSettings:
         random_state=42,
         data_lake=DataLakeSettings("http://localhost:9000", "key", "secret", "house", "prefix"),
         dataset_source=DatasetSource.DOWNLOAD,
-        report_dir=tmp_path / "reports",
+        audit_dir=tmp_path / "reports",
         dataset_filename="house.csv",
         model_filename="model.joblib",
         prediction_column="predicted_total_price",
@@ -46,7 +46,7 @@ def test_local_model_repository_saves_and_loads(tmp_path: Path) -> None:
 def test_local_model_repository_saves_and_loads_typed_metadata(tmp_path: Path) -> None:
     repository = LocalModelRepository()
     path = tmp_path / "models" / "model.joblib"
-    metadata = ModelMetadata(
+    metadata = Metadata(
         model_type="random_forest",
         model_parameters={"n_estimators": 200, "n_jobs": -1, "random_state": 42},
         target_column="total_price",
@@ -135,9 +135,9 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
     assert isinstance(result, Prediction)
     pd.testing.assert_frame_equal(result.dataframe, dataframe)
     assert result.predictions.tolist() == [110]
-    assert result.report_path is not None
-    assert result.report_path.exists()
-    assert "prediction_completed" in result.report_path.read_text(encoding="utf-8")
+    assert result.audit_path is not None
+    assert result.audit_path.exists()
+    assert "prediction_completed" in result.audit_path.read_text(encoding="utf-8")
     predictor.predict.assert_called_once()
     dataset.download.assert_called_once_with()
     pd.testing.assert_frame_equal(predictor.predict.call_args.args[0], dataframe)
@@ -188,7 +188,7 @@ def test_model_predictor_builds_features_and_returns_named_series(mocker) -> Non
     pipeline.predict.return_value = [101.0, 202.0]
     repository = mocker.Mock()
     repository.load.return_value = pipeline
-    repository.load_metadata.return_value = ModelMetadata(
+    repository.load_metadata.return_value = Metadata(
         model_type="random_forest",
         model_parameters={"n_estimators": 200, "n_jobs": -1, "random_state": 42},
         target_column="total_price",

@@ -1,13 +1,13 @@
-﻿from typing import Any
+from typing import Any
 
-from ml_prediction.presentation.experiment_data import ExperimentData
+from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 from ml_prediction.presentation.presenter import Presenter
 
 
 class WebExperimentPresenter(Presenter):
     """Produces a JSON-ready representation for a web or API adapter."""
 
-    def present(self, data: ExperimentData) -> dict[str, Any]:
+    def present(self, data: ExperimentAuditData) -> dict[str, Any]:
         if data.experiment is None:
             return {}
         return {
@@ -17,5 +17,5 @@ class WebExperimentPresenter(Presenter):
             "validation_metrics": data.experiment.validation_metrics.__dict__,
             "test_metrics": data.experiment.test_metrics.__dict__,
             "model_path": str(data.experiment.model_path),
-            "report_path": str(data.experiment.report_path) if data.experiment.report_path else None,
+            "audit_path": str(data.experiment.audit_path) if data.experiment.audit_path else None,
         }

@@ -1,58 +1,68 @@
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any
+from dataclasses import replace
+from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 
-from ml_prediction.audit.experiment import Experiment
-from ml_prediction.audit.experiment_writer import ExperimentWriter
-from ml_prediction.audit.mlflow_tracker import MlflowTracker
-from ml_prediction.audit.report_event_data import ReportEventData
-from ml_prediction.audit.report_writer import ReportWriter
+from ml_prediction.audit.data.artifact_data import ArtifactData
+from ml_prediction.audit.data.audit_data import AuditData
+from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.utils.id_generator import IdGenerator
+from ml_prediction.audit.experiment_service import ExperimentService
+from ml_prediction.audit.mlflow_service import MlflowService, mlflow
+from ml_prediction.audit.pipeline_step.experiment_completed_data import ExperimentCompletedData
+from ml_prediction.audit.audit_log_service import AuditLogService
+from ml_prediction.audit.data_service import DataService
 from ml_prediction.config.settings import get_settings
+from ml_prediction.presentation.visualizer import Visualizer
 
 
 class AuditService:
-    """Coordinates durable audit output and external experiment tracking."""
-
-    def __init__(self, dataset_name: str, mlflow_service: MlflowTracker | None = None,
-                 experiment_writer: ExperimentWriter | None = None) -> None:
+    def __init__(self, dataset_name: str) -> None:
         settings = get_settings(dataset_name)
-        self._report_dir = settings.report_dir
-        self._experiment_writer = experiment_writer or ExperimentWriter(dataset_name)
-        self._mlflow_service = mlflow_service or MlflowTracker(settings)
-        self._report: ReportWriter | None = None
+        experiment_id = IdGenerator.generate()
+        audit_path = settings.audit_path("training", experiment_id)
+        audit_log_service = AuditLogService(dataset_name, "training", run_id=experiment_id)
+        experiment_service = ExperimentService()
+        tracking_configured = settings.mlflow_enabled and settings.mlflow_tracking_uri
+        if tracking_configured and mlflow is None and settings.mlflow_required:
+            raise RuntimeError("MLflow is enabled but the mlflow package is not installed")
+        services: list[DataService] = [audit_log_service, experiment_service]
+        if tracking_configured and mlflow is not None:
+            services.append(MlflowService(settings))
+        self._settings = settings
+        self._experiment_id = experiment_id
+        self._audit_path = audit_path
+        self._experiment_path = settings.experiment_path(experiment_id)
+        self._audit_log_service = audit_log_service
+        self._experiment_service = experiment_service
+        self._services = services
+        self._services.insert(2, Visualizer(dataset_name))
 
     @property
-    def report_path(self) -> Path | None:
-        return self._report.path if self._report is not None else None
+    def experiment_id(self) -> str:
+        return self._experiment_id
 
-    def start(self, dataset_name: str, operation: str, experiment_id: str, parameters: dict[str, Any]) -> None:
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-        path = self._report_dir / f"{dataset_name}_{operation}_report_{timestamp}.csv"
-        self._report = ReportWriter(path, dataset_name, operation, run_id=experiment_id)
-        self._mlflow_service.start(experiment_id, parameters)
+    def handle(self, data: AuditData) -> ExperimentData | None:
+        if not isinstance(data, ExperimentAuditData):
+            for service in self._services:
+                self._write(service, data)
+            return None
 
-    def record(self, event: ReportEventData) -> None:
-        if self._report is None:
-            raise RuntimeError("AuditService must be started before recording events")
-        self._report.record(event)
+        audit_path = self._settings.audit_path("training", self.experiment_id)
+        experiment = replace(data.experiment, audit_path=audit_path)
+        completed_data = replace(
+            data,
+            experiment=experiment,
+            artifacts=data.artifacts + (ArtifactData(audit_path, "audit"),),
+        )
+        for service in self._services:
+            self._write(service, ExperimentCompletedData(audit_path))
+            published_data = self._write(service, completed_data)
+            if published_data is not None:
+                completed_data = published_data
+        return experiment
 
-    def log_metrics(self, prefix: str, metrics: Any) -> None:
-        self._mlflow_service.log_metrics(prefix, metrics)
-
-    def log_artifact(self, path: Path, category: str | None = None) -> None:
-        self._mlflow_service.log_artifact(path, category)
-
-    def log_model(self, pipeline: Any) -> None:
-        self._mlflow_service.log_model(pipeline)
-
-    def save_experiment(self, experiment: Experiment) -> None:
-        self._experiment_writer.save(experiment)
-
-    def finish(self, status: str = "FINISHED") -> None:
-        self._mlflow_service.end(status)
-
-    def __enter__(self) -> "AuditService":
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        self.finish("FAILED" if exc_type is not None else "FINISHED")
+    def _write(self, service: DataService, data: AuditData):
+        if service is self._audit_log_service:
+            return service.write(data, self._audit_path)
+        if service is self._experiment_service:
+            return service.write(data, self._experiment_path)
+        return service.write(data, self._audit_path)

@@ -1,8 +1,8 @@
-﻿from dataclasses import dataclass
+from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
-from ml_prediction.config.settings_types import TaskType
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.model_parameters import ModelParameters
 
@@ -23,7 +23,7 @@ class AppSettings:
     test_size: float
     random_state: int
     data_lake: DataLakeSettings
-    task_type: TaskType = TaskType.REGRESSION
+    task_type: ExperimentTaskType = ExperimentTaskType.REGRESSION
     model_type: str = "random_forest"
     n_estimators: int = 200
     n_jobs: int = -1
@@ -33,7 +33,16 @@ class AppSettings:
     max_features: int | float | str | None = 1.0
     bootstrap: bool = True
     dataset_source: DatasetSource = DatasetSource.LOCAL
-    report_dir: Path = PROJECT_ROOT / "reports"
+    audit_dir: Path = PROJECT_ROOT / "audit"
+    audit_filename_template: str = "{dataset_name}_{operation}_{experiment_id}.csv"
+    prediction_audit_filename_template: str = "{dataset_name}_prediction_{experiment_id}.csv"
+    comparison_dirname: str = "comparison"
+    actual_vs_predicted_filename: str = "actual_vs_predicted.png"
+    residual_vs_predicted_filename: str = "residual_vs_predicted.png"
+    feature_importance_filename: str = "feature_importance.png"
+    validation_mae_filename: str = "validation_mae_comparison.png"
+    validation_rmse_filename: str = "validation_rmse_comparison.png"
+    validation_r2_filename: str = "validation_r2_comparison.png"
     dataset_name: str = ""
     dataset_filename: str = ""
     model_filename: str = ""
@@ -57,4 +66,26 @@ class AppSettings:
             max_features=self.max_features,
             bootstrap=self.bootstrap,
             random_state=self.random_state,
+        )
+
+    def audit_path(self, operation: str, experiment_id: str) -> Path:
+        return self.audit_dir / self.audit_filename_template.format(
+            dataset_name=self.dataset_name,
+            operation=operation,
+            experiment_id=experiment_id,
+        )
+
+    def prediction_audit_path(self, experiment_id: str) -> Path:
+        return self.audit_dir / self.prediction_audit_filename_template.format(
+            dataset_name=self.dataset_name,
+            experiment_id=experiment_id,
+        )
+
+    def artifact_path(self, experiment_id: str, filename: str) -> Path:
+        return self.audit_dir / experiment_id / filename
+
+    def experiment_path(self, experiment_id: str) -> Path:
+        return self.audit_dir / self.experiment_filename.format(
+            dataset_name=self.dataset_name,
+            experiment_id=experiment_id,
         )

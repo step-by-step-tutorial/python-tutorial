@@ -1,31 +1,39 @@
 import logging
+from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 
-from ml_prediction.audit.report_event_data import (
-    DatasetDownloaded, DatasetPrepared, DatasetSplit as DatasetSplitEvent,
-    FeaturesBuilt, ModelEvaluated, ModelSaved, ModelTrained, TargetExtracted,
-)
-from ml_prediction.audit.experiment import Experiment
-from ml_prediction.audit.model_metadata import ModelMetadata
-from ml_prediction.audit.models import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION
-from ml_prediction.config.settings import TaskType, get_settings
-from ml_prediction.data_model.dataset_split import DatasetSplit
-from ml_prediction.data_model.evaluation import RegressionEvaluation
+from ml_prediction.audit.pipeline_step.dataset_downloaded_data import DatasetDownloadedData
+from ml_prediction.audit.pipeline_step.dataset_prepared_data import DatasetPreparedData
+from ml_prediction.audit.pipeline_step.dataset_split_data import DatasetSplitData as AuditDatasetSplitData
+from ml_prediction.audit.pipeline_step.features_built_data import FeaturesBuiltData
+from ml_prediction.audit.pipeline_step.model_evaluated_data import ModelEvaluatedData
+from ml_prediction.audit.pipeline_step.model_saved_data import ModelSavedData
+from ml_prediction.audit.pipeline_step.model_training_data import ModelTrainingData
+from ml_prediction.audit.pipeline_step.target_extracted_data import TargetExtractedData
+from ml_prediction.audit.data.artifact_data import ArtifactData
+from ml_prediction.audit.data.metrics_data import MetricsData
+from ml_prediction.audit.data.trained_model_data import TrainedModelData
+from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
+from ml_prediction.audit.data.metadata import Metadata
+from ml_prediction.audit.data.metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION
+from ml_prediction.config.settings import get_settings
+from ml_prediction.data_model.dataset_split import DatasetSplitData
+from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
-from ml_prediction.experiment.experiment_coordinator import ExperimentCoordinator
+from ml_prediction.audit.audit_service import AuditService
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.pipeline.regressor_pipeline_builder import RegressorPipelineBuilder
-from ml_prediction.presentation.experiment_data import ExperimentData
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.trainer import Trainer
@@ -34,12 +42,12 @@ from ml_prediction.utils.data_validator_utils import should_be_same
 logger = logging.getLogger(__name__)
 
 
-class HousePriceRegressionTrainer(Trainer[Experiment]):
+class HousePriceRegressionTrainer(Trainer[ExperimentData]):
     def __init__(self, dataset: Dataset) -> None:
         self._settings = get_settings(dataset.dataset_name)
         self._dataset = dataset
         self._feature_model = HouseFeatureModel()
-        self._experiment_coordinator = ExperimentCoordinator(dataset.dataset_name)
+        self._audit_service = AuditService(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
         self._pipeline_builder = RegressorPipelineBuilder(self._feature_model, RegressorBuilder(dataset.dataset_name))
         self._evaluator = RegressionEvaluator()
@@ -49,16 +57,13 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         self._selected_model_parameters: dict[str, object] | None = None
         self._selected_model_score: float | None = None
 
-    def train(self) -> Experiment:
-        return self._experiment_coordinator.execute(
-            self._train,
-            self._settings.model_parameters.as_dict(),
-        )
+    def train(self) -> ExperimentData:
+        return self._train()
 
-    def _train(self) -> Experiment:
+    def _train(self) -> ExperimentData:
         should_be_same(
             first=self._settings.task_type,
-            second=TaskType.REGRESSION,
+            second=ExperimentTaskType.REGRESSION,
             error_message=(
                 f"HousePriceRegressionTrainer supports only regression tasks, "
                 f"got '{self._settings.task_type}'"
@@ -67,28 +72,28 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
 
         # Dataset preparation
         dataframe, dataset_path = self.download_dataset()
-        experiment_id = self._experiment_coordinator.experiment_id
-        self._experiment_coordinator.log_artifact(dataset_path, "dataset")
-        self._experiment_coordinator.record(DatasetDownloaded(dataset_path))
+        experiment_id = self._audit_service.experiment_id
+        self._audit_service.handle(ArtifactData(dataset_path, "dataset"))
+        self._audit_service.handle(DatasetDownloadedData(dataset_path))
 
         # Feature engineering
         features_and_target = self.build_features_and_target(dataframe)
-        self._experiment_coordinator.record(
-            DatasetPrepared(len(features_and_target.features), self._settings.target_column))
-        self._experiment_coordinator.record(
-            FeaturesBuilt(len(features_and_target.features), len(features_and_target.features.columns)))
-        self._experiment_coordinator.record(TargetExtracted(len(features_and_target.target), self._settings.target_column))
+        self._audit_service.handle(
+            DatasetPreparedData(len(features_and_target.features), self._settings.target_column))
+        self._audit_service.handle(
+            FeaturesBuiltData(len(features_and_target.features), len(features_and_target.features.columns)))
+        self._audit_service.handle(TargetExtractedData(len(features_and_target.target), self._settings.target_column))
 
         # Train/validation/test split
         partitions = self._dataset_splitter.split(features_and_target.features, features_and_target.target)
-        self._experiment_coordinator.record(DatasetSplitEvent(
+        self._audit_service.handle(AuditDatasetSplitData(
             len(features_and_target.features),
             len(partitions.train.features),
             len(partitions.validation.features),
             len(partitions.test.features),
         ))
 
-        # Experiment setup and monitoring
+        # ExperimentData setup and monitoring
         experiment_timestamp = datetime.now(timezone.utc)
         configured_parameters = self._settings.model_parameters.as_dict()
         logger.info(
@@ -104,8 +109,8 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             f"partition=train rows={len(partitions.train.features)}",
         )
         trained_model = self.train_model(partitions)
-        self._experiment_coordinator.record(
-            ModelTrained("train", len(partitions.train.features), self._settings.model_type))
+        self._audit_service.handle(
+            ModelTrainingData("train", len(partitions.train.features), self._settings.model_type))
 
         # Evaluation
         logger.info(
@@ -113,8 +118,8 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             f"partition=validation rows={len(partitions.validation.features)}",
         )
         validation_metrics = self.evaluate_model(trained_model, partitions.validation)
-        self._experiment_coordinator.log_metrics("validation", validation_metrics)
-        self._experiment_coordinator.record(ModelEvaluated(
+        self._audit_service.handle(MetricsData("validation", validation_metrics))
+        self._audit_service.handle(ModelEvaluatedData(
             "validation",
             len(partitions.validation.features),
             self._settings.model_type,
@@ -127,8 +132,8 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             f"partition=test rows={len(partitions.test.features)}",
         )
         final_test_evaluation = self.evaluate_model_with_predictions(trained_model, partitions.test)
-        self._experiment_coordinator.log_metrics("test", final_test_evaluation.metrics)
-        self._experiment_coordinator.record(ModelEvaluated(
+        self._audit_service.handle(MetricsData("test", final_test_evaluation.metrics))
+        self._audit_service.handle(ModelEvaluatedData(
             "test",
             len(partitions.test.features),
             self._settings.model_type,
@@ -136,7 +141,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         ))
 
         # Model persistence
-        metadata = ModelMetadata(
+        metadata = Metadata(
             model_type=self._settings.model_type,
             model_parameters=self._selected_model_parameters or configured_parameters,
             target_column=self._settings.target_column,
@@ -153,12 +158,12 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(trained_model, metadata)
-        self._experiment_coordinator.log_model(trained_model.pipeline)
-        self._experiment_coordinator.log_artifact(model_path.with_suffix(".metadata.json"), "model")
-        self._experiment_coordinator.record(ModelSaved(model_path))
+        self._audit_service.handle(TrainedModelData(trained_model.pipeline))
+        self._audit_service.handle(ArtifactData(model_path.with_suffix(".metadata.json"), "model"))
+        self._audit_service.handle(ModelSavedData(model_path))
 
         # Experiments, visualizations, and monitoring
-        result = Experiment(
+        result = ExperimentData(
             experiment_id=experiment_id,
             timestamp=experiment_timestamp,
             dataset_name=self._settings.dataset_name,
@@ -167,16 +172,17 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
             validation_metrics=validation_metrics,
             test_metrics=final_test_evaluation.metrics,
             model_path=model_path,
-            report_path=self._experiment_coordinator.report_path,
+            audit_path=None,
+            task_type=ExperimentTaskType.value_of(self._settings.task_type.value),
             model_selection_metric="mean_absolute_error" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        self._experiment_coordinator.publish(ExperimentData(
+        return self._audit_service.handle(ExperimentAuditData(
+            experiment=result,
             model=trained_model,
             evaluation=final_test_evaluation,
-            report_dir=self._settings.report_dir,
+            audit_dir=self._settings.audit_dir,
         ))
-        return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:
         return self._dataset.download()
@@ -194,7 +200,7 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
         )
         return FeaturesAndTarget(features, target)
 
-    def train_model(self, partitions: DatasetSplit) -> TrainedModel:
+    def train_model(self, partitions: DatasetSplitData) -> TrainedModel:
         if not self._search_enabled:
             return TrainedModel(self._pipeline_builder).fit(partitions.train.features, partitions.train.target)
 
@@ -213,12 +219,12 @@ class HousePriceRegressionTrainer(Trainer[Experiment]):
     def evaluate_model(self, model, data: FeaturesAndTarget) -> RegressionMetrics:
         return self._evaluator.evaluate(data.target, model.predict(data.features)).metrics
 
-    def evaluate_model_with_predictions(self, model, data: FeaturesAndTarget) -> RegressionEvaluation:
+    def evaluate_model_with_predictions(self, model, data: FeaturesAndTarget) -> RegressionEvaluationData:
         y_true = data.target
         y_pred = model.predict(data.features)
         return self._evaluator.evaluate(y_true, y_pred)
 
-    def save_model(self, model: TrainedModel, metadata: ModelMetadata) -> Path:
+    def save_model(self, model: TrainedModel, metadata: Metadata) -> Path:
         return self._model_repository.save(
             model.pipeline,
             self._settings.model_dir / self._settings.model_filename,

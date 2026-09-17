@@ -1,29 +1,29 @@
-﻿import csv
+import csv
 import logging
-from collections.abc import Callable, Collection, Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any, TypeVar
 
 import pandas as pd
 
+from ml_prediction.audit.data.audit_data import AuditData
+
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-def write_csv(
-        path: Path,
-        data: Iterable[Any],
-        fieldnames: Collection[str],
-        converter: Callable[[Any], dict[str, str]],
-) -> None:
+def write_csv(path: Path, data: Iterable[AuditData]) -> None:
+    data = list(data)
+    if not data:
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     write_header = not path.exists() or path.stat().st_size == 0
     with path.open("a", newline="", encoding="utf-8") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer = csv.DictWriter(csv_file, fieldnames=data[0].fields())
         if write_header:
             writer.writeheader()
-        for row in data:
-            writer.writerow(converter(row))
+        for value in data:
+            writer.writerow(value.to_dict())
 
 
 def read_csv(path: Path, converter: Callable[[dict[str, str]], T]) -> list[T]:

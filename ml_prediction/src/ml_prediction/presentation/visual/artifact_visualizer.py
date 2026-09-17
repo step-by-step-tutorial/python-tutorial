@@ -1,4 +1,4 @@
-﻿"""Visualization components for training results.
+"""Visualization components for training results.
 
 Image-producing operations belong in this module and remain separate from
 the text and logging concerns in ``ml_prediction.presentation``.
@@ -34,7 +34,8 @@ class ArtifactVisualizer:
             y_true,
             y_pred,
             experiment_id: str,
-            report_dir: Path,
+            audit_dir: Path,
+            output_path: Path | None = None,
     ) -> Path:
         """Save an actual-versus-predicted plot for an existing evaluation."""
         display = PredictionErrorDisplay.from_predictions(
@@ -44,7 +45,7 @@ class ArtifactVisualizer:
         )
         return cls.save_figure(
             display.figure_,
-            report_dir / experiment_id / "actual_vs_predicted.png",
+            output_path if output_path is not None else audit_dir / experiment_id / "actual_vs_predicted.png",
         )
 
     @classmethod
@@ -53,7 +54,8 @@ class ArtifactVisualizer:
             y_true,
             y_pred,
             experiment_id: str,
-            report_dir: Path,
+            audit_dir: Path,
+            output_path: Path | None = None,
     ) -> Path:
         """Save a residual-versus-predicted plot for an existing evaluation."""
         display = PredictionErrorDisplay.from_predictions(
@@ -63,7 +65,7 @@ class ArtifactVisualizer:
         )
         return cls.save_figure(
             display.figure_,
-            report_dir / experiment_id / "residual_vs_predicted.png",
+            output_path if output_path is not None else audit_dir / experiment_id / "residual_vs_predicted.png",
         )
 
     @classmethod
@@ -71,8 +73,9 @@ class ArtifactVisualizer:
             cls,
             fitted_model,
             experiment_id: str,
-            report_dir: Path,
+            audit_dir: Path,
             top_n: int = 20,
+            output_path: Path | None = None,
     ) -> Path | None:
         """Save the most important features when the fitted regressor provides them."""
         pipeline = getattr(fitted_model, "pipeline", fitted_model)
@@ -102,7 +105,7 @@ class ArtifactVisualizer:
         figure.tight_layout()
         return cls.save_figure(
             figure,
-            report_dir / experiment_id / "feature_importance.png",
+            output_path if output_path is not None else audit_dir / experiment_id / "feature_importance.png",
         )
 
     @staticmethod

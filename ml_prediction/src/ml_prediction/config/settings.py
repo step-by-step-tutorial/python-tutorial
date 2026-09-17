@@ -1,16 +1,13 @@
-﻿import os
+import os
 from pathlib import Path
 
 from ml_prediction.config.dataset_profiles import DATASET_PROFILES
-from ml_prediction.config.settings_types import TaskType
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.utils.type_converter import to_bool
 
 PROJECT_ROOT = os.getenv("PROJECT_ROOT", Path(__file__).resolve().parents[3])
-
-
-def _env_bool(name: str, default: bool = False) -> bool:
-    return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def get_settings(dataset_name: str) -> AppSettings:
@@ -30,7 +27,9 @@ def get_settings(dataset_name: str) -> AppSettings:
             bucket_name=os.getenv("ML_PREDICTION_DATALAKE_BUCKET_NAME", profile.data_lake_bucket),
             object_prefix=os.getenv("ML_PREDICTION_DATALAKE_PREFIX", profile.data_lake_prefix),
         ),
-        task_type=TaskType(os.getenv("ML_PREDICTION_TASK_TYPE", profile.task_type)),
+        task_type=ExperimentTaskType.value_of(
+            os.getenv("ML_PREDICTION_TASK_TYPE", profile.task_type.value),
+        ),
         model_type=os.getenv("ML_PREDICTION_MODEL_TYPE", "random_forest"),
         n_estimators=int(os.getenv("ML_PREDICTION_N_ESTIMATORS", "200")),
         n_jobs=int(os.getenv("ML_PREDICTION_N_JOBS", "-1")),
@@ -40,7 +39,34 @@ def get_settings(dataset_name: str) -> AppSettings:
         max_features=float(os.getenv("ML_PREDICTION_MAX_FEATURES", "1.0")),
         bootstrap=bool(os.getenv("ML_PREDICTION_BOOTSTRAP", "True")),
         dataset_source=DatasetSource(os.getenv("ML_PREDICTION_DATASET_SOURCE", DatasetSource.LOCAL)),
-        report_dir=Path(os.getenv("ML_PREDICTION_REPORT_DIR", str(PROJECT_ROOT / "reports"))),
+        audit_dir=Path(os.getenv("ML_PREDICTION_AUDIT_DIR", str(PROJECT_ROOT / "audit"))),
+        audit_filename_template=os.getenv(
+            "ML_PREDICTION_AUDIT_FILENAME_TEMPLATE",
+            "{dataset_name}_{operation}_{experiment_id}.csv",
+        ),
+        prediction_audit_filename_template=os.getenv(
+            "ML_PREDICTION_PREDICTION_AUDIT_FILENAME_TEMPLATE",
+            "{dataset_name}_prediction_{experiment_id}.csv",
+        ),
+        comparison_dirname=os.getenv("ML_PREDICTION_COMPARISON_DIRNAME", "comparison"),
+        actual_vs_predicted_filename=os.getenv(
+            "ML_PREDICTION_ACTUAL_VS_PREDICTED_FILENAME", "actual_vs_predicted.png",
+        ),
+        residual_vs_predicted_filename=os.getenv(
+            "ML_PREDICTION_RESIDUAL_VS_PREDICTED_FILENAME", "residual_vs_predicted.png",
+        ),
+        feature_importance_filename=os.getenv(
+            "ML_PREDICTION_FEATURE_IMPORTANCE_FILENAME", "feature_importance.png",
+        ),
+        validation_mae_filename=os.getenv(
+            "ML_PREDICTION_VALIDATION_MAE_FILENAME", "validation_mae_comparison.png",
+        ),
+        validation_rmse_filename=os.getenv(
+            "ML_PREDICTION_VALIDATION_RMSE_FILENAME", "validation_rmse_comparison.png",
+        ),
+        validation_r2_filename=os.getenv(
+            "ML_PREDICTION_VALIDATION_R2_FILENAME", "validation_r2_comparison.png",
+        ),
         dataset_name=dataset_name,
         dataset_filename=os.getenv("ML_PREDICTION_DATASET_FILENAME", profile.dataset_filename),
         model_filename=os.getenv("ML_PREDICTION_MODEL_FILENAME", profile.model_filename),
@@ -49,7 +75,7 @@ def get_settings(dataset_name: str) -> AppSettings:
         experiment_filename=os.getenv("ML_PREDICTION_EXPERIMENT_FILENAME", profile.experiment_filename),
         mlflow_tracking_uri=os.getenv("MLFLOW_TRACKING_URI", ""),
         mlflow_experiment_prefix=os.getenv("MLFLOW_EXPERIMENT_PREFIX", "ml_prediction"),
-        mlflow_enabled=_env_bool("MLFLOW_ENABLED"),
-        mlflow_required=_env_bool("MLFLOW_REQUIRED"),
-        search_enabled=_env_bool("ML_PREDICTION_SEARCH_ENABLED"),
+        mlflow_enabled=to_bool(os.getenv("MLFLOW_ENABLED")),
+        mlflow_required=to_bool(os.getenv("MLFLOW_REQUIRED")),
+        search_enabled=to_bool(os.getenv("ML_PREDICTION_SEARCH_ENABLED")),
     )

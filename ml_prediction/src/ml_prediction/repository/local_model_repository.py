@@ -1,18 +1,17 @@
-﻿import logging
+import logging
 from pathlib import Path
 from typing import Any
 
 import joblib
 
-from ml_prediction.audit.metadata_reader import MetadataReader
-from ml_prediction.audit.metadata_writer import MetadataWriter
-from ml_prediction.audit.model_metadata import ModelMetadata
+from ml_prediction.audit.metadata_service import MetadataService
+from ml_prediction.audit.data.metadata import Metadata
 
 logger = logging.getLogger(__name__)
 
 
 class LocalModelRepository:
-    def save(self, model: Any, path: Path, metadata: ModelMetadata | None = None) -> Path:
+    def save(self, model: Any, path: Path, metadata: Metadata | None = None) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(model, path)
         if metadata is not None:
@@ -24,10 +23,10 @@ class LocalModelRepository:
         logger.info(f"Loading model: path={path}")
         return joblib.load(path)
 
-    def save_metadata(self, metadata: ModelMetadata, path: Path) -> Path:
-        metadata_path = MetadataWriter().save(metadata, path)
+    def save_metadata(self, metadata: Metadata, path: Path) -> Path:
+        metadata_path = MetadataService().write(metadata, path)
         logger.info(f"Saved model metadata: path={metadata_path}")
         return metadata_path
 
-    def load_metadata(self, path: Path) -> ModelMetadata:
-        return MetadataReader().load(path)
+    def load_metadata(self, path: Path) -> Metadata:
+        return MetadataService().read(path)
