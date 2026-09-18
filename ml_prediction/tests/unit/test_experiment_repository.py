@@ -33,7 +33,7 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
     assert len(experiment_path.read_text().splitlines()) == 3
     with experiment_path.open(newline="") as history_file:
         rows = list(csv.DictReader(history_file))
-    assert list(rows[0]) == list(ExperimentData.fields())
+    assert list(rows[0]) == list(result.to_dict())
     assert rows[0]["model_parameters"] == json.dumps(
         {"bootstrap": True, "n_estimators": 200},
         sort_keys=True,

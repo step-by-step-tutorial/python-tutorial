@@ -25,7 +25,7 @@ class ExperimentData(AuditData):
     model_selection_score: float | None = None
     task_type: ExperimentTaskType = ExperimentTaskType.REGRESSION
 
-    def to_dict(self) -> dict[str, str | float]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
             "timestamp": self.timestamp.isoformat(),

@@ -19,9 +19,7 @@ class ExecutionLogService(DataService):
     def read(self, path: Path) -> list[ExecutionData]:
         return read_csv(path, ExecutionData.from_dict)
 
-    def write(self, data: AuditData, path: Path) -> None:
-        if not isinstance(data, PipelineStepData):
-            return
+    def write(self, data: PipelineStepData, path: Path) -> None:
         fields = data.to_dict()
         selected_path = fields.get("model_path")
         metric_values = fields.get("metrics")

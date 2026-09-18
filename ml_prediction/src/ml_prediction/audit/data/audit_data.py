@@ -2,8 +2,10 @@ from abc import ABC
 from dataclasses import asdict, fields as dataclass_fields
 from typing import Any, Self
 
+from ml_prediction.utils.dict_data import DictData
 
-class AuditData(ABC):
+
+class AuditData(DictData, ABC):
     @classmethod
     def fields(cls) -> tuple[str, ...]:
         return tuple(field.name for field in dataclass_fields(cls))

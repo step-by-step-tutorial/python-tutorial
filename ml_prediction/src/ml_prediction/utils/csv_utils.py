@@ -6,24 +6,24 @@ from typing import Any, TypeVar
 
 import pandas as pd
 
-from ml_prediction.audit.data.audit_data import AuditData
+from ml_prediction.utils.dict_data import DictData
+from ml_prediction.utils.data_validator_utils import is_blank
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-def write_csv(path: Path, data: Iterable[AuditData]) -> None:
-    data = list(data)
-    if not data:
+def write_csv(path: Path, data: Iterable[DictData]) -> None:
+    rows = [value.to_dict() for value in data]
+    if is_blank(rows):
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     write_header = not path.exists() or path.stat().st_size == 0
     with path.open("a", newline="", encoding="utf-8") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=data[0].fields())
+        writer = csv.DictWriter(csv_file, fieldnames=rows[0].keys())
         if write_header:
             writer.writeheader()
-        for value in data:
-            writer.writerow(value.to_dict())
+        writer.writerows(rows)
 
 
 def read_csv(path: Path, converter: Callable[[dict[str, str]], T]) -> list[T]:
