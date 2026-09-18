@@ -11,8 +11,7 @@ class ExperimentService(DataService):
     def read(self, path: Path) -> list[ExperimentData]:
         return read_csv(path, ExperimentData.from_row)
 
-    def write(self, data: AuditData, path: Path) -> AuditData | None:
+    def write(self, data: AuditData, path: Path) -> None:
         if not isinstance(data, ExperimentAuditData):
-            return None
+            return
         write_csv(path, [data.experiment])
-        return data

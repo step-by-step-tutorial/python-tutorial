@@ -29,6 +29,7 @@ from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
 from ml_prediction.audit.audit_service import AuditService
+from ml_prediction.presentation.visualizer import VisualizationFacade
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.trained_model import TrainedModel
@@ -49,6 +50,7 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
         self._dataset = dataset
         self._feature_model = HouseFeatureModel()
         self._audit_service = AuditService(dataset.dataset_name)
+        self._visualization_facade = VisualizationFacade(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
         self._pipeline_builder = RegressorPipelineBuilder(self._feature_model, RegressorBuilder(dataset.dataset_name))
         self._evaluator = RegressionEvaluator()
@@ -178,7 +180,7 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
             model_selection_metric="mean_absolute_error" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        self._audit_service.write(ExperimentAuditData(
+        audit_data = ExperimentAuditData(
             experiment=result,
             model=trained_model,
             evaluation=final_test_evaluation,
@@ -187,7 +189,8 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
                 **{f"validation_{key}": float(value) for key, value in asdict(validation_metrics).items()},
                 **{f"test_{key}": float(value) for key, value in asdict(final_test_evaluation.metrics).items()},
             },
-        ))
+        )
+        self._audit_service.write(self._visualization_facade.visualize(audit_data))
         return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:

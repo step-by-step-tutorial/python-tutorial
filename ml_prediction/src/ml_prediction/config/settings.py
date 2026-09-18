@@ -75,6 +75,7 @@ def get_settings(dataset_name: str) -> AppSettings:
         experiment_filename=os.getenv("ML_PREDICTION_EXPERIMENT_FILENAME", profile.experiment_filename),
         mlflow_tracking_uri=os.getenv("MLFLOW_TRACKING_URI", ""),
         mlflow_experiment_prefix=os.getenv("MLFLOW_EXPERIMENT_PREFIX", "ml_prediction"),
+        experiment_enabled=to_bool(os.getenv("EXPERIMENT_ENABLED"), default=True),
         mlflow_enabled=to_bool(os.getenv("MLFLOW_ENABLED")),
         mlflow_required=to_bool(os.getenv("MLFLOW_REQUIRED")),
         search_enabled=to_bool(os.getenv("ML_PREDICTION_SEARCH_ENABLED")),

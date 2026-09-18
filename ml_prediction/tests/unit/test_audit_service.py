@@ -43,13 +43,10 @@ def test_audit_service_writes_data_to_services(tmp_path: Path, mocker) -> None:
     report.write.return_value = None
     writer = mocker.Mock()
     writer.write.return_value = None
-    visual = mocker.Mock()
-    visual.write.return_value = None
     tracker = mocker.Mock()
     tracker.write.return_value = None
-    mocker.patch("ml_prediction.audit.audit_service.AuditLogService", return_value=report)
+    mocker.patch("ml_prediction.audit.audit_service.ExecutionLogService", return_value=report)
     mocker.patch("ml_prediction.audit.audit_service.ExperimentService", return_value=writer)
-    mocker.patch("ml_prediction.audit.audit_service.Visualizer", return_value=visual)
     mocker.patch("ml_prediction.audit.audit_service.MlflowService", return_value=tracker)
     audit_service = AuditService("house")
     audit_service.write(MetricsData("validation", RegressionMetrics(1.0, 2.0, 0.5)))
@@ -67,7 +64,6 @@ def test_audit_service_writes_data_to_services(tmp_path: Path, mocker) -> None:
     assert any(call.args and hasattr(call.args[0], "experiment")
                and call.args[0].experiment.run_id == data.experiment.run_id
                for call in writer.write.call_args_list)
-    visual.write.assert_called()
     assert any(call.args and hasattr(call.args[0], "experiment")
                and call.args[0].experiment.run_id == data.experiment.run_id
                for call in tracker.write.call_args_list)

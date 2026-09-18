@@ -29,6 +29,7 @@ from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.classification_evaluator import ClassificationEvaluator
 from ml_prediction.audit.audit_service import AuditService
+from ml_prediction.presentation.visualizer import VisualizationFacade
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
 from ml_prediction.model.trained_model import TrainedModel
@@ -53,6 +54,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
         self._dataset_splitter = DatasetSplitter(dataset.dataset_name)
         self._model_repository = LocalModelRepository()
         self._audit_service = AuditService(dataset.dataset_name)
+        self._visualization_facade = VisualizationFacade(dataset.dataset_name)
         self._search_enabled = self._settings.search_enabled
         self._model_selector = ClassificationModelSelector()
         self._selected_model_parameters: dict[str, object] | None = None
@@ -129,7 +131,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
             model_selection_metric="f1_weighted" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        self._audit_service.write(ExperimentAuditData(
+        audit_data = ExperimentAuditData(
             experiment=result,
             model=model,
             evaluation=final,
@@ -138,7 +140,8 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
                 **{f"validation_{key}": float(value) for key, value in asdict(validation).items()},
                 **{f"test_{key}": float(value) for key, value in asdict(final.metrics).items()},
             },
-        ))
+        )
+        self._audit_service.write(self._visualization_facade.visualize(audit_data))
         return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:

@@ -7,7 +7,7 @@ from ml_prediction.audit.pipeline_step.dataset_ready_data import DatasetReadyDat
 from ml_prediction.audit.pipeline_step.model_loaded_data import ModelLoadedData
 from ml_prediction.audit.pipeline_step.prediction_completed_data import PredictionCompletedData
 from ml_prediction.audit.pipeline_step.predictions_generated_data import PredictionsGeneratedData
-from ml_prediction.audit.audit_log_service import AuditLogService
+from ml_prediction.audit.execution_log_service import ExecutionLogService
 from ml_prediction.audit.data.audit_operation import AuditOperation
 from ml_prediction.config.settings import get_settings
 from ml_prediction.data_model.prediction import Prediction
@@ -27,14 +27,14 @@ class PredictionService:
         dataframe, dataset_path = self.dataset.download()
 
         audit_path = self.settings.prediction_audit_path(IdGenerator.generate())
-        audit_log_service = AuditLogService(self.settings.dataset_name, AuditOperation.PREDICTION)
-        audit_log_service.write(DatasetReadyData(dataset_path), audit_path)
-        audit_log_service.write(ModelLoadedData(model_path), audit_path)
+        execution_log_service = ExecutionLogService(self.settings.dataset_name, AuditOperation.PREDICTION)
+        execution_log_service.write(DatasetReadyData(dataset_path), audit_path)
+        execution_log_service.write(ModelLoadedData(model_path), audit_path)
 
-        audit_log_service.write(DatasetLoadedData(len(dataframe), dataset_path), audit_path)
+        execution_log_service.write(DatasetLoadedData(len(dataframe), dataset_path), audit_path)
         predictions = self.predictor.predict(dataframe)
-        audit_log_service.write(PredictionsGeneratedData(len(predictions), len(dataframe.columns)), audit_path)
-        audit_log_service.write(PredictionCompletedData(audit_path), audit_path)
+        execution_log_service.write(PredictionsGeneratedData(len(predictions), len(dataframe.columns)), audit_path)
+        execution_log_service.write(PredictionCompletedData(audit_path), audit_path)
 
         return Prediction(
             dataframe,
