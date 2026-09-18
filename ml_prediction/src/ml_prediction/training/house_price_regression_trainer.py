@@ -1,4 +1,5 @@
 import logging
+from dataclasses import asdict
 from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 from datetime import datetime, timezone
 from pathlib import Path
@@ -182,6 +183,10 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
             model=trained_model,
             evaluation=final_test_evaluation,
             audit_dir=self._settings.audit_dir,
+            metrics={
+                **{f"validation_{key}": float(value) for key, value in asdict(validation_metrics).items()},
+                **{f"test_{key}": float(value) for key, value in asdict(final_test_evaluation.metrics).items()},
+            },
         ))
         return result
 

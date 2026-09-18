@@ -1,4 +1,5 @@
 import logging
+from dataclasses import asdict
 from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 from datetime import datetime, timezone
 from pathlib import Path
@@ -133,6 +134,10 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
             model=model,
             evaluation=final,
             audit_dir=self._settings.audit_dir,
+            metrics={
+                **{f"validation_{key}": float(value) for key, value in asdict(validation).items()},
+                **{f"test_{key}": float(value) for key, value in asdict(final.metrics).items()},
+            },
         ))
         return result
 

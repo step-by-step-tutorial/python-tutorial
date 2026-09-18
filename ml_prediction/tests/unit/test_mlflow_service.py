@@ -2,8 +2,6 @@ from pathlib import Path
 from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
 from datetime import datetime, timezone
 
-from ml_prediction.audit.data.metrics_data import MetricsData
-from ml_prediction.audit.data.trained_model_data import TrainedModelData
 from ml_prediction.audit.data.experiment_data import ExperimentData
 from ml_prediction.audit.mlflow_service import MlflowService
 from ml_prediction.data_model.app_settings import AppSettings
@@ -25,8 +23,6 @@ def test_tracker_publishes_parameters_and_metrics(mocker) -> None:
     mlflow_service = MlflowService(_settings())
 
     path = Path("audit.log")
-    mlflow_service.write(MetricsData("validation", RegressionMetrics(1.0, 2.0, 0.5)), path)
-    mlflow_service.write(TrainedModelData(mocker.Mock()), path)
     mlflow_service.write(ExperimentAuditData(experiment=ExperimentData(
         run_id="experiment-1", timestamp=datetime.now(timezone.utc),
         dataset_name="house", model_type="random_forest",
@@ -34,7 +30,14 @@ def test_tracker_publishes_parameters_and_metrics(mocker) -> None:
         validation_metrics=RegressionMetrics(1.0, 2.0, 0.5),
         test_metrics=RegressionMetrics(1.0, 2.0, 0.5),
         model_path=Path("model.joblib"), audit_path=Path("report.csv"),
-    )), path)
+    ), metrics={
+        "validation_mean_absolute_error": 1.0,
+        "validation_root_mean_squared_error": 2.0,
+        "validation_r2_score": 0.5,
+        "test_mean_absolute_error": 1.0,
+        "test_root_mean_squared_error": 2.0,
+        "test_r2_score": 0.5,
+    }), path)
 
     mlflow.set_tracking_uri.assert_called_once_with("http://mlflow:5000")
     mlflow.set_experiment.assert_called_once_with("ml_prediction/house")
@@ -44,5 +47,8 @@ def test_tracker_publishes_parameters_and_metrics(mocker) -> None:
         "validation_mean_absolute_error": 1.0,
         "validation_root_mean_squared_error": 2.0,
         "validation_r2_score": 0.5,
+        "test_mean_absolute_error": 1.0,
+        "test_root_mean_squared_error": 2.0,
+        "test_r2_score": 0.5,
     })
     mlflow.end_run.assert_called_once_with(status="FINISHED")

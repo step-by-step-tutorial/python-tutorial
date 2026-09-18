@@ -96,7 +96,7 @@ python -m ml_prediction.main online_shopping predict
 cd ./ml_prediction
 rm -rf ./src/*.egg-info
 rm -rf ./models/*
-rm -rf ./reports/*
+rm -rf ./audit/*
 rm -rf ./mlruns/*
 rm ./mlflow.db
 ```

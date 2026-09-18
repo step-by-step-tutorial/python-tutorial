@@ -30,4 +30,6 @@ class AuditService:
 
     def write(self, data: AuditData):
         for service, path in self._services:
-            service.write(data, path)
+            result = service.write(data, path)
+            if isinstance(result, AuditData):
+                data = result

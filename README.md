@@ -119,7 +119,7 @@ rm -rf ./data_platform/src/*.egg-info
 rm -rf ./data_platform/.coverage
 rm -rf ./ml_prediction/src/*.egg-info
 rm -rf ./ml_prediction/models/*
-rm -rf ./ml_prediction/reports/*
+rm -rf ./ml_prediction/audit/*
 rm ./ml_prediction/mlflow.db
 rm -rf ./test_data/src/*.egg-info
 rm -rf ./test_data/output_test/*

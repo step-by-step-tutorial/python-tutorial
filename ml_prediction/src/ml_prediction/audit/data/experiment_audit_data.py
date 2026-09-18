@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from ml_prediction.audit.data.artifact_data import ArtifactData
@@ -14,5 +14,5 @@ class ExperimentAuditData(AuditData):
     model: object | None = None
     evaluation: RegressionEvaluationData | ClassificationEvaluationData | None = None
     audit_dir: Path | None = None
-    metrics: Mapping[str, float] | None = None
+    metrics: Mapping[str, float] = field(default_factory=dict)
     artifacts: tuple[ArtifactData, ...] = ()
