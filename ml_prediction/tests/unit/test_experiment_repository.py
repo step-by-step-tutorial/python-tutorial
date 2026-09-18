@@ -1,5 +1,5 @@
 import csv
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -25,8 +25,8 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
         audit_path=tmp_path / "reports" / "training.csv",
     )
 
-    writer.write(ExperimentAuditData(experiment=result), experiment_path)
-    writer.write(ExperimentAuditData(experiment=result), experiment_path)
+    writer.write(TrainingAuditData(experiment=result), experiment_path)
+    writer.write(TrainingAuditData(experiment=result), experiment_path)
 
     assert len(reader.read(experiment_path)) == 2
     assert reader.read(experiment_path)[0] == result

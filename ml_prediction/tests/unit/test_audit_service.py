@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from pathlib import Path
 
 from ml_prediction.audit.data.experiment_data import ExperimentData
 from ml_prediction.audit.data.artifact_data import ArtifactData
+from ml_prediction.audit.data.artifact_category import ArtifactCategory
 from ml_prediction.audit.data.metrics_data import MetricsData
 from ml_prediction.audit.data.trained_model_data import TrainedModelData
 from ml_prediction.data_model.app_settings import AppSettings
@@ -50,16 +51,16 @@ def test_audit_service_writes_data_to_services(tmp_path: Path, mocker) -> None:
     mocker.patch("ml_prediction.audit.audit_service.MlflowService", return_value=tracker)
     audit_service = AuditService("house")
     audit_service.write(MetricsData("validation", RegressionMetrics(1.0, 2.0, 0.5)))
-    audit_service.write(ArtifactData(tmp_path / "dataset.csv", "dataset"))
+    audit_service.write(ArtifactData(tmp_path / "dataset.csv", ArtifactCategory.DATASET))
     audit_service.write(TrainedModelData(mocker.Mock()))
 
-    data = ExperimentAuditData(
+    data = TrainingAuditData(
         experiment=_experiment(tmp_path), model=mocker.Mock(), evaluation=mocker.Mock(),
-        audit_dir=settings.audit_dir,
+        path=settings.audit_dir,
     )
     audit_service.write(data)
 
-    assert any(call.args and isinstance(call.args[0], ExperimentAuditData)
+    assert any(call.args and isinstance(call.args[0], TrainingAuditData)
                for call in report.write.call_args_list)
     assert any(call.args and hasattr(call.args[0], "experiment")
                and call.args[0].experiment.run_id == data.experiment.run_id

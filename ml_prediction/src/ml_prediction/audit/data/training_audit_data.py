@@ -9,10 +9,10 @@ from ml_prediction.data_model.classification_evaluation_data import Classificati
 from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
 
 @dataclass(frozen=True)
-class ExperimentAuditData(AuditData):
+class TrainingAuditData(AuditData):
     experiment: ExperimentData | None = None
     model: object | None = None
     evaluation: RegressionEvaluationData | ClassificationEvaluationData | None = None
-    audit_dir: Path | None = None
+    path: Path | None = None
     metrics: Mapping[str, float] = field(default_factory=dict)
     artifacts: tuple[ArtifactData, ...] = ()

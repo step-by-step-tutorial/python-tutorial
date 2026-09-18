@@ -33,7 +33,7 @@ class AppSettings:
     max_features: int | float | str | None = 1.0
     bootstrap: bool = True
     dataset_source: DatasetSource = DatasetSource.LOCAL
-    audit_dir: Path = PROJECT_ROOT / "audit"
+    audit_dir: Path = PROJECT_ROOT / "audit_log"
     audit_filename_template: str = "{dataset_name}_{operation}_{run_id}.csv"
     prediction_audit_filename_template: str = "{dataset_name}_prediction_{run_id}.csv"
     comparison_dirname: str = "comparison"

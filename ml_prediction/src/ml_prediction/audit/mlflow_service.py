@@ -34,6 +34,6 @@ class MlflowService(DataService):
         mlflow.log_metrics({key: float(value) for key, value in data.metrics.items()})
         mlflow.sklearn.log_model(data.model, name="model", serialization_format="cloudpickle")
         for artifact in data.artifacts:
-            mlflow.log_artifact(str(artifact.path), artifact_path=artifact.category)
+            mlflow.log_artifact(str(artifact.path), artifact_path=artifact.category.value)
 
         mlflow.end_run(status="FINISHED")

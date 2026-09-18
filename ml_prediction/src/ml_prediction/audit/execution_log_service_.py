@@ -4,7 +4,7 @@ from pathlib import Path
 from ml_prediction.audit.data.audit_data import AuditData
 from ml_prediction.audit.data.audit_operation import AuditOperation
 from ml_prediction.audit.pipeline_step.pipeline_step_data import PipelineStepData
-from ml_prediction.audit.data.execution_log import ExecutionLog
+from ml_prediction.audit.data.execution_data import ExecutionData
 from ml_prediction.audit.data_service import DataService
 from ml_prediction.utils.csv_utils import read_csv, write_csv
 from ml_prediction.utils.id_generator import IdGenerator
@@ -16,8 +16,8 @@ class ExecutionLogService(DataService):
         self._operation = operation
         self._run_id = run_id
 
-    def read(self, path: Path) -> list[ExecutionLog]:
-        return read_csv(path, ExecutionLog.from_dict)
+    def read(self, path: Path) -> list[ExecutionData]:
+        return read_csv(path, ExecutionData.from_dict)
 
     def write(self, data: AuditData, path: Path) -> None:
         if not isinstance(data, PipelineStepData):
@@ -25,7 +25,7 @@ class ExecutionLogService(DataService):
         fields = data.to_dict()
         selected_path = fields.get("model_path")
         metric_values = fields.get("metrics")
-        execution_log = ExecutionLog(
+        execution_data = ExecutionData(
             datetime.now(timezone.utc),
             self._run_id,
             self._dataset_name,
@@ -39,4 +39,4 @@ class ExecutionLogService(DataService):
             metric_values,
             fields.get("details", ""),
         )
-        write_csv(path, [execution_log])
+        write_csv(path, [execution_data])

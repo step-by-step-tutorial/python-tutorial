@@ -4,7 +4,7 @@ from pathlib import Path
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
 from ml_prediction.audit.data.experiment_data import ExperimentData
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 
 
 def experiment(run_id: str, mae: float, rmse: float, r2: float) -> ExperimentData:
@@ -31,7 +31,7 @@ def test_comparison_service_returns_best_experiment_for_each_validation_metric(t
         experiment("third", 2.0, 1.0, 0.9),
     ]
     for result in experiments:
-        repository.write(ExperimentAuditData(experiment=result), service.experiment_path)
+        repository.write(TrainingAuditData(experiment=result), service.experiment_path)
 
     assert service.best_by_validation_mae() == experiments[1]
     assert service.best_by_validation_rmse() == experiments[2]

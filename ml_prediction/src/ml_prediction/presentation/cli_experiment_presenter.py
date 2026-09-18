@@ -1,5 +1,5 @@
 import logging
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 
 from ml_prediction.audit.data.experiment_data import ExperimentData
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class CliExperimentPresenter(Presenter):
-    def present(self, data: ExperimentAuditData) -> None:
+    def present(self, data: TrainingAuditData) -> None:
         output: ExperimentData | None = data.experiment
         if output is None:
             return

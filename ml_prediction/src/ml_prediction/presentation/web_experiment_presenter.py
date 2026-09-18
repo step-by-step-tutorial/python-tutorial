@@ -1,13 +1,13 @@
 from typing import Any
 
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from ml_prediction.presentation.presenter import Presenter
 
 
 class WebExperimentPresenter(Presenter):
     """Produces a JSON-ready representation for a web or API adapter."""
 
-    def present(self, data: ExperimentAuditData) -> dict[str, Any]:
+    def present(self, data: TrainingAuditData) -> dict[str, Any]:
         if data.experiment is None:
             return {}
         return {

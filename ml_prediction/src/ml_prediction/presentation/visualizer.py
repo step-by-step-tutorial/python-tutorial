@@ -3,7 +3,7 @@ from typing import Any
 
 from ml_prediction.audit.data.artifact_data import ArtifactData
 from ml_prediction.presentation.cli_experiment_presenter import CliExperimentPresenter
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from ml_prediction.presentation.presenter import Presenter
 from ml_prediction.presentation.visualization_service import VisualizationService
 
@@ -15,7 +15,7 @@ class VisualizationFacade:
             CliExperimentPresenter(),
         )
 
-    def visualize(self, data: ExperimentAuditData) -> ExperimentAuditData:
+    def visualize(self, data: TrainingAuditData) -> TrainingAuditData:
         artifacts: list[ArtifactData] = []
         for service in self._services:
             result: Any = service.present(data)

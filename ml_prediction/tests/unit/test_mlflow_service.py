@@ -1,5 +1,5 @@
 from pathlib import Path
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from datetime import datetime, timezone
 
 from ml_prediction.audit.data.experiment_data import ExperimentData
@@ -23,7 +23,7 @@ def test_tracker_publishes_parameters_and_metrics(mocker) -> None:
     mlflow_service = MlflowService(_settings())
 
     path = Path("audit.log")
-    mlflow_service.write(ExperimentAuditData(experiment=ExperimentData(
+    mlflow_service.write(TrainingAuditData(experiment=ExperimentData(
         run_id="experiment-1", timestamp=datetime.now(timezone.utc),
         dataset_name="house", model_type="random_forest",
         model_parameters={"n_estimators": 200},

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from pathlib import Path
 
 from ml_prediction.audit.data.experiment_data import ExperimentData
@@ -38,8 +38,8 @@ def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path, mo
     experiment_path = tmp_path / "experiments.csv"
     visualizer._experiment_path = experiment_path
     writer = ExperimentService()
-    writer.write(ExperimentAuditData(experiment=make_experiment("experiment-123456", "random_forest")), experiment_path)
-    writer.write(ExperimentAuditData(experiment=make_experiment("experiment-abcdef", "extra_trees")), experiment_path)
+    writer.write(TrainingAuditData(experiment=make_experiment("experiment-123456", "random_forest")), experiment_path)
+    writer.write(TrainingAuditData(experiment=make_experiment("experiment-abcdef", "extra_trees")), experiment_path)
 
     mae_path = visualizer.save_validation_mae_comparison()
     rmse_path = visualizer.save_validation_rmse_comparison()

@@ -1,8 +1,9 @@
 from pathlib import Path
 
 from ml_prediction.audit.data.artifact_data import ArtifactData
+from ml_prediction.audit.data.artifact_category import ArtifactCategory
 from ml_prediction.config.settings import get_settings
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
 from ml_prediction.presentation.presenter import Presenter
 from ml_prediction.presentation.visual.artifact_visualizer import ArtifactVisualizer
@@ -16,10 +17,10 @@ class VisualizationService(Presenter):
         self._artifact_visualizer = ArtifactVisualizer()
         self._experiment_visualizer = ExperimentVisualizer(dataset_name)
 
-    def present(self, output: ExperimentAuditData) -> tuple[ArtifactData, ...]:
-        if output.model is None or output.evaluation is None or output.experiment is None or output.audit_dir is None:
+    def present(self, output: TrainingAuditData) -> tuple[ArtifactData, ...]:
+        if output.model is None or output.evaluation is None or output.experiment is None or output.path is None:
             return ()
-        return self.publish(output.model, output.evaluation, output.experiment.run_id, output.audit_dir)
+        return self.publish(output.model, output.evaluation, output.experiment.run_id, output.path)
 
     def publish(self, model, evaluation, run_id: str, audit_dir: Path) -> tuple[ArtifactData, ...]:
         artifacts = []
@@ -48,4 +49,4 @@ class VisualizationService(Presenter):
             ])
         artifact_dir = audit_dir / run_id
         artifacts.extend(artifact_dir.glob("*.png"))
-        return tuple(ArtifactData(path, "plots") for path in {path for path in artifacts if isinstance(path, Path)})
+        return tuple(ArtifactData(path, ArtifactCategory.PLOTS) for path in {path for path in artifacts if isinstance(path, Path)})

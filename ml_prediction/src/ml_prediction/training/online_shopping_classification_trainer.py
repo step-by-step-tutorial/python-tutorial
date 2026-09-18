@@ -1,6 +1,6 @@
 import logging
 from dataclasses import asdict
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -15,6 +15,7 @@ from ml_prediction.audit.pipeline_step.model_saved_data import ModelSavedData
 from ml_prediction.audit.pipeline_step.model_training_data import ModelTrainingData
 from ml_prediction.audit.pipeline_step.target_extracted_data import TargetExtractedData
 from ml_prediction.audit.data.artifact_data import ArtifactData
+from ml_prediction.audit.data.artifact_category import ArtifactCategory
 from ml_prediction.audit.data.metrics_data import MetricsData
 from ml_prediction.audit.data.trained_model_data import TrainedModelData
 from ml_prediction.audit.data.experiment_data import ExperimentData
@@ -69,7 +70,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
         dataframe, dataset_path = self.download_dataset()
         configured_parameters = self._settings.model_parameters.as_dict()
         run_id = self._audit_service.run_id
-        self._audit_service.write(ArtifactData(dataset_path, "dataset"))
+        self._audit_service.write(ArtifactData(dataset_path, ArtifactCategory.DATASET))
         self._audit_service.write(DatasetDownloadedData(dataset_path))
         prepared = self.build_features_and_target(dataframe)
         self._audit_service.write(DatasetPreparedData(len(prepared.features), self._settings.target_column))
@@ -120,7 +121,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
         )
         model_path = self.save_model(model, metadata)
         self._audit_service.write(TrainedModelData(model.pipeline))
-        self._audit_service.write(ArtifactData(model_path.with_suffix(".metadata.json"), "model"))
+        self._audit_service.write(ArtifactData(model_path.with_suffix(".metadata.json"), ArtifactCategory.MODEL))
         self._audit_service.write(ModelSavedData(model_path))
         result = ExperimentData(
             run_id=run_id, timestamp=timestamp, dataset_name=self._settings.dataset_name,
@@ -131,11 +132,11 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
             model_selection_metric="f1_weighted" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        audit_data = ExperimentAuditData(
+        audit_data = TrainingAuditData(
             experiment=result,
             model=model,
             evaluation=final,
-            audit_dir=self._settings.audit_dir,
+            path=self._settings.audit_dir,
             metrics={
                 **{f"validation_{key}": float(value) for key, value in asdict(validation).items()},
                 **{f"test_{key}": float(value) for key, value in asdict(final.metrics).items()},

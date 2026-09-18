@@ -39,7 +39,7 @@ def get_settings(dataset_name: str) -> AppSettings:
         max_features=float(os.getenv("ML_PREDICTION_MAX_FEATURES", "1.0")),
         bootstrap=bool(os.getenv("ML_PREDICTION_BOOTSTRAP", "True")),
         dataset_source=DatasetSource(os.getenv("ML_PREDICTION_DATASET_SOURCE", DatasetSource.LOCAL)),
-        audit_dir=Path(os.getenv("ML_PREDICTION_AUDIT_DIR", str(PROJECT_ROOT / "audit"))),
+        audit_dir=Path(os.getenv("ML_PREDICTION_AUDIT_DIR", str(PROJECT_ROOT / "audit_log"))),
         audit_filename_template=os.getenv(
             "ML_PREDICTION_AUDIT_FILENAME_TEMPLATE",
             "{dataset_name}_{operation}_{run_id}.csv",

@@ -1,5 +1,5 @@
 from pathlib import Path
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from unittest.mock import call
 
 import pandas as pd
@@ -129,7 +129,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         call(model, partitions.validation),
     ]
     trainer.save_model.assert_called_once()
-    assert any(call_args.args and isinstance(call_args.args[0], ExperimentAuditData) for call_args in audit_service.write.call_args_list)
+    assert any(call_args.args and isinstance(call_args.args[0], TrainingAuditData) for call_args in audit_service.write.call_args_list)
     assert result.audit_path is None
 
 

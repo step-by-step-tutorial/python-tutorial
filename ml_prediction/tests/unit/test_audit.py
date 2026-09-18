@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from pathlib import Path
 
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
@@ -25,7 +25,7 @@ def test_classification_experiment_round_trip(tmp_path: Path, mocker) -> None:
     )
 
     experiment_service = ExperimentService()
-    experiment_service.write(ExperimentAuditData(experiment=experiment), experiment_path)
+    experiment_service.write(TrainingAuditData(experiment=experiment), experiment_path)
     loaded = experiment_service.read(experiment_path)[0]
 
     assert loaded == experiment

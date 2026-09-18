@@ -1,6 +1,6 @@
 import logging
 from dataclasses import asdict
-from ml_prediction.audit.data.experiment_audit_data import ExperimentAuditData
+from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -15,6 +15,7 @@ from ml_prediction.audit.pipeline_step.model_saved_data import ModelSavedData
 from ml_prediction.audit.pipeline_step.model_training_data import ModelTrainingData
 from ml_prediction.audit.pipeline_step.target_extracted_data import TargetExtractedData
 from ml_prediction.audit.data.artifact_data import ArtifactData
+from ml_prediction.audit.data.artifact_category import ArtifactCategory
 from ml_prediction.audit.data.metrics_data import MetricsData
 from ml_prediction.audit.data.trained_model_data import TrainedModelData
 from ml_prediction.audit.data.experiment_data import ExperimentData
@@ -76,7 +77,7 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
         # Dataset preparation
         dataframe, dataset_path = self.download_dataset()
         run_id = self._audit_service.run_id
-        self._audit_service.write(ArtifactData(dataset_path, "dataset"))
+        self._audit_service.write(ArtifactData(dataset_path, ArtifactCategory.DATASET))
         self._audit_service.write(DatasetDownloadedData(dataset_path))
 
         # Feature engineering
@@ -162,7 +163,7 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
         )
         model_path = self.save_model(trained_model, metadata)
         self._audit_service.write(TrainedModelData(trained_model.pipeline))
-        self._audit_service.write(ArtifactData(model_path.with_suffix(".metadata.json"), "model"))
+        self._audit_service.write(ArtifactData(model_path.with_suffix(".metadata.json"), ArtifactCategory.MODEL))
         self._audit_service.write(ModelSavedData(model_path))
 
         # Experiments, visualizations, and monitoring
@@ -180,11 +181,11 @@ class HousePriceRegressionTrainer(Trainer[ExperimentData]):
             model_selection_metric="mean_absolute_error" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        audit_data = ExperimentAuditData(
+        audit_data = TrainingAuditData(
             experiment=result,
             model=trained_model,
             evaluation=final_test_evaluation,
-            audit_dir=self._settings.audit_dir,
+            path=self._settings.audit_dir,
             metrics={
                 **{f"validation_{key}": float(value) for key, value in asdict(validation_metrics).items()},
                 **{f"test_{key}": float(value) for key, value in asdict(final_test_evaluation.metrics).items()},
