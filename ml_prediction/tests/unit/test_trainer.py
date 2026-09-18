@@ -85,6 +85,10 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         "ml_prediction.training.house_price_regression_trainer.AuditService",
         return_value=audit_service,
     )
+    visualization_facade = mocker.patch(
+        "ml_prediction.training.house_price_regression_trainer.VisualizationFacade",
+    ).return_value
+    visualization_facade.visualize.side_effect = lambda data: data
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
     trainer = HousePriceRegressionTrainer(dataset)
     dataset_path = tmp_path / "data" / "house.csv"
