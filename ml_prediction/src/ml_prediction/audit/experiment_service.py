@@ -14,4 +14,7 @@ class ExperimentService(DataService):
         return read_csv(path, ExperimentData.from_row)
 
     def write(self, data: TrainingAuditData, path: Path) -> None:
-        write_csv(path, [data.experiment])
+        experiment = data.experiment
+        if is_none(experiment):
+            return
+        write_csv(path, [cast(ExperimentData, experiment)])

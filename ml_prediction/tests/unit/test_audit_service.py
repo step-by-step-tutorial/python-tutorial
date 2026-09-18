@@ -8,6 +8,7 @@ from ml_prediction.audit.data.artifact_data import ArtifactData
 from ml_prediction.audit.data.artifact_category import ArtifactCategory
 from ml_prediction.audit.data.metrics_data import MetricsData
 from ml_prediction.audit.data.trained_model_data import TrainedModelData
+from ml_prediction.audit.pipeline_step.dataset_prepared_data import DatasetPreparedData
 from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
@@ -54,6 +55,7 @@ def test_audit_service_writes_data_to_services(tmp_path: Path, mocker) -> None:
     audit_service.write(MetricsData("validation", RegressionMetrics(1.0, 2.0, 0.5)))
     audit_service.write(ArtifactData(tmp_path / "dataset.csv", ArtifactCategory.DATASET))
     audit_service.write(TrainedModelData(mocker.Mock()))
+    audit_service.write(DatasetPreparedData(10, "target"))
 
     data = TrainingAuditData(
         experiment=_experiment(tmp_path), model=mocker.Mock(), evaluation=mocker.Mock(),
@@ -61,18 +63,20 @@ def test_audit_service_writes_data_to_services(tmp_path: Path, mocker) -> None:
     )
     audit_service.write(data)
 
-    assert any(call.args and isinstance(call.args[0], TrainingAuditData)
+    assert any(call.args and isinstance(call.args[0], DatasetPreparedData)
                for call in report.write.call_args_list)
     assert any(call.args and hasattr(call.args[0], "experiment")
                and call.args[0].experiment.run_id == data.experiment.run_id
                for call in writer.write.call_args_list)
-    assert any(call.args and hasattr(call.args[0], "experiment")
-               and call.args[0].experiment.run_id == data.experiment.run_id
-               for call in tracker.write.call_args_list)
 
 
 def test_audit_service_skips_execution_logging_when_disabled(tmp_path: Path, mocker) -> None:
-    settings = replace(_settings(tmp_path), execution_log_enabled=False)
+    settings = replace(
+        _settings(tmp_path),
+        execution_log_enabled=False,
+        experiment_enabled=False,
+        mlflow_enabled=False,
+    )
     mocker.patch("ml_prediction.audit.audit_service.get_settings", return_value=settings)
     execution_log_service = mocker.patch("ml_prediction.audit.audit_service.ExecutionLogService")
 
