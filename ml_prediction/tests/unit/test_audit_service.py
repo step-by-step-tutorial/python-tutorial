@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from dataclasses import replace
 from ml_prediction.audit.data.training_audit_data import TrainingAuditData
 from pathlib import Path
 
@@ -68,6 +69,16 @@ def test_audit_service_writes_data_to_services(tmp_path: Path, mocker) -> None:
     assert any(call.args and hasattr(call.args[0], "experiment")
                and call.args[0].experiment.run_id == data.experiment.run_id
                for call in tracker.write.call_args_list)
+
+
+def test_audit_service_skips_execution_logging_when_disabled(tmp_path: Path, mocker) -> None:
+    settings = replace(_settings(tmp_path), execution_log_enabled=False)
+    mocker.patch("ml_prediction.audit.audit_service.get_settings", return_value=settings)
+    execution_log_service = mocker.patch("ml_prediction.audit.audit_service.ExecutionLogService")
+
+    AuditService("house")
+
+    execution_log_service.assert_not_called()
 
 
 def test_visualization_service_returns_artifacts_without_tracking(tmp_path: Path, mocker) -> None:

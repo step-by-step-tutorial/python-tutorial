@@ -51,6 +51,7 @@ class AppSettings:
     experiment_filename: str = "experiments.csv"
     mlflow_tracking_uri: str = ""
     mlflow_experiment_prefix: str = "ml_prediction"
+    execution_log_enabled: bool = True
     experiment_enabled: bool = True
     mlflow_enabled: bool = False
     mlflow_required: bool = False
