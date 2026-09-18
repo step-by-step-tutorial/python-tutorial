@@ -26,17 +26,18 @@ class AuditService:
         if settings.mlflow_enabled:
             self._mlflow_path = settings.audit_path(AuditOperation.TRAINING, run_id)
             self._mlflow_service = MlflowService(settings)
+        self._settings = settings
 
     @property
     def run_id(self) -> str:
         return self._run_id
 
     def write(self, data: AuditData):
-        if isinstance(data, PipelineStepData) and self._execution_log_service is not None:
+        if isinstance(data, PipelineStepData) and self._settings.execution_log_enabled:
             self._execution_log_service.write(data, self._execution_log_path)
-        elif isinstance(data, TrainingAuditData) and self._experiment_service is not None:
+        elif isinstance(data, TrainingAuditData) and self._settings.experiment_enabled:
             self._experiment_service.write(data, self._experiment_path)
-        elif isinstance(data, TrainingAuditData) and self._mlflow_service is not None:
+        elif isinstance(data, TrainingAuditData) and self._settings.mlflow_enabled:
             self._mlflow_service.write(data, self._mlflow_path)
         else:
             return

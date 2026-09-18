@@ -14,6 +14,9 @@ def is_empty_text(obj: Any) -> bool:
 def is_none(obj: Any) -> bool:
     return obj is None
 
+def is_not_none(obj: Any) -> bool:
+    return obj is not None
+
 
 def is_blank(obj: Any) -> bool:
     return is_none(obj) or is_empty_collection(obj) or is_empty_text(obj)
