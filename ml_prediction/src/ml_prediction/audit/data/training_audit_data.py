@@ -8,6 +8,7 @@ from ml_prediction.audit.data.experiment_data import ExperimentData
 from ml_prediction.data_model.classification_evaluation_data import ClassificationEvaluationData
 from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
 
+
 @dataclass(frozen=True)
 class TrainingAuditData(AuditData):
     experiment: ExperimentData | None = None

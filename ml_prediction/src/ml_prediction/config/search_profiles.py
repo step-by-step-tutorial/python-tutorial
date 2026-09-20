@@ -1,6 +1,5 @@
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 
-
 SEARCH_PARAMETER_GRIDS: dict[ExperimentTaskType, dict[str, list]] = {
     ExperimentTaskType.CLASSIFICATION: {
         "classifier__n_estimators": [100, 300, 500],

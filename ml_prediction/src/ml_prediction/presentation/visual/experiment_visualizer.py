@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from ml_prediction.audit.data.experiment_data import ExperimentData
 from pathlib import Path
 
 import matplotlib.pyplot as plt

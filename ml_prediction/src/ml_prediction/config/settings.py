@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 
-from ml_prediction.config.dataset_profiles import DATASET_PROFILES
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
+from ml_prediction.config.dataset_profiles import DATASET_PROFILES
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.utils.type_converter import to_bool

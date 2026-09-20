@@ -36,7 +36,8 @@ class ExperimentData(AuditData):
             "model_parameters": json.dumps(self.model_parameters, sort_keys=True, separators=(",", ":")),
             "model_selection_metric": self.model_selection_metric or "",
             "model_selection_score": self.model_selection_score if self.model_selection_score is not None else "",
-            "validation_metrics": json.dumps({key: float(value) for key, value in asdict(self.validation_metrics).items()}),
+            "validation_metrics": json.dumps(
+                {key: float(value) for key, value in asdict(self.validation_metrics).items()}),
             "test_metrics": json.dumps({key: float(value) for key, value in asdict(self.test_metrics).items()}),
             "model_path": str(self.model_path),
             "audit_path": str(self.audit_path) if self.audit_path is not None else "",

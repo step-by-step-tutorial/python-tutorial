@@ -4,8 +4,8 @@ from typing import Any
 
 import joblib
 
-from ml_prediction.audit.metadata_service import MetadataService
 from ml_prediction.audit.data.metadata import Metadata
+from ml_prediction.audit.metadata_service import MetadataService
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,12 @@
 from typing import Any
 
 from ml_prediction.audit.data.training_audit_data import TrainingAuditData
-from ml_prediction.presentation.presenter import Presenter
+from ml_prediction.presentation.view import View
 
 
-class WebExperimentPresenter(Presenter):
+class WebView(View):
 
-    def present(self, data: TrainingAuditData) -> dict[str, Any]:
+    def render(self, data: TrainingAuditData) -> dict[str, Any]:
         if data.experiment is None:
             return {}
         return {

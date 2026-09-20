@@ -2,7 +2,7 @@ import csv
 import logging
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import TypeVar
 
 import pandas as pd
 

@@ -16,7 +16,7 @@ from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
 from ml_prediction.audit.audit_service import AuditService
 from ml_prediction.presentation.visual.artifact_visualizer import ArtifactVisualizer
 from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
-from ml_prediction.presentation.visualization_service import VisualizationService
+from ml_prediction.presentation.visualization_view import VisualizationView
 
 
 def _settings(tmp_path: Path) -> AppSettings:
@@ -91,9 +91,9 @@ def test_visualization_service_returns_artifacts_without_tracking(tmp_path: Path
     artifact_visualizer.save_residual_vs_predicted.return_value = tmp_path / "residual.png"
     artifact_visualizer.save_feature_importance.return_value = None
     experiment_visualizer = mocker.Mock(spec=ExperimentVisualizer)
-    mocker.patch("ml_prediction.presentation.visualization_service.ArtifactVisualizer", return_value=artifact_visualizer)
-    mocker.patch("ml_prediction.presentation.visualization_service.ExperimentVisualizer", return_value=experiment_visualizer)
-    service = VisualizationService("house")
+    mocker.patch("ml_prediction.presentation.visualization_view.ArtifactVisualizer", return_value=artifact_visualizer)
+    mocker.patch("ml_prediction.presentation.visualization_view.ExperimentVisualizer", return_value=experiment_visualizer)
+    service = VisualizationView("house")
     evaluation = RegressionEvaluationData([1.0], [1.0], mocker.Mock())
 
     artifacts = service.publish(mocker.Mock(), evaluation, "experiment-1", tmp_path)

@@ -5,9 +5,9 @@ import pytest
 
 from ml_prediction import main
 from ml_prediction.application.application import Application
-from ml_prediction.presentation.prediction_presenter import PredictionPresenter
-from ml_prediction.presentation.presenter import Presenter
-from ml_prediction.presentation.cli_experiment_presenter import CliExperimentPresenter
+from ml_prediction.presentation.prediction_view import PredictionView
+from ml_prediction.presentation.view import View
+from ml_prediction.presentation.cli_view import CliView
 
 
 def test_application_delegates_train_and_predict(mocker) -> None:
@@ -27,10 +27,10 @@ def test_application_delegates_train_and_predict(mocker) -> None:
 
 
 def test_presenters_implement_presenter_contract(tmp_path: Path) -> None:
-    assert issubclass(CliExperimentPresenter, Presenter)
-    assert issubclass(PredictionPresenter, Presenter)
-    assert not CliExperimentPresenter.__abstractmethods__
-    assert not PredictionPresenter.__abstractmethods__
+    assert issubclass(CliView, View)
+    assert issubclass(PredictionView, View)
+    assert not CliView.__abstractmethods__
+    assert not PredictionView.__abstractmethods__
 
 
 def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None:
@@ -43,7 +43,7 @@ def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None
         tmp_path / "house.csv",
     )
 
-    assert PredictionPresenter(output_path).present(result) == output_path
+    assert PredictionView(output_path).render(result) == output_path
     assert output_path.read_text(encoding="utf-8").splitlines() == [
         "city,predicted_total_price",
         "Paris,123.5",
@@ -72,14 +72,14 @@ def test_cli_select_prediction_supports_exit(monkeypatch) -> None:
 def test_cli_run_train_and_predict(mocker) -> None:
     application = mocker.Mock()
     mocker.patch.object(main, "create_application", return_value=application)
-    prediction_presenter = mocker.patch.object(main, "PredictionPresenter")
+    prediction_view = mocker.patch.object(main, "PredictionView")
 
     main.run("house", "train")
     main.run("house", "predict")
 
     application.train.assert_called_once_with()
     application.predict.assert_called_once_with()
-    prediction_presenter.return_value.present.assert_called_once_with(application.predict.return_value)
+    prediction_view.return_value.render.assert_called_once_with(application.predict.return_value)
 
 
 def test_create_application_does_not_load_model_for_training(mocker) -> None:
