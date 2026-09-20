@@ -23,8 +23,7 @@ class MetadataService(DataService):
         data["final_test_metrics"] = create_metrics(data["final_test_metrics"], metric_type)
         return Metadata(**data)
 
-    def write(self, data: Metadata, path: Path) -> Path:
+    def write(self, data: Metadata, path: Path):
         path = path.with_suffix(".metadata.json")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data.to_dict(), indent=2), encoding="utf-8")
-        return path

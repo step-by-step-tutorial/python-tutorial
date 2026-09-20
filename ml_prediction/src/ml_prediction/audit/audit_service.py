@@ -14,9 +14,6 @@ class AuditService:
         settings = get_settings(dataset_name)
         run_id = IdGenerator.generate()
         self._run_id = run_id
-        self._execution_log_service = None
-        self._experiment_service = None
-        self._mlflow_service = None
         if settings.execution_log_enabled:
             self._execution_log_path = settings.audit_path(AuditOperation.TRAINING, run_id)
             self._execution_log_service = ExecutionLogService(dataset_name, AuditOperation.TRAINING, run_id=run_id)
