@@ -128,7 +128,7 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
         return_value=settings(tmp_path),
     )
     dataset.download.return_value = (dataframe, dataset_path)
-    service = PredictionService(predictor, dataset)
+    service = PredictionService(dataset, predictor)
 
     result = service.predict()
 
@@ -161,10 +161,7 @@ def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path
     )
     dataset = mocker.Mock(dataset_name="house")
     dataset.download.return_value = (pd.DataFrame(), tmp_path / "data" / "house.csv")
-    service = PredictionService(
-        mocker.Mock(dataset_name="house"),
-        dataset,
-    )
+    service = PredictionService(dataset, mocker.Mock(dataset_name="house"))
 
     assert service.dataset.download()[1] == tmp_path / "data" / "house.csv"
     dataset.download.assert_called_once_with()
@@ -177,7 +174,7 @@ def test_prediction_service_downloads_dataset_when_configured(mocker, tmp_path: 
     )
     dataset = mocker.Mock(dataset_name="house")
     dataset.download.return_value = (pd.DataFrame(), tmp_path / "data" / "house.csv")
-    service = PredictionService(mocker.Mock(), dataset)
+    service = PredictionService(dataset, mocker.Mock())
 
     assert service.dataset.download()[1] == tmp_path / "data" / "house.csv"
     dataset.download.assert_called_once_with()

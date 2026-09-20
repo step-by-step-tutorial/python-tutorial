@@ -14,7 +14,7 @@ class Application:
         self.dataset = dataset
         self.settings = get_settings(dataset.dataset_name)
         self.trainer = trainer
-        self.prediction_service = PredictionService(predictor, dataset) if predictor is not None else None
+        self.prediction_service = PredictionService(dataset, predictor) if predictor is not None else None
         self.experiment_comparison_service = ExperimentComparisonService(dataset.dataset_name)
 
     def train(self) -> Any:
