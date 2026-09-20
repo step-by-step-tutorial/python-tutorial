@@ -5,7 +5,6 @@ from ml_prediction.presentation.presenter import Presenter
 
 
 class WebExperimentPresenter(Presenter):
-    """Produces a JSON-ready representation for a web or API adapter."""
 
     def present(self, data: TrainingAuditData) -> dict[str, Any]:
         if data.experiment is None:

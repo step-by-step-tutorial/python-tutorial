@@ -11,22 +11,22 @@ logger = logging.getLogger(__name__)
 
 
 class LocalModelRepository:
-    def save(self, model: Any, path: Path, metadata: Metadata | None = None) -> Path:
+    def __init__(self):
+        self._metadata_service = MetadataService()
+
+    def save_model(self, path: Path, model: Any, metadata: Metadata):
         path.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(model, path)
-        if metadata is not None:
-            self.save_metadata(metadata, path)
+        self.save_metadata(metadata, path)
         logger.info(f"Saved model: path={path}")
-        return path
 
-    def load(self, path: Path) -> Any:
+    def load_model(self, path: Path) -> Any:
         logger.info(f"Loading model: path={path}")
         return joblib.load(path)
 
-    def save_metadata(self, metadata: Metadata, path: Path) -> Path:
-        metadata_path = MetadataService().write(metadata, path)
-        logger.info(f"Saved model metadata: path={metadata_path}")
-        return metadata_path
+    def save_metadata(self, metadata: Metadata, path: Path):
+        self._metadata_service.write(metadata, path)
+        logger.info(f"Saved model metadata: path={path.with_suffix('.metadata.json')}")
 
     def load_metadata(self, path: Path) -> Metadata:
-        return MetadataService().read(path)
+        return self._metadata_service.read(path)

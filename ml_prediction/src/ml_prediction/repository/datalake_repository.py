@@ -42,18 +42,18 @@ class DataLakeRepository:
             dataframes.append(pd.read_parquet(parquet_buffer))
 
         pd.concat(dataframes, ignore_index=True).to_csv(path, index=False)
-        logger.info(
-            f"Enriched dataset downloaded: "
-            f"bucket={self.bucket_name} "
-            f"prefix={self.object_prefix} "
-            f"files={len(latest_partition)} "
-            f"output={path}"
-        )
+        logger.info(f"Enriched dataset downloaded: "
+                    f"bucket={self.bucket_name} "
+                    f"prefix={self.object_prefix} "
+                    f"files={len(latest_partition)} "
+                    f"output={path}")
         return path
 
     def get_object_keys(self) -> list[dict]:
         response = self._client.list_objects_v2(Bucket=self.bucket_name, Prefix=self.object_prefix)
         objects = [item for item in response.get("Contents", []) if item["Key"].lower().endswith(".parquet")]
-        logger.info(
-            f"Found Parquet objects: bucket={self.bucket_name} prefix={self.object_prefix} count={len(objects)}")
+        logger.info(f"Found Parquet objects: "
+                    f"bucket={self.bucket_name} "
+                    f"prefix={self.object_prefix} "
+                    f"count={len(objects)}")
         return objects

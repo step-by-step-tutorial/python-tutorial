@@ -38,9 +38,22 @@ def settings(tmp_path: Path) -> AppSettings:
 def test_local_model_repository_saves_and_loads(tmp_path: Path) -> None:
     repository = LocalModelRepository()
     path = tmp_path / "models" / "model.joblib"
+    metadata = Metadata(
+        model_type="random_forest",
+        model_parameters={},
+        target_column="total_price",
+        numeric_features=(),
+        boolean_features=(),
+        categorical_features=(),
+        training_timestamp=datetime.now(timezone.utc),
+        validation_metrics=RegressionMetrics(1.0, 2.0, 0.5),
+        final_test_metrics=RegressionMetrics(1.5, 2.5, 0.4),
+        schema_version="1",
+        model_version="1",
+    )
 
-    assert repository.save({"value": 1}, path) == path
-    assert repository.load(path) == {"value": 1}
+    assert repository.save_model(path, {"value": 1}, metadata) is None
+    assert repository.load_model(path) == {"value": 1}
 
 
 def test_local_model_repository_saves_and_loads_typed_metadata(tmp_path: Path) -> None:
@@ -60,7 +73,7 @@ def test_local_model_repository_saves_and_loads_typed_metadata(tmp_path: Path) -
         model_version="1",
     )
 
-    repository.save({"value": 1}, path, metadata)
+    repository.save_model(path, {"value": 1}, metadata)
 
     assert repository.load_metadata(path) == metadata
 
@@ -184,7 +197,7 @@ def test_model_predictor_builds_features_and_returns_named_series(mocker) -> Non
     pipeline = mocker.Mock()
     pipeline.predict.return_value = [101.0, 202.0]
     repository = mocker.Mock()
-    repository.load.return_value = pipeline
+    repository.load_model.return_value = pipeline
     repository.load_metadata.return_value = Metadata(
         model_type="random_forest",
         model_parameters={"n_estimators": 200, "n_jobs": -1, "random_state": 42},
@@ -215,7 +228,7 @@ def test_model_predictor_builds_features_and_returns_named_series(mocker) -> Non
 
     assert predictions.tolist() == [101.0, 202.0]
     assert predictions.name == "predicted_total_price"
-    repository.load.assert_called_once_with(Path("models") / "model.joblib")
+    repository.load_model.assert_called_once_with(Path("models") / "model.joblib")
     pipeline.predict.assert_called_once()
 
 

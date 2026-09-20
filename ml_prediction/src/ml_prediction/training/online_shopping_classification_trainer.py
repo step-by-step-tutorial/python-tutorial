@@ -184,8 +184,6 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
         return self._evaluator.evaluate(y_true, y_pred)
 
     def save_model(self, model: TrainedModel, metadata: Metadata) -> Path:
-        return self._model_repository.save(
-            model.pipeline,
-            self._settings.model_dir / self._settings.model_filename,
-            metadata,
-        )
+        model_path = self._settings.model_dir / self._settings.model_filename
+        self._model_repository.save_model(model_path, model.pipeline, metadata)
+        return model_path
