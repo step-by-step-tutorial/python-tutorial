@@ -5,7 +5,7 @@ from ml_prediction.audit.data.audit_data import AuditData
 
 
 @dataclass(frozen=True)
-class PipelineStepData(AuditData):
+class PipelineStepDto(AuditData):
     step: ClassVar[str]
 
     def to_dict(self) -> dict[str, Any]:

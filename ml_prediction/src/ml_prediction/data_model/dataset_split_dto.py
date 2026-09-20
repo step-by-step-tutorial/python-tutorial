@@ -4,7 +4,7 @@ from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 
 
 @dataclass(frozen=True)
-class DatasetSplitData:
+class DatasetSplitDto:
     train: FeaturesAndTarget
     validation: FeaturesAndTarget
     test: FeaturesAndTarget

@@ -9,5 +9,5 @@ class DataService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def write(self, data: Any, path: Path) -> None:
+    def write(self, dto: Any, path: Path) -> None:
         raise NotImplementedError

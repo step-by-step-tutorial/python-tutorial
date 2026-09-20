@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from ml_prediction.audit.pipeline_step.pipeline_step_data import PipelineStepData
+from ml_prediction.audit.pipeline_step.pipeline_step_dto import PipelineStepDto
 
 
 @dataclass(frozen=True)
-class FeaturesBuiltData(PipelineStepData):
+class FeaturesBuiltDto(PipelineStepDto):
     rows: int
     columns: int
     step: ClassVar[str] = "features_built"

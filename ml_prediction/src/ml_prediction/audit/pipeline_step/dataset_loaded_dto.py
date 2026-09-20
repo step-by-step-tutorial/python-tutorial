@@ -2,11 +2,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, ClassVar
 
-from ml_prediction.audit.pipeline_step.pipeline_step_data import PipelineStepData
+from ml_prediction.audit.pipeline_step.pipeline_step_dto import PipelineStepDto
 
 
 @dataclass(frozen=True)
-class DatasetLoadedData(PipelineStepData):
+class DatasetLoadedDto(PipelineStepDto):
     rows: int
     dataset_path: Path
     step: ClassVar[str] = "dataset_loaded"

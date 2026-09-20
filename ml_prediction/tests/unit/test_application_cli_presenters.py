@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from ml_prediction import main
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.application.application import Application
 from ml_prediction.presentation.prediction_view import PredictionView
 from ml_prediction.presentation.view import View
@@ -34,13 +35,15 @@ def test_presenters_implement_presenter_contract(tmp_path: Path) -> None:
 
 
 def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None:
-    from ml_prediction.data_model.prediction import Prediction
+    from ml_prediction.data_model.prediction_dto import PredictionDto
 
     output_path = tmp_path / "output" / "predictions.csv"
-    result = Prediction(
+    result = PredictionDto(
         pd.DataFrame({"city": ["Paris"]}),
         pd.Series([123.5]),
         tmp_path / "house.csv",
+        "predicted_total_price",
+        ExperimentTaskType.REGRESSION,
     )
 
     assert PredictionView(output_path).render(result) == output_path

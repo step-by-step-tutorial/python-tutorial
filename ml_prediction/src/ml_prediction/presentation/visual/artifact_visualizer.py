@@ -1,9 +1,3 @@
-"""Visualization components for training results.
-
-Image-producing operations belong in this module and remain separate from
-the text and logging concerns in ``ml_prediction.presentation``.
-"""
-
 from pathlib import Path
 
 import matplotlib
@@ -16,11 +10,9 @@ from sklearn.metrics import PredictionErrorDisplay
 
 
 class ArtifactVisualizer:
-    """Owns visual artifact generation for experiment results."""
 
     @staticmethod
     def save_figure(figure: Figure, output_path: Path) -> Path:
-        """Save a figure as an artifact and release its resources."""
         output_path.parent.mkdir(parents=True, exist_ok=True)
         try:
             figure.savefig(output_path)
@@ -37,7 +29,6 @@ class ArtifactVisualizer:
             audit_dir: Path,
             output_path: Path | None = None,
     ) -> Path:
-        """Save an actual-versus-predicted plot for an existing evaluation."""
         display = PredictionErrorDisplay.from_predictions(
             y_true,
             y_pred,
@@ -57,7 +48,6 @@ class ArtifactVisualizer:
             audit_dir: Path,
             output_path: Path | None = None,
     ) -> Path:
-        """Save a residual-versus-predicted plot for an existing evaluation."""
         display = PredictionErrorDisplay.from_predictions(
             np.asarray(y_true),
             np.asarray(y_pred),
@@ -77,7 +67,6 @@ class ArtifactVisualizer:
             top_n: int = 20,
             output_path: Path | None = None,
     ) -> Path | None:
-        """Save the most important features when the fitted regressor provides them."""
         pipeline = getattr(fitted_model, "pipeline", fitted_model)
         regressor = (
             pipeline.named_steps["regressor"]

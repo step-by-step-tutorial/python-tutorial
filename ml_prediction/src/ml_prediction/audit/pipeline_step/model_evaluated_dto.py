@@ -1,17 +1,16 @@
 from dataclasses import asdict, dataclass
 from typing import Any, ClassVar
 
-from ml_prediction.audit.pipeline_step.pipeline_step_data import PipelineStepData
-from ml_prediction.data_model.classification_metrics import ClassificationMetrics
-from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.audit.pipeline_step.pipeline_step_dto import PipelineStepDto
+from ml_prediction.data_model.metrics import Metrics
 
 
 @dataclass(frozen=True)
-class ModelEvaluatedData(PipelineStepData):
+class ModelEvaluatedDto(PipelineStepDto):
     partition: str
     rows: int
     model_name: str
-    metrics: RegressionMetrics | ClassificationMetrics
+    metrics: Metrics
     step: ClassVar[str] = "model_evaluated"
 
     def to_dict(self) -> dict[str, Any]:

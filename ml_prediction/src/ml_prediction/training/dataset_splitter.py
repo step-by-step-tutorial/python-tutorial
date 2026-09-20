@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 from ml_prediction.config.settings import get_settings
-from ml_prediction.data_model.dataset_split import DatasetSplitData
+from ml_prediction.data_model.dataset_split_dto import DatasetSplitDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class DatasetSplitter:
     def __init__(self, dataset_name: str) -> None:
         self._dataset_name = dataset_name
 
-    def split(self, features: pd.DataFrame, target: pd.Series) -> DatasetSplitData:
+    def split(self, features: pd.DataFrame, target: pd.Series) -> DatasetSplitDto:
         settings = get_settings(self._dataset_name)
         train_features, remaining_features, train_target, remaining_target = train_test_split(
             features,
@@ -37,7 +37,7 @@ class DatasetSplitter:
             len(validation_features),
             len(test_features),
         )
-        return DatasetSplitData(
+        return DatasetSplitDto(
             train=FeaturesAndTarget(train_features, train_target),
             validation=FeaturesAndTarget(validation_features, validation_target),
             test=FeaturesAndTarget(test_features, test_target),

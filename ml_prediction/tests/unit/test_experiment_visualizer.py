@@ -1,15 +1,15 @@
 from datetime import datetime, timezone
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from pathlib import Path
 
-from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.experiment_service import ExperimentService
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
 
 
-def make_experiment(run_id: str, model_type: str) -> ExperimentData:
-    return ExperimentData(
+def make_experiment(run_id: str, model_type: str) -> ExperimentDto:
+    return ExperimentDto(
         run_id=run_id,
         timestamp=datetime.now(timezone.utc),
         dataset_name="house",
@@ -26,7 +26,7 @@ def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path, mo
     mocker.patch(
         "ml_prediction.presentation.visual.experiment_visualizer.get_settings",
         return_value=mocker.Mock(
-            audit_dir=tmp_path / "reports",
+            audit_root=tmp_path / "reports",
             experiment_filename="experiments.csv",
             comparison_dirname="comparison",
             validation_mae_filename="validation_mae_comparison.png",
@@ -38,12 +38,12 @@ def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path, mo
     experiment_path = tmp_path / "experiments.csv"
     visualizer._experiment_path = experiment_path
     writer = ExperimentService()
-    writer.write(TrainingAuditData(experiment=make_experiment("experiment-123456", "random_forest")), experiment_path)
-    writer.write(TrainingAuditData(experiment=make_experiment("experiment-abcdef", "extra_trees")), experiment_path)
+    writer.write(TrainingAuditDto(experiment=make_experiment("experiment-123456", "random_forest")), experiment_path)
+    writer.write(TrainingAuditDto(experiment=make_experiment("experiment-abcdef", "extra_trees")), experiment_path)
 
-    mae_path = visualizer.save_validation_mae_comparison()
-    rmse_path = visualizer.save_validation_rmse_comparison()
-    r2_path = visualizer.save_validation_r2_comparison()
+    mae_path = visualizer.save_validation_mae()
+    rmse_path = visualizer.save_validation_rmse()
+    r2_path = visualizer.save_validation_r2()
 
     assert mae_path == tmp_path / "reports" / "comparison" / "validation_mae_comparison.png"
     assert rmse_path == tmp_path / "reports" / "comparison" / "validation_rmse_comparison.png"
@@ -55,7 +55,7 @@ def test_experiment_visualizer_skips_empty_history(tmp_path: Path, mocker) -> No
     mocker.patch(
         "ml_prediction.presentation.visual.experiment_visualizer.get_settings",
         return_value=mocker.Mock(
-            audit_dir=tmp_path / "reports",
+            audit_root=tmp_path / "reports",
             experiment_filename="experiments.csv",
             comparison_dirname="comparison",
             validation_mae_filename="validation_mae_comparison.png",
@@ -66,8 +66,8 @@ def test_experiment_visualizer_skips_empty_history(tmp_path: Path, mocker) -> No
     visualizer = ExperimentVisualizer("house")
     visualizer._experiment_path = tmp_path / "experiments.csv"
 
-    assert visualizer.save_validation_mae_comparison() is None
-    assert visualizer.save_validation_rmse_comparison() is None
-    assert visualizer.save_validation_r2_comparison() is None
+    assert visualizer.save_validation_mae() is None
+    assert visualizer.save_validation_rmse() is None
+    assert visualizer.save_validation_r2() is None
 
 

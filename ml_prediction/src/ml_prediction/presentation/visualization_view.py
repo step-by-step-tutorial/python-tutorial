@@ -1,10 +1,10 @@
 from pathlib import Path
 
 from ml_prediction.audit.data.artifact_category import ArtifactCategory
-from ml_prediction.audit.data.artifact_data import ArtifactData
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
+from ml_prediction.audit.data.artifact_dto import ArtifactDto
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from ml_prediction.config.settings import get_settings
-from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
+from ml_prediction.data_model.evaluation_dto import RegressionEvaluationDto
 from ml_prediction.presentation.view import View
 from ml_prediction.presentation.visual.artifact_visualizer import ArtifactVisualizer
 from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
@@ -17,14 +17,14 @@ class VisualizationView(View):
         self._artifact_visualizer = ArtifactVisualizer()
         self._experiment_visualizer = ExperimentVisualizer(dataset_name)
 
-    def render(self, data: TrainingAuditData) -> tuple[ArtifactData, ...]:
-        if data.model is None or data.evaluation is None or data.experiment is None or data.path is None:
+    def render(self, dto: TrainingAuditDto) -> tuple[ArtifactDto, ...]:
+        if dto.model is None or dto.evaluation is None or dto.experiment is None or dto.path is None:
             return ()
-        return self.publish(data.model, data.evaluation, data.experiment.run_id, data.path)
+        return self.publish(dto.model, dto.evaluation, dto.experiment.run_id, dto.path)
 
-    def publish(self, model, evaluation, run_id: str, audit_dir: Path) -> tuple[ArtifactData, ...]:
+    def publish(self, model, evaluation, run_id: str, audit_dir: Path) -> tuple[ArtifactDto, ...]:
         artifacts = []
-        if isinstance(evaluation, RegressionEvaluationData):
+        if isinstance(evaluation, RegressionEvaluationDto):
             artifacts.extend([
                 self._artifact_visualizer.save_actual_vs_predicted(
                     evaluation.y_true, evaluation.y_pred, run_id, audit_dir,
@@ -43,11 +43,11 @@ class VisualizationView(View):
         ))
         if hasattr(evaluation.metrics, "mean_absolute_error"):
             artifacts.extend([
-                self._experiment_visualizer.save_validation_mae_comparison(),
-                self._experiment_visualizer.save_validation_rmse_comparison(),
-                self._experiment_visualizer.save_validation_r2_comparison(),
+                self._experiment_visualizer.save_validation_mae(),
+                self._experiment_visualizer.save_validation_rmse(),
+                self._experiment_visualizer.save_validation_r2(),
             ])
         artifact_dir = audit_dir / run_id
         artifacts.extend(artifact_dir.glob("*.png"))
-        return tuple(ArtifactData(path, ArtifactCategory.PLOTS) for path in
+        return tuple(ArtifactDto(path, ArtifactCategory.PLOTS) for path in
                      {path for path in artifacts if isinstance(path, Path)})

@@ -2,9 +2,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ml_prediction.audit.data.audit_operation import AuditOperation
-from ml_prediction.audit.data.execution_data import ExecutionData
+from ml_prediction.audit.data.execution_dto import ExecutionDto
 from ml_prediction.audit.data_service import DataService
-from ml_prediction.audit.pipeline_step.pipeline_step_data import PipelineStepData
+from ml_prediction.audit.pipeline_step.pipeline_step_dto import PipelineStepDto
 from ml_prediction.utils.csv_utils import read_csv, write_csv
 from ml_prediction.utils.id_generator import IdGenerator
 
@@ -15,19 +15,19 @@ class ExecutionLogService(DataService):
         self._operation = operation
         self._run_id = run_id
 
-    def read(self, path: Path) -> list[ExecutionData]:
-        return read_csv(path, ExecutionData.from_dict)
+    def read(self, path: Path) -> list[ExecutionDto]:
+        return read_csv(path, ExecutionDto.from_dict)
 
-    def write(self, data: PipelineStepData, path: Path) -> None:
-        fields = data.to_dict()
+    def write(self, dto: PipelineStepDto, path: Path) -> None:
+        fields = dto.to_dict()
         selected_path = fields.get("model_path")
         metric_values = fields.get("metrics")
-        execution_data = ExecutionData(
+        execution_dto = ExecutionDto(
             datetime.now(timezone.utc),
             self._run_id,
             self._dataset_name,
             self._operation,
-            data.step,
+            dto.step,
             fields.get("partition", ""),
             fields.get("rows"),
             fields.get("model_name", ""),
@@ -36,4 +36,4 @@ class ExecutionLogService(DataService):
             metric_values,
             fields.get("details", ""),
         )
-        write_csv(path, [execution_data])
+        write_csv(path, [execution_dto])

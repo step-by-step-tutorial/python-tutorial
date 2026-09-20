@@ -5,5 +5,6 @@ from ml_prediction.audit.data.audit_data import AuditData
 
 
 @dataclass(frozen=True)
-class TrainedModelData(AuditData):
-    model: Any
+class MetricsDto(AuditData):
+    prefix: str
+    metrics: Any

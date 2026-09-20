@@ -7,7 +7,7 @@ import pytest
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.inference.model_predictor import ModelPredictor
-from ml_prediction.data_model.prediction import Prediction
+from ml_prediction.data_model.prediction_dto import PredictionDto
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.audit.data.metadata import Metadata
@@ -20,15 +20,15 @@ from test_dataset_features import house_dataframe
 
 def settings(tmp_path: Path) -> AppSettings:
     return AppSettings(
-        data_dir=tmp_path / "data",
-        model_dir=tmp_path / "models",
+        data_root=tmp_path / "data",
+        model_root=tmp_path / "models",
         target_column="total_price",
         validation_size=0.2,
         test_size=0.2,
         random_state=42,
         data_lake=DataLakeSettings("http://localhost:9000", "key", "secret", "house", "prefix"),
         dataset_source=DatasetSource.DOWNLOAD,
-        audit_dir=tmp_path / "reports",
+        audit_root=tmp_path / "reports",
         dataset_filename="house.csv",
         model_filename="model.joblib",
         prediction_column="predicted_total_price",
@@ -145,7 +145,7 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
 
     result = service.predict()
 
-    assert isinstance(result, Prediction)
+    assert isinstance(result, PredictionDto)
     pd.testing.assert_frame_equal(result.dataframe, dataframe)
     assert result.predictions.tolist() == [110]
     assert result.audit_path is not None
@@ -158,8 +158,8 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
 
 def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path: Path) -> None:
     local_settings = AppSettings(
-        data_dir=tmp_path / "data",
-        model_dir=tmp_path / "models",
+        data_root=tmp_path / "data",
+        model_root=tmp_path / "models",
         target_column="total_price",
         validation_size=0.2,
         test_size=0.2,

@@ -7,26 +7,26 @@ import pandas as pd
 
 from ml_prediction.audit.audit_service import AuditService
 from ml_prediction.audit.data.artifact_category import ArtifactCategory
-from ml_prediction.audit.data.artifact_data import ArtifactData
-from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.audit.data.artifact_dto import ArtifactDto
+from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.audit.data.metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION
 from ml_prediction.audit.data.metadata import Metadata
-from ml_prediction.audit.data.metrics_data import MetricsData
-from ml_prediction.audit.data.trained_model_data import TrainedModelData
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
-from ml_prediction.audit.pipeline_step.dataset_downloaded_data import DatasetDownloadedData
-from ml_prediction.audit.pipeline_step.dataset_prepared_data import DatasetPreparedData
-from ml_prediction.audit.pipeline_step.dataset_split_data import DatasetSplitData as AuditDatasetSplitData
-from ml_prediction.audit.pipeline_step.features_built_data import FeaturesBuiltData
-from ml_prediction.audit.pipeline_step.model_evaluated_data import ModelEvaluatedData
-from ml_prediction.audit.pipeline_step.model_saved_data import ModelSavedData
-from ml_prediction.audit.pipeline_step.model_training_data import ModelTrainingData
-from ml_prediction.audit.pipeline_step.target_extracted_data import TargetExtractedData
+from ml_prediction.audit.data.metrics_dto import MetricsDto
+from ml_prediction.audit.data.trained_model_dto import TrainedModelDto
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
+from ml_prediction.audit.pipeline_step.dataset_downloaded_dto import DatasetDownloadedDto
+from ml_prediction.audit.pipeline_step.dataset_prepared_dto import DatasetPreparedDto
+from ml_prediction.audit.pipeline_step.dataset_split_dto import DatasetSplitDto as AuditDatasetSplitDto
+from ml_prediction.audit.pipeline_step.features_built_dto import FeaturesBuiltDto
+from ml_prediction.audit.pipeline_step.model_evaluated_dto import ModelEvaluatedDto
+from ml_prediction.audit.pipeline_step.model_saved_dto import ModelSavedDto
+from ml_prediction.audit.pipeline_step.model_training_dto import ModelTrainingDto
+from ml_prediction.audit.pipeline_step.target_extracted_dto import TargetExtractedDto
 from ml_prediction.config.settings import get_settings
-from ml_prediction.data_model.classification_evaluation_data import ClassificationEvaluationData
+from ml_prediction.data_model.classification_evaluation_dto import ClassificationEvaluationDto
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
-from ml_prediction.data_model.dataset_split import DatasetSplitData
+from ml_prediction.data_model.dataset_split_dto import DatasetSplitDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.classification_evaluator import ClassificationEvaluator
@@ -44,7 +44,7 @@ from ml_prediction.training.trainer import Trainer
 logger = logging.getLogger(__name__)
 
 
-class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
+class OnlineShoppingClassificationTrainer(Trainer[ExperimentDto]):
     def __init__(self, dataset: Dataset) -> None:
         self._settings = get_settings(dataset.dataset_name)
         self._dataset = dataset
@@ -61,23 +61,23 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
         self._selected_model_parameters: dict[str, object] | None = None
         self._selected_model_score: float | None = None
 
-    def train(self) -> ExperimentData:
+    def train(self) -> ExperimentDto:
         return self._train()
 
-    def _train(self) -> ExperimentData:
+    def _train(self) -> ExperimentDto:
         if self._settings.task_type != ExperimentTaskType.CLASSIFICATION:
             raise ValueError("OnlineShoppingClassificationTrainer requires a classification dataset")
         dataframe, dataset_path = self.download_dataset()
-        configured_parameters = self._settings.model_parameters.as_dict()
+        configured_parameters = self._settings.model_parameters.to_dict()
         run_id = self._audit_service.run_id
-        self._audit_service.write(ArtifactData(dataset_path, ArtifactCategory.DATASET))
-        self._audit_service.write(DatasetDownloadedData(dataset_path))
+        self._audit_service.write(ArtifactDto(dataset_path, ArtifactCategory.DATASET))
+        self._audit_service.write(DatasetDownloadedDto(dataset_path))
         prepared = self.build_features_and_target(dataframe)
-        self._audit_service.write(DatasetPreparedData(len(prepared.features), self._settings.target_column))
-        self._audit_service.write(FeaturesBuiltData(len(prepared.features), len(prepared.features.columns)))
-        self._audit_service.write(TargetExtractedData(len(prepared.target), self._settings.target_column))
+        self._audit_service.write(DatasetPreparedDto(len(prepared.features), self._settings.target_column))
+        self._audit_service.write(FeaturesBuiltDto(len(prepared.features), len(prepared.features.columns)))
+        self._audit_service.write(TargetExtractedDto(len(prepared.target), self._settings.target_column))
         partitions = self._dataset_splitter.split(prepared.features, prepared.target)
-        self._audit_service.write(AuditDatasetSplitData(
+        self._audit_service.write(AuditDatasetSplitDto(
             len(prepared.features),
             len(partitions.train.features),
             len(partitions.validation.features),
@@ -85,18 +85,18 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
         ))
         model = self.train_model(partitions)
         self._audit_service.write(
-            ModelTrainingData("train", len(partitions.train.features), self._settings.model_type))
+            ModelTrainingDto("train", len(partitions.train.features), self._settings.model_type))
         validation = self.evaluate_model(model, partitions.validation)
-        self._audit_service.write(MetricsData("validation", validation))
-        self._audit_service.write(ModelEvaluatedData(
+        self._audit_service.write(MetricsDto("validation", validation))
+        self._audit_service.write(ModelEvaluatedDto(
             "validation",
             len(partitions.validation.features),
             self._settings.model_type,
             validation,
         ))
         final = self.evaluate_model_with_predictions(model, partitions.test)
-        self._audit_service.write(MetricsData("test", final.metrics))
-        self._audit_service.write(ModelEvaluatedData(
+        self._audit_service.write(MetricsDto("test", final.metrics))
+        self._audit_service.write(ModelEvaluatedDto(
             "test",
             len(partitions.test.features),
             self._settings.model_type,
@@ -120,10 +120,10 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
             prediction_column=self._settings.prediction_column,
         )
         model_path = self.save_model(model, metadata)
-        self._audit_service.write(TrainedModelData(model.pipeline))
-        self._audit_service.write(ArtifactData(model_path.with_suffix(".metadata.json"), ArtifactCategory.MODEL))
-        self._audit_service.write(ModelSavedData(model_path))
-        result = ExperimentData(
+        self._audit_service.write(TrainedModelDto(model.pipeline))
+        self._audit_service.write(ArtifactDto(model_path.with_suffix(".metadata.json"), ArtifactCategory.MODEL))
+        self._audit_service.write(ModelSavedDto(model_path))
+        result = ExperimentDto(
             run_id=run_id, timestamp=timestamp, dataset_name=self._settings.dataset_name,
             model_type=self._settings.model_type, model_parameters=metadata.model_parameters,
             validation_metrics=validation, test_metrics=final.metrics,
@@ -132,11 +132,11 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
             model_selection_metric="f1_weighted" if self._search_enabled else None,
             model_selection_score=self._selected_model_score,
         )
-        audit_data = TrainingAuditData(
+        audit_data = TrainingAuditDto(
             experiment=result,
             model=model,
             evaluation=final,
-            path=self._settings.audit_dir,
+            path=self._settings.audit_root,
             metrics={
                 **{f"validation_{key}": float(value) for key, value in asdict(validation).items()},
                 **{f"test_{key}": float(value) for key, value in asdict(final.metrics).items()},
@@ -153,7 +153,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
         target = dataframe.pop(self._settings.target_column)
         return FeaturesAndTarget(FeatureBuilder(dataframe, self._feature_model).build(), target)
 
-    def train_model(self, partitions: DatasetSplitData) -> TrainedModel:
+    def train_model(self, partitions: DatasetSplitDto) -> TrainedModel:
         if not self._search_enabled:
             return TrainedModel(self._pipeline_builder).fit(
                 partitions.train.features,
@@ -173,17 +173,17 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentData]):
         self._selected_model_score = selection.f1_score
         return TrainedModel.from_pipeline(selection.pipeline)
 
-    def evaluate_model(self, model, data: FeaturesAndTarget) -> ClassificationMetrics:
+    def evaluate_model(self, model, dto: FeaturesAndTarget) -> ClassificationMetrics:
         return self._evaluator.evaluate(
-            data.target, model.predict(data.features)
+            dto.target, model.predict(dto.features)
         ).metrics
 
-    def evaluate_model_with_predictions(self, model, data: FeaturesAndTarget) -> ClassificationEvaluationData:
-        y_true = data.target
-        y_pred = model.predict(data.features)
+    def evaluate_model_with_predictions(self, model, dto: FeaturesAndTarget) -> ClassificationEvaluationDto:
+        y_true = dto.target
+        y_pred = model.predict(dto.features)
         return self._evaluator.evaluate(y_true, y_pred)
 
     def save_model(self, model: TrainedModel, metadata: Metadata) -> Path:
-        model_path = self._settings.model_dir / self._settings.model_filename
+        model_path = self._settings.model_root / self._settings.model_filename
         self._model_repository.save_model(model_path, model.pipeline, metadata)
         return model_path

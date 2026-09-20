@@ -7,7 +7,7 @@ from ml_prediction.audit.data.audit_data import AuditData
 
 
 @dataclass(frozen=True)
-class ExecutionData(AuditData):
+class ExecutionDto(AuditData):
     timestamp: datetime
     run_id: str
     dataset_name: str

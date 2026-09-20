@@ -5,7 +5,7 @@ from ml_prediction.data_model.classification_metrics import ClassificationMetric
 
 
 @dataclass(frozen=True)
-class ClassificationEvaluationData:
+class ClassificationEvaluationDto:
     y_true: Any
     y_pred: Any
     metrics: ClassificationMetrics

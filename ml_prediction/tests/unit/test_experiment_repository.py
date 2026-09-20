@@ -1,10 +1,10 @@
 import csv
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from datetime import datetime, timezone
 import json
 from pathlib import Path
 
-from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.audit.experiment_service import ExperimentService
 
@@ -13,7 +13,7 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
     writer = ExperimentService()
     reader = ExperimentService()
     experiment_path = tmp_path / "reports" / "experiments.csv"
-    result = ExperimentData(
+    result = ExperimentDto(
         run_id="experiment-1",
         timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
         dataset_name="house",
@@ -25,8 +25,8 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
         audit_path=tmp_path / "reports" / "training.csv",
     )
 
-    writer.write(TrainingAuditData(experiment=result), experiment_path)
-    writer.write(TrainingAuditData(experiment=result), experiment_path)
+    writer.write(TrainingAuditDto(experiment=result), experiment_path)
+    writer.write(TrainingAuditDto(experiment=result), experiment_path)
 
     assert len(reader.read(experiment_path)) == 2
     assert reader.read(experiment_path)[0] == result

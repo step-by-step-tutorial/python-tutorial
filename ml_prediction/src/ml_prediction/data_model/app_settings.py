@@ -14,8 +14,8 @@ class DatasetSource(StrEnum):
 
 @dataclass(frozen=True)
 class AppSettings:
-    data_dir: Path
-    model_dir: Path
+    data_root: Path
+    model_root: Path
     target_column: str
     validation_size: float
     test_size: float
@@ -31,7 +31,7 @@ class AppSettings:
     max_features: int | float | str | None = 1.0
     bootstrap: bool = True
     dataset_source: DatasetSource = DatasetSource.LOCAL
-    audit_dir: Path = Path("audit_log")
+    audit_root: Path = Path("audit_log")
     audit_filename_template: str = "{dataset_name}_{operation}_{run_id}.csv"
     prediction_audit_filename_template: str = "{dataset_name}_prediction_{run_id}.csv"
     comparison_dirname: str = "comparison"
@@ -69,23 +69,23 @@ class AppSettings:
         )
 
     def audit_path(self, operation: str, run_id: str) -> Path:
-        return self.audit_dir / self.audit_filename_template.format(
+        return self.audit_root / self.audit_filename_template.format(
             dataset_name=self.dataset_name,
             operation=operation,
             run_id=run_id,
         )
 
     def prediction_audit_path(self, run_id: str) -> Path:
-        return self.audit_dir / self.prediction_audit_filename_template.format(
+        return self.audit_root / self.prediction_audit_filename_template.format(
             dataset_name=self.dataset_name,
             run_id=run_id,
         )
 
     def artifact_path(self, run_id: str, filename: str) -> Path:
-        return self.audit_dir / run_id / filename
+        return self.audit_root / run_id / filename
 
     def experiment_path(self, run_id: str) -> Path:
-        return self.audit_dir / self.experiment_filename.format(
+        return self.audit_root / self.experiment_filename.format(
             dataset_name=self.dataset_name,
             run_id=run_id,
         )

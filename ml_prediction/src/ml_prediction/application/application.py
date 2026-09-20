@@ -1,7 +1,7 @@
 from typing import Any
 
 from ml_prediction.config.settings import get_settings
-from ml_prediction.data_model.prediction import Prediction
+from ml_prediction.data_model.prediction_dto import PredictionDto
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.experiment_comparison_service import ExperimentComparisonService
 from ml_prediction.inference.prediction_service import PredictionService
@@ -20,7 +20,7 @@ class Application:
     def train(self) -> Any:
         return self.trainer.train()
 
-    def predict(self) -> Prediction:
+    def predict(self) -> PredictionDto:
         if self.prediction_service is None:
             raise RuntimeError("Prediction service is not configured for this application")
         return self.prediction_service.predict()

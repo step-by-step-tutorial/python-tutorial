@@ -16,7 +16,7 @@ class ModelPredictor(Predictor[pd.Series]):
 
     def __init__(self, dataset_name: str, feature_model: FeatureModel) -> None:
         self._settings = get_settings(dataset_name)
-        self._model_path = self._settings.model_dir / self._settings.model_filename
+        self._model_path = self._settings.model_root / self._settings.model_filename
         self._model = LocalModelRepository().load_model(self._model_path)
         self._feature_model = feature_model
 

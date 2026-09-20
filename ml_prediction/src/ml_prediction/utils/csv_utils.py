@@ -6,14 +6,14 @@ from typing import TypeVar
 
 import pandas as pd
 
-from ml_prediction.data_model.dict_data import DictData
+from ml_prediction.data_model.dictionary import Dictionary
 from ml_prediction.utils.data_validator_utils import is_blank
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-def write_csv(path: Path, data: Iterable[DictData]) -> None:
+def write_csv(path: Path, data: Iterable[Dictionary]) -> None:
     rows = [value.to_dict() for value in data]
     if is_blank(rows):
         return

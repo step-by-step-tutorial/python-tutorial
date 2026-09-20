@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
+from ml_prediction.data_model.dictionary import Dictionary
 
 @dataclass(frozen=True)
-class ModelParameters:
+class ModelParameters(Dictionary):
     n_estimators: int
     n_jobs: int
     max_depth: int | None
@@ -12,7 +13,7 @@ class ModelParameters:
     bootstrap: bool
     random_state: int
 
-    def as_dict(self) -> dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "n_estimators": self.n_estimators,
             "n_jobs": self.n_jobs,

@@ -4,7 +4,7 @@ from typing import Any
 import mlflow
 import mlflow.sklearn
 
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from ml_prediction.audit.data_service import DataService
 from ml_prediction.data_model.app_settings import AppSettings
 
@@ -18,18 +18,18 @@ class MlflowService(DataService):
     def read(self, path: Path) -> dict[str, Any]:
         return {}
 
-    def write(self, data: TrainingAuditData, path: Path):
-        mlflow.start_run(run_name=data.experiment.run_id)
+    def write(self, dto: TrainingAuditDto, path: Path):
+        mlflow.start_run(run_name=dto.experiment.run_id)
         mlflow.set_tags({
             "dataset_name": self._settings.dataset_name,
             "task_type": self._settings.task_type.value,
             "model_type": self._settings.model_type,
         })
-        mlflow.log_params(data.experiment.model_parameters)
+        mlflow.log_params(dto.experiment.model_parameters)
 
-        mlflow.log_metrics({key: float(value) for key, value in data.metrics.items()})
-        mlflow.sklearn.log_model(data.model, name="model", serialization_format="cloudpickle")
-        for artifact in data.artifacts:
+        mlflow.log_metrics({key: float(value) for key, value in dto.metrics.items()})
+        mlflow.sklearn.log_model(dto.model, name="model", serialization_format="cloudpickle")
+        for artifact in dto.artifacts:
             mlflow.log_artifact(str(artifact.path), artifact_path=artifact.category.value)
 
         mlflow.end_run(status="FINISHED")

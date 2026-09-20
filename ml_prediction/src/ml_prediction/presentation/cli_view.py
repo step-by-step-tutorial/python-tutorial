@@ -1,38 +1,18 @@
 import logging
 
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
-from ml_prediction.data_model.classification_metrics import ClassificationMetrics
-from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from ml_prediction.presentation.view import View
 
 logger = logging.getLogger(__name__)
 
 
 class CliView(View):
-    def render(self, data: TrainingAuditData) -> None:
-        output = data.experiment
-        if output is None:
+    def render(self, dto: TrainingAuditDto) -> None:
+        experiment = dto.experiment
+        if experiment is None:
             return
-        logger.info(
-            "ExperimentData completed: run_id=%s dataset=%s model_type=%s",
-            output.run_id,
-            output.dataset_name,
-            output.model_type,
-        )
-        self._log_metrics("Validation", output.validation_metrics)
-        self._log_metrics("Final test", output.test_metrics)
-        logger.info("Saved model: path=%s", output.model_path)
-        logger.info("ExperimentData history: path=%s", output.audit_path)
-
-    @staticmethod
-    def _log_metrics(label: str, metrics: RegressionMetrics | ClassificationMetrics) -> None:
-        if isinstance(metrics, RegressionMetrics):
-            logger.info(
-                "%s metrics: mae=%.2f rmse=%.2f r2=%.4f",
-                label, metrics.mean_absolute_error, metrics.root_mean_squared_error, metrics.r2_score,
-            )
-        else:
-            logger.info(
-                "%s metrics: accuracy=%.4f precision=%.4f recall=%.4f f1=%.4f",
-                label, metrics.accuracy, metrics.precision, metrics.recall, metrics.f1_score,
-            )
+        logger.info(f"ExperimentDto completed: {experiment.to_string()}")
+        logger.info("Validation metrics: %s", experiment.validation_metrics.to_string())
+        logger.info("Final test metrics: %s", experiment.test_metrics.to_string())
+        logger.info(f"Saved model: path={experiment.model_path}")
+        logger.info(f"ExperimentDto history: path={experiment.audit_path}")

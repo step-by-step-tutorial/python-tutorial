@@ -27,7 +27,7 @@ def create_parser() -> argparse.ArgumentParser:
 
 def _create_house_application(settings, include_prediction: bool = True) -> Application:
     feature_model = HouseFeatureModel()
-    dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
+    dataset_service = Dataset(settings.data_root / settings.dataset_filename, settings.dataset_name)
     predictor = None
     if include_prediction:
         predictor = ModelPredictor(
@@ -46,7 +46,7 @@ def _create_online_shopping_application(
         include_prediction: bool = True,
 ) -> Application:
     feature_model = OnlineShoppingFeatureModel()
-    dataset_service = Dataset(settings.data_dir / settings.dataset_filename, settings.dataset_name)
+    dataset_service = Dataset(settings.data_root / settings.dataset_filename, settings.dataset_name)
     predictor = (
         ModelPredictor(dataset_service.dataset_name, feature_model)
         if include_prediction
@@ -127,7 +127,7 @@ def run(dataset: str, prediction: str, search_enabled: bool | None = None) -> No
 
     prediction_output = application.predict()
     settings = get_settings(dataset)
-    PredictionView(settings.data_dir / settings.prediction_filename).render(prediction_output)
+    PredictionView(settings.data_root / settings.prediction_filename).render(prediction_output)
 
 
 def main(argv: Sequence[str] | None = None) -> None:

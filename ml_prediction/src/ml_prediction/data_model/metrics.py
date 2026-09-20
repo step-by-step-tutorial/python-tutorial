@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any
 
 
-class View(ABC):
+class Metrics(ABC):
     @abstractmethod
-    def render(self, dto: Any) -> Any:
+    def to_string(self) -> str:
         raise NotImplementedError

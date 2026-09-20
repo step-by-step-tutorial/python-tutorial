@@ -1,8 +1,8 @@
 from pathlib import Path
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from datetime import datetime, timezone
 
-from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.mlflow_service import MlflowService
 from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
@@ -11,7 +11,7 @@ from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 def _settings() -> AppSettings:
     return AppSettings(
-        data_dir=Path("data"), model_dir=Path("models"), target_column="target",
+        data_root=Path("data"), model_root=Path("models"), target_column="target",
         validation_size=0.2, test_size=0.2, random_state=42,
         data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
         dataset_name="house", mlflow_enabled=True, mlflow_tracking_uri="http://mlflow:5000",
@@ -23,7 +23,7 @@ def test_tracker_publishes_parameters_and_metrics(mocker) -> None:
     mlflow_service = MlflowService(_settings())
 
     path = Path("audit.log")
-    mlflow_service.write(TrainingAuditData(experiment=ExperimentData(
+    mlflow_service.write(TrainingAuditDto(experiment=ExperimentDto(
         run_id="experiment-1", timestamp=datetime.now(timezone.utc),
         dataset_name="house", model_type="random_forest",
         model_parameters={"n_estimators": 200},

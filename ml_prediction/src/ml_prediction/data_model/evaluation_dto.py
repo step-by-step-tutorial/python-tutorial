@@ -5,7 +5,7 @@ from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 
 @dataclass(frozen=True)
-class RegressionEvaluationData:
+class RegressionEvaluationDto:
     y_true: Any
     y_pred: Any
     metrics: RegressionMetrics

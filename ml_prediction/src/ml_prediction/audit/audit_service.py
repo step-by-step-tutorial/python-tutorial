@@ -1,10 +1,10 @@
 from ml_prediction.audit.data.audit_data import AuditData
 from ml_prediction.audit.data.audit_operation import AuditOperation
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from ml_prediction.audit.execution_log_service_ import ExecutionLogService
 from ml_prediction.audit.experiment_service import ExperimentService
 from ml_prediction.audit.mlflow_service import MlflowService
-from ml_prediction.audit.pipeline_step.pipeline_step_data import PipelineStepData
+from ml_prediction.audit.pipeline_step.pipeline_step_dto import PipelineStepDto
 from ml_prediction.config.settings import get_settings
 from ml_prediction.utils.id_generator import IdGenerator
 
@@ -29,12 +29,12 @@ class AuditService:
     def run_id(self) -> str:
         return self._run_id
 
-    def write(self, data: AuditData):
-        if isinstance(data, PipelineStepData) and self._settings.execution_log_enabled:
-            self._execution_log_service.write(data, self._execution_log_path)
-        elif isinstance(data, TrainingAuditData) and self._settings.experiment_enabled:
-            self._experiment_service.write(data, self._experiment_path)
-        elif isinstance(data, TrainingAuditData) and self._settings.mlflow_enabled:
-            self._mlflow_service.write(data, self._mlflow_path)
+    def write(self, dto: AuditData):
+        if isinstance(dto, PipelineStepDto) and self._settings.execution_log_enabled:
+            self._execution_log_service.write(dto, self._execution_log_path)
+        elif isinstance(dto, TrainingAuditDto) and self._settings.experiment_enabled:
+            self._experiment_service.write(dto, self._experiment_path)
+        elif isinstance(dto, TrainingAuditDto) and self._settings.mlflow_enabled:
+            self._mlflow_service.write(dto, self._mlflow_path)
         else:
             return

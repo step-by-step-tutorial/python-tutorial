@@ -1,16 +1,16 @@
 from pathlib import Path
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from unittest.mock import call
 
 import pandas as pd
 
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
-from ml_prediction.data_model.evaluation_data import RegressionEvaluationData
-from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.data_model.evaluation_dto import RegressionEvaluationDto
+from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.data_model.dataset_split import DatasetSplitData
+from ml_prediction.data_model.dataset_split_dto import DatasetSplitDto
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
 
@@ -22,7 +22,7 @@ def test_dataset_splitter_splits_dataset_into_train_validation_and_test() -> Non
 
     partitions = splitter.split(features, target)
 
-    assert isinstance(partitions, DatasetSplitData)
+    assert isinstance(partitions, DatasetSplitDto)
     assert len(partitions.train.features) == 6
     assert len(partitions.validation.features) == 2
     assert len(partitions.test.features) == 2
@@ -61,14 +61,14 @@ def test_house_price_trainer_prepares_features_and_target(mocker) -> None:
 
 def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: Path, mocker) -> None:
     settings = AppSettings(
-        data_dir=tmp_path / "data",
-        model_dir=tmp_path / "models",
+        data_root=tmp_path / "data",
+        model_root=tmp_path / "models",
         target_column="target",
         validation_size=0.2,
         test_size=0.2,
         random_state=42,
         data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
-        audit_dir=tmp_path / "reports",
+        audit_root=tmp_path / "reports",
         dataset_name="custom_dataset",
         dataset_filename="house.csv",
     )
@@ -80,7 +80,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
     audit_service = mocker.MagicMock()
     audit_service.run_id = "experiment-1"
-    audit_service.write.side_effect = lambda data: data.experiment if hasattr(data, "experiment") else None
+    audit_service.write.side_effect = lambda dto: dto.experiment if hasattr(dto, "experiment") else None
     mocker.patch(
         "ml_prediction.training.house_price_regression_trainer.AuditService",
         return_value=audit_service,
@@ -88,13 +88,13 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     visualization_facade = mocker.patch(
         "ml_prediction.training.house_price_regression_trainer.VisualizationFacade",
     ).return_value
-    visualization_facade.visualize.side_effect = lambda data: data
+    visualization_facade.visualize.side_effect = lambda dto: dto
     dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
     trainer = HousePriceRegressionTrainer(dataset)
     dataset_path = tmp_path / "data" / "house.csv"
     dataframe = pd.DataFrame({"target": [100]})
     partition = FeaturesAndTarget(dataframe, dataframe["target"])
-    partitions = DatasetSplitData(partition, partition, partition)
+    partitions = DatasetSplitDto(partition, partition, partition)
     model = mocker.Mock()
     metrics = RegressionMetrics(1.0, 2.0, 0.5)
 
@@ -104,13 +104,13 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     trainer.train_model = mocker.Mock(return_value=model)
     trainer.evaluate_model = mocker.Mock(side_effect=[metrics, metrics])
     trainer.evaluate_model_with_predictions = mocker.Mock(
-        return_value=RegressionEvaluationData([100], [100], metrics)
+        return_value=RegressionEvaluationDto([100], [100], metrics)
     )
     trainer.save_model = mocker.Mock(return_value=tmp_path / "models" / "house.joblib")
 
     result = trainer.train()
 
-    assert isinstance(result, ExperimentData)
+    assert isinstance(result, ExperimentDto)
     assert result.run_id
     assert result.timestamp.tzinfo is not None
     assert result.dataset_name == settings.dataset_name
@@ -129,14 +129,14 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
         call(model, partitions.validation),
     ]
     trainer.save_model.assert_called_once()
-    assert any(call_args.args and isinstance(call_args.args[0], TrainingAuditData) for call_args in audit_service.write.call_args_list)
+    assert any(call_args.args and isinstance(call_args.args[0], TrainingAuditDto) for call_args in audit_service.write.call_args_list)
     assert result.audit_path is None
 
 
 def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path, mocker) -> None:
     settings = AppSettings(
-            data_dir=tmp_path / "data",
-            model_dir=tmp_path / "models",
+        data_root=tmp_path / "data",
+        model_root=tmp_path / "models",
             target_column="target",
             validation_size=0.2,
             test_size=0.2,
@@ -160,8 +160,8 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
 
 def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, mocker) -> None:
     settings = AppSettings(
-            data_dir=tmp_path / "data",
-            model_dir=tmp_path / "models",
+        data_root=tmp_path / "data",
+        model_root=tmp_path / "models",
             target_column="target",
             validation_size=0.2,
             test_size=0.2,

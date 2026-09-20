@@ -1,4 +1,4 @@
-from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.experiment_service import ExperimentService
 from ml_prediction.config.settings import get_settings
 
@@ -8,9 +8,9 @@ class ExperimentComparisonService:
         self.dataset_name = dataset_name
         settings = get_settings(dataset_name)
         self.repository = ExperimentService()
-        self.experiment_path = settings.audit_dir / settings.experiment_filename
+        self.experiment_path = settings.audit_root / settings.experiment_filename
 
-    def best_by_validation_mae(self) -> ExperimentData | None:
+    def best_by_validation_mae(self) -> ExperimentDto | None:
         experiments = self.repository.read(self.experiment_path)
         return min(
             experiments,
@@ -18,7 +18,7 @@ class ExperimentComparisonService:
             default=None,
         )
 
-    def best_by_validation_rmse(self) -> ExperimentData | None:
+    def best_by_validation_rmse(self) -> ExperimentDto | None:
         experiments = self.repository.read(self.experiment_path)
         return min(
             experiments,
@@ -26,7 +26,7 @@ class ExperimentComparisonService:
             default=None,
         )
 
-    def best_by_validation_r2(self) -> ExperimentData | None:
+    def best_by_validation_r2(self) -> ExperimentDto | None:
         experiments = self.repository.read(self.experiment_path)
         return max(
             experiments,
@@ -34,7 +34,7 @@ class ExperimentComparisonService:
             default=None,
         )
 
-    def best_by_validation_accuracy(self) -> ExperimentData | None:
+    def best_by_validation_accuracy(self) -> ExperimentDto | None:
         experiments = self.repository.read(self.experiment_path)
         return max(
             experiments,
@@ -42,7 +42,7 @@ class ExperimentComparisonService:
             default=None,
         )
 
-    def best_by_validation_precision(self) -> ExperimentData | None:
+    def best_by_validation_precision(self) -> ExperimentDto | None:
         experiments = self.repository.read(self.experiment_path)
         return max(
             experiments,
@@ -50,7 +50,7 @@ class ExperimentComparisonService:
             default=None,
         )
 
-    def best_by_validation_recall(self) -> ExperimentData | None:
+    def best_by_validation_recall(self) -> ExperimentDto | None:
         experiments = self.repository.read(self.experiment_path)
         return max(
             experiments,
@@ -58,7 +58,7 @@ class ExperimentComparisonService:
             default=None,
         )
 
-    def best_by_validation_f1_score(self) -> ExperimentData | None:
+    def best_by_validation_f1_score(self) -> ExperimentDto | None:
         experiments = self.repository.read(self.experiment_path)
         return max(
             experiments,

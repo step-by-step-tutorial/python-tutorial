@@ -1,17 +1,17 @@
 from datetime import datetime, timezone
-from ml_prediction.audit.data.training_audit_data import TrainingAuditData
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from pathlib import Path
 
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.audit.experiment_service import ExperimentService
-from ml_prediction.audit.data.experiment_data import ExperimentData
+from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 
 
 def test_classification_experiment_round_trip(tmp_path: Path, mocker) -> None:
     experiment_path = tmp_path / "online_shopping_experiment_classification-1.csv"
-    experiment = ExperimentData(
+    experiment = ExperimentDto(
         run_id="classification-1",
         timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
         dataset_name="online_shopping",
@@ -25,7 +25,7 @@ def test_classification_experiment_round_trip(tmp_path: Path, mocker) -> None:
     )
 
     experiment_service = ExperimentService()
-    experiment_service.write(TrainingAuditData(experiment=experiment), experiment_path)
+    experiment_service.write(TrainingAuditDto(experiment=experiment), experiment_path)
     loaded = experiment_service.read(experiment_path)[0]
 
     assert loaded == experiment

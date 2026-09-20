@@ -14,8 +14,8 @@ def get_settings(dataset_name: str) -> AppSettings:
     profile = DATASET_PROFILES[dataset_name]
 
     return AppSettings(
-        data_dir=Path(os.getenv("ML_PREDICTION_DATA_DIR", str(PROJECT_ROOT / "data"))),
-        model_dir=Path(os.getenv("ML_PREDICTION_MODEL_DIR", str(PROJECT_ROOT / "models"))),
+        data_root=Path(os.getenv("ML_PREDICTION_DATA_DIR", str(PROJECT_ROOT / "data"))),
+        model_root=Path(os.getenv("ML_PREDICTION_MODEL_DIR", str(PROJECT_ROOT / "models"))),
         target_column=os.getenv("ML_PREDICTION_TARGET_COLUMN", profile.target_column),
         validation_size=float(os.getenv("ML_PREDICTION_VALIDATION_SIZE", "0.2")),
         test_size=float(os.getenv("ML_PREDICTION_TEST_SIZE", "0.2")),
@@ -39,7 +39,7 @@ def get_settings(dataset_name: str) -> AppSettings:
         max_features=float(os.getenv("ML_PREDICTION_MAX_FEATURES", "1.0")),
         bootstrap=bool(os.getenv("ML_PREDICTION_BOOTSTRAP", "True")),
         dataset_source=DatasetSource(os.getenv("ML_PREDICTION_DATASET_SOURCE", DatasetSource.LOCAL)),
-        audit_dir=Path(os.getenv("ML_PREDICTION_AUDIT_DIR", str(PROJECT_ROOT / "audit_log"))),
+        audit_root=Path(os.getenv("ML_PREDICTION_AUDIT_DIR", str(PROJECT_ROOT / "audit_log"))),
         audit_filename_template=os.getenv(
             "ML_PREDICTION_AUDIT_FILENAME_TEMPLATE",
             "{dataset_name}_{operation}_{run_id}.csv",
