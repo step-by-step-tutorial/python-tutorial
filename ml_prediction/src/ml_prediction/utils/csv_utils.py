@@ -6,7 +6,7 @@ from typing import Any, TypeVar
 
 import pandas as pd
 
-from ml_prediction.utils.dict_data import DictData
+from ml_prediction.data_model.dict_data import DictData
 from ml_prediction.utils.data_validator_utils import is_blank
 
 logger = logging.getLogger(__name__)

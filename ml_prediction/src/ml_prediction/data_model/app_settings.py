@@ -6,8 +6,6 @@ from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.model_parameters import ModelParameters
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-
 
 class DatasetSource(StrEnum):
     LOCAL = "local"
@@ -33,7 +31,7 @@ class AppSettings:
     max_features: int | float | str | None = 1.0
     bootstrap: bool = True
     dataset_source: DatasetSource = DatasetSource.LOCAL
-    audit_dir: Path = PROJECT_ROOT / "audit_log"
+    audit_dir: Path = Path("audit_log")
     audit_filename_template: str = "{dataset_name}_{operation}_{run_id}.csv"
     prediction_audit_filename_template: str = "{dataset_name}_prediction_{run_id}.csv"
     comparison_dirname: str = "comparison"

@@ -3,7 +3,8 @@ import logging
 from sklearn.model_selection import GridSearchCV, ParameterGrid
 from sklearn.pipeline import Pipeline
 
-from ml_prediction.config.regression_search import REGRESSION_PARAMETER_GRID
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
+from ml_prediction.config.search_profiles import SEARCH_PARAMETER_GRIDS
 from ml_prediction.model_selection.regression_selection import RegressionSelection
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,8 @@ class RegressionModelSelector:
         self._n_jobs = n_jobs
 
     def select(self, pipeline: Pipeline, features, target) -> RegressionSelection:
-        candidate_count = len(list(ParameterGrid(REGRESSION_PARAMETER_GRID)))
+        parameter_grid = SEARCH_PARAMETER_GRIDS[ExperimentTaskType.REGRESSION]
+        candidate_count = len(list(ParameterGrid(parameter_grid)))
         logger.info(
             "Regression model search started: candidates=%s cross_validation_folds=%s metric=mean_absolute_error",
             candidate_count,
@@ -23,7 +25,7 @@ class RegressionModelSelector:
         )
         search = GridSearchCV(
             estimator=pipeline,
-            param_grid=REGRESSION_PARAMETER_GRID,
+            param_grid=parameter_grid,
             scoring="neg_mean_absolute_error",
             cv=self._cross_validation_folds,
             n_jobs=self._n_jobs,

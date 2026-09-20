@@ -33,3 +33,35 @@ class ExperimentComparisonService:
             key=lambda experiment: experiment.validation_metrics.r2_score,
             default=None,
         )
+
+    def best_by_validation_accuracy(self) -> ExperimentData | None:
+        experiments = self.repository.read(self.experiment_path)
+        return max(
+            experiments,
+            key=lambda experiment: experiment.validation_metrics.accuracy,
+            default=None,
+        )
+
+    def best_by_validation_precision(self) -> ExperimentData | None:
+        experiments = self.repository.read(self.experiment_path)
+        return max(
+            experiments,
+            key=lambda experiment: experiment.validation_metrics.precision,
+            default=None,
+        )
+
+    def best_by_validation_recall(self) -> ExperimentData | None:
+        experiments = self.repository.read(self.experiment_path)
+        return max(
+            experiments,
+            key=lambda experiment: experiment.validation_metrics.recall,
+            default=None,
+        )
+
+    def best_by_validation_f1_score(self) -> ExperimentData | None:
+        experiments = self.repository.read(self.experiment_path)
+        return max(
+            experiments,
+            key=lambda experiment: experiment.validation_metrics.f1_score,
+            default=None,
+        )

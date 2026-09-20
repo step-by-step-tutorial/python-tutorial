@@ -1,7 +1,11 @@
-from ml_prediction.config.classification_search import CLASSIFICATION_PARAMETER_GRID
-from ml_prediction.config.regression_search import REGRESSION_PARAMETER_GRID
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
+from ml_prediction.config.search_profiles import SEARCH_PARAMETER_GRIDS
 from ml_prediction.model_selection.classification_model_selector import ClassificationModelSelector
 from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
+
+
+CLASSIFICATION_PARAMETER_GRID = SEARCH_PARAMETER_GRIDS[ExperimentTaskType.CLASSIFICATION]
+REGRESSION_PARAMETER_GRID = SEARCH_PARAMETER_GRIDS[ExperimentTaskType.REGRESSION]
 
 
 def test_regression_model_selector_uses_regression_grid_and_mae(mocker) -> None:

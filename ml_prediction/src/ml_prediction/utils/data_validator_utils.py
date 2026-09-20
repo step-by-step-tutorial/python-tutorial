@@ -1,4 +1,5 @@
 from collections import Counter
+from collections.abc import Collection
 from datetime import date
 from typing import Any, Mapping, Iterable
 
@@ -41,6 +42,11 @@ def require_not_blank(obj: Any, error_message="Object cannot be None.") -> Any:
 
 
 def should_be_same(first: Any, second: Any, error_message: str = "Values must be the same.") -> None:
+    if isinstance(first, Collection) and isinstance(second, Collection) and not isinstance(first, (str, bytes)):
+        difference = sorted(set(first).difference(second))
+        if difference:
+            raise Exception(error_message.format(difference=difference))
+        return
     if first != second:
         raise Exception(error_message)
 

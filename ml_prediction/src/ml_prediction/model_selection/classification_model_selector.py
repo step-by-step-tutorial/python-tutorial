@@ -3,7 +3,8 @@ import logging
 from sklearn.model_selection import GridSearchCV, ParameterGrid
 from sklearn.pipeline import Pipeline
 
-from ml_prediction.config.classification_search import CLASSIFICATION_PARAMETER_GRID
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
+from ml_prediction.config.search_profiles import SEARCH_PARAMETER_GRIDS
 from ml_prediction.model_selection.classification_selection import ClassificationSelection
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,8 @@ class ClassificationModelSelector:
         self._n_jobs = n_jobs
 
     def select(self, pipeline: Pipeline, features, target) -> ClassificationSelection:
-        candidate_count = len(list(ParameterGrid(CLASSIFICATION_PARAMETER_GRID)))
+        parameter_grid = SEARCH_PARAMETER_GRIDS[ExperimentTaskType.CLASSIFICATION]
+        candidate_count = len(list(ParameterGrid(parameter_grid)))
         logger.info(
             f"Classification model search started: "
             f"candidates={candidate_count} "
@@ -24,7 +26,7 @@ class ClassificationModelSelector:
         )
         search = GridSearchCV(
             estimator=pipeline,
-            param_grid=CLASSIFICATION_PARAMETER_GRID,
+            param_grid=parameter_grid,
             scoring="f1_weighted",
             cv=self._cross_validation_folds,
             n_jobs=self._n_jobs,

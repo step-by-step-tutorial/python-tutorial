@@ -6,7 +6,8 @@ from typing import Any
 
 from ml_prediction.audit.data.audit_data import AuditData
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
-from ml_prediction.data_model.metrics import Metrics
+from ml_prediction.data_model.classification_metrics import ClassificationMetrics
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.utils.metrics_utils import create_metrics
 
 
@@ -17,8 +18,8 @@ class ExperimentData(AuditData):
     dataset_name: str
     model_type: str
     model_parameters: dict[str, Any]
-    validation_metrics: Metrics
-    test_metrics: Metrics
+    validation_metrics: RegressionMetrics | ClassificationMetrics
+    test_metrics: RegressionMetrics | ClassificationMetrics
     model_path: Path
     audit_path: Path | None
     model_selection_metric: str | None = None

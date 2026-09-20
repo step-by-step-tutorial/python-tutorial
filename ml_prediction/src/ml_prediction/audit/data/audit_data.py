@@ -2,7 +2,7 @@ from abc import ABC
 from dataclasses import asdict, fields as dataclass_fields
 from typing import Any, Self
 
-from ml_prediction.utils.dict_data import DictData
+from ml_prediction.data_model.dict_data import DictData
 
 
 class AuditData(DictData, ABC):
