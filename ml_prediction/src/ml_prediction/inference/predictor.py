@@ -9,8 +9,9 @@ PredictionType = TypeVar("PredictionType")
 
 class Predictor(ABC, Generic[PredictionType]):
     @property
-    def model_path(self) -> Path | None:
-        return None
+    @abstractmethod
+    def model_path(self) -> Path:
+        ...
 
     @property
     @abstractmethod
