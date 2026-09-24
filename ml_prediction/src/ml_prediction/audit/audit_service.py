@@ -37,6 +37,8 @@ class AuditService:
         return self._run_id
 
     def write(self, dto: AuditData):
-        for service, path in self._services.get(type(dto), []):
-            service.write(dto, path)
+        for registered_type, destinations in self._services.items():
+            if isinstance(dto, registered_type):
+                for service, path in destinations:
+                    service.write(dto, path)
         return
