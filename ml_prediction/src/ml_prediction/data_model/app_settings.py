@@ -38,6 +38,7 @@ class AppSettings:
     actual_vs_predicted_filename: str = "actual_vs_predicted.png"
     residual_vs_predicted_filename: str = "residual_vs_predicted.png"
     feature_importance_filename: str = "feature_importance.png"
+    confusion_matrix_filename: str = "confusion_matrix.png"
     validation_mae_filename: str = "validation_mae_comparison.png"
     validation_rmse_filename: str = "validation_rmse_comparison.png"
     validation_r2_filename: str = "validation_r2_comparison.png"

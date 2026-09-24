@@ -58,6 +58,9 @@ def get_settings(dataset_name: str) -> AppSettings:
         feature_importance_filename=os.getenv(
             "ML_PREDICTION_FEATURE_IMPORTANCE_FILENAME", "feature_importance.png",
         ),
+        confusion_matrix_filename=os.getenv(
+            "ML_PREDICTION_CONFUSION_MATRIX_FILENAME", "confusion_matrix.png",
+        ),
         validation_mae_filename=os.getenv(
             "ML_PREDICTION_VALIDATION_MAE_FILENAME", "validation_mae_comparison.png",
         ),
