@@ -6,11 +6,11 @@ import mlflow.sklearn
 
 from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from ml_prediction.audit.data_service import DataService
-from ml_prediction.data_model.app_settings import AppSettings
+from ml_prediction.data_model.app_config import AppConfig
 
 
 class MlflowService(DataService):
-    def __init__(self, settings: AppSettings) -> None:
+    def __init__(self, settings: AppConfig) -> None:
         self._settings = settings
         mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
         mlflow.set_experiment(f"{settings.mlflow_experiment_prefix}/{settings.dataset_name}")

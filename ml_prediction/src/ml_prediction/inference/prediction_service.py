@@ -1,7 +1,7 @@
 import pandas as pd
 
 from ml_prediction.audit.data.audit_operation import AuditOperation
-from ml_prediction.audit.execution_log_service_ import ExecutionLogService
+from ml_prediction.audit.pipeline_audit_service import PipelineAuditService
 from ml_prediction.audit.pipeline_step.dataset_loaded_dto import DatasetLoadedDto
 from ml_prediction.audit.pipeline_step.dataset_ready_dto import DatasetReadyDto
 from ml_prediction.audit.pipeline_step.model_loaded_dto import ModelLoadedDto
@@ -28,12 +28,12 @@ class PredictionService:
         audit_path = self.settings.prediction_audit_path(IdGenerator.generate())
 
         if self.settings.execution_log_enabled:
-            execution_log_service = ExecutionLogService(self.settings.dataset_name, AuditOperation.PREDICTION)
-            execution_log_service.write(DatasetReadyDto(dataset_path), audit_path)
-            execution_log_service.write(ModelLoadedDto(model_path), audit_path)
-            execution_log_service.write(DatasetLoadedDto(len(dataframe), dataset_path), audit_path)
-            execution_log_service.write(PredictionsGeneratedDto(len(predictions), len(dataframe.columns)), audit_path)
-            execution_log_service.write(PredictionCompletedDto(audit_path), audit_path)
+            pipeline_audit_service = PipelineAuditService(self.settings.dataset_name, AuditOperation.PREDICTION)
+            pipeline_audit_service.write(DatasetReadyDto(dataset_path), audit_path)
+            pipeline_audit_service.write(ModelLoadedDto(model_path), audit_path)
+            pipeline_audit_service.write(DatasetLoadedDto(len(dataframe), dataset_path), audit_path)
+            pipeline_audit_service.write(PredictionsGeneratedDto(len(predictions), len(dataframe.columns)), audit_path)
+            pipeline_audit_service.write(PredictionCompletedDto(audit_path), audit_path)
 
         return PredictionDto(
             dataframe=dataframe,

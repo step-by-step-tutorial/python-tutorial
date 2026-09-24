@@ -4,8 +4,8 @@ from unittest.mock import call
 
 import pandas as pd
 
-from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
-from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.data_model.app_config import AppConfig, DatasetSource
+from ml_prediction.data_model.datalake_config import DataLakeconfig
 from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
@@ -60,14 +60,14 @@ def test_house_price_trainer_prepares_features_and_target(mocker) -> None:
 
 
 def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: Path, mocker) -> None:
-    settings = AppSettings(
+    settings = AppConfig(
         data_root=tmp_path / "data",
         model_root=tmp_path / "models",
         target_column="target",
         validation_size=0.2,
         test_size=0.2,
         random_state=42,
-        data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
+        data_lake=DataLakeconfig("http://localhost", "key", "secret", "bucket", ""),
         audit_root=tmp_path / "reports",
         dataset_name="custom_dataset",
         dataset_filename="house.csv",
@@ -134,14 +134,14 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
 
 
 def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path, mocker) -> None:
-    settings = AppSettings(
+    settings = AppConfig(
         data_root=tmp_path / "data",
         model_root=tmp_path / "models",
             target_column="target",
             validation_size=0.2,
             test_size=0.2,
             random_state=42,
-            data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
+        data_lake=DataLakeconfig("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.LOCAL,
             dataset_filename="house.csv",
             dataset_name="house",
@@ -159,14 +159,14 @@ def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path,
 
 
 def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, mocker) -> None:
-    settings = AppSettings(
+    settings = AppConfig(
         data_root=tmp_path / "data",
         model_root=tmp_path / "models",
             target_column="target",
             validation_size=0.2,
             test_size=0.2,
             random_state=42,
-            data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
+        data_lake=DataLakeconfig("http://localhost", "key", "secret", "bucket", ""),
             dataset_source=DatasetSource.DOWNLOAD,
             dataset_filename="house.csv",
             dataset_name="house",

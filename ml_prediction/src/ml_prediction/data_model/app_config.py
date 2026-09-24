@@ -3,7 +3,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
-from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.data_model.datalake_config import DataLakeconfig
 from ml_prediction.data_model.model_parameters import ModelParameters
 
 
@@ -13,14 +13,14 @@ class DatasetSource(StrEnum):
 
 
 @dataclass(frozen=True)
-class AppSettings:
+class AppConfig:
     data_root: Path
     model_root: Path
     target_column: str
     validation_size: float
     test_size: float
     random_state: int
-    data_lake: DataLakeSettings
+    data_lake: DataLakeconfig
     task_type: ExperimentTaskType = ExperimentTaskType.REGRESSION
     model_type: str = "random_forest"
     n_estimators: int = 200

@@ -10,8 +10,8 @@ from ml_prediction.audit.data.artifact_category import ArtifactCategory
 from ml_prediction.audit.data.artifact_dto import ArtifactDto
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
-from ml_prediction.audit.data.metadata import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION
-from ml_prediction.audit.data.metadata import Metadata
+from ml_prediction.audit.data.metadata_dto import CURRENT_MODEL_VERSION, CURRENT_SCHEMA_VERSION
+from ml_prediction.audit.data.metadata_dto import MetadataDto
 from ml_prediction.audit.data.metrics_dto import MetricsDto
 from ml_prediction.audit.data.trained_model_dto import TrainedModelDto
 from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
@@ -104,7 +104,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentDto]):
             final.metrics,
         ))
         timestamp = datetime.now(timezone.utc)
-        metadata = Metadata(
+        metadata = MetadataDto(
             model_type=self._settings.model_type,
             model_parameters=self._selected_model_parameters or configured_parameters,
             target_column=self._settings.target_column,
@@ -185,7 +185,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentDto]):
         y_pred = model.predict(dto.features)
         return self._evaluator.evaluate(y_true, y_pred)
 
-    def save_model(self, model: TrainedModel, metadata: Metadata) -> Path:
+    def save_model(self, model: TrainedModel, metadata: MetadataDto) -> Path:
         model_path = self._settings.model_root / self._settings.model_filename
         self._model_repository.save_model(model_path, model.pipeline, metadata)
         return model_path

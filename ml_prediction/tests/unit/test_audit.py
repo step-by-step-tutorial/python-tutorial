@@ -3,7 +3,7 @@ from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from pathlib import Path
 
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
-from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.data_model.datalake_config import DataLakeconfig
 from ml_prediction.audit.experiment_service import ExperimentService
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType

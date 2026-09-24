@@ -4,13 +4,13 @@ from datetime import datetime, timezone
 import pandas as pd
 import pytest
 
-from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
-from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.data_model.app_config import AppConfig, DatasetSource
+from ml_prediction.data_model.datalake_config import DataLakeconfig
 from ml_prediction.inference.model_predictor import ModelPredictor
 from ml_prediction.data_model.prediction_dto import PredictionDto
 from ml_prediction.inference.prediction_service import PredictionService
 from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.audit.data.metadata import Metadata
+from ml_prediction.audit.data.metadata_dto import MetadataDto
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.repository.datalake_repository import DataLakeRepository
 from ml_prediction.repository.local_model_repository import LocalModelRepository
@@ -18,15 +18,15 @@ from ml_prediction.repository.local_model_repository import LocalModelRepository
 from test_dataset_features import house_dataframe
 
 
-def settings(tmp_path: Path) -> AppSettings:
-    return AppSettings(
+def settings(tmp_path: Path) -> AppConfig:
+    return AppConfig(
         data_root=tmp_path / "data",
         model_root=tmp_path / "models",
         target_column="total_price",
         validation_size=0.2,
         test_size=0.2,
         random_state=42,
-        data_lake=DataLakeSettings("http://localhost:9000", "key", "secret", "house", "prefix"),
+        data_lake=DataLakeconfig("http://localhost:9000", "key", "secret", "house", "prefix"),
         dataset_source=DatasetSource.DOWNLOAD,
         audit_root=tmp_path / "reports",
         dataset_filename="house.csv",
@@ -38,7 +38,7 @@ def settings(tmp_path: Path) -> AppSettings:
 def test_local_model_repository_saves_and_loads(tmp_path: Path) -> None:
     repository = LocalModelRepository()
     path = tmp_path / "models" / "model.joblib"
-    metadata = Metadata(
+    metadata = MetadataDto(
         model_type="random_forest",
         model_parameters={},
         target_column="total_price",
@@ -59,7 +59,7 @@ def test_local_model_repository_saves_and_loads(tmp_path: Path) -> None:
 def test_local_model_repository_saves_and_loads_typed_metadata(tmp_path: Path) -> None:
     repository = LocalModelRepository()
     path = tmp_path / "models" / "model.joblib"
-    metadata = Metadata(
+    metadata = MetadataDto(
         model_type="random_forest",
         model_parameters={"n_estimators": 200, "n_jobs": -1, "random_state": 42},
         target_column="total_price",
@@ -157,14 +157,14 @@ def test_prediction_service_downloads_loads_and_predicts(mocker, tmp_path: Path)
 
 
 def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path: Path) -> None:
-    local_settings = AppSettings(
+    local_settings = AppConfig(
         data_root=tmp_path / "data",
         model_root=tmp_path / "models",
         target_column="total_price",
         validation_size=0.2,
         test_size=0.2,
         random_state=42,
-        data_lake=DataLakeSettings("http://localhost", "key", "secret", "house", ""),
+        data_lake=DataLakeconfig("http://localhost", "key", "secret", "house", ""),
         dataset_source=DatasetSource.LOCAL,
         dataset_filename="house.csv",
     )
@@ -198,7 +198,7 @@ def test_model_predictor_builds_features_and_returns_named_series(mocker) -> Non
     pipeline.predict.return_value = [101.0, 202.0]
     repository = mocker.Mock()
     repository.load_model.return_value = pipeline
-    repository.load_metadata.return_value = Metadata(
+    repository.load_metadata.return_value = MetadataDto(
         model_type="random_forest",
         model_parameters={"n_estimators": 200, "n_jobs": -1, "random_state": 42},
         target_column="total_price",

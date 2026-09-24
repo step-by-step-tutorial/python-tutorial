@@ -4,7 +4,7 @@ from typing import Any
 
 import joblib
 
-from ml_prediction.audit.data.metadata import Metadata
+from ml_prediction.audit.data.metadata_dto import MetadataDto
 from ml_prediction.audit.metadata_service import MetadataService
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class LocalModelRepository:
     def __init__(self):
         self._metadata_service = MetadataService()
 
-    def save_model(self, path: Path, model: Any, metadata: Metadata):
+    def save_model(self, path: Path, model: Any, metadata: MetadataDto):
         path.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(model, path)
         self.save_metadata(metadata, path)
@@ -24,9 +24,9 @@ class LocalModelRepository:
         logger.info(f"Loading model: path={path}")
         return joblib.load(path)
 
-    def save_metadata(self, metadata: Metadata, path: Path):
+    def save_metadata(self, metadata: MetadataDto, path: Path):
         self._metadata_service.write(metadata, path)
         logger.info(f"Saved model metadata: path={path.with_suffix('.metadata.json')}")
 
-    def load_metadata(self, path: Path) -> Metadata:
+    def load_metadata(self, path: Path) -> MetadataDto:
         return self._metadata_service.read(path)

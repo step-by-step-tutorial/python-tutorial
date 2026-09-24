@@ -9,7 +9,7 @@ from ml_prediction.utils.csv_utils import read_csv, write_csv
 from ml_prediction.utils.id_generator import IdGenerator
 
 
-class ExecutionLogService(DataService):
+class PipelineAuditService(DataService):
     def __init__(self, dataset_name: str, operation: AuditOperation, run_id: str = "") -> None:
         self._dataset_name = dataset_name
         self._operation = operation

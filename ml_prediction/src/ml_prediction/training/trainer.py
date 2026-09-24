@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 import pandas as pd
 
-from ml_prediction.audit.data.metadata import Metadata
+from ml_prediction.audit.data.metadata_dto import MetadataDto
 from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 
@@ -34,7 +34,7 @@ class Trainer(ABC, Generic[TrainingResultType]):
         ...
 
     @abstractmethod
-    def save_model(self, model, metadata: Metadata) -> Path:
+    def save_model(self, model, metadata: MetadataDto) -> Path:
         ...
 
     @abstractmethod

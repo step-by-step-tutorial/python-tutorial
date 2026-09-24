@@ -10,7 +10,7 @@ CURRENT_MODEL_VERSION = "1"
 
 
 @dataclass(frozen=True)
-class Metadata(AuditData):
+class MetadataDto(AuditData):
     model_type: str
     model_parameters: dict[str, Any]
     target_column: str

@@ -3,24 +3,24 @@ from pathlib import Path
 
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.config.dataset_profiles import DATASET_PROFILES
-from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
-from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.data_model.app_config import AppConfig, DatasetSource
+from ml_prediction.data_model.datalake_config import DataLakeconfig
 from ml_prediction.utils.type_converter import to_bool
 
 PROJECT_ROOT = os.getenv("PROJECT_ROOT", Path(__file__).resolve().parents[3])
 
 
-def get_settings(dataset_name: str) -> AppSettings:
+def get_settings(dataset_name: str) -> AppConfig:
     profile = DATASET_PROFILES[dataset_name]
 
-    return AppSettings(
+    return AppConfig(
         data_root=Path(os.getenv("ML_PREDICTION_DATA_DIR", str(PROJECT_ROOT / "data"))),
         model_root=Path(os.getenv("ML_PREDICTION_MODEL_DIR", str(PROJECT_ROOT / "models"))),
         target_column=os.getenv("ML_PREDICTION_TARGET_COLUMN", profile.target_column),
         validation_size=float(os.getenv("ML_PREDICTION_VALIDATION_SIZE", "0.2")),
         test_size=float(os.getenv("ML_PREDICTION_TEST_SIZE", "0.2")),
         random_state=int(os.getenv("ML_PREDICTION_RANDOM_STATE", "42")),
-        data_lake=DataLakeSettings(
+        data_lake=DataLakeconfig(
             endpoint=os.getenv("ML_PREDICTION_DATALAKE_ENDPOINT", "http://localhost:9000"),
             access_key=os.getenv("ML_PREDICTION_DATALAKE_ACCESS_KEY", "admin"),
             secret_key=os.getenv("ML_PREDICTION_DATALAKE_SECRET_KEY", "administrator"),

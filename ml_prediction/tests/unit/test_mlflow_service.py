@@ -4,16 +4,16 @@ from datetime import datetime, timezone
 
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.mlflow_service import MlflowService
-from ml_prediction.data_model.app_settings import AppSettings
-from ml_prediction.data_model.datalake_settings import DataLakeSettings
+from ml_prediction.data_model.app_config import AppConfig
+from ml_prediction.data_model.datalake_config import DataLakeconfig
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 
-def _settings() -> AppSettings:
-    return AppSettings(
+def _settings() -> AppConfig:
+    return AppConfig(
         data_root=Path("data"), model_root=Path("models"), target_column="target",
         validation_size=0.2, test_size=0.2, random_state=42,
-        data_lake=DataLakeSettings("http://localhost", "key", "secret", "bucket", ""),
+        data_lake=DataLakeconfig("http://localhost", "key", "secret", "bucket", ""),
         dataset_name="house", mlflow_enabled=True, mlflow_tracking_uri="http://mlflow:5000",
     )
 
