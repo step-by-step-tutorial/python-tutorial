@@ -23,7 +23,7 @@ class ExperimentDto(AuditData):
     audit_path: Path | None
     model_selection_metric: str | None = None
     model_selection_score: float | None = None
-    task_type: ExperimentTaskType = ExperimentTaskType.REGRESSION
+    task_type: ExperimentTaskType = ExperimentTaskType.UNKNOWN
 
     def to_string(self) -> str:
         return (

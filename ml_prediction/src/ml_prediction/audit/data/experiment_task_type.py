@@ -8,6 +8,7 @@ from ml_prediction.data_model.regression_metrics import RegressionMetrics
 class ExperimentTaskType(Enum):
     REGRESSION = ("regression", RegressionMetrics)
     CLASSIFICATION = ("classification", ClassificationMetrics)
+    UNKNOWN = ("unknown", Any)
 
     metrics_type: Any
 

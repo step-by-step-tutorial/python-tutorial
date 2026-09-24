@@ -3,6 +3,7 @@ from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from pathlib import Path
 
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.audit.experiment_service import ExperimentService
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.visualize.experiment_visualizer import ExperimentVisualizer
@@ -13,6 +14,7 @@ def make_experiment(run_id: str, model_type: str) -> ExperimentDto:
         run_id=run_id,
         timestamp=datetime.now(timezone.utc),
         dataset_name="house",
+        task_type=ExperimentTaskType.REGRESSION,
         model_type=model_type,
         model_parameters={},
         validation_metrics=RegressionMetrics(1.0, 2.0, 0.8),

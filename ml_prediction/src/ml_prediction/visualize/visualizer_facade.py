@@ -16,19 +16,22 @@ class VisualizationFacade:
                 EvaluationVisualizer(dataset_name),
                 ModelInterpretabilityVisualizer(dataset_name),
                 ExperimentVisualizer(dataset_name),
+                CliVisualizer(),
             ),
             ExperimentTaskType.CLASSIFICATION: (
                 ClassificationEvaluationVisualizer(dataset_name),
+                CliVisualizer(),
+            ),
+            ExperimentTaskType.UNKNOWN: (
+                CliVisualizer(),
             ),
         }
-        self._cli_visualizer = CliVisualizer()
 
     def visualize(self, dto: TrainingAuditDto) -> tuple[ArtifactDto, ...]:
-        artifacts: list[ArtifactDto] = []
         if dto.experiment is None:
-            self._cli_visualizer.render(dto)
             return ()
+
+        artifacts: list[ArtifactDto] = []
         for visualizer in self._visualizers[dto.experiment.task_type]:
             artifacts.extend(visualizer.render(dto))
-        self._cli_visualizer.render(dto)
         return tuple(artifacts)

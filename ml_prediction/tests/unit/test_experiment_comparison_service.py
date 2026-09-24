@@ -14,6 +14,7 @@ def experiment(run_id: str, mae: float, rmse: float, r2: float) -> ExperimentDto
         run_id=run_id,
         timestamp=datetime.now(timezone.utc),
         dataset_name="house",
+        task_type=ExperimentTaskType.REGRESSION,
         model_type="random_forest",
         model_parameters={},
         validation_metrics=RegressionMetrics(mae, rmse, r2),

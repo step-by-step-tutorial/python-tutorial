@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.audit.experiment_service import ExperimentService
 
@@ -17,6 +18,7 @@ def test_experiment_repository_appends_and_reads_typed_results(tmp_path: Path) -
         run_id="experiment-1",
         timestamp=datetime(2026, 1, 1, tzinfo=timezone.utc),
         dataset_name="house",
+        task_type=ExperimentTaskType.REGRESSION,
         model_type="random_forest",
         model_parameters={"n_estimators": 200, "bootstrap": True},
         validation_metrics=RegressionMetrics(0.8, 1.5, 0.7),
