@@ -1,12 +1,12 @@
 import logging
 
 from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
-from ml_prediction.presentation.view import View
+from ml_prediction.visualize.visualizer import Visualizer
 
 logger = logging.getLogger(__name__)
 
 
-class CliView(View):
+class CliVisualizer(Visualizer):
     def render(self, dto: TrainingAuditDto) -> None:
         experiment = dto.experiment
         if experiment is None:

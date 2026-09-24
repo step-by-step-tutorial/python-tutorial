@@ -6,6 +6,7 @@ from sklearn.pipeline import Pipeline
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.config.search_profiles import SEARCH_PARAMETER_GRIDS
 from ml_prediction.model_selection.regression_selection import RegressionSelection
+from ml_prediction.pipeline.pipeline_step import PipelineStep
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class RegressionModelSelector:
                 start=1,
         ):
             readable_parameters = {
-                key.removeprefix("regressor__"): value
+                key.removeprefix(f"{PipelineStep.REGRESSOR}__"): value
                 for key, value in parameters.items()
             }
             logger.info(
@@ -50,7 +51,7 @@ class RegressionModelSelector:
         logger.info(
             "Regression model search completed: best_parameters=%s cross_validation_mae=%.4f",
             {
-                key.removeprefix("regressor__"): value
+                key.removeprefix(f"{PipelineStep.REGRESSOR}__"): value
                 for key, value in search.best_params_.items()
             },
             -search.best_score_,

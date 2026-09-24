@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Any
 
-from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.data_model.metrics import Metrics
 
 
 @dataclass(frozen=True)
-class RegressionEvaluationDto:
+class EvaluationDto:
     y_true: Any
     y_pred: Any
-    metrics: RegressionMetrics
+    metrics: Metrics

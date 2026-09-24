@@ -1,10 +1,10 @@
 from typing import Any
 
 from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
-from ml_prediction.presentation.view import View
+from ml_prediction.visualize.visualizer import Visualizer
 
 
-class WebView(View):
+class WebVisualizer(Visualizer):
 
     def render(self, dto: TrainingAuditDto) -> dict[str, Any]:
         if dto.experiment is None:

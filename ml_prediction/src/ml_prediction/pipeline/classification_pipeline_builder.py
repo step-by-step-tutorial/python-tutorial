@@ -6,6 +6,7 @@ from sklearn.preprocessing import OneHotEncoder
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.pipeline.classifier_builder import ClassifierBuilder
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
+from ml_prediction.pipeline.pipeline_step import PipelineStep
 
 
 class ClassificationPipelineBuilder(PipelineBuilder):
@@ -26,6 +27,6 @@ class ClassificationPipelineBuilder(PipelineBuilder):
             ("categorical", categorical_transformer, categorical_features),
         ])
         return Pipeline([
-            ("preprocessor", preprocessor),
-            ("classifier", self._classifier_builder.build()),
+            (PipelineStep.PREPROCESSOR, preprocessor),
+            (PipelineStep.CLASSIFIER, self._classifier_builder.build()),
         ])

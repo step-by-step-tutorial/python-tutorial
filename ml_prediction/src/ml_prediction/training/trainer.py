@@ -5,12 +5,11 @@ from typing import Generic, TypeVar
 import pandas as pd
 
 from ml_prediction.audit.data.metadata import Metadata
-from ml_prediction.data_model.classification_evaluation_dto import ClassificationEvaluationDto
-from ml_prediction.data_model.evaluation_dto import RegressionEvaluationDto
+from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 
 TrainingResultType = TypeVar("TrainingResultType")
-EvaluationType = RegressionEvaluationDto | ClassificationEvaluationDto
+EvaluationType = EvaluationDto
 
 
 class Trainer(ABC, Generic[TrainingResultType]):

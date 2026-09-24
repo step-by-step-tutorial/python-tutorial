@@ -10,7 +10,7 @@ from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
 from ml_prediction.inference.model_predictor import ModelPredictor
-from ml_prediction.presentation.prediction_view import PredictionView
+from ml_prediction.visualize.prediction_visualizer import PredictionVisualizer
 from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
 from ml_prediction.training.online_shopping_classification_trainer import OnlineShoppingClassificationTrainer
 
@@ -127,7 +127,7 @@ def run(dataset: str, prediction: str, search_enabled: bool | None = None) -> No
 
     prediction_output = application.predict()
     settings = get_settings(dataset)
-    PredictionView(settings.data_root / settings.prediction_filename).render(prediction_output)
+    PredictionVisualizer(settings.data_root / settings.prediction_filename).render(prediction_output)
 
 
 def main(argv: Sequence[str] | None = None) -> None:

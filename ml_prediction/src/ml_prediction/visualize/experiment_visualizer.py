@@ -1,11 +1,16 @@
 from pathlib import Path
 
+from ml_prediction.audit.data.artifact_category import ArtifactCategory
+from ml_prediction.audit.data.artifact_dto import ArtifactDto
+from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from ml_prediction.audit.experiment_service import ExperimentService
 from ml_prediction.config.settings import get_settings
+from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.visualize.visualizer import Visualizer
 from ml_prediction.utils.visualization_utils import save_line_chart
 
 
-class ExperimentVisualizer:
+class ExperimentVisualizer(Visualizer):
 
     def __init__(self, dataset_name: str):
         settings = get_settings(dataset_name)
@@ -14,6 +19,13 @@ class ExperimentVisualizer:
         self._experiment_path = settings.audit_root / settings.experiment_filename
         self.audit_dir = settings.audit_root / settings.comparison_dirname
         self.dataset_name = dataset_name
+
+    def render(self, dto: TrainingAuditDto) -> tuple[ArtifactDto, ...]:
+        return tuple([
+            ArtifactDto(self.save_validation_mae(), ArtifactCategory.PLOTS),
+            ArtifactDto(self.save_validation_rmse(), ArtifactCategory.PLOTS),
+            ArtifactDto(self.save_validation_r2(), ArtifactCategory.PLOTS),
+        ])
 
     def save_validation_mae(self) -> Path | None:
         metric_data = self._read_metric_data("mean_absolute_error")

@@ -5,7 +5,7 @@ from pathlib import Path
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.experiment_service import ExperimentService
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
+from ml_prediction.visualize.experiment_visualizer import ExperimentVisualizer
 
 
 def make_experiment(run_id: str, model_type: str) -> ExperimentDto:
@@ -24,7 +24,7 @@ def make_experiment(run_id: str, model_type: str) -> ExperimentDto:
 
 def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path, mocker) -> None:
     mocker.patch(
-        "ml_prediction.presentation.visual.experiment_visualizer.get_settings",
+        "ml_prediction.visualize.experiment_visualizer.get_settings",
         return_value=mocker.Mock(
             audit_root=tmp_path / "reports",
             experiment_filename="experiments.csv",
@@ -53,7 +53,7 @@ def test_experiment_visualizer_creates_separate_metric_charts(tmp_path: Path, mo
 
 def test_experiment_visualizer_skips_empty_history(tmp_path: Path, mocker) -> None:
     mocker.patch(
-        "ml_prediction.presentation.visual.experiment_visualizer.get_settings",
+        "ml_prediction.visualize.experiment_visualizer.get_settings",
         return_value=mocker.Mock(
             audit_root=tmp_path / "reports",
             experiment_filename="experiments.csv",

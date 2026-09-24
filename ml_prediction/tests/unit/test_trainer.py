@@ -6,7 +6,7 @@ import pandas as pd
 
 from ml_prediction.data_model.app_settings import AppSettings, DatasetSource
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
-from ml_prediction.data_model.evaluation_dto import RegressionEvaluationDto
+from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
@@ -104,7 +104,7 @@ def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: P
     trainer.train_model = mocker.Mock(return_value=model)
     trainer.evaluate_model = mocker.Mock(side_effect=[metrics, metrics])
     trainer.evaluate_model_with_predictions = mocker.Mock(
-        return_value=RegressionEvaluationDto([100], [100], metrics)
+        return_value=EvaluationDto([100], [100], metrics)
     )
     trainer.save_model = mocker.Mock(return_value=tmp_path / "models" / "house.joblib")
 

@@ -6,9 +6,9 @@ import pytest
 from ml_prediction import main
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.application.application import Application
-from ml_prediction.presentation.prediction_view import PredictionView
-from ml_prediction.presentation.view import View
-from ml_prediction.presentation.cli_view import CliView
+from ml_prediction.visualize.prediction_visualizer import PredictionVisualizer
+from ml_prediction.visualize.visualizer import Visualizer
+from ml_prediction.visualize.cli_visualizer import CliVisualizer
 
 
 def test_application_delegates_train_and_predict(mocker) -> None:
@@ -28,10 +28,10 @@ def test_application_delegates_train_and_predict(mocker) -> None:
 
 
 def test_presenters_implement_presenter_contract(tmp_path: Path) -> None:
-    assert issubclass(CliView, View)
-    assert issubclass(PredictionView, View)
-    assert not CliView.__abstractmethods__
-    assert not PredictionView.__abstractmethods__
+    assert issubclass(CliVisualizer, Visualizer)
+    assert issubclass(PredictionVisualizer, Visualizer)
+    assert not CliVisualizer.__abstractmethods__
+    assert not PredictionVisualizer.__abstractmethods__
 
 
 def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None:
@@ -46,7 +46,7 @@ def test_prediction_presenter_writes_predictions(tmp_path: Path, caplog) -> None
         ExperimentTaskType.REGRESSION,
     )
 
-    assert PredictionView(output_path).render(result) == output_path
+    assert PredictionVisualizer(output_path).render(result) == output_path
     assert output_path.read_text(encoding="utf-8").splitlines() == [
         "city,predicted_total_price",
         "Paris,123.5",
@@ -75,7 +75,7 @@ def test_cli_select_prediction_supports_exit(monkeypatch) -> None:
 def test_cli_run_train_and_predict(mocker) -> None:
     application = mocker.Mock()
     mocker.patch.object(main, "create_application", return_value=application)
-    prediction_view = mocker.patch.object(main, "PredictionView")
+    prediction_view = mocker.patch.object(main, "PredictionVisualizer")
 
     main.run("house", "train")
     main.run("house", "predict")

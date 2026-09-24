@@ -1,5 +1,5 @@
 import logging
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -24,9 +24,9 @@ from ml_prediction.audit.pipeline_step.model_saved_dto import ModelSavedDto
 from ml_prediction.audit.pipeline_step.model_training_dto import ModelTrainingDto
 from ml_prediction.audit.pipeline_step.target_extracted_dto import TargetExtractedDto
 from ml_prediction.config.settings import get_settings
-from ml_prediction.data_model.classification_evaluation_dto import ClassificationEvaluationDto
 from ml_prediction.data_model.classification_metrics import ClassificationMetrics
 from ml_prediction.data_model.dataset_split_dto import DatasetSplitDto
+from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.classification_evaluator import ClassificationEvaluator
@@ -36,7 +36,8 @@ from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model_selection.classification_model_selector import ClassificationModelSelector
 from ml_prediction.pipeline.classification_pipeline_builder import ClassificationPipelineBuilder
 from ml_prediction.pipeline.classifier_builder import ClassifierBuilder
-from ml_prediction.presentation.visualizer import VisualizationFacade
+from ml_prediction.pipeline.pipeline_step import PipelineStep
+from ml_prediction.visualize.visualizer_facade import VisualizationFacade
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.trainer import Trainer
@@ -142,7 +143,8 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentDto]):
                 **{f"test_{key}": float(value) for key, value in asdict(final.metrics).items()},
             },
         )
-        self._audit_service.write(self._visualization_facade.visualize(audit_data))
+        artifacts = self._visualization_facade.visualize(audit_data)
+        self._audit_service.write(replace(audit_data, artifacts=artifacts))
         return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:
@@ -167,7 +169,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentDto]):
             partitions.train.target,
         )
         self._selected_model_parameters = {
-            key.removeprefix("classifier__"): value
+            key.removeprefix(f"{PipelineStep.CLASSIFIER}__"): value
             for key, value in selection.parameters.items()
         }
         self._selected_model_score = selection.f1_score
@@ -178,7 +180,7 @@ class OnlineShoppingClassificationTrainer(Trainer[ExperimentDto]):
             dto.target, model.predict(dto.features)
         ).metrics
 
-    def evaluate_model_with_predictions(self, model, dto: FeaturesAndTarget) -> ClassificationEvaluationDto:
+    def evaluate_model_with_predictions(self, model, dto: FeaturesAndTarget) -> EvaluationDto:
         y_true = dto.target
         y_pred = model.predict(dto.features)
         return self._evaluator.evaluate(y_true, y_pred)

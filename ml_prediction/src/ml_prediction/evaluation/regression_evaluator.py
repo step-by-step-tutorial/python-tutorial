@@ -2,14 +2,14 @@ import logging
 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-from ml_prediction.data_model.evaluation_dto import RegressionEvaluationDto
+from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 
 logger = logging.getLogger(__name__)
 
 
 class RegressionEvaluator:
-    def evaluate(self, actual, predicted) -> RegressionEvaluationDto:
+    def evaluate(self, actual, predicted) -> EvaluationDto:
         metrics = RegressionMetrics(
             mean_absolute_error=float(mean_absolute_error(actual, predicted)),
             root_mean_squared_error=float(mean_squared_error(actual, predicted) ** 0.5),
@@ -21,4 +21,4 @@ class RegressionEvaluator:
             f"rmse={metrics.root_mean_squared_error} "
             f"r2={metrics.r2_score}"
         )
-        return RegressionEvaluationDto(actual, predicted, metrics)
+        return EvaluationDto(actual, predicted, metrics)

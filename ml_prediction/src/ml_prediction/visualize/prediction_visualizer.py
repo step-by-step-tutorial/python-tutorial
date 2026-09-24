@@ -2,12 +2,12 @@ import logging
 from pathlib import Path
 
 from ml_prediction.data_model.prediction_dto import PredictionDto
-from ml_prediction.presentation.view import View
+from ml_prediction.visualize.visualizer import Visualizer
 
 logger = logging.getLogger(__name__)
 
 
-class PredictionView(View):
+class PredictionVisualizer(Visualizer):
     def __init__(self, path: Path) -> None:
         self._path = path
 

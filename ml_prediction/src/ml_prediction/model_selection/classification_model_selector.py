@@ -6,6 +6,7 @@ from sklearn.pipeline import Pipeline
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.config.search_profiles import SEARCH_PARAMETER_GRIDS
 from ml_prediction.model_selection.classification_selection import ClassificationSelection
+from ml_prediction.pipeline.pipeline_step import PipelineStep
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class ClassificationModelSelector:
                 start=1,
         ):
             readable_parameters = {
-                key.removeprefix("classifier__"): value
+                key.removeprefix(f"{PipelineStep.CLASSIFIER}__"): value
                 for key, value in parameters.items()
             }
             logger.info(
@@ -51,7 +52,7 @@ class ClassificationModelSelector:
         logger.info(
             "Classification model search completed: best_parameters=%s cross_validation_f1_weighted=%.4f",
             {
-                key.removeprefix("classifier__"): value
+                key.removeprefix(f"{PipelineStep.CLASSIFIER}__"): value
                 for key, value in search.best_params_.items()
             },
             search.best_score_,

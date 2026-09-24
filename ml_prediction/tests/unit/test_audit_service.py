@@ -6,17 +6,19 @@ from pathlib import Path
 from ml_prediction.audit.data.experiment_dto import ExperimentDto
 from ml_prediction.audit.data.artifact_dto import ArtifactDto
 from ml_prediction.audit.data.artifact_category import ArtifactCategory
+from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
 from ml_prediction.audit.data.metrics_dto import MetricsDto
 from ml_prediction.audit.data.trained_model_dto import TrainedModelDto
 from ml_prediction.audit.pipeline_step.dataset_prepared_dto import DatasetPreparedDto
 from ml_prediction.data_model.app_settings import AppSettings
 from ml_prediction.data_model.datalake_settings import DataLakeSettings
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.data_model.evaluation_dto import RegressionEvaluationDto
+from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.audit.audit_service import AuditService
-from ml_prediction.presentation.visual.artifact_visualizer import ArtifactVisualizer
-from ml_prediction.presentation.visual.experiment_visualizer import ExperimentVisualizer
-from ml_prediction.presentation.visualization_view import VisualizationView
+from ml_prediction.visualize.evaluation_visualizer import EvaluationVisualizer
+from ml_prediction.visualize.experiment_visualizer import ExperimentVisualizer
+from ml_prediction.visualize.model_interpretability_visualizer import ModelInterpretabilityVisualizer
+from ml_prediction.visualize.visualizer_facade import VisualizationFacade
 
 
 def _settings(tmp_path: Path) -> AppSettings:
@@ -86,17 +88,32 @@ def test_audit_service_skips_execution_logging_when_disabled(tmp_path: Path, moc
 
 
 def test_visualization_service_returns_artifacts_without_tracking(tmp_path: Path, mocker) -> None:
-    artifact_visualizer = mocker.Mock(spec=ArtifactVisualizer)
-    artifact_visualizer.save_actual_vs_predicted.return_value = tmp_path / "actual.png"
-    artifact_visualizer.save_residual_vs_predicted.return_value = tmp_path / "residual.png"
-    artifact_visualizer.save_feature_importance.return_value = None
+    evaluation_visualizer = mocker.Mock(spec=EvaluationVisualizer)
+    evaluation_visualizer.render.return_value = (
+        ArtifactDto(tmp_path / "actual.png", ArtifactCategory.PLOTS),
+        ArtifactDto(tmp_path / "residual.png", ArtifactCategory.PLOTS),
+    )
     experiment_visualizer = mocker.Mock(spec=ExperimentVisualizer)
-    mocker.patch("ml_prediction.presentation.visualization_view.ArtifactVisualizer", return_value=artifact_visualizer)
-    mocker.patch("ml_prediction.presentation.visualization_view.ExperimentVisualizer", return_value=experiment_visualizer)
-    service = VisualizationView("house")
-    evaluation = RegressionEvaluationDto([1.0], [1.0], mocker.Mock())
+    experiment_visualizer.render.return_value = ()
+    interpretability_visualizer = mocker.Mock(spec=ModelInterpretabilityVisualizer)
+    interpretability_visualizer.render.return_value = ()
+    mocker.patch("ml_prediction.visualize.visualizer_facade.EvaluationVisualizer", return_value=evaluation_visualizer)
+    mocker.patch(
+        "ml_prediction.visualize.visualizer_facade.ModelInterpretabilityVisualizer",
+        return_value=interpretability_visualizer,
+    )
+    mocker.patch("ml_prediction.visualize.visualizer_facade.ExperimentVisualizer", return_value=experiment_visualizer)
+    service = VisualizationFacade("house")
+    evaluation = EvaluationDto([1.0], [1.0], RegressionMetrics(1.0, 2.0, 0.5))
 
-    artifacts = service.publish(mocker.Mock(), evaluation, "experiment-1", tmp_path)
+    result = service.visualize(
+        TrainingAuditDto(
+            model=mocker.Mock(),
+            evaluation=evaluation,
+            experiment=mocker.Mock(run_id="experiment-1", task_type=ExperimentTaskType.REGRESSION),
+        )
+    )
+    artifacts = result
 
     assert {artifact.path for artifact in artifacts} == {tmp_path / "actual.png", tmp_path / "residual.png"}
     assert all(artifact.category == "plots" for artifact in artifacts)

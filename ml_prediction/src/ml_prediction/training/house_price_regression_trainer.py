@@ -1,5 +1,5 @@
 import logging
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -25,7 +25,7 @@ from ml_prediction.audit.pipeline_step.model_training_dto import ModelTrainingDt
 from ml_prediction.audit.pipeline_step.target_extracted_dto import TargetExtractedDto
 from ml_prediction.config.settings import get_settings
 from ml_prediction.data_model.dataset_split_dto import DatasetSplitDto
-from ml_prediction.data_model.evaluation_dto import RegressionEvaluationDto
+from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.dataset.dataset import Dataset
@@ -36,7 +36,8 @@ from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.pipeline.regressor_pipeline_builder import RegressorPipelineBuilder
-from ml_prediction.presentation.visualizer import VisualizationFacade
+from ml_prediction.pipeline.pipeline_step import PipelineStep
+from ml_prediction.visualize.visualizer_facade import VisualizationFacade
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.trainer import Trainer
@@ -191,7 +192,8 @@ class HousePriceRegressionTrainer(Trainer[ExperimentDto]):
                 **{f"test_{key}": float(value) for key, value in asdict(final_test_evaluation.metrics).items()},
             },
         )
-        self._audit_service.write(self._visualization_facade.visualize(audit_data))
+        artifacts = self._visualization_facade.visualize(audit_data)
+        self._audit_service.write(replace(audit_data, artifacts=artifacts))
         return result
 
     def download_dataset(self) -> tuple[pd.DataFrame, Path]:
@@ -221,7 +223,8 @@ class HousePriceRegressionTrainer(Trainer[ExperimentDto]):
             partitions.train.target,
         )
         self._selected_model_parameters = {
-            key.removeprefix("regressor__"): value for key, value in selection.parameters.items()
+            key.removeprefix(f"{PipelineStep.REGRESSOR}__"): value
+            for key, value in selection.parameters.items()
         }
         self._selected_model_score = selection.mean_absolute_error
         return TrainedModel.from_pipeline(selection.pipeline)
@@ -229,7 +232,7 @@ class HousePriceRegressionTrainer(Trainer[ExperimentDto]):
     def evaluate_model(self, model, dto: FeaturesAndTarget) -> RegressionMetrics:
         return self._evaluator.evaluate(dto.target, model.predict(dto.features)).metrics
 
-    def evaluate_model_with_predictions(self, model, dto: FeaturesAndTarget) -> RegressionEvaluationDto:
+    def evaluate_model_with_predictions(self, model, dto: FeaturesAndTarget) -> EvaluationDto:
         y_true = dto.target
         y_pred = model.predict(dto.features)
         return self._evaluator.evaluate(y_true, y_pred)

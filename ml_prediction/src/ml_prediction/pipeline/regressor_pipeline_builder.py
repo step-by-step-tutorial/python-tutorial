@@ -6,6 +6,7 @@ from sklearn.preprocessing import OneHotEncoder
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.pipeline.pipeline_builder import PipelineBuilder
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
+from ml_prediction.pipeline.pipeline_step import PipelineStep
 
 
 class RegressorPipelineBuilder(PipelineBuilder):
@@ -32,8 +33,8 @@ class RegressorPipelineBuilder(PipelineBuilder):
         ])
 
         pipeline = Pipeline([
-            ("preprocessor", preprocessor),
-            ("regressor", self._regressor_builder.build()),
+            (PipelineStep.PREPROCESSOR, preprocessor),
+            (PipelineStep.REGRESSOR, self._regressor_builder.build()),
         ])
 
         return pipeline
