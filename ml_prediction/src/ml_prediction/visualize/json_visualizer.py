@@ -4,7 +4,7 @@ from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
 from ml_prediction.visualize.visualizer import Visualizer
 
 
-class WebVisualizer(Visualizer):
+class JsonVisualizer(Visualizer):
 
     def render(self, dto: TrainingAuditDto) -> dict[str, Any]:
         if dto.experiment is None:
