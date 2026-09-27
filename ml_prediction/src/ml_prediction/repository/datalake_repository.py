@@ -6,7 +6,7 @@ import boto3
 import pandas as pd
 
 from ml_prediction.config.settings import get_settings
-from ml_prediction.utils.data_validator_utils import require_not_blank
+from ml_prediction.utils.data_validator_utils import should_not_be_blank
 from ml_prediction.utils.datalake_utils import find_latest_partition
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class DataLakeRepository:
 
     def download_latest_csv(self, path: Path) -> Path:
         objects = self.get_object_keys()
-        require_not_blank(
+        should_not_be_blank(
             obj=objects,
             error_message=f"No Parquet files found in bucket '{self.bucket_name}' with prefix '{self.object_prefix}'."
         )

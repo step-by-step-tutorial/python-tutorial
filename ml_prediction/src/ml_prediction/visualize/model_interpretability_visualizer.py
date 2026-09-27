@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ml_prediction.utils.data_validator_utils import require_not_blank
+from ml_prediction.utils.data_validator_utils import should_not_be_blank
 
 import numpy as np
 
@@ -28,7 +28,7 @@ class ModelInterpretabilityVisualizer(Visualizer):
         if dto.model is None:
             return ()
 
-        feature_importance_path = require_not_blank(self.save_feature_importance(dto.model, dto.experiment.run_id))
+        feature_importance_path = should_not_be_blank(self.save_feature_importance(dto.model, dto.experiment.run_id))
         return tuple([
             ArtifactDto(feature_importance_path, ArtifactCategory.PLOTS),
         ])

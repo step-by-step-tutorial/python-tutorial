@@ -1,6 +1,6 @@
 import pandas as pd
 
-from ml_prediction.utils.data_validator_utils import require_blank
+from ml_prediction.utils.data_validator_utils import should_be_blank
 
 
 def extract(dataframe: pd.DataFrame, columns) -> pd.DataFrame:
@@ -12,4 +12,4 @@ def should_have_unique_columns(dataframe: pd.DataFrame) -> None:
         raise Exception("DataFrame must not be empty")
 
     duplicated_columns = dataframe.columns[dataframe.columns.duplicated()].tolist()
-    require_blank(duplicated_columns, f"DataFrame contains duplicated column names: {duplicated_columns}")
+    should_be_blank(duplicated_columns, f"DataFrame contains duplicated column names: {duplicated_columns}")

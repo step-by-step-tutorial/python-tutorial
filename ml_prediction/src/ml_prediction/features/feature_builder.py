@@ -5,7 +5,7 @@ import pandas as pd
 from ml_prediction.features.feature_model import FeatureModel
 from ml_prediction.utils.data_converter import boolean_to_numeric
 from ml_prediction.utils.data_validator_utils import (
-    require_not_blank,
+    should_not_be_blank,
     should_be_same,
     should_not_have_duplication,
 )
@@ -24,7 +24,7 @@ class FeatureBuilder:
 
     def build(self) -> pd.DataFrame:
         should_have_unique_columns(self._dataframe)
-        require_not_blank(self._feature_columns, "No feature columns were defined")
+        should_not_be_blank(self._feature_columns, "No feature columns were defined")
         should_not_have_duplication(list(self._feature_columns))
         should_be_same(
             first=self._feature_columns,

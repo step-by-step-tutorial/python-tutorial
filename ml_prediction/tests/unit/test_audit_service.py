@@ -75,7 +75,7 @@ def test_audit_service_writes_data_to_services(tmp_path: Path, mocker) -> None:
 def test_audit_service_skips_execution_logging_when_disabled(tmp_path: Path, mocker) -> None:
     settings = replace(
         _settings(tmp_path),
-        execution_log_enabled=False,
+        pipeline_audit_enabled=False,
         experiment_enabled=False,
         mlflow_enabled=False,
     )
