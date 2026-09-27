@@ -27,21 +27,21 @@ from ml_prediction.config.settings import get_settings
 from ml_prediction.data_model.dataset_split_dto import DatasetSplitDto
 from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.data_model.features_and_target import FeaturesAndTarget
-from ml_prediction.data_model.regression_metrics import RegressionMetrics
+from ml_prediction.data_model.metrics import Metrics
 from ml_prediction.dataset.dataset import Dataset
 from ml_prediction.evaluation.regression_evaluator import RegressionEvaluator
 from ml_prediction.features.feature_builder import FeatureBuilder
 from ml_prediction.features.house_feature_model import HouseFeatureModel
 from ml_prediction.model.trained_model import TrainedModel
 from ml_prediction.model_selection.regression_model_selector import RegressionModelSelector
+from ml_prediction.pipeline.pipeline_step import PipelineStep
 from ml_prediction.pipeline.regressor_builder import RegressorBuilder
 from ml_prediction.pipeline.regressor_pipeline_builder import RegressorPipelineBuilder
-from ml_prediction.pipeline.pipeline_step import PipelineStep
-from ml_prediction.visualize.visualizer_facade import VisualizationFacade
 from ml_prediction.repository.local_model_repository import LocalModelRepository
 from ml_prediction.training.dataset_splitter import DatasetSplitter
 from ml_prediction.training.trainer import Trainer
 from ml_prediction.utils.data_validator_utils import should_be_same
+from ml_prediction.visualize.visualizer_facade import VisualizationFacade
 
 logger = logging.getLogger(__name__)
 
@@ -63,9 +63,6 @@ class HousePriceRegressionTrainer(Trainer[ExperimentDto]):
         self._selected_model_score: float | None = None
 
     def train(self) -> ExperimentDto:
-        return self._train()
-
-    def _train(self) -> ExperimentDto:
         should_be_same(
             first=self._settings.task_type,
             second=ExperimentTaskType.REGRESSION,
@@ -229,7 +226,7 @@ class HousePriceRegressionTrainer(Trainer[ExperimentDto]):
         self._selected_model_score = selection.mean_absolute_error
         return TrainedModel.from_pipeline(selection.pipeline)
 
-    def evaluate_model(self, model, dto: FeaturesAndTarget) -> RegressionMetrics:
+    def evaluate_model(self, model, dto: FeaturesAndTarget) -> Metrics:
         return self._evaluator.evaluate(dto.target, model.predict(dto.features)).metrics
 
     def evaluate_model_with_predictions(self, model, dto: FeaturesAndTarget) -> EvaluationDto:

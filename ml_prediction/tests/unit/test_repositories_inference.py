@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from ml_prediction.data_model.app_config import AppConfig, DatasetSource
-from ml_prediction.data_model.datalake_config import DataLakeconfig
+from ml_prediction.data_model.datalake_config import DataLakeConfig
 from ml_prediction.inference.model_predictor import ModelPredictor
 from ml_prediction.data_model.prediction_dto import PredictionDto
 from ml_prediction.inference.prediction_service import PredictionService
@@ -26,7 +26,7 @@ def settings(tmp_path: Path) -> AppConfig:
         validation_size=0.2,
         test_size=0.2,
         random_state=42,
-        data_lake=DataLakeconfig("http://localhost:9000", "key", "secret", "house", "prefix"),
+        data_lake=DataLakeConfig("http://localhost:9000", "key", "secret", "house", "prefix"),
         dataset_source=DatasetSource.DOWNLOAD,
         audit_root=tmp_path / "reports",
         dataset_filename="house.csv",
@@ -50,6 +50,9 @@ def test_local_model_repository_saves_and_loads(tmp_path: Path) -> None:
         final_test_metrics=RegressionMetrics(1.5, 2.5, 0.4),
         schema_version="1",
         model_version="1",
+        dataset_name="house",
+        task_type="regression",
+        prediction_column="predicted_total_price",
     )
 
     assert repository.save_model(path, {"value": 1}, metadata) is None
@@ -71,6 +74,9 @@ def test_local_model_repository_saves_and_loads_typed_metadata(tmp_path: Path) -
         final_test_metrics=RegressionMetrics(1.5, 2.5, 0.4),
         schema_version="1",
         model_version="1",
+        dataset_name="house",
+        task_type="regression",
+        prediction_column="predicted_total_price",
     )
 
     repository.save_model(path, {"value": 1}, metadata)
@@ -164,7 +170,7 @@ def test_prediction_service_uses_local_dataset_without_download(mocker, tmp_path
         validation_size=0.2,
         test_size=0.2,
         random_state=42,
-        data_lake=DataLakeconfig("http://localhost", "key", "secret", "house", ""),
+        data_lake=DataLakeConfig("http://localhost", "key", "secret", "house", ""),
         dataset_source=DatasetSource.LOCAL,
         dataset_filename="house.csv",
     )
@@ -210,6 +216,9 @@ def test_model_predictor_builds_features_and_returns_named_series(mocker) -> Non
         final_test_metrics=RegressionMetrics(1.5, 2.5, 0.4),
         schema_version="1",
         model_version="1",
+        dataset_name="house",
+        task_type="regression",
+        prediction_column="predicted_total_price",
     )
     mocker.patch(
         "ml_prediction.inference.model_predictor.get_settings",

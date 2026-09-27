@@ -3,7 +3,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
-from ml_prediction.data_model.datalake_config import DataLakeconfig
+from ml_prediction.data_model.datalake_config import DataLakeConfig
 from ml_prediction.data_model.model_parameters import ModelParameters
 
 
@@ -20,7 +20,7 @@ class AppConfig:
     validation_size: float
     test_size: float
     random_state: int
-    data_lake: DataLakeconfig
+    data_lake: DataLakeConfig
     task_type: ExperimentTaskType = ExperimentTaskType.REGRESSION
     model_type: str = "random_forest"
     n_estimators: int = 200
@@ -50,7 +50,7 @@ class AppConfig:
     experiment_filename: str = "experiments.csv"
     mlflow_tracking_uri: str = ""
     mlflow_experiment_prefix: str = "ml_prediction"
-    execution_log_enabled: bool = True
+    pipeline_audit_enabled: bool = True
     experiment_enabled: bool = True
     mlflow_enabled: bool = False
     mlflow_required: bool = False

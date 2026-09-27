@@ -22,9 +22,9 @@ class MetadataDto(AuditData):
     final_test_metrics: Metrics
     schema_version: str
     model_version: str
-    dataset_name: str = "house"
-    task_type: str = "regression"
-    prediction_column: str = "predicted_total_price"
+    dataset_name: str
+    task_type: str
+    prediction_column: str
     run_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:

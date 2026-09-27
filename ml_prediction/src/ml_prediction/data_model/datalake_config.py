@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class DataLakeconfig:
+class DataLakeConfig:
     endpoint: str
     access_key: str
     secret_key: str

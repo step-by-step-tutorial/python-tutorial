@@ -27,7 +27,7 @@ class PredictionService:
         model_path = self.predictor.model_path
         audit_path = self.settings.prediction_audit_path(IdGenerator.generate())
 
-        if self.settings.execution_log_enabled:
+        if self.settings.pipeline_audit_enabled:
             pipeline_audit_service = PipelineAuditService(self.settings.dataset_name, AuditOperation.PREDICTION)
             pipeline_audit_service.write(DatasetReadyDto(dataset_path), audit_path)
             pipeline_audit_service.write(ModelLoadedDto(model_path), audit_path)

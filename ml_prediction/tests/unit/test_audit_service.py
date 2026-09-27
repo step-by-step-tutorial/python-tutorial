@@ -11,7 +11,7 @@ from ml_prediction.audit.data.metrics_dto import MetricsDto
 from ml_prediction.audit.data.trained_model_dto import TrainedModelDto
 from ml_prediction.audit.pipeline_step.dataset_prepared_dto import DatasetPreparedDto
 from ml_prediction.data_model.app_config import AppConfig
-from ml_prediction.data_model.datalake_config import DataLakeconfig
+from ml_prediction.data_model.datalake_config import DataLakeConfig
 from ml_prediction.data_model.regression_metrics import RegressionMetrics
 from ml_prediction.data_model.evaluation_dto import EvaluationDto
 from ml_prediction.audit.audit_service import AuditService
@@ -25,7 +25,7 @@ def _settings(tmp_path: Path) -> AppConfig:
     return AppConfig(
         data_root=tmp_path / "data", model_root=tmp_path / "models", target_column="target",
         validation_size=0.2, test_size=0.2, random_state=42,
-        data_lake=DataLakeconfig("http://localhost", "key", "secret", "bucket", ""),
+        data_lake=DataLakeConfig("http://localhost", "key", "secret", "bucket", ""),
         audit_root=tmp_path / "reports", dataset_name="house",
         mlflow_enabled=True, mlflow_tracking_uri="http://mlflow:5000",
     )

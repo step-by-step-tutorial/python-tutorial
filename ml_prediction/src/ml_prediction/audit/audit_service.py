@@ -18,11 +18,10 @@ class AuditService:
         run_id = IdGenerator.generate()
         self._run_id = run_id
         self._services: dict[type[AuditData], list[tuple[DataService, Path]]] = {}
-        if settings.execution_log_enabled:
+        if settings.pipeline_audit_enabled:
             self._pipeline_audit_path = settings.audit_path(AuditOperation.TRAINING, run_id)
             self._pipeline_audit_service = PipelineAuditService(dataset_name, AuditOperation.TRAINING, run_id=run_id)
-            self._services.setdefault(PipelineStepDto, []).append(
-                (self._pipeline_audit_service, self._pipeline_audit_path))
+            self._services.setdefault(PipelineStepDto, []).append((self._pipeline_audit_service, self._pipeline_audit_path))
         if settings.experiment_enabled:
             self._experiment_path = settings.experiment_path(run_id)
             self._experiment_service = ExperimentService()
@@ -37,8 +36,8 @@ class AuditService:
         return self._run_id
 
     def write(self, dto: AuditData):
-        for registered_type, destinations in self._services.items():
-            if isinstance(dto, registered_type):
-                for service, path in destinations:
+        for audit_dto_type, handlers in self._services.items():
+            if isinstance(dto, audit_dto_type):
+                for service, path in handlers:
                     service.write(dto, path)
         return
