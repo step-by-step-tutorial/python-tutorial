@@ -1,185 +1,81 @@
-from pathlib import Path
-from ml_prediction.audit.data.training_audit_dto import TrainingAuditDto
-from unittest.mock import call
+import pytest
 
-import pandas as pd
+from conftest import make_settings, write_dataset
+from ml_prediction.audit import audit_service
+from ml_prediction.config.dataset_profiles import HOUSE
+from ml_prediction.config.model_type import ModelType
+from ml_prediction.config.operation import Operation
+from ml_prediction.model.execution_model import ExecutionModel
+from ml_prediction.model.metrics_model import ClassificationMetricsModel, RegressionMetricsModel
+from ml_prediction.model.settings_model import MlflowSettingsModel
+from ml_prediction.repository.experiment_repository import ExperimentRepository
+from ml_prediction.repository.model_repository import ModelRepository
+from ml_prediction.training.trainer import Trainer
+from ml_prediction.util.csv_utils import read_rows
 
-from ml_prediction.data_model.app_config import AppConfig, DatasetSource
-from ml_prediction.data_model.datalake_config import DataLakeConfig
-from ml_prediction.data_model.evaluation_dto import EvaluationDto
-from ml_prediction.audit.data.experiment_dto import ExperimentDto
-from ml_prediction.data_model.features_and_target import FeaturesAndTarget
-from ml_prediction.data_model.regression_metrics import RegressionMetrics
-from ml_prediction.data_model.dataset_split_dto import DatasetSplitDto
-from ml_prediction.training.dataset_splitter import DatasetSplitter
-from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
-
-
-def test_dataset_splitter_splits_dataset_into_train_validation_and_test() -> None:
-    splitter = DatasetSplitter("house")
-    features = pd.DataFrame({"value": range(10)})
-    target = pd.Series(range(10), name="target")
-
-    partitions = splitter.split(features, target)
-
-    assert isinstance(partitions, DatasetSplitDto)
-    assert len(partitions.train.features) == 6
-    assert len(partitions.validation.features) == 2
-    assert len(partitions.test.features) == 2
-    assert set(partitions.train.features.index) == set(partitions.train.target.index)
-    assert set(partitions.validation.features.index) == set(partitions.validation.target.index)
-    assert set(partitions.test.features.index) == set(partitions.test.target.index)
+TRAINING_STEPS = [
+    "dataset_loaded",
+    "features_built",
+    "target_extracted",
+    "dataset_split",
+    "model_trained",
+    "model_evaluated",
+    "model_evaluated",
+    "model_saved",
+]
 
 
-def test_house_price_trainer_prepares_features_and_target(mocker) -> None:
-    path = Path("house.csv")
-    dataframe = pd.DataFrame({"target": [100, 200], "value": [1, 2]})
-    expected_features = dataframe.drop(columns=["target"])
-    features = pd.DataFrame({"value": [1, 2]})
-    target = dataframe["target"]
-    feature_builder = mocker.Mock()
-    feature_builder.build.return_value = features
-
-    trainer = HousePriceRegressionTrainer.__new__(HousePriceRegressionTrainer)
-    trainer._dataset = mocker.Mock(path=path)
-    trainer._settings = mocker.Mock(target_column="target")
-    trainer._feature_model = mocker.Mock()
-    feature_builder_class = mocker.patch(
-        "ml_prediction.training.house_price_regression_trainer.FeatureBuilder",
-        return_value=feature_builder,
-    )
-
-    prepared = trainer.build_features_and_target(dataframe)
-
-    assert isinstance(prepared, FeaturesAndTarget)
-    assert prepared.features.equals(features)
-    assert prepared.target.equals(target)
-    assert feature_builder_class.call_count == 1
-    assert feature_builder_class.call_args.args[0].equals(expected_features)
-    assert feature_builder_class.call_args.args[1] is trainer._feature_model
+def executed_steps(settings, run_id: str) -> list[str]:
+    path = settings.execution_log_path(Operation.TRAIN, run_id)
+    return [execution.step for execution in read_rows(path, ExecutionModel.from_dict)]
 
 
-def test_house_price_trainer_training_workflow_coordinates_all_steps(tmp_path: Path, mocker) -> None:
-    settings = AppConfig(
-        data_root=tmp_path / "data",
-        model_root=tmp_path / "models",
-        target_column="target",
-        validation_size=0.2,
-        test_size=0.2,
-        random_state=42,
-        data_lake=DataLakeConfig("http://localhost", "key", "secret", "bucket", ""),
-        audit_root=tmp_path / "reports",
-        dataset_name="custom_dataset",
-        dataset_filename="house.csv",
-    )
-    dataset_splitter = mocker.patch(
-        "ml_prediction.training.house_price_regression_trainer.DatasetSplitter",
-        return_value=mocker.Mock(),
-    ).return_value
-    mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
-    mocker.patch("ml_prediction.pipeline.regressor_builder.get_settings", return_value=settings)
-    audit_service = mocker.MagicMock()
-    audit_service.run_id = "experiment-1"
-    audit_service.write.side_effect = lambda dto: dto.experiment if hasattr(dto, "experiment") else None
-    mocker.patch(
-        "ml_prediction.training.house_price_regression_trainer.AuditService",
-        return_value=audit_service,
-    )
-    visualization_facade = mocker.patch(
-        "ml_prediction.training.house_price_regression_trainer.VisualizationFacade",
-    ).return_value
-    visualization_facade.visualize.side_effect = lambda dto: dto
-    dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
-    trainer = HousePriceRegressionTrainer(dataset)
-    dataset_path = tmp_path / "data" / "house.csv"
-    dataframe = pd.DataFrame({"target": [100]})
-    partition = FeaturesAndTarget(dataframe, dataframe["target"])
-    partitions = DatasetSplitDto(partition, partition, partition)
-    model = mocker.Mock()
-    metrics = RegressionMetrics(1.0, 2.0, 0.5)
+def test_train_regression_saves_model_experiment_and_plots(house_settings) -> None:
+    result = Trainer(house_settings).train()
 
-    trainer.download_dataset = mocker.Mock(return_value=(dataframe, dataset_path))
-    trainer.build_features_and_target = mocker.Mock(return_value=FeaturesAndTarget(dataframe, dataframe["target"]))
-    dataset_splitter.split.return_value = partitions
-    trainer.train_model = mocker.Mock(return_value=model)
-    trainer.evaluate_model = mocker.Mock(side_effect=[metrics, metrics])
-    trainer.evaluate_model_with_predictions = mocker.Mock(
-        return_value=EvaluationDto([100], [100], metrics)
-    )
-    trainer.save_model = mocker.Mock(return_value=tmp_path / "models" / "house.joblib")
-
-    result = trainer.train()
-
-    assert isinstance(result, ExperimentDto)
-    assert result.run_id
-    assert result.timestamp.tzinfo is not None
-    assert result.dataset_name == settings.dataset_name
-    assert result.model_type == settings.model_type
-    assert result.model_parameters["n_estimators"] == settings.n_estimators
-    assert result.validation_metrics == metrics
-    assert result.test_metrics == metrics
-    assert result.model_path == tmp_path / "models" / "house.joblib"
-    audit_service.write.assert_called()
-    trainer.build_features_and_target.assert_called_once_with(dataframe)
-    dataset_splitter.split.assert_called_once_with(dataframe, dataframe["target"])
-    trainer.train_model.assert_called_once_with(partitions)
-    assert trainer.evaluate_model.call_count == 1
-    trainer.evaluate_model_with_predictions.assert_called_once_with(model, partitions.test)
-    assert trainer.evaluate_model.call_args_list == [
-        call(model, partitions.validation),
-    ]
-    trainer.save_model.assert_called_once()
-    assert any(call_args.args and isinstance(call_args.args[0], TrainingAuditDto) for call_args in audit_service.write.call_args_list)
-    assert result.audit_path is None
+    experiment = result.experiment
+    assert isinstance(experiment.test_metrics, RegressionMetricsModel)
+    assert ModelRepository().load_metadata(house_settings.model_path).run_id == experiment.run_id
+    assert ExperimentRepository(house_settings.experiment_path).find_all() == [experiment]
+    assert executed_steps(house_settings, experiment.run_id) == TRAINING_STEPS
+    assert house_settings.artifact_path(experiment.run_id, "actual_vs_predicted.png").exists()
+    assert house_settings.artifact_path(experiment.run_id, "feature_importance.png").exists()
+    assert house_settings.comparison_path("validation_mae.png").exists()
 
 
-def test_house_price_trainer_uses_local_dataset_without_download(tmp_path: Path, mocker) -> None:
-    settings = AppConfig(
-        data_root=tmp_path / "data",
-        model_root=tmp_path / "models",
-            target_column="target",
-            validation_size=0.2,
-            test_size=0.2,
-            random_state=42,
-        data_lake=DataLakeConfig("http://localhost", "key", "secret", "bucket", ""),
-            dataset_source=DatasetSource.LOCAL,
-            dataset_filename="house.csv",
-            dataset_name="house",
-    )
-    mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
-    dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
-    dataframe = pd.DataFrame()
-    dataset.download.return_value = (dataframe, dataset.path)
-    trainer = HousePriceRegressionTrainer(dataset)
+def test_train_classification(online_shopping_settings) -> None:
+    result = Trainer(online_shopping_settings).train()
 
-    downloaded_dataframe, downloaded_path = trainer.download_dataset()
-    assert downloaded_dataframe is dataframe
-    assert downloaded_path == dataset.path
-    dataset.download.assert_called_once_with()
+    assert isinstance(result.experiment.test_metrics, ClassificationMetricsModel)
+    assert online_shopping_settings.model_path.exists()
+    assert online_shopping_settings.artifact_path(result.experiment.run_id, "confusion_matrix.png").exists()
 
 
-def test_house_price_trainer_downloads_dataset_when_configured(tmp_path: Path, mocker) -> None:
-    settings = AppConfig(
-        data_root=tmp_path / "data",
-        model_root=tmp_path / "models",
-            target_column="target",
-            validation_size=0.2,
-            test_size=0.2,
-            random_state=42,
-        data_lake=DataLakeConfig("http://localhost", "key", "secret", "bucket", ""),
-            dataset_source=DatasetSource.DOWNLOAD,
-            dataset_filename="house.csv",
-            dataset_name="house",
-    )
-    mocker.patch("ml_prediction.training.house_price_regression_trainer.get_settings", return_value=settings)
-    dataset = mocker.Mock(path=tmp_path / "data" / "house.csv", dataset_name=settings.dataset_name)
-    dataframe = pd.DataFrame()
-    dataset.download.return_value = (dataframe, dataset.path)
-    trainer = HousePriceRegressionTrainer(dataset)
+def test_train_without_feature_importance(tmp_path) -> None:
+    settings = make_settings(tmp_path, HOUSE, model_type=ModelType.HIST_GRADIENT_BOOSTING)
+    write_dataset(settings)
 
-    downloaded_dataframe, downloaded_path = trainer.download_dataset()
-    assert downloaded_dataframe is dataframe
-    assert downloaded_path == dataset.path
-    dataset.download.assert_called_once_with()
+    result = Trainer(settings).train()
+
+    assert settings.model_path.exists()
+    assert not settings.artifact_path(result.experiment.run_id, "feature_importance.png").exists()
 
 
+def test_train_publishes_to_mlflow_when_enabled(tmp_path, mocker) -> None:
+    settings = make_settings(tmp_path, HOUSE, mlflow=MlflowSettingsModel(enabled=True))
+    write_dataset(settings)
+    mlflow_service = mocker.patch.object(audit_service, "MlflowService")
+
+    result = Trainer(settings).train()
+
+    result_argument, artifacts = mlflow_service.return_value.publish.call_args.args
+    assert result_argument is result
+    assert artifacts
+
+
+def test_train_with_unknown_target_column_fails(tmp_path) -> None:
+    settings = make_settings(tmp_path, HOUSE)
+    write_dataset(settings).drop(columns=HOUSE.target_column).to_csv(settings.dataset_path, index=False)
+
+    with pytest.raises(KeyError):
+        Trainer(settings).train()
