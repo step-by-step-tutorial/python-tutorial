@@ -1,12 +1,11 @@
 import json
-import importlib
 from pathlib import Path
 
 import httpx
 import pytest
 
 from test_data.api.dataset_api import create_api
-from test_data.config import settings as env_config
+from test_data.model.settings_model import SettingsModel
 from test_data.generator.dataset_generator import DatasetGenerator
 
 pytestmark = pytest.mark.anyio
@@ -24,11 +23,11 @@ async def get(path: str, **kwargs) -> httpx.Response:
 
 
 async def test_download_serves_requested_output_format(project_root: Path) -> None:
-    config_path = env_config.CONFIG_DIR / "demo.json"
+    config_path = SettingsModel.from_env().config_dir / "demo.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     config["destinations"] = ["csv", "json", "xml"]
     config_path.write_text(json.dumps(config), encoding="utf-8")
-    DatasetGenerator("demo.json").write()
+    DatasetGenerator("demo.json", SettingsModel.from_env()).write()
 
     csv_response = await get("/datasets/demo/download?format=csv")
     json_response = await get("/datasets/demo/download?format=json")
@@ -76,16 +75,15 @@ async def test_root_redirects_to_health(project_root: Path) -> None:
 
 
 async def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -> None:
-    config_path = env_config.CONFIG_DIR / "demo.json"
+    config_path = SettingsModel.from_env().config_dir / "demo.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     config["destinations"] = ["database"]
     config_path.write_text(json.dumps(config), encoding="utf-8")
     database_path = project_root / "test_data.sqlite"
     monkeypatch.setenv("DATABASE_URL", f"sqlite+pysqlite:///{database_path}")
-    importlib.reload(env_config)
-    monkeypatch.setattr(env_config, "DATABASE_SCHEMA", None)
+    monkeypatch.setenv("DATABASE_SCHEMA", "")
     try:
-        DatasetGenerator("demo.json").write()
+        DatasetGenerator("demo.json", SettingsModel.from_env()).write()
 
         response = await get("/datasets/demo/rows?page=2&page_size=2")
 
@@ -96,7 +94,6 @@ async def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -
         assert len(response.json()["items"]) == 2
     finally:
         monkeypatch.delenv("DATABASE_URL", raising=False)
-        importlib.reload(env_config)
 
 
 async def post(path: str) -> httpx.Response:
@@ -125,7 +122,7 @@ async def test_generate_writes_output_and_returns_metadata(project_root: Path) -
 
     assert response.status_code == 200
     assert response.json()["name"] == "demo"
-    assert (env_config.OUTPUT_DIR / "demo.csv").is_file()
+    assert (SettingsModel.from_env().output_dir / "demo.csv").is_file()
 
 
 async def test_unknown_dataset_returns_not_found(project_root: Path) -> None:
@@ -135,7 +132,7 @@ async def test_unknown_dataset_returns_not_found(project_root: Path) -> None:
 
 
 async def test_download_returns_not_found_before_generation(project_root: Path) -> None:
-    (env_config.OUTPUT_DIR / "demo.csv").unlink(missing_ok=True)
+    (SettingsModel.from_env().output_dir / "demo.csv").unlink(missing_ok=True)
 
     response = await get("/datasets/demo/download?format=csv")
 
@@ -143,7 +140,7 @@ async def test_download_returns_not_found_before_generation(project_root: Path) 
 
 
 async def test_generate_reports_failed_destinations(project_root: Path) -> None:
-    config_path = env_config.CONFIG_DIR / "demo.json"
+    config_path = SettingsModel.from_env().config_dir / "demo.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     config["destinations"] = ["csv", "unknown"]
     config_path.write_text(json.dumps(config), encoding="utf-8")

@@ -3,12 +3,15 @@
 from pathlib import Path
 import pytest
 
-from test_data.generator.column_generator_registry import ColumnGeneratorRegistry
+from test_data.generator.column.column_generator_registry import ColumnGeneratorRegistry
 from test_data.model.column_model import ColumnModel
+from test_data.model.settings_model import SettingsModel
+from test_data.repository.source_repository import SourceRepository
 
 
-def build(column: ColumnModel):
-    return ColumnGeneratorRegistry.get_one(column)
+def build(column: ColumnModel, source_repository: SourceRepository | None = None):
+    settings = SettingsModel.from_env()
+    return ColumnGeneratorRegistry(settings, source_repository or SourceRepository(settings)).get_one(column)
 
 
 def test_sequence_uses_start_and_step() -> None:
@@ -432,3 +435,22 @@ def test_date_with_random_day_offset_uses_min_and_max_days(project_root: Path) -
     )
 
     assert generator.generate({"order_date": "2026-01-01"}, 0) == "2026-01-04"
+
+
+def test_mapped_csv_columns_of_one_record_share_the_selected_row(project_root: Path, write_lines) -> None:
+    write_lines(
+        project_root / "data" / "addresses.csv",
+        "state,street,city",
+        *(f"CA,Street {index},City {index}" for index in range(20)),
+    )
+    settings = SettingsModel.from_env()
+    source_repository = SourceRepository(settings)
+    common = {"type": "random_from_mapped_csv", "source_field": "state", "mapping_file": "data/addresses.csv",
+              "key_column": "state"}
+    street = build(ColumnModel(name="street", value_column="street", **common), source_repository)
+    city = build(ColumnModel(name="city", value_column="city", **common), source_repository)
+
+    for row_index in range(10):
+        street_value = street.generate({"state": "CA"}, row_index)
+        city_value = city.generate({"state": "CA"}, row_index)
+        assert street_value.split()[-1] == city_value.split()[-1]

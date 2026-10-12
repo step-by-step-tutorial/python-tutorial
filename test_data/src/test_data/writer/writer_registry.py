@@ -2,19 +2,20 @@ import logging
 from collections.abc import Iterable, Mapping
 
 from test_data.model.config_model import ConfigModel
+from test_data.model.settings_model import SettingsModel
 from test_data.writer.writer import CsvWriter, DatabaseWriter, JsonWriter, KafkaWriter, XmlWriter
 
 logger = logging.getLogger(__name__)
 
 
 class WriterRegistry:
-    def __init__(self) -> None:
+    def __init__(self, settings: SettingsModel) -> None:
         writers = [
             CsvWriter(),
             JsonWriter(),
             XmlWriter(),
-            DatabaseWriter(),
-            KafkaWriter(),
+            DatabaseWriter(settings),
+            KafkaWriter(settings),
         ]
         self._writers = {writer.name: writer for writer in writers}
 

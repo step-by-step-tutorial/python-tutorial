@@ -6,12 +6,12 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from sqlalchemy.exc import NoSuchTableError
 
-from test_data.config import settings as env_config
 from test_data.repository.database_repository import DatabaseRepository
 from test_data.generator.dataset_generator import DatasetGenerator
-from test_data.generator.dataset_registry import DatasetNotFoundError, DatasetRegistry
 from test_data.model.database_page_model import DatabasePageModel
 from test_data.model.dataset_metadata_model import DatasetMetadataModel
+from test_data.model.settings_model import SettingsModel
+from test_data.repository.dataset_repository import DatasetNotFoundError, DatasetRepository
 from test_data.util.file_utils import check_file_exists
 from test_data.writer.writer_registry import WriterError
 
@@ -20,7 +20,8 @@ MEDIA_TYPES = {"csv": "text/csv", "json": "application/json", "xml": "applicatio
 logger = logging.getLogger(__name__)
 
 
-def create_api() -> FastAPI:
+def create_api(settings: SettingsModel | None = None) -> FastAPI:
+    settings = settings or SettingsModel.from_env()
     app = FastAPI(
         title="Test Data Generator API",
         version=__version__,
@@ -35,8 +36,9 @@ def create_api() -> FastAPI:
         ],
     )
 
-    registry = DatasetRegistry()
-    logger.info("Data simulator API initialized: datasets=%s", registry.get_all_names())
+    datasets = DatasetRepository(settings)
+    database = DatabaseRepository(settings.database_url, schema=settings.database_schema)
+    logger.info("Data simulator API initialized: datasets=%s", datasets.get_all_names())
 
     @app.exception_handler(DatasetNotFoundError)
     async def handle_dataset_not_found(request: Request, error: DatasetNotFoundError) -> JSONResponse:
@@ -56,21 +58,21 @@ def create_api() -> FastAPI:
 
     @app.get("/datasets", tags=["Datasets"], summary="List datasets")
     async def get_list() -> list[DatasetMetadataModel]:
-        return registry.get_all_metadata()
+        return datasets.get_all_metadata()
 
     @app.get("/datasets/names", tags=["Datasets"], summary="List dataset names")
     async def get_names() -> list[str]:
-        return registry.get_all_names()
+        return datasets.get_all_names()
 
     @app.get("/datasets/{name}", tags=["Datasets"], summary="Get dataset metadata")
     async def get_one(name: str) -> DatasetMetadataModel:
-        return DatasetMetadataModel.from_dataset(registry.get_one(name))
+        return DatasetMetadataModel.from_config(datasets.get_one(name), settings)
 
     @app.post("/datasets/{name}/generate", tags=["Datasets"], summary="Generate dataset output")
     async def generate(name: str) -> DatasetMetadataModel:
         logger.info("Dataset generation requested: dataset=%s", name)
-        dataset = registry.get_one(name)
-        return DatasetMetadataModel.from_dataset(DatasetGenerator(config_name=dataset.config.name).write())
+        config = DatasetGenerator(datasets.get_one(name).name, settings).write()
+        return DatasetMetadataModel.from_config(config, settings)
 
     @app.get(
         "/datasets/{name}/rows",
@@ -85,15 +87,13 @@ def create_api() -> FastAPI:
             page_size: int = Query(100, ge=1, le=1_000, description="Maximum number of rows to return."),
     ) -> DatabasePageModel:
         logger.info("Dataset rows requested: dataset=%s page=%s page_size=%s", name, page, page_size)
-        dataset = registry.get_one(name)
-        if "database" not in dataset.destinations:
+        config = datasets.get_one(name)
+        if "database" not in config.destinations:
             raise HTTPException(status_code=404, detail=f"Dataset {name} has no database destination.")
 
         try:
-            items, total = DatabaseRepository(
-                env_config.DATABASE_URL, schema=env_config.DATABASE_SCHEMA
-            ).read_page(
-                table_name=dataset.config.table_name,
+            items, total = database.read_page(
+                table_name=config.table_name,
                 page=page,
                 page_size=page_size,
             )
@@ -119,15 +119,15 @@ def create_api() -> FastAPI:
             ),
     ) -> FileResponse:
         logger.info("Dataset download requested: dataset=%s format=%s", name, format_name)
-        dataset = registry.get_one(name)
-        if format_name not in dataset.destinations:
+        config = datasets.get_one(name)
+        if format_name not in config.destinations:
             raise HTTPException(status_code=404, detail=f"Format '{format_name}' is not available for {name}.")
 
         media_type = MEDIA_TYPES.get(format_name)
         if media_type is None:
             raise HTTPException(status_code=404, detail=f"Unsupported format: {format_name}.")
 
-        path = dataset.config.output_file(format_name)
+        path = config.output_file(format_name)
 
         try:
             check_file_exists(path)

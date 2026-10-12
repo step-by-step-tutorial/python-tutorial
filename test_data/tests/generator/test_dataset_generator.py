@@ -1,10 +1,9 @@
 import json
-import importlib
 from dataclasses import asdict
 from pathlib import Path
 
 import pytest
-from test_data.config import settings as env_config
+from test_data.model.settings_model import SettingsModel
 from test_data.generator.dataset_generator import DatasetGenerator
 from test_data.model.column_model import ColumnModel
 from test_data.model.config_model import ConfigModel
@@ -23,14 +22,16 @@ def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
     config_name = f"../output_test/{name}"
     config_path = tmp_path / "output_test" / name
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(json.dumps(clean(asdict(config))), encoding="utf-8")
+    raw = asdict(config)
+    raw.pop("output_dir")
+    config_path.write_text(json.dumps(clean(raw)), encoding="utf-8")
     return config_name
 
 
 def config_with_headers(**kwargs) -> ConfigModel:
     return ConfigModel(
         name=kwargs.pop("name", "test_config.json"),
-        column_names=tuple(column.name for column in kwargs["columns"]),
+        output_dir=Path("output"),
         kafka_topic=kwargs.pop("kafka_topic", "test-events"),
         kafka_key_column=kwargs.pop("kafka_key_column", "id"),
         **kwargs,
@@ -45,9 +46,7 @@ def temp_project_env(tmp_path: Path, monkeypatch) -> None:
         patch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
         # POSIX resolves "config/../" only when the config directory exists.
         (tmp_path / "config").mkdir(exist_ok=True)
-        importlib.reload(env_config)
         yield
-    importlib.reload(env_config)
 
 
 def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DatasetGenerator:
@@ -57,18 +56,19 @@ def make_generator(columns: list[ColumnModel], row_count: int = 1) -> DatasetGen
         columns=columns,
         destinations=("csv",),
     )
-    return DatasetGenerator(write_config_file(Path(env_config.CONFIG_DIR).parent, "test_config.json", config))
+    settings = SettingsModel.from_env()
+    return DatasetGenerator(write_config_file(settings.config_dir.parent, "test_config.json", config), settings)
 
 
 def test_generate_rows_follows_config_column_order(project_root: Path) -> None:
-    rows = list(DatasetGenerator("demo.json").row_generator.generate_rows())
+    rows = list(DatasetGenerator("demo.json", SettingsModel.from_env()).row_generator.generate_rows())
 
     assert len(rows) == 5
     assert list(rows[0]) == ["order_id", "customer_name", "product_name", "category", "country"]
 
 
 def test_country_dependent_columns_stay_consistent(project_root: Path) -> None:
-    rows = list(DatasetGenerator("demo.json").row_generator.generate_rows())
+    rows = list(DatasetGenerator("demo.json", SettingsModel.from_env()).row_generator.generate_rows())
 
     expected = {"Germany": {"Hans Bauer"}, "USA": {"John Smith"}}
     for row in rows:
@@ -172,8 +172,8 @@ def test_circular_dependencies_are_rejected_before_generating(tmp_path: Path) ->
 
 
 def test_seeded_runs_are_reproducible(project_root: Path) -> None:
-    first = list(DatasetGenerator("demo.json").row_generator.generate_rows())
-    second = list(DatasetGenerator("demo.json").row_generator.generate_rows())
+    first = list(DatasetGenerator("demo.json", SettingsModel.from_env()).row_generator.generate_rows())
+    second = list(DatasetGenerator("demo.json", SettingsModel.from_env()).row_generator.generate_rows())
 
     assert first == second
 
@@ -187,9 +187,9 @@ def test_zero_rows_writes_header_only(project_root: Path) -> None:
 
 
 def test_generate_dataset_loads_the_config_and_writes_the_file(project_root: Path) -> None:
-    DatasetGenerator("demo.json").write()
+    DatasetGenerator("demo.json", SettingsModel.from_env()).write()
 
-    assert (env_config.OUTPUT_DIR / "demo.csv").is_file()
+    assert (SettingsModel.from_env().output_dir / "demo.csv").is_file()
 
 
 def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch) -> None:
@@ -215,9 +215,8 @@ def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch
     monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
     monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
-    importlib.reload(env_config)
 
-    DatasetGenerator("sample.json").write()
+    DatasetGenerator("sample.json", SettingsModel.from_env()).write()
 
     output_path = tmp_path / "output" / "sample.csv"
     assert output_path.read_text(encoding="utf-8").splitlines() == [
@@ -231,7 +230,6 @@ def test_generate_dataset_writes_json_when_requested(tmp_path: Path, monkeypatch
     monkeypatch.delenv("PROJECT_ROOT", raising=False)
     monkeypatch.delenv("CONFIG_DIR", raising=False)
     monkeypatch.delenv("OUTPUT_DIR", raising=False)
-    importlib.reload(env_config)
 
 
 def test_generate_dataset_publishes_json_rows_to_kafka(tmp_path: Path, mocker, monkeypatch) -> None:
@@ -256,21 +254,19 @@ def test_generate_dataset_publishes_json_rows_to_kafka(tmp_path: Path, mocker, m
 
     monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
-    importlib.reload(env_config)
-    producer = mocker.patch("test_data.writer.writer.create_producer").return_value
+    producer = mocker.patch("test_data.connector.kafka_connector.create_producer").return_value
     producer.flush.return_value = 0
 
-    DatasetGenerator("sample.json").write()
+    DatasetGenerator("sample.json", SettingsModel.from_env()).write()
 
     assert producer.produce.call_count == 2
     assert producer.produce.call_args_list[0].kwargs["topic"] == "test-data-sample"
     assert producer.produce.call_args_list[0].kwargs["key"] == "1"
     assert producer.produce.call_args_list[0].kwargs["value"] == b'{"id": "1", "country": "USA"}'
-    producer.flush.assert_called_once_with(env_config.KAFKA_FLUSH_TIMEOUT_SECONDS)
+    producer.flush.assert_called_once_with(SettingsModel.from_env().kafka_flush_timeout_seconds)
 
     monkeypatch.delenv("PROJECT_ROOT", raising=False)
     monkeypatch.delenv("CONFIG_DIR", raising=False)
-    importlib.reload(env_config)
 
 
 def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path, mocker, monkeypatch) -> None:
@@ -337,10 +333,9 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
     monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
-    importlib.reload(env_config)
 
     database_repository = mocker.patch("test_data.writer.writer.DatabaseRepository")
-    DatasetGenerator("online.json").write()
+    DatasetGenerator("online.json", SettingsModel.from_env()).write()
 
     output_path = tmp_path / "output" / "online.csv"
     assert output_path.read_text(encoding="utf-8").splitlines() == [
@@ -353,7 +348,6 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     monkeypatch.delenv("PROJECT_ROOT", raising=False)
     monkeypatch.delenv("CONFIG_DIR", raising=False)
     monkeypatch.delenv("OUTPUT_DIR", raising=False)
-    importlib.reload(env_config)
 
 
 def test_generate_rows_creates_derived_email(tmp_path: Path, temp_project_env) -> None:
@@ -379,7 +373,7 @@ def test_generate_rows_creates_derived_email(tmp_path: Path, temp_project_env) -
         ],
     )
 
-    rows = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config)).row_generator.generate_rows())
+    rows = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config), SettingsModel.from_env()).row_generator.generate_rows())
 
     assert rows == [{"first_name": "John", "last_name": "Smith", "email": "john.smith@example.com"}]
 
@@ -405,7 +399,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path, t
         ],
     )
 
-    row = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config)).row_generator.generate_rows())[0]
+    row = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config), SettingsModel.from_env()).row_generator.generate_rows())[0]
 
     assert row["order_id"] == "1"
     assert row["product"] == "Laptop"
@@ -436,7 +430,7 @@ def test_product_of_source_fields(tmp_path: Path, temp_project_env, factor: floa
     )
     config = config_with_headers(row_count=1, output_name="generated", destinations=("csv",), columns=columns)
 
-    row = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config)).row_generator.generate_rows())[0]
+    row = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config), SettingsModel.from_env()).row_generator.generate_rows())[0]
 
     assert row["result"] == expected
 
@@ -459,7 +453,7 @@ def test_generate_rows_supports_random_from_mapped_file(tmp_path: Path, temp_pro
         ],
     )
 
-    rows = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config)).row_generator.generate_rows())
+    rows = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config), SettingsModel.from_env()).row_generator.generate_rows())
 
     assert rows == [{"country": "Germany", "customer_name": "Hans"}]
 
@@ -484,7 +478,7 @@ def test_random_from_mapped_file_joins_multiple_file_columns(tmp_path: Path, tem
         ],
     )
 
-    rows = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config)).row_generator.generate_rows())
+    rows = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config), SettingsModel.from_env()).row_generator.generate_rows())
 
     assert rows == [{"country": "Germany", "customer_name": "Hans Bauer"}]
 
@@ -508,7 +502,7 @@ def test_generate_rows_resolves_column_listed_after_its_dependents(tmp_path: Pat
         ],
     )
 
-    row = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config)).row_generator.generate_rows())[0]
+    row = list(DatasetGenerator(write_config_file(tmp_path, "test_config.json", config), SettingsModel.from_env()).row_generator.generate_rows())[0]
 
     assert list(row) == ["customer_name", "country"]
     assert row == {"customer_name": "Hans", "country": "Germany"}
@@ -526,4 +520,4 @@ def test_generate_rows_rejects_circular_dependencies(tmp_path: Path, temp_projec
     )
 
     with pytest.raises(Exception):
-        DatasetGenerator(write_config_file(tmp_path, "test_config.json", config))
+        DatasetGenerator(write_config_file(tmp_path, "test_config.json", config), SettingsModel.from_env())

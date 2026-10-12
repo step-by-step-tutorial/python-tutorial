@@ -1,67 +1,52 @@
+from collections.abc import Mapping
 from datetime import date
-from typing import Any, Mapping
+from typing import Any
 
 
-def is_empty_collection(obj: Any) -> bool:
-    return isinstance(obj, (list, tuple, set, frozenset, dict)) and len(obj) == 0
+def is_blank(value: Any) -> bool:
+    """None, an empty string or an empty collection."""
+    return value is None or (isinstance(value, (str, bytes, list, tuple, set, frozenset, dict)) and len(value) == 0)
 
 
-def is_empty_text(obj: Any) -> bool:
-    return isinstance(obj, (str, bytes)) and len(obj) == 0
+def default_if_blank(value: Any, default: Any) -> Any:
+    return default if is_blank(value) else value
 
 
-def is_none(obj: Any) -> bool:
-    return obj is None
-
-
-def is_blank(obj: Any) -> bool:
-    return is_none(obj) or is_empty_collection(obj) or is_empty_text(obj)
-
-
-def require_blank(value: Any, error_message: str = "Value must be empty.") -> Any:
+def require_blank(value: Any, error_message: str = "Value must be blank.") -> Any:
     if not is_blank(value):
         raise ValueError(error_message)
     return value
 
 
-def require_not_blank(obj: Any, error_message="Object cannot be None.") -> Any:
-    if is_blank(obj):
+def require_not_blank(value: Any, error_message: str = "Value must not be blank.") -> Any:
+    if is_blank(value):
         raise ValueError(error_message)
-    return obj
+    return value
 
 
-def require_or_default(obj: Any, default: Any) -> Any:
-    if is_blank(obj):
-        return default
-    return obj
-
-
-def require_or_raise_map(mapping: Mapping[str, Any], key: str, error_message: str = "Key not found.") -> Any:
+def require_key(mapping: Mapping[str, Any], key: str, error_message: str = "Key not found.") -> Any:
     if key not in mapping:
         raise KeyError(error_message)
     return mapping[key]
 
 
-def check_min_max(minimum: int | None, maximum: int | None, error_message: str = "min must be less than max"):
+def require_exactly_one(first: Any, second: Any, error_message: str = "Exactly one of the values must be set.") -> None:
+    if is_blank(first) == is_blank(second):
+        raise ValueError(error_message)
+
+
+def require_not_greater(minimum: int, maximum: int, error_message: str = "min must not be greater than max") -> None:
     if require_not_blank(minimum) > require_not_blank(maximum):
         raise ValueError(error_message)
 
 
-def require_iso_date(value, error_message: str = "Column needs ISO dates (YYYY-MM-DD)"):
-    try:
-        parsed = date.fromisoformat(require_not_blank(value))
-    except ValueError as error:
-        raise ValueError(error_message) from error
-
-    return parsed
-
-
-def require_xor(obj1: Any, obj2: Any, error_message: str = "Exactly one of the objects must be not None"):
-    if (is_blank(obj1) and is_blank(obj2)) or (not is_blank(obj1) and not is_blank(obj2)):
+def require_not_negative(*numbers: int, error_message: str = "Value must not be negative") -> None:
+    if any(number < 0 for number in numbers):
         raise ValueError(error_message)
 
 
-def should_not_be_negative(*numbers: int, error_message: str = "Value must not be negative"):
-    for number in numbers:
-        if number < 0:
-            raise ValueError(error_message)
+def require_iso_date(value: str | None, error_message: str = "Column needs ISO dates (YYYY-MM-DD)") -> date:
+    try:
+        return date.fromisoformat(require_not_blank(value))
+    except ValueError as error:
+        raise ValueError(error_message) from error

@@ -1,14 +1,18 @@
 from collections.abc import Iterator
 
-from test_data.generator.column_generator_registry import ColumnGeneratorRegistry
+from test_data.generator.column.column_generator_registry import ColumnGeneratorRegistry
 from test_data.model.config_model import ConfigModel
+from test_data.model.settings_model import SettingsModel
+from test_data.repository.source_repository import SourceRepository
 from test_data.util.collection_utils import topological_sort
 
 
 class RowGenerator:
-    def __init__(self, config: ConfigModel) -> None:
+    def __init__(self, config: ConfigModel, settings: SettingsModel) -> None:
         self.config = config
-        self.column_generators = ColumnGeneratorRegistry.get_all(config.columns)
+        # One source repository per dataset run: source files are read once and mapped rows are shared by its columns.
+        registry = ColumnGeneratorRegistry(settings, SourceRepository(settings))
+        self.column_generators = registry.get_all(config.columns)
         # Columns are generated after the columns they are derived from.
         self.ordered_columns = topological_sort(
             {name: generator.dependencies for name, generator in self.column_generators.items()}

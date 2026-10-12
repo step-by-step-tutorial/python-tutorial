@@ -22,12 +22,12 @@ test_data
 ├── src/test_data
 │   ├── cli.py                   command line entry point (python -m test_data)
 │   ├── api/                     REST API
-│   ├── config/settings.py       environment settings
-│   ├── model/                   data models: column, config, dataset and API models, one per file
-│   ├── generator/               column, row and dataset generators
+│   ├── model/                   data models, one per file: settings, column, config and API models
+│   ├── generator/               dataset and row generators
+│   ├── generator/column/        column generators by kind and their registry
 │   ├── writer/                  csv, json, xml, database and kafka writers, and the writer registry
-│   ├── repository/              source file and database access
-│   ├── connector/               Kafka producer
+│   ├── repository/              configured datasets, source files and database access
+│   ├── connector/               Kafka producer and publishing
 │   └── util/                    file, csv, json, xml, date, text, formula and validation helpers
 └── tests
 ```
