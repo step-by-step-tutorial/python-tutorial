@@ -3,13 +3,13 @@ from geodata_pipeline.model import AddressRecord, GeonameRecord, OvertureAddress
 from geodata_pipeline.repository import GeoDataRepository
 
 
-class AddressResolver:
-    """Decides whether an Overture address belongs to a target and turns it into an output record."""
+class AddressMatcher:
+    """Matches Overture addresses to a target and turns the matching ones into output records."""
 
     def __init__(self, repository: GeoDataRepository) -> None:
         self._repository = repository
 
-    def resolve(self, address: OvertureAddress, target: Target) -> AddressRecord | None:
+    def match(self, address: OvertureAddress, target: Target) -> AddressRecord | None:
         """Return the output record of an address in the target's state and cities, otherwise None."""
         if address.country != target.country_code or not address.is_in_state(target):
             return None
