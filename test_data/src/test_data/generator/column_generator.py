@@ -7,7 +7,7 @@ from typing import Mapping
 
 from test_data.config import settings as env_config
 from test_data.repository.source_repository import SourceRepository
-from test_data.model import ColumnModel
+from test_data.model.column_model import ColumnModel
 from test_data.util.date_utils import days_between, random_date_between, random_date_from
 from test_data.util.file_utils import list_directory_names
 from test_data.util.formula_utils import check_formula, evaluate_formula

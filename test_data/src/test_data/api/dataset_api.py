@@ -10,7 +10,8 @@ from test_data.config import settings as env_config
 from test_data.repository.database_repository import DatabaseRepository
 from test_data.generator.dataset_generator import DatasetGenerator
 from test_data.generator.dataset_registry import DatasetNotFoundError, DatasetRegistry
-from test_data.model import DatabasePageModel, DatasetMetadataModel
+from test_data.model.database_page_model import DatabasePageModel
+from test_data.model.dataset_metadata_model import DatasetMetadataModel
 from test_data.util.file_utils import check_file_exists
 from test_data.writer.writer_registry import WriterError
 

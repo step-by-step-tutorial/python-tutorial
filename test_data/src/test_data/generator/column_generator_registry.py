@@ -21,7 +21,7 @@ from test_data.generator.column_generator import (
     RandomIntColumn,
     SequenceColumn,
 )
-from test_data.model import ColumnModel
+from test_data.model.column_model import ColumnModel
 from test_data.util.validation_utils import require_not_blank
 
 

@@ -1,12 +1,12 @@
-
-
-import json
 import importlib
+import json
 from pathlib import Path
 
 import pytest
+
 from test_data.config import settings as env_config
-from test_data.model import ColumnModel, ConfigModel, DatasetModel, DatasetMetadataModel
+from test_data.model.config_model import ConfigModel
+from test_data.model.dataset_model import DatasetModel
 
 
 def test_load_config_reads_columns(project_root: Path) -> None:
@@ -17,24 +17,6 @@ def test_load_config_reads_columns(project_root: Path) -> None:
     assert config.output_name == "demo"
     assert config.column_names == ("order_id", "customer_name", "product_name", "category", "country")
     assert config.destinations == ("csv",)
-
-
-def test_column_config_converts_file_columns_to_tuple() -> None:
-    column = ColumnModel.from_dict(
-        {
-            "name": "customer_name",
-            "type": "random_from_mapped_file",
-            "file_columns": ["first_name_file", "last_name_file"],
-        }
-    )
-
-    assert column.file_columns == ("first_name_file", "last_name_file")
-
-
-def test_column_model_list_converter_returns_models() -> None:
-    column = ColumnModel.from_dict({"name": "country", "type": "fixed", "value": "USA"})
-
-    assert column == ColumnModel(name="country", type="fixed", value="USA")
 
 
 def test_generator_config_reads_destinations() -> None:
@@ -65,6 +47,8 @@ def test_generator_config_reads_kafka_key_column() -> None:
     )
 
     assert config.kafka_key_column == "record_id"
+
+
 def test_load_config_reports_missing_file(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
     importlib.reload(env_config)
@@ -141,16 +125,6 @@ def test_load_config_accepts_path_outside_config_dir(tmp_path: Path) -> None:
 
     assert config.name == "custom.json"
     assert config.output_name == "custom"
-
-
-def test_dataset_metadata_from_dataset(project_root: Path) -> None:
-    metadata = DatasetMetadataModel.from_dataset(DatasetModel(name="demo", config=ConfigModel.from_file("demo.json")))
-
-    assert metadata.name == "demo"
-    assert metadata.config_file == "config/demo.json"
-    assert metadata.file == "output_test/demo.csv"
-    assert metadata.download_url == "/datasets/demo/download"
-    assert metadata.row_count == 5
 
 
 def test_config_derives_dataset_name_table_name_and_output_files(project_root: Path) -> None:

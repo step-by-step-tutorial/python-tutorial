@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 from test_data.config import settings as env_config
 from test_data.generator.dataset_generator import DatasetGenerator
-from test_data.model import ColumnModel, ConfigModel
+from test_data.model.column_model import ColumnModel
+from test_data.model.config_model import ConfigModel
 
 
 def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:

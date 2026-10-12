@@ -1,7 +1,9 @@
 import logging
 
 from test_data.config import settings as env_config
-from test_data.model import ConfigModel, DatasetModel, DatasetMetadataModel
+from test_data.model.config_model import ConfigModel
+from test_data.model.dataset_model import DatasetModel
+from test_data.model.dataset_metadata_model import DatasetMetadataModel
 from test_data.util.file_utils import list_file_names
 
 logger = logging.getLogger(__name__)

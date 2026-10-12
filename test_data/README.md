@@ -23,7 +23,7 @@ test_data
 │   ├── cli.py                   command line entry point (python -m test_data)
 │   ├── api/                     REST API
 │   ├── config/settings.py       environment settings
-│   ├── model.py                 data models: column, config, dataset and API models
+│   ├── model/                   data models: column, config, dataset and API models, one per file
 │   ├── generator/               column, row and dataset generators
 │   ├── writer/                  csv, json, xml, database and kafka writers, and the writer registry
 │   ├── repository/              source file and database access
