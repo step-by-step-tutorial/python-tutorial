@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Iterable, Sequence, Callable
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
@@ -21,15 +21,15 @@ def write_csv(output_path: Path, headers: Sequence[str], rows: Iterable[Mapping[
     return path
 
 
-def read_csv_file(path: str, consumer: Callable[[dict[str, str]], None]) -> int:
-    path = absolute_project_path(path)
+def read_csv_file(path: str, consumer: Callable[[dict[str, str]], None]) -> None:
+    """Pass every row of a project CSV file to consumer."""
+    absolute_path = absolute_project_path(path)
     try:
-        with path.open("r", encoding="utf-8", newline="") as file:
-            reader = csv.DictReader(file)
-            for row in reader:
+        with absolute_path.open("r", encoding="utf-8", newline="") as file:
+            for row in csv.DictReader(file):
                 consumer(row)
-    except Exception:
-        raise Exception(f"Reading CSV file failed due to: {path}")
+    except FileNotFoundError as error:
+        raise FileNotFoundError(f"CSV file not found: {absolute_path}") from error
 
 
 def extract_map_from_csv(path: str, key_column: str, value_column: str) -> Mapping[str, str]:

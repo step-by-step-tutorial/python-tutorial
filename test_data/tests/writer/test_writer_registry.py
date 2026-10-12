@@ -1,6 +1,8 @@
 from types import SimpleNamespace
 
-from test_data.writer.writer_registry import WriterRegistry
+import pytest
+
+from test_data.writer.writer_registry import WriterError, WriterRegistry
 
 
 class RecordingWriter:
@@ -19,10 +21,12 @@ def test_write_all_logs_writer_failure_and_continues(caplog) -> None:
     failing_writer = RecordingWriter(RuntimeError("database unavailable"))
     succeeding_writer = RecordingWriter()
     registry._writers = {"database": failing_writer, "csv": succeeding_writer}
-    config = SimpleNamespace(destinations=("database", "csv"))
+    config = SimpleNamespace(name="demo.json", destinations=("database", "csv"))
 
-    registry.write_all(({"id": "1"},), config)
+    with pytest.raises(WriterError) as error:
+        registry.write_all(({"id": "1"},), config)
 
+    assert error.value.failures == {"database": "database unavailable"}
     assert failing_writer.calls == 1
     assert succeeding_writer.calls == 1
     assert "Writer 'database' failed" in caplog.text
@@ -34,9 +38,20 @@ def test_write_all_logs_unknown_writer_and_continues(caplog) -> None:
     registry = WriterRegistry()
     succeeding_writer = RecordingWriter()
     registry._writers = {"csv": succeeding_writer}
-    config = SimpleNamespace(destinations=("missing", "csv"))
+    config = SimpleNamespace(name="demo.json", destinations=("missing", "csv"))
 
-    registry.write_all((), config)
+    with pytest.raises(WriterError, match="missing"):
+        registry.write_all((), config)
 
     assert succeeding_writer.calls == 1
     assert "Writer 'missing' is not registered; continuing with next writer." in caplog.text
+
+
+def test_write_all_succeeds_when_all_writers_succeed() -> None:
+    registry = WriterRegistry()
+    writer = RecordingWriter()
+    registry._writers = {"csv": writer}
+
+    registry.write_all(({"id": "1"},), SimpleNamespace(name="demo.json", destinations=("csv",)))
+
+    assert writer.calls == 1

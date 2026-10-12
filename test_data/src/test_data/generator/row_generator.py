@@ -1,15 +1,18 @@
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 
 from test_data.generator.column_generator_registry import ColumnGeneratorRegistry
-from test_data.model.schemas import ColumnModel, ConfigModel
+from test_data.model.schemas import ConfigModel
 from test_data.util.collection_utils import topological_sort
 
 
 class RowGenerator:
-    def __init__(self, config: ConfigModel, columns: Sequence[ColumnModel]) -> None:
+    def __init__(self, config: ConfigModel) -> None:
         self.config = config
-        self.column_generators = ColumnGeneratorRegistry.get_all(columns)
-        self.ordered_columns = topological_sort(ColumnGeneratorRegistry.get_dependencies(columns))
+        self.column_generators = ColumnGeneratorRegistry.get_all(config.columns)
+        # Columns are generated after the columns they are derived from.
+        self.ordered_columns = topological_sort(
+            {name: generator.dependencies for name, generator in self.column_generators.items()}
+        )
 
     def generate_rows(self) -> Iterator[dict[str, str]]:
         for row_index in range(self.config.row_count):

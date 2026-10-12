@@ -1,7 +1,6 @@
 import argparse
 import sys
 from collections.abc import Sequence
-from pathlib import Path
 
 from test_data.generator.dataset_generator import DatasetGenerator
 from test_data.generator.dataset_registry import DatasetRegistry
@@ -14,14 +13,15 @@ def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Generate test data from text files.")
     parser.add_argument(
         "--config",
-        help="Path to one JSON config file, for example config/online_shopping.json",
+        help="Config name in the config directory (online_shopping) or path to a JSON config file. "
+             "Without it, every config in the config directory is generated.",
     )
     return parser
 
 
 def get_config_names(config: str | None) -> list[str]:
     if config is not None:
-        return [Path(config).name]
+        return [config]
 
     return DatasetRegistry().get_all_names()
 

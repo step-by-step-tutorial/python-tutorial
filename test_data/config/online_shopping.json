@@ -122,8 +122,8 @@
       "type": "derived",
       "method": "date_with_random_day_offset",
       "source_field": "order_date",
-      "start": 2,
-      "step": 10
+      "min": 2,
+      "max": 10
     },
     { "name": "coupon_code", "type": "random_from_file", "file": "data/coupon_codes.txt" },
     { "name": "payment_method", "type": "random_from_file", "file": "data/payment_methods.txt" },

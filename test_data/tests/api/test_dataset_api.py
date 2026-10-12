@@ -97,3 +97,58 @@ async def test_get_rows_reads_a_database_page(project_root: Path, monkeypatch) -
     finally:
         monkeypatch.delenv("DATABASE_URL", raising=False)
         importlib.reload(env_config)
+
+
+async def post(path: str) -> httpx.Response:
+    transport = httpx.ASGITransport(app=create_api())
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        return await client.post(path)
+
+
+async def test_get_list_returns_dataset_metadata(project_root: Path) -> None:
+    response = await get("/datasets")
+
+    assert response.status_code == 200
+    assert response.json()[0]["name"] == "demo"
+    assert response.json()[0]["config_file"] == "config/demo.json"
+
+
+async def test_get_one_returns_dataset_metadata(project_root: Path) -> None:
+    response = await get("/datasets/demo")
+
+    assert response.status_code == 200
+    assert response.json()["download_url"] == "/datasets/demo/download"
+
+
+async def test_generate_writes_output_and_returns_metadata(project_root: Path) -> None:
+    response = await post("/datasets/demo/generate")
+
+    assert response.status_code == 200
+    assert response.json()["name"] == "demo"
+    assert (env_config.OUTPUT_DIR / "demo.csv").is_file()
+
+
+async def test_unknown_dataset_returns_not_found(project_root: Path) -> None:
+    assert (await get("/datasets/missing")).status_code == 404
+    assert (await get("/datasets/missing/download")).status_code == 404
+    assert (await post("/datasets/missing/generate")).status_code == 404
+
+
+async def test_download_returns_not_found_before_generation(project_root: Path) -> None:
+    (env_config.OUTPUT_DIR / "demo.csv").unlink(missing_ok=True)
+
+    response = await get("/datasets/demo/download?format=csv")
+
+    assert response.status_code == 404
+
+
+async def test_generate_reports_failed_destinations(project_root: Path) -> None:
+    config_path = env_config.CONFIG_DIR / "demo.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    config["destinations"] = ["csv", "unknown"]
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+
+    response = await post("/datasets/demo/generate")
+
+    assert response.status_code == 500
+    assert response.json()["failures"] == {"unknown": "writer is not registered"}

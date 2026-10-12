@@ -3,17 +3,18 @@ import logging
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from sqlalchemy.exc import NoSuchTableError
 
 from test_data.config import settings as env_config
 from test_data.repository.database_repository import DatabaseRepository
 from test_data.generator.dataset_generator import DatasetGenerator
-from test_data.generator.dataset_registry import DatasetRegistry
+from test_data.generator.dataset_registry import DatasetNotFoundError, DatasetRegistry
 from test_data.model.schemas import DatabasePage, DatasetMetadata
 from test_data.util.file_utils import check_file_exists
 from test_data.util.output_format_utils import media_type_for
+from test_data.writer.writer_registry import WriterError
 
 __version__ = "1.1.0"
 logger = logging.getLogger(__name__)
@@ -37,6 +38,14 @@ def create_api() -> FastAPI:
     registry = DatasetRegistry()
     logger.info("Data simulator API initialized: datasets=%s", registry.get_all_names())
 
+    @app.exception_handler(DatasetNotFoundError)
+    async def handle_dataset_not_found(request: Request, error: DatasetNotFoundError) -> JSONResponse:
+        return JSONResponse(status_code=404, content={"detail": str(error)})
+
+    @app.exception_handler(WriterError)
+    async def handle_writer_error(request: Request, error: WriterError) -> JSONResponse:
+        return JSONResponse(status_code=500, content={"detail": str(error), "failures": error.failures})
+
     @app.get("/", include_in_schema=False)
     async def redirect_to_health() -> RedirectResponse:
         return RedirectResponse(url="/health")
@@ -55,12 +64,13 @@ def create_api() -> FastAPI:
 
     @app.get("/datasets/{name}", tags=["Datasets"], summary="Get dataset metadata")
     async def get_one(name: str) -> DatasetMetadata:
-        return registry.get_one(name).get_metadata()
+        return DatasetMetadata.from_dataset(registry.get_one(name))
 
     @app.post("/datasets/{name}/generate", tags=["Datasets"], summary="Generate dataset output")
     async def generate(name: str) -> DatasetMetadata:
         logger.info("Dataset generation requested: dataset=%s", name)
-        return DatasetGenerator(config_name=name).write().get_metadata()
+        dataset = registry.get_one(name)
+        return DatasetMetadata.from_dataset(DatasetGenerator(config_name=dataset.config.name).write())
 
     @app.get(
         "/datasets/{name}/rows",
@@ -119,8 +129,12 @@ def create_api() -> FastAPI:
         except KeyError as error:
             raise HTTPException(status_code=404, detail=f"Unsupported format: {format_name}.") from error
 
-        check_file_exists(path)
-        logger.info("Dataset download ready: dataset=%s format=%s path=%s bytes=%s", name, format_name, path, path.stat().st_size)
+        try:
+            check_file_exists(path)
+        except FileNotFoundError as error:
+            raise HTTPException(status_code=404, detail=f"Output for {name} has not been generated yet.") from error
+        logger.info("Dataset download ready: dataset=%s format=%s path=%s bytes=%s",
+                    name, format_name, path, path.stat().st_size)
         return FileResponse(path, media_type=media_type, filename=path.name)
 
     return app

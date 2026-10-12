@@ -1,8 +1,7 @@
 import re
+import unicodedata
 from datetime import date, timedelta
 from random import Random
-
-import unicodedata
 
 NUMBER_LETTER_PATTERN = re.compile(r"[^a-z0-9]+")
 REPEATED_DOTS_PATTERN = re.compile(r"\.+")
@@ -19,6 +18,7 @@ def convert_to_email(value: str) -> str:
 
 
 def calculate_days(start: date, end: date, error_message: str = "start must be earlier than or equal to end") -> int:
+    """Return the days from start to end; raise ValueError when end is before start."""
     if start > end:
         raise ValueError(error_message)
     return (end - start).days
@@ -34,6 +34,3 @@ def random_date_from(base_date: date, min_days: int, max_days: int, random: Rand
     offset = random.randint(min_days, max_days)
     return (base_date + timedelta(days=offset)).isoformat()
 
-
-def convert_to_floats(values: list[str]) -> list[float]:
-    return [float(value) for value in values]

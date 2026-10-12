@@ -16,23 +16,23 @@ def list_of_directory_names(directory: Path) -> list[str]:
     return sorted(path.name for path in Path(directory).glob("*") if path.is_dir())
 
 
-def check_file_exists(path: Path):
+def check_file_exists(path: Path) -> None:
     if not path.is_file():
-        raise Exception(f"File {path.name} does not exist.")
+        raise FileNotFoundError(f"File {path} does not exist.")
 
 
 def read_content_of_file(path: str) -> str:
-    path = absolute_project_path(path)
+    absolute_path = absolute_project_path(path)
     try:
-        text = path.read_text(encoding="utf-8")
-    except Exception:
-        raise Exception(f"Source file not found: {path}")
-    return text
+        return absolute_path.read_text(encoding="utf-8")
+    except FileNotFoundError as error:
+        raise FileNotFoundError(f"Source file not found: {absolute_path}") from error
 
 
 def file_to_tuple(path: str) -> tuple[str, ...]:
+    """Return the non-blank, stripped lines of a project file."""
     content = read_content_of_file(path)
     result = tuple(line.strip() for line in content.splitlines() if line.strip())
     if not result:
-        raise Exception(f"Source file is empty: {absolute_project_path(path)}")
+        raise ValueError(f"Source file is empty: {absolute_project_path(path)}")
     return result

@@ -42,6 +42,8 @@ def temp_project_env(tmp_path: Path, monkeypatch) -> None:
         patch.setenv("PROJECT_ROOT", str(tmp_path))
         patch.setenv("CONFIG_DIR", str(tmp_path / "config"))
         patch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
+        # POSIX resolves "config/../" only when the config directory exists.
+        (tmp_path / "config").mkdir(exist_ok=True)
         importlib.reload(env_config)
         yield
     importlib.reload(env_config)
@@ -322,8 +324,8 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
               "type": "derived",
               "method": "date_with_random_day_offset",
               "source_field": "order_date",
-              "start": 2,
-              "step": 2
+              "min": 2,
+              "max": 2
             }
           ]
         }

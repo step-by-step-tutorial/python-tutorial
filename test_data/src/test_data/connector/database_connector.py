@@ -1,12 +1,6 @@
-import logging
-
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 
-logger = logging.getLogger(__name__)
 
-
-def create_connection(url):
-    try:
-        return create_engine(url)
-    except Exception as e:
-        logger.error(f"Connecting to database failed due to {e}")
+def create_connection(url: str) -> Engine:
+    return create_engine(url)

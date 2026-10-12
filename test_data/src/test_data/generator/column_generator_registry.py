@@ -23,6 +23,8 @@ from test_data.generator.column_generator import (
 from test_data.model.schemas import ColumnModel
 from test_data.util.validation_utils import require_not_blank
 
+DEFAULT_NULL_PROBABILITY = 0.2
+
 
 class ColumnGeneratorRegistry:
     generator_types: dict[str, type[ColumnGenerator]] = {
@@ -60,19 +62,17 @@ class ColumnGeneratorRegistry:
     def get_all(cls, columns: Sequence[ColumnModel]) -> dict[str, ColumnGenerator]:
         return {column.name: cls.get_one(column) for column in columns}
 
-    @classmethod
-    def get_dependencies(cls, columns: Sequence[ColumnModel]) -> dict[str, tuple[str, ...]]:
-        return {
-            column.name: cls.get_one(column).dependencies
-            for column in columns
-        }
-
 
 class NullableColumnGenerator(ColumnGenerator):
     def __init__(self, delegate: ColumnGenerator, probability: float | None):
         self.delegate = delegate
-        self.probability = 0.2 if probability is None else probability
+        self.probability = DEFAULT_NULL_PROBABILITY if probability is None else probability
         super().__init__(delegate.model)
+
+    @property
+    def seed(self) -> str:
+        # Null decisions use their own random stream, independent of the delegate's values.
+        return f"{super().seed}:null"
 
     @property
     def dependencies(self) -> tuple[str, ...]:

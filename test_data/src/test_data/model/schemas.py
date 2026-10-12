@@ -1,10 +1,13 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 from test_data.config import settings as env_config
+from test_data.util.json_utils import read_json_file
 from test_data.util.output_format_utils import output_file_name
-from pydantic import BaseModel, Field
 
 
 @dataclass(frozen=True)
@@ -41,6 +44,12 @@ class ColumnModel:
     nullable: bool = False
     null_probability: float | None = None
 
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "ColumnModel":
+        """Build a column from its JSON config; JSON lists become tuples so the model stays hashable."""
+        data = {key: tuple(value) if isinstance(value, list) else value for key, value in raw.items()}
+        return cls(**data)
+
 
 @dataclass(frozen=True)
 class ConfigModel:
@@ -52,6 +61,31 @@ class ConfigModel:
     column_names: tuple[str, ...]
     kafka_topic: str
     kafka_key_column: str
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any], name: str = "") -> "ConfigModel":
+        columns = tuple(ColumnModel.from_dict(column) for column in raw["columns"])
+        return cls(
+            name=name,
+            row_count=raw["row_count"],
+            output_name=raw["output_name"],
+            columns=columns,
+            destinations=tuple(raw["destinations"]),
+            column_names=tuple(column.name for column in columns),
+            kafka_topic=raw["kafka_topic"],
+            kafka_key_column=raw["kafka_key_column"],
+        )
+
+    @classmethod
+    def from_file(cls, config: str | Path) -> "ConfigModel":
+        """Load a config by name from CONFIG_DIR (".json" is optional), or from a path to a config file."""
+        path = Path(config)
+        if path.suffix == "":
+            path = path.with_suffix(".json")
+        if (env_config.CONFIG_DIR / path).is_file():
+            path = env_config.CONFIG_DIR / path
+
+        return cls.from_dict(read_json_file(path), path.name)
 
 
 @dataclass(frozen=True)
@@ -74,18 +108,6 @@ class Dataset:
     def output_file_for(self, format_name: str) -> Path:
         return env_config.OUTPUT_DIR / output_file_name(self.config.output_name, format_name)
 
-    def get_metadata(self) -> "DatasetMetadata":
-        return DatasetMetadata(
-            name=self.name,
-            config_file=f"{env_config.CONFIG_DIR.pipeline_name}/{self.name}",
-            row_count=self.config.row_count,
-            column_count=len(self.columns),
-            columns=list(self.columns),
-            destinations=list(self.destinations),
-            file=str(Path(env_config.OUTPUT_DIR.pipeline_name) / output_file_name(self.config.output_name, "csv")),
-            download_url=f"/datasets/{Path(self.name).stem}/download",
-        )
-
 
 class DatasetMetadata(BaseModel):
     name: str
@@ -96,6 +118,19 @@ class DatasetMetadata(BaseModel):
     destinations: list[str]
     file: str = Field(description="Path relative to the project root")
     download_url: str
+
+    @classmethod
+    def from_dataset(cls, dataset: Dataset) -> "DatasetMetadata":
+        return cls(
+            name=dataset.name,
+            config_file=f"{env_config.CONFIG_DIR.name}/{dataset.config.name}",
+            row_count=dataset.config.row_count,
+            column_count=len(dataset.columns),
+            columns=list(dataset.columns),
+            destinations=list(dataset.destinations),
+            file=f"{env_config.OUTPUT_DIR.name}/{output_file_name(dataset.config.output_name, 'csv')}",
+            download_url=f"/datasets/{dataset.name}/download",
+        )
 
 
 class DatabasePage(BaseModel):
