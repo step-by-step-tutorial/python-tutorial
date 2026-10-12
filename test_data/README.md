@@ -114,7 +114,6 @@ docker compose --file ./test_data/docker-compose-infrastructure.yml --project-na
 ```shell
 python -m test_data --config online_shopping
 python -m test_data --config house
-python -m test_data --config ./test_data/config/house_los_angeles.json
 python -m test_data
 python -m test_data --help
 ```
