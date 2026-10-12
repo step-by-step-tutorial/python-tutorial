@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from geodata_pipeline.model import PipelineConfigModel
-from geodata_pipeline.repository import GeoDataRepository
+from geodata_pipeline.geo_data_repository import GeoDataRepository
 
 
 def load(project_dir: Path) -> tuple[PipelineConfigModel, GeoDataRepository]:

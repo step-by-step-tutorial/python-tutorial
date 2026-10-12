@@ -1,5 +1,5 @@
 from geodata_pipeline.model import AddressModel, GeonameModel, OvertureAddressModel, TargetModel
-from geodata_pipeline.repository import GeoDataRepository
+from geodata_pipeline.geo_data_repository import GeoDataRepository
 
 
 class AddressMatcher:
