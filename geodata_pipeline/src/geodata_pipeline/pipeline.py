@@ -5,10 +5,8 @@ from dataclasses import asdict
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
-from geodata_pipeline.address import is_target_city, matches_state
 from geodata_pipeline.config import PipelineConfig, Target
-from geodata_pipeline.converter import to_address_record
-from geodata_pipeline.model import ADDRESS_COLUMNS
+from geodata_pipeline.model import OVERTURE_ADDRESS_COLUMNS, AddressRecord, OvertureAddress
 from geodata_pipeline.repository import GeoDataRepository
 from geodata_pipeline.resolver import AddressResolver
 
@@ -16,19 +14,6 @@ logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 50_000
 PROGRESS_LOG_INTERVAL = 100_000
-
-# Only the Overture address columns the pipeline reads, so the rest of the file is never decoded.
-OVERTURE_COLUMNS = [
-    "id",
-    "geometry",
-    "country",
-    "postcode",
-    "street",
-    "number",
-    "unit",
-    "postal_city",
-    "address_levels",
-]
 
 
 class Pipeline:
@@ -55,13 +40,13 @@ class Pipeline:
                     target.state_code, target.input_file, target.output_file)
 
         parquet_file = pq.ParquetFile(target.input_file)
-        columns = [column for column in OVERTURE_COLUMNS if column in parquet_file.schema_arrow.names]
+        columns = [column for column in OVERTURE_ADDRESS_COLUMNS if column in parquet_file.schema_arrow.names]
         scanned = 0
         written = 0
         missing_coordinates = 0
 
         with target.output_file.open("w", encoding="utf-8", newline="") as output:
-            writer = csv.DictWriter(output, fieldnames=ADDRESS_COLUMNS)
+            writer = csv.DictWriter(output, fieldnames=AddressRecord.column_names())
             writer.writeheader()
 
             for batch in parquet_file.iter_batches(batch_size=BATCH_SIZE, columns=columns):
@@ -70,16 +55,10 @@ class Pipeline:
                 batch = batch.filter(pc.equal(batch.column("country"), target.country_code))
 
                 for row in batch.to_pylist():
-                    if not matches_state(row, target.state, target.state_code):
+                    record = self._address_resolver.resolve(OvertureAddress.from_row(row), target)
+
+                    if record is None:
                         continue
-
-                    city = self._address_resolver.find_city(row, target)
-
-                    if not is_target_city(city, target.cities):
-                        continue
-
-                    geoname = self._address_resolver.find_geoname(city, target)
-                    record = to_address_record(row, target, city, geoname)
 
                     if record.latitude is None:
                         missing_coordinates += 1
