@@ -1,12 +1,10 @@
-from pathlib import Path
-
 from test_data.model.config_model import ConfigModel
-from test_data.model.dataset_model import DatasetModel
 from test_data.model.dataset_metadata_model import DatasetMetadataModel
+from test_data.model.settings_model import SettingsModel
 
 
-def test_dataset_metadata_from_dataset(project_root: Path) -> None:
-    metadata = DatasetMetadataModel.from_dataset(DatasetModel(name="demo", config=ConfigModel.from_file("demo.json")))
+def test_dataset_metadata_from_config(settings: SettingsModel) -> None:
+    metadata = DatasetMetadataModel.from_config(ConfigModel.from_file("demo.json", settings), settings)
 
     assert metadata.name == "demo"
     assert metadata.config_file == "config/demo.json"

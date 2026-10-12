@@ -1,12 +1,11 @@
-import importlib
 from pathlib import Path
 
-from test_data.config import settings as env_config
-from test_data.generator.dataset_registry import DatasetRegistry
+from test_data.model.settings_model import SettingsModel
+from test_data.repository.dataset_repository import DatasetRepository
 from test_data.util.file_utils import list_file_names
 
 
-def test_dataset_registry_discovers_dataset_names_without_prefix(tmp_path: Path, monkeypatch) -> None:
+def test_dataset_repository_discovers_dataset_names_without_prefix(tmp_path: Path, monkeypatch) -> None:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
     (config_dir / "alpha.json").write_text(
@@ -20,17 +19,15 @@ def test_dataset_registry_discovers_dataset_names_without_prefix(tmp_path: Path,
     (config_dir / "nested").mkdir()
 
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
-    importlib.reload(env_config)
-    registry = DatasetRegistry()
+    repository = DatasetRepository(SettingsModel.from_env())
 
     assert list_file_names(config_dir) == ["alpha.json", "beta.json"]
-    assert registry.get_all_names() == ["alpha", "beta"]
+    assert repository.get_all_names() == ["alpha", "beta"]
 
     monkeypatch.delenv("CONFIG_DIR", raising=False)
-    importlib.reload(env_config)
 
 
-def test_dataset_registry_resolves_config_path_from_dataset_name(tmp_path: Path, monkeypatch) -> None:
+def test_dataset_repository_resolves_config_path_from_dataset_name(tmp_path: Path, monkeypatch) -> None:
     config_dir = tmp_path / "config"
     config_dir.mkdir()
     path = config_dir / "sale.json"
@@ -40,10 +37,8 @@ def test_dataset_registry_resolves_config_path_from_dataset_name(tmp_path: Path,
     )
 
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
-    importlib.reload(env_config)
-    registry = DatasetRegistry()
+    repository = DatasetRepository(SettingsModel.from_env())
 
-    assert registry.get_one("sale").config.output_name == "sale"
+    assert repository.get_one("sale").output_name == "sale"
 
     monkeypatch.delenv("CONFIG_DIR", raising=False)
-    importlib.reload(env_config)

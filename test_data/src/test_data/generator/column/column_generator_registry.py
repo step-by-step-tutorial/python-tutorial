@@ -1,27 +1,31 @@
 from collections.abc import Sequence
 
-from test_data.generator.column_generator import (
-    ColumnGenerator,
+from test_data.generator.column.column_generator import ColumnGenerator, NullableColumnGenerator
+from test_data.generator.column.derived_columns import (
     ConcatFromSourceFieldsColumn,
     DateWithRandomDayOffsetColumn,
     EmailFromSourceFieldsColumn,
-    FixedColumn,
     FormulaColumn,
-    LookupFromCsvColumn,
-    NullableColumnGenerator,
     ProductColumn,
+)
+from test_data.generator.column.random_columns import (
+    RandomBooleanColumn,
     RandomDateColumn,
     RandomFloatColumn,
-    RandomBooleanColumn,
+    RandomIntColumn,
     RandomTimestampColumn,
+)
+from test_data.generator.column.simple_columns import FixedColumn, SequenceColumn
+from test_data.generator.column.source_file_columns import (
+    LookupFromCsvColumn,
+    RandomFromDirectoryColumn,
     RandomFromFileColumn,
     RandomFromMappedCsvColumn,
-    RandomFromDirectoryColumn,
     RandomFromMappedFileColumn,
-    RandomIntColumn,
-    SequenceColumn,
 )
 from test_data.model.column_model import ColumnModel
+from test_data.model.settings_model import SettingsModel
+from test_data.repository.source_repository import SourceRepository
 from test_data.util.validation_utils import require_not_blank
 
 
@@ -46,17 +50,19 @@ class ColumnGeneratorRegistry:
         "date_with_random_day_offset": DateWithRandomDayOffsetColumn,
     }
 
-    @classmethod
-    def get_one(cls, column: ColumnModel) -> ColumnGenerator:
+    def __init__(self, settings: SettingsModel, source_repository: SourceRepository) -> None:
+        self._settings = settings
+        self._source_repository = source_repository
+
+    def get_one(self, column: ColumnModel) -> ColumnGenerator:
         generator_name = column.method or column.type
-        generator_type = cls.generator_types.get(generator_name)
+        generator_type = self.generator_types.get(generator_name)
         require_not_blank(generator_type, f"Unsupported column generator: {generator_name}")
 
-        generator = generator_type(column)
+        generator = generator_type(column, self._settings, self._source_repository)
         if not column.nullable:
             return generator
         return NullableColumnGenerator(generator, column.null_probability)
 
-    @classmethod
-    def get_all(cls, columns: Sequence[ColumnModel]) -> dict[str, ColumnGenerator]:
-        return {column.name: cls.get_one(column) for column in columns}
+    def get_all(self, columns: Sequence[ColumnModel]) -> dict[str, ColumnGenerator]:
+        return {column.name: self.get_one(column) for column in columns}

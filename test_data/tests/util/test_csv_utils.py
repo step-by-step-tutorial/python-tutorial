@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from test_data.util.csv_utils import read_csv_mapping, read_csv_rows, write_csv
+from test_data.util.csv_utils import filter_rows, read_csv_mapping, read_csv_rows, rows_with_values, write_csv
 
 
 def test_write_and_read_csv_rows(tmp_path: Path) -> None:
@@ -18,3 +18,10 @@ def test_read_csv_mapping(tmp_path: Path) -> None:
 
     with pytest.raises(KeyError):
         read_csv_mapping(path, "product", "missing")
+
+
+def test_filter_rows_and_rows_with_values() -> None:
+    rows = [{"kind": "R", "name": "Sunset"}, {"kind": "P", "name": ""}, {"kind": "P", "name": "Pasadena"}]
+
+    assert filter_rows(rows, "kind", ["P"]) == (rows[1], rows[2])
+    assert rows_with_values(rows, ["name"]) == (rows[0], rows[2])

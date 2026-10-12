@@ -3,7 +3,8 @@ import sys
 from collections.abc import Sequence
 
 from test_data.generator.dataset_generator import DatasetGenerator
-from test_data.generator.dataset_registry import DatasetRegistry
+from test_data.model.settings_model import SettingsModel
+from test_data.repository.dataset_repository import DatasetRepository
 
 EXIT_OK = 0
 EXIT_ERROR = 1
@@ -19,11 +20,11 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def get_config_names(config: str | None) -> list[str]:
+def get_config_names(config: str | None, settings: SettingsModel) -> list[str]:
     if config is not None:
         return [config]
 
-    return DatasetRegistry().get_all_names()
+    return DatasetRepository(settings).get_all_names()
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -31,14 +32,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        config_names = get_config_names(args.config)
-        datasets = [DatasetGenerator(config_name).write() for config_name in config_names]
+        settings = SettingsModel.from_env()
+        config_names = get_config_names(args.config, settings)
+        configs = [DatasetGenerator(config_name, settings).write() for config_name in config_names]
     except Exception as error:
         print(f"error: {error}", file=sys.stderr)
         return EXIT_ERROR
 
-    for dataset in datasets:
-        print(f"Generated {dataset.config.row_count} rows by {dataset.name}")
+    for config in configs:
+        print(f"Generated {config.row_count} rows by {config.dataset_name}")
     return EXIT_OK
 
 

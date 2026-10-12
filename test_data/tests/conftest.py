@@ -1,10 +1,9 @@
 
 import json
-import importlib
 from pathlib import Path
 
 import pytest
-from test_data.config import settings as env_config
+from test_data.model.settings_model import SettingsModel
 
 TEST_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "output_test"
 
@@ -86,11 +85,14 @@ def project_root(tmp_path: Path, data_dir: Path, monkeypatch) -> Path:
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
     TEST_OUTPUT_DIR.mkdir(exist_ok=True)
     monkeypatch.setenv("OUTPUT_DIR", str(TEST_OUTPUT_DIR))
-    importlib.reload(env_config)
 
     yield tmp_path
 
     monkeypatch.delenv("PROJECT_ROOT", raising=False)
     monkeypatch.delenv("CONFIG_DIR", raising=False)
     monkeypatch.delenv("OUTPUT_DIR", raising=False)
-    importlib.reload(env_config)
+
+
+@pytest.fixture
+def settings(project_root: Path) -> SettingsModel:
+    return SettingsModel.from_env()

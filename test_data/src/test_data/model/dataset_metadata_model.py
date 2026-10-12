@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
-from test_data.config import settings as env_config
-from test_data.model.dataset_model import DatasetModel
+from test_data.model.config_model import ConfigModel
+from test_data.model.settings_model import SettingsModel
 
 
 class DatasetMetadataModel(BaseModel):
@@ -15,14 +15,14 @@ class DatasetMetadataModel(BaseModel):
     download_url: str
 
     @classmethod
-    def from_dataset(cls, dataset: DatasetModel) -> "DatasetMetadataModel":
+    def from_config(cls, config: ConfigModel, settings: SettingsModel) -> "DatasetMetadataModel":
         return cls(
-            name=dataset.name,
-            config_file=f"{env_config.CONFIG_DIR.name}/{dataset.config.name}",
-            row_count=dataset.config.row_count,
-            column_count=len(dataset.columns),
-            columns=list(dataset.columns),
-            destinations=list(dataset.destinations),
-            file=f"{env_config.OUTPUT_DIR.name}/{dataset.output_file.name}",
-            download_url=f"/datasets/{dataset.name}/download",
+            name=config.dataset_name,
+            config_file=f"{settings.config_dir.name}/{config.name}",
+            row_count=config.row_count,
+            column_count=len(config.columns),
+            columns=list(config.column_names),
+            destinations=list(config.destinations),
+            file=f"{config.output_dir.name}/{config.output_file('csv').name}",
+            download_url=f"/datasets/{config.dataset_name}/download",
         )

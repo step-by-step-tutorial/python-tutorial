@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from test_data.model.settings_model import SettingsModel
 from test_data.writer.writer_registry import WriterError, WriterRegistry
 
 
@@ -17,7 +18,7 @@ class RecordingWriter:
 
 
 def test_write_all_logs_writer_failure_and_continues(caplog) -> None:
-    registry = WriterRegistry()
+    registry = WriterRegistry(SettingsModel.from_env({}))
     failing_writer = RecordingWriter(RuntimeError("database unavailable"))
     succeeding_writer = RecordingWriter()
     registry._writers = {"database": failing_writer, "csv": succeeding_writer}
@@ -35,7 +36,7 @@ def test_write_all_logs_writer_failure_and_continues(caplog) -> None:
 
 
 def test_write_all_logs_unknown_writer_and_continues(caplog) -> None:
-    registry = WriterRegistry()
+    registry = WriterRegistry(SettingsModel.from_env({}))
     succeeding_writer = RecordingWriter()
     registry._writers = {"csv": succeeding_writer}
     config = SimpleNamespace(name="demo.json", destinations=("missing", "csv"))
@@ -48,7 +49,7 @@ def test_write_all_logs_unknown_writer_and_continues(caplog) -> None:
 
 
 def test_write_all_succeeds_when_all_writers_succeed() -> None:
-    registry = WriterRegistry()
+    registry = WriterRegistry(SettingsModel.from_env({}))
     writer = RecordingWriter()
     registry._writers = {"csv": writer}
 
