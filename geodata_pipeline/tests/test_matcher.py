@@ -1,19 +1,18 @@
 from pathlib import Path
 
-from geodata_pipeline.config import PipelineConfig
-from geodata_pipeline.model import OvertureAddress
+from geodata_pipeline.model import OvertureAddressModel, PipelineConfigModel
 from geodata_pipeline.repository import GeoDataRepository
 from geodata_pipeline.matcher import AddressMatcher
 
 
 def load(project_dir: Path):
-    config = PipelineConfig.from_file(project_dir / "config" / "targets.json")
+    config = PipelineConfigModel.from_file(project_dir / "config" / "targets.json")
     repository = GeoDataRepository.from_files(config.targets, config.geonames_file, config.postal_codes_file)
     return config.targets[0], AddressMatcher(repository)
 
 
-def address(**row) -> OvertureAddress:
-    return OvertureAddress.from_row({"country": "US", "address_levels": [{"value": "CA"}]} | row)
+def address(**row) -> OvertureAddressModel:
+    return OvertureAddressModel.from_row({"country": "US", "address_levels": [{"value": "CA"}]} | row)
 
 
 def test_find_city_prefers_postal_city_then_postal_code_then_last_level(project_dir: Path) -> None:

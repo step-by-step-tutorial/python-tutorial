@@ -2,12 +2,12 @@ import logging
 from collections.abc import Iterable
 from pathlib import Path
 
-from geodata_pipeline.config import Target
 from geodata_pipeline.model import (
     GEONAMES_COLUMN_COUNT,
     POSTAL_CODES_MIN_COLUMN_COUNT,
-    GeonameRecord,
-    PostalCodeRecord,
+    GeonameModel,
+    PostalCodeModel,
+    TargetModel,
 )
 from geodata_pipeline.util.file_utils import read_tsv
 from geodata_pipeline.util.text_utils import normalize
@@ -15,8 +15,8 @@ from geodata_pipeline.util.text_utils import normalize
 logger = logging.getLogger(__name__)
 
 StateKey = tuple[str, str]
-PlacesByName = dict[str, GeonameRecord]
-PostalCodesByCode = dict[str, PostalCodeRecord]
+PlacesByName = dict[str, GeonameModel]
+PostalCodesByCode = dict[str, PostalCodeModel]
 
 
 class GeoDataRepository:
@@ -31,7 +31,7 @@ class GeoDataRepository:
         self._postal_codes = postal_codes
 
     @classmethod
-    def from_files(cls, targets: Iterable[Target], geonames_file: Path, postal_codes_file: Path) -> "GeoDataRepository":
+    def from_files(cls, targets: Iterable[TargetModel], geonames_file: Path, postal_codes_file: Path) -> "GeoDataRepository":
         """Read the GeoNames dumps once, keeping only the states the targets cover."""
         states = {target.state_key for target in targets}
         return cls(
@@ -39,10 +39,10 @@ class GeoDataRepository:
             postal_codes=cls._read_postal_codes(postal_codes_file, states),
         )
 
-    def find_geoname(self, target: Target, name: str) -> GeonameRecord | None:
+    def find_geoname(self, target: TargetModel, name: str) -> GeonameModel | None:
         return self._places.get(target.state_key, {}).get(normalize(name))
 
-    def find_postal_code(self, target: Target, postal_code: str) -> PostalCodeRecord | None:
+    def find_postal_code(self, target: TargetModel, postal_code: str) -> PostalCodeModel | None:
         return self._postal_codes.get(target.state_key, {}).get(postal_code)
 
     @staticmethod
@@ -55,7 +55,7 @@ class GeoDataRepository:
             if len(values) != GEONAMES_COLUMN_COUNT:
                 continue
 
-            record = GeonameRecord.from_values(values)
+            record = GeonameModel.from_values(values)
             state_places = places.get(record.state_key)
 
             # Only cities, towns and villages: other features (parks, buildings, counties) share city names.
@@ -82,7 +82,7 @@ class GeoDataRepository:
             if len(values) < POSTAL_CODES_MIN_COLUMN_COUNT:
                 continue
 
-            record = PostalCodeRecord.from_values(values)
+            record = PostalCodeModel.from_values(values)
             state_postal_codes = postal_codes.get(record.state_key)
 
             if state_postal_codes is None:

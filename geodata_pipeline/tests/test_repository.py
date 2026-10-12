@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from geodata_pipeline.config import PipelineConfig
+from geodata_pipeline.model import PipelineConfigModel
 from geodata_pipeline.repository import GeoDataRepository
 
 
-def load(project_dir: Path) -> tuple[PipelineConfig, GeoDataRepository]:
-    config = PipelineConfig.from_file(project_dir / "config" / "targets.json")
+def load(project_dir: Path) -> tuple[PipelineConfigModel, GeoDataRepository]:
+    config = PipelineConfigModel.from_file(project_dir / "config" / "targets.json")
     return config, GeoDataRepository.from_files(config.targets, config.geonames_file, config.postal_codes_file)
 
 
@@ -35,7 +35,7 @@ def test_find_postal_code(project_dir: Path) -> None:
 
 
 def test_find_returns_none_for_state_without_data() -> None:
-    from tests.test_config import make_target
+    from tests.test_model import make_target
 
     repository = GeoDataRepository(places={}, postal_codes={})
 

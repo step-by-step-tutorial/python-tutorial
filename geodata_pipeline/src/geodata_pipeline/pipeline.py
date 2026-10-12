@@ -5,8 +5,13 @@ from dataclasses import asdict
 import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
-from geodata_pipeline.config import PipelineConfig, Target
-from geodata_pipeline.model import OVERTURE_ADDRESS_COLUMNS, AddressRecord, OvertureAddress
+from geodata_pipeline.model import (
+    OVERTURE_ADDRESS_COLUMNS,
+    AddressModel,
+    OvertureAddressModel,
+    PipelineConfigModel,
+    TargetModel,
+)
 from geodata_pipeline.repository import GeoDataRepository
 from geodata_pipeline.matcher import AddressMatcher
 
@@ -17,7 +22,7 @@ PROGRESS_LOG_INTERVAL = 100_000
 
 
 class Pipeline:
-    def __init__(self, config: PipelineConfig, repository: GeoDataRepository | None = None) -> None:
+    def __init__(self, config: PipelineConfigModel, repository: GeoDataRepository | None = None) -> None:
         self._config = config
         self._repository = repository or GeoDataRepository.from_files(
             config.targets, config.geonames_file, config.postal_codes_file
@@ -35,7 +40,7 @@ class Pipeline:
 
             self.process_target(target)
 
-    def process_target(self, target: Target) -> None:
+    def process_target(self, target: TargetModel) -> None:
         logger.info("Processing target state=%s: input=%s, output=%s",
                     target.state_code, target.input_file, target.output_file)
 
@@ -46,7 +51,7 @@ class Pipeline:
         missing_coordinates = 0
 
         with target.output_file.open("w", encoding="utf-8", newline="") as output:
-            writer = csv.DictWriter(output, fieldnames=AddressRecord.column_names())
+            writer = csv.DictWriter(output, fieldnames=AddressModel.column_names())
             writer.writeheader()
 
             for batch in parquet_file.iter_batches(batch_size=BATCH_SIZE, columns=columns):
@@ -55,7 +60,7 @@ class Pipeline:
                 batch = batch.filter(pc.equal(batch.column("country"), target.country_code))
 
                 for row in batch.to_pylist():
-                    record = self._address_matcher.match(OvertureAddress.from_row(row), target)
+                    record = self._address_matcher.match(OvertureAddressModel.from_row(row), target)
 
                     if record is None:
                         continue

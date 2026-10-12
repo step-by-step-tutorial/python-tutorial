@@ -1,5 +1,4 @@
-from geodata_pipeline.config import Target
-from geodata_pipeline.model import AddressRecord, GeonameRecord, OvertureAddress
+from geodata_pipeline.model import AddressModel, GeonameModel, OvertureAddressModel, TargetModel
 from geodata_pipeline.repository import GeoDataRepository
 
 
@@ -9,7 +8,7 @@ class AddressMatcher:
     def __init__(self, repository: GeoDataRepository) -> None:
         self._repository = repository
 
-    def match(self, address: OvertureAddress, target: Target) -> AddressRecord | None:
+    def match(self, address: OvertureAddressModel, target: TargetModel) -> AddressModel | None:
         """Return the output record of an address in the target's state and cities, otherwise None."""
         if address.country != target.country_code or not address.is_in_state(target):
             return None
@@ -19,9 +18,9 @@ class AddressMatcher:
         if not target.is_city(city):
             return None
 
-        return AddressRecord.from_overture_address(address, target, city, self.find_geoname(city, target))
+        return AddressModel.from_overture_address(address, target, city, self.find_geoname(city, target))
 
-    def find_city(self, address: OvertureAddress, target: Target) -> str | None:
+    def find_city(self, address: OvertureAddressModel, target: TargetModel) -> str | None:
         """Pick the city from the postal city, then the postal-code lookup, then the most specific address level."""
         if address.postal_city:
             return address.postal_city
@@ -34,7 +33,7 @@ class AddressMatcher:
 
         return address.address_levels[-1] if address.address_levels else None
 
-    def find_geoname(self, city: str | None, target: Target) -> GeonameRecord | None:
+    def find_geoname(self, city: str | None, target: TargetModel) -> GeonameModel | None:
         if not city:
             return None
 
