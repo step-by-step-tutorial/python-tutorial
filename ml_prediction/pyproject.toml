@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ml_prediction"
 version = "0.1.0"
-description = "Machine learning workflow for house price prediction."
+description = "Trains and runs machine learning models on the data platform datasets."
 requires-python = ">=3.12"
 dependencies = [
     "boto3",
@@ -13,7 +13,14 @@ dependencies = [
     "scikit-learn",
     "joblib",
     "pyarrow",
+    "matplotlib",
     "mlflow",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-mock",
 ]
 
 [tool.setuptools.packages.find]

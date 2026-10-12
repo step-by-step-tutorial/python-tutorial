@@ -1,159 +1,74 @@
 import argparse
 import logging
-import os
 import sys
 from collections.abc import Sequence
 
-from ml_prediction.application.application import Application
-from ml_prediction.config.settings import get_settings
-from ml_prediction.dataset.dataset import Dataset
-from ml_prediction.features.house_feature_model import HouseFeatureModel
-from ml_prediction.features.online_shopping_feature_model import OnlineShoppingFeatureModel
-from ml_prediction.inference.model_predictor import ModelPredictor
-from ml_prediction.visualize.prediction_visualizer import PredictionVisualizer
-from ml_prediction.training.house_price_regression_trainer import HousePriceRegressionTrainer
-from ml_prediction.training.online_shopping_classification_trainer import OnlineShoppingClassificationTrainer
+from ml_prediction.config.dataset_profiles import DATASET_PROFILES
+from ml_prediction.config.operation import Operation
+from ml_prediction.inference.predictor import Predictor
+from ml_prediction.model.settings_model import SettingsModel
+from ml_prediction.training.trainer import Trainer
 
-PREDICTIONS = ("train", "predict")
+DATASETS = tuple(DATASET_PROFILES)
+OPERATIONS = tuple(Operation)
 
 
 def create_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run a machine learning application.")
+    parser = argparse.ArgumentParser(description="Train or run a machine learning model.")
     parser.add_argument("dataset", nargs="?", choices=DATASETS, help="Dataset name.")
-    parser.add_argument("prediction", nargs="?", choices=PREDICTIONS, help="Operation to run.")
+    parser.add_argument("operation", nargs="?", choices=OPERATIONS, type=Operation, help="Operation to run.")
     parser.add_argument("--search", action="store_true", help="Search hyperparameters before saving the model.")
     return parser
 
 
-def _create_house_application(settings, include_prediction: bool = True) -> Application:
-    feature_model = HouseFeatureModel()
-    dataset_service = Dataset(settings.data_root / settings.dataset_filename, settings.dataset_name)
-    predictor = None
-    if include_prediction:
-        predictor = ModelPredictor(
-            dataset_service.dataset_name,
-            feature_model,
-        )
-    return Application(
-        dataset_service,
-        HousePriceRegressionTrainer(dataset_service),
-        predictor,
-    )
+def run(dataset_name: str, operation: Operation, search_enabled: bool = False) -> None:
+    settings = SettingsModel.from_env(DATASET_PROFILES[dataset_name], search_enabled=search_enabled)
+    if operation == Operation.TRAIN:
+        Trainer(settings).train()
+    else:
+        Predictor(settings).predict()
 
 
-def _create_online_shopping_application(
-        settings,
-        include_prediction: bool = True,
-) -> Application:
-    feature_model = OnlineShoppingFeatureModel()
-    dataset_service = Dataset(settings.data_root / settings.dataset_filename, settings.dataset_name)
-    predictor = (
-        ModelPredictor(dataset_service.dataset_name, feature_model)
-        if include_prediction
-        else None
-    )
-    return Application(
-        dataset_service,
-        OnlineShoppingClassificationTrainer(dataset_service),
-        predictor,
-    )
-
-
-DATASET_COMPOSERS = {
-    "house": _create_house_application,
-    "online_shopping": _create_online_shopping_application,
-}
-DATASETS = tuple(DATASET_COMPOSERS)
-
-
-def create_application(
-        dataset: str,
-        include_prediction: bool = True,
-        search_enabled: bool | None = None,
-) -> Application:
-    settings = get_settings(dataset)
-    if search_enabled is not None:
-        os.environ["ML_PREDICTION_SEARCH_ENABLED"] = str(search_enabled).lower()
-        settings = get_settings(dataset)
-    try:
-        compose = DATASET_COMPOSERS[dataset]
-    except KeyError as error:
-        supported = ", ".join(sorted(DATASET_COMPOSERS))
-        raise ValueError(
-            f"Dataset '{dataset}' has no application composer. Supported datasets: {supported}"
-        ) from error
-    return compose(settings, include_prediction)
-
-
-def select_dataset() -> str | None:
-    print("Available datasets:")
-    for index, dataset in enumerate(DATASETS, start=1):
-        print(f"  {index}. {dataset}")
+def select(title: str, options: Sequence[str]) -> str | None:
+    print(f"Available {title}s:")
+    for index, option in enumerate(options, start=1):
+        print(f"  {index}. {option}")
     print("  0. Exit")
 
     while True:
-        selection = input("Select a dataset: ").strip().lower()
+        selection = input(f"Select a {title}: ").strip().lower()
         if selection in {"0", "q", "quit", "exit"}:
             return None
-        if selection.isdigit() and 1 <= int(selection) <= len(DATASETS):
-            return DATASETS[int(selection) - 1]
-        print(f"Select a number between 1 and {len(DATASETS)}, or 0 to exit.")
-
-
-def select_prediction() -> str | None:
-    print("Available predictions:")
-    for index, prediction in enumerate(PREDICTIONS, start=1):
-        print(f"  {index}. {prediction}")
-    print("  0. Exit")
-
-    while True:
-        selection = input("Select a prediction: ").strip().lower()
-        if selection in {"0", "q", "quit", "exit"}:
-            return None
-        if selection.isdigit() and 1 <= int(selection) <= len(PREDICTIONS):
-            return PREDICTIONS[int(selection) - 1]
-        print(f"Select a number between 1 and {len(PREDICTIONS)}, or 0 to exit.")
-
-
-def run(dataset: str, prediction: str, search_enabled: bool | None = None) -> None:
-    application = create_application(
-        dataset,
-        include_prediction=prediction == "predict",
-        search_enabled=search_enabled,
-    )
-    if prediction == "train":
-        application.train()
-        return
-
-    prediction_output = application.predict()
-    settings = get_settings(dataset)
-    PredictionVisualizer(settings.data_root / settings.prediction_filename).render(prediction_output)
+        if selection.isdigit() and 1 <= int(selection) <= len(options):
+            return options[int(selection) - 1]
+        print(f"Select a number between 1 and {len(options)}, or 0 to exit.")
 
 
 def main(argv: Sequence[str] | None = None) -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     args = create_parser().parse_args(argv)
 
-    if (args.dataset is None) != (args.prediction is None):
-        raise SystemExit("dataset and prediction must be provided together")
+    if (args.dataset is None) != (args.operation is None):
+        raise SystemExit("dataset and operation must be provided together")
 
     if args.dataset is not None:
-        if args.search:
-            run(args.dataset, args.prediction, True)
-        else:
-            run(args.dataset, args.prediction)
+        run(args.dataset, args.operation, args.search)
         return
 
     if not sys.stdin.isatty():
-        raise RuntimeError("dataset and prediction are required when standard input is not interactive")
+        raise RuntimeError("dataset and operation are required when standard input is not interactive")
 
-    dataset = select_dataset()
-    if dataset is None:
+    dataset_name = select("dataset", DATASETS)
+    if dataset_name is None:
         return
 
-    prediction = select_prediction()
-    if prediction is not None:
-        run(dataset, prediction)
+    operation = select("operation", OPERATIONS)
+    if operation is not None:
+        run(dataset_name, Operation(operation), args.search)
 
 
 if __name__ == "__main__":

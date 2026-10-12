@@ -1,27 +1,105 @@
-from ml_prediction.audit.data.experiment_task_type import ExperimentTaskType
-from ml_prediction.data_model.dataset_profile import DatasetProfile
+from ml_prediction.config.task_type import TaskType
+from ml_prediction.model.dataset_profile_model import DatasetProfileModel
+from ml_prediction.model.feature_set_model import FeatureSetModel
 
-DATASET_PROFILES: dict[str, DatasetProfile] = {
-    "house": DatasetProfile(
-        target_column="total_price",
-        task_type=ExperimentTaskType.REGRESSION,
-        dataset_filename="house.csv",
-        model_filename="house_price_model.joblib",
-        prediction_filename="house_predictions.csv",
-        prediction_column="predicted_total_price",
-        experiment_filename="house_experiments_v2.csv",
-        data_lake_bucket="house",
-        data_lake_prefix="enriched/house/",
+HOUSE = DatasetProfileModel(
+    name="house",
+    task_type=TaskType.REGRESSION,
+    target_column="total_price",
+    prediction_column="predicted_total_price",
+    features=FeatureSetModel(
+        numeric=(
+            "latitude",
+            "longitude",
+            "construction_year",
+            "renovation_year",
+            "area_sqm",
+            "living_area_sqm",
+            "land_area_sqm",
+            "room_count",
+            "bedroom_count",
+            "bathroom_count",
+            "toilet_count",
+            "floor_number",
+            "total_floors",
+            "balcony_area_sqm",
+            "garden_area_sqm",
+            "garage_capacity",
+            "parking_spaces",
+            "basement_area_sqm",
+            "annual_energy_consumption_kwh",
+            "internet_speed_mbps",
+            "distance_to_city_center_km",
+            "distance_to_school_km",
+            "distance_to_supermarket_km",
+            "distance_to_public_transport_km",
+        ),
+        boolean=(
+            "owner_occupied",
+            "has_balcony",
+            "has_garden",
+            "has_garage",
+            "has_basement",
+            "has_elevator",
+            "has_storage_room",
+            "has_fireplace",
+            "has_swimming_pool",
+            "has_solar_panels",
+            "furnished",
+            "internet_available",
+        ),
+        categorical=(
+            "property_type",
+            "city",
+            "state",
+            "country",
+            "owner_type",
+            "occupancy_status",
+            "ownership_status",
+            "currency",
+            "heating_type",
+            "energy_source",
+            "energy_efficiency_class",
+            "condition",
+        ),
     ),
-    "online_shopping": DatasetProfile(
-        target_column="order_status",
-        task_type=ExperimentTaskType.CLASSIFICATION,
-        dataset_filename="online_shopping.csv",
-        model_filename="online_shopping_model.joblib",
-        prediction_filename="online_shopping_predictions.csv",
-        prediction_column="predicted_order_status",
-        experiment_filename="online_shopping_experiments_v2.csv",
-        data_lake_bucket="online_shopping",
-        data_lake_prefix="enriched/online_shopping/",
+    data_lake_bucket="house",
+    data_lake_prefix="enriched/house/",
+)
+
+# Identifiers, personal data and raw dates are left out: they do not generalize and only add noise.
+ONLINE_SHOPPING = DatasetProfileModel(
+    name="online_shopping",
+    task_type=TaskType.CLASSIFICATION,
+    target_column="order_status",
+    prediction_column="predicted_order_status",
+    features=FeatureSetModel(
+        numeric=(
+            "unit_price",
+            "quantity",
+            "subtotal",
+            "discount_percent",
+            "shipping_cost",
+            "tax_amount",
+            "total_amount",
+            "delivery_days",
+        ),
+        categorical=(
+            "sales_channel",
+            "country",
+            "currency",
+            "warehouse",
+            "product_name",
+            "category",
+            "payment_status",
+            "fulfillment_status",
+            "coupon_code",
+            "payment_method",
+            "shipping_method",
+        ),
     ),
-}
+    data_lake_bucket="online-shopping",
+    data_lake_prefix="enriched/online_shopping/",
+)
+
+DATASET_PROFILES: dict[str, DatasetProfileModel] = {profile.name: profile for profile in (HOUSE, ONLINE_SHOPPING)}

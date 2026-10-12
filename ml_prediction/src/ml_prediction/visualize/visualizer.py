@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any
+
+from ml_prediction.model.artifact_model import ArtifactModel
+from ml_prediction.model.training_result_model import TrainingResultModel
 
 
 class Visualizer(ABC):
     @abstractmethod
-    def render(self, dto: Any) -> Any:
-        raise NotImplementedError
+    def render(self, result: TrainingResultModel) -> tuple[ArtifactModel, ...]:
+        ...
