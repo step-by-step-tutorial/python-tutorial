@@ -48,9 +48,7 @@ All commands below run from the repository root.
 ## 1. Prerequisite
 
 * Python 3.12+
-* Docker (for MLflow)
-
-## 2. Prepare Environment
+* Docker, for MLflow
 
 ```shell
 python --version
@@ -58,18 +56,18 @@ pip --version
 docker --version
 ```
 
+## 2. Install
+
 ```shell
-cd ./ml_prediction
 python -m pip install --upgrade pip
-pip install -r ./requirements.txt
-pip install -e .
+pip install -r ./ml_prediction/requirements.txt
+pip install -e ./ml_prediction
 ```
 
 ## 3. Test
 
 ```shell
-cd ./ml_prediction
-pytest
+pytest ./ml_prediction
 ```
 
 ## 4. Start MLflow
@@ -77,8 +75,7 @@ pytest
 MLflow is optional. Set `MLFLOW_ENABLED=true` and `MLFLOW_TRACKING_URI=http://localhost:5000` to publish runs.
 
 ```shell
-cd ./ml_prediction
-docker compose --file docker-compose.yml --project-name test up --build -d
+docker compose --file ./ml_prediction/docker-compose.yml --project-name test up --build -d
 ```
 
 MLflow: [http://localhost:5000](http://localhost:5000)
@@ -88,7 +85,6 @@ MLflow: [http://localhost:5000](http://localhost:5000)
 Pass the dataset name and the operation (`train` or `predict`):
 
 ```shell
-cd ./ml_prediction
 python -m ml_prediction.main house train
 python -m ml_prediction.main house predict
 python -m ml_prediction.main online_shopping train
@@ -98,13 +94,12 @@ python -m ml_prediction.main online_shopping predict
 Add `--search` to train with a hyperparameter search instead of the configured parameters:
 
 ```shell
-cd ./ml_prediction
 python -m ml_prediction.main house train --search
 ```
 
 Without arguments, the command asks for both interactively. Predictions are written to `output/{dataset}_predictions.csv`.
 
-### Configuration
+### 5.1. Configuration
 
 | Variable                        | Default         | Description                                                                         |
 |---------------------------------|-----------------|-------------------------------------------------------------------------------------|
@@ -120,14 +115,12 @@ Without arguments, the command asks for both interactively. Predictions are writ
 ## 6. Stop MLflow
 
 ```shell
-cd ./ml_prediction
-docker compose --file docker-compose.yml --project-name test down -v
+docker compose --file ./ml_prediction/docker-compose.yml --project-name test down -v
 ```
 
 ## 7. Clean
 
 ```shell
-cd ./ml_prediction
-rm -rf ./src/*.egg-info
-rm -rf ./models/* ./audit_log/* ./output/* ./mlruns/*
+rm -rf ./ml_prediction/src/*.egg-info
+rm -rf ./ml_prediction/models/* ./ml_prediction/audit_log/* ./ml_prediction/output/* ./ml_prediction/mlruns/*
 ```

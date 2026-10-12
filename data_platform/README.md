@@ -46,10 +46,8 @@ All commands below run from the repository root.
 ## 1. Prerequisite
 
 * Python 3.12+
-* Java (for the Spark pipeline)
+* Java, for the Spark pipeline
 * Docker
-
-## 2. Prepare Environment
 
 ```shell
 python --version
@@ -58,35 +56,32 @@ java --version
 docker --version
 ```
 
+## 2. Install
+
 ```shell
-cd ./data_platform
 python -m pip install --upgrade pip
-pip install -r ./requirements.txt
-pip install -e .
+pip install -r ./data_platform/requirements.txt
+pip install -e ./data_platform
 ```
 
 ## 3. Test
 
-```shell
-cd ./data_platform
-pytest
-```
-
 Spark tests are skipped when `pyspark` is not installed.
 
 ```shell
-cd ./data_platform
-pytest --html=./report/test/test-report.html
-pytest --cov --cov-report=html:./report/coverage
-python -m http.server 8000 --directory ./report
+pytest ./data_platform
+```
+
+```shell
+pytest ./data_platform --html=./data_platform/report/test/test-report.html
+pytest ./data_platform --cov --cov-report=html:./data_platform/report/coverage
+python -m http.server 8000 --directory ./data_platform/report
 ```
 
 ## 4. Start the Infrastructure
 
 ```shell
-cd ./data_platform
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test up --build -d
+docker compose --file ./data_platform/docker-compose-infrastructure.yml --project-name test --env-file ./data_platform/.env.test up --build -d
 ```
 
 ## 5. Run a Pipeline
@@ -94,7 +89,6 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 Pass the dataset name and the pipeline type (`inmemory` or `spark`):
 
 ```shell
-cd ./data_platform
 python -m data_platform.main house inmemory
 python -m data_platform.main online_shopping spark
 ```
@@ -104,20 +98,17 @@ Without arguments, the command asks for both interactively.
 ## 6. Stop the Infrastructure
 
 ```shell
-cd ./data_platform
-docker compose --file docker-compose-infrastructure.yml --project-name test --env-file .env.test down -v
+docker compose --file ./data_platform/docker-compose-infrastructure.yml --project-name test --env-file ./data_platform/.env.test down -v
 ```
 
 ## 7. Run with Docker
 
 ```shell
-cd ./data_platform
-docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev up --build -d
+docker compose --file ./data_platform/docker-compose.yml --project-name dev --env-file ./data_platform/.env.dev up --build -d
 ```
 
 ```shell
-cd ./data_platform
-docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
+docker compose --file ./data_platform/docker-compose.yml --project-name dev --env-file ./data_platform/.env.dev down -v
 docker rmi samanalishiri/data-platform:latest
 ```
 

@@ -96,7 +96,14 @@
     { "name": "child_count", "type": "random_int", "min": 0, "max": 3 },
 
     { "name": "owner_id", "type": "sequence", "start": 50000, "step": 1 },
-    { "name": "owner_name", "type": "fixed", "value": "Max Mustermann" },
+    {
+      "name": "owner_name",
+      "type": "random_from_mapped_file",
+      "source_field": "country",
+      "mapping_file": "data/country_source_map.csv",
+      "key_column": "country",
+      "file_columns": ["first_name_file", "last_name_file"]
+    },
     { "name": "owner_type", "type": "fixed", "value": "private" },
     { "name": "owner_occupied", "type": "random_bool" },
 
