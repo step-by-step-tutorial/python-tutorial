@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from test_data.config import settings as env_config
 from test_data.generator.dataset_generator import DatasetGenerator
-from test_data.model.schemas import ColumnModel, ConfigModel
+from test_data.model import ColumnModel, ConfigModel
 
 
 def write_config_file(tmp_path: Path, name: str, config: ConfigModel) -> str:
@@ -256,7 +256,7 @@ def test_generate_dataset_publishes_json_rows_to_kafka(tmp_path: Path, mocker, m
     monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
     monkeypatch.setenv("CONFIG_DIR", str(config_dir))
     importlib.reload(env_config)
-    producer = mocker.patch("test_data.writer.writer_registry.create_producer").return_value
+    producer = mocker.patch("test_data.writer.writer.create_producer").return_value
     producer.flush.return_value = 0
 
     DatasetGenerator("sample.json").write()
@@ -338,7 +338,7 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "output"))
     importlib.reload(env_config)
 
-    database_repository = mocker.patch("test_data.writer.writer_registry.DatabaseRepository")
+    database_repository = mocker.patch("test_data.writer.writer.DatabaseRepository")
     DatasetGenerator("online.json").write()
 
     output_path = tmp_path / "output" / "online.csv"

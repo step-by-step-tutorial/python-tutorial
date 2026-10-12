@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from test_data.config import settings as env_config
-from test_data.model.schemas import ColumnModel, ConfigModel, Dataset, DatasetMetadata
+from test_data.model import ColumnModel, ConfigModel, DatasetModel, DatasetMetadataModel
 
 
 def test_load_config_reads_columns(project_root: Path) -> None:
@@ -144,10 +144,21 @@ def test_load_config_accepts_path_outside_config_dir(tmp_path: Path) -> None:
 
 
 def test_dataset_metadata_from_dataset(project_root: Path) -> None:
-    metadata = DatasetMetadata.from_dataset(Dataset(name="demo", config=ConfigModel.from_file("demo.json")))
+    metadata = DatasetMetadataModel.from_dataset(DatasetModel(name="demo", config=ConfigModel.from_file("demo.json")))
 
     assert metadata.name == "demo"
     assert metadata.config_file == "config/demo.json"
     assert metadata.file == "output_test/demo.csv"
     assert metadata.download_url == "/datasets/demo/download"
     assert metadata.row_count == 5
+
+
+def test_config_derives_dataset_name_table_name_and_output_files(project_root: Path) -> None:
+    config = ConfigModel.from_file("demo.json")
+    dataset = DatasetModel.from_config(config)
+
+    assert config.dataset_name == "demo"
+    assert config.table_name == "demo"
+    assert config.output_file("json") == env_config.OUTPUT_DIR / "demo.json"
+    assert dataset.name == "demo"
+    assert dataset.output_file == env_config.OUTPUT_DIR / "demo.csv"

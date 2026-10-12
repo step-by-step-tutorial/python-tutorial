@@ -86,3 +86,13 @@ def test_database_schema_defaults_to_test_data(monkeypatch) -> None:
     module = importlib.reload(env_config)
 
     assert module.DATABASE_SCHEMA == "test_data"
+
+
+def test_project_path_resolves_against_project_root(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("PROJECT_ROOT", str(tmp_path))
+    importlib.reload(env_config)
+
+    assert env_config.project_path("data/countries.txt") == tmp_path / "data" / "countries.txt"
+
+    monkeypatch.delenv("PROJECT_ROOT", raising=False)
+    importlib.reload(env_config)

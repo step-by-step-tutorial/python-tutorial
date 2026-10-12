@@ -3,7 +3,7 @@ from pathlib import Path
 
 from test_data.config import settings as env_config
 from test_data.generator.dataset_registry import DatasetRegistry
-from test_data.util.file_utils import list_of_file_names
+from test_data.util.file_utils import list_file_names
 
 
 def test_dataset_registry_discovers_dataset_names_without_prefix(tmp_path: Path, monkeypatch) -> None:
@@ -23,7 +23,8 @@ def test_dataset_registry_discovers_dataset_names_without_prefix(tmp_path: Path,
     importlib.reload(env_config)
     registry = DatasetRegistry()
 
-    assert list_of_file_names(config_dir) == ["alpha.json", "beta.json"]
+    assert list_file_names(config_dir) == ["alpha.json", "beta.json"]
+    assert registry.get_all_names() == ["alpha", "beta"]
 
     monkeypatch.delenv("CONFIG_DIR", raising=False)
     importlib.reload(env_config)

@@ -1,4 +1,4 @@
-# Test Data Generator
+<h1 align="center">Test Data Generator</h1>
 
 Generates realistic test datasets from JSON configs and plain text source files, and writes them as CSV, JSON or XML
 files, to a PostgreSQL table, or to a Kafka topic. A small REST API lists, generates and downloads the datasets.
@@ -23,13 +23,12 @@ test_data
 │   ├── cli.py                   command line entry point (python -m test_data)
 │   ├── api/                     REST API
 │   ├── config/settings.py       environment settings
-│   ├── model/schemas.py         ColumnModel, ConfigModel, Dataset, API models
+│   ├── model.py                 data models: column, config, dataset and API models
 │   ├── generator/               column, row and dataset generators
-│   ├── writer/                  csv, json, xml, database and kafka writers
+│   ├── writer/                  csv, json, xml, database and kafka writers, and the writer registry
 │   ├── repository/              source file and database access
-│   ├── connector/               database and Kafka connections
-│   ├── converter/               value conversions (email, dates)
-│   └── util/                    file, csv, json, xml, formula and validation helpers
+│   ├── connector/               Kafka producer
+│   └── util/                    file, csv, json, xml, date, text, formula and validation helpers
 └── tests
 ```
 
@@ -96,7 +95,13 @@ optional `null_probability` (default 0.2).
 Columns that read source fields are generated after those fields, whatever their order in the config. Each column
 has its own random stream (seeded from `RANDOM_SEED` and the column name), so the output is the same on every run.
 
-## 4. Start the Infrastructure
+## 4. Test
+
+```shell
+pytest ./test_data
+```
+
+## 5. Start the Infrastructure
 
 Needed only for the `database` and `kafka` destinations: PostgreSQL, Adminer, Kafka and Kafdrop.
 
@@ -104,7 +109,7 @@ Needed only for the `database` and `kafka` destinations: PostgreSQL, Adminer, Ka
 docker compose --file ./test_data/docker-compose-infrastructure.yml --project-name test --env-file ./test_data/.env.test up --build -d
 ```
 
-## 5. Generate Datasets
+## 6. Generate Datasets
 
 ```shell
 python -m test_data --config online_shopping
@@ -118,7 +123,7 @@ python -m test_data --help
 written to `./test_data/output`. If any destination fails, the others are still written and the command exits
 with an error.
 
-## 6. Run the API
+## 7. Run the API
 
 ```shell
 PORT=8084 python -m test_data.api.dataset_api
@@ -137,12 +142,6 @@ PORT=8084 python -m test_data.api.dataset_api
 | POST   | `/datasets/{name}/generate`             | generate the dataset                          |
 | GET    | `/datasets/{name}/rows?page=&page_size=` | read generated rows from the database         |
 | GET    | `/datasets/{name}/download?format=csv`  | download a generated csv, json or xml file    |
-
-## 7. Test
-
-```shell
-pytest ./test_data
-```
 
 ## 8. Stop the Infrastructure
 

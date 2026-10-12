@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 
 from test_data.config import settings as env_config
 from test_data.util.json_utils import read_json_file
-from test_data.util.output_format_utils import output_file_name
 
 
 @dataclass(frozen=True)
@@ -87,11 +86,27 @@ class ConfigModel:
 
         return cls.from_dict(read_json_file(path), path.name)
 
+    @property
+    def dataset_name(self) -> str:
+        return Path(self.name).stem
+
+    @property
+    def table_name(self) -> str:
+        return Path(self.output_name).stem
+
+    def output_file(self, format_name: str) -> Path:
+        """Path of the generated file for a file format (csv, json, xml), named after output_name."""
+        return env_config.OUTPUT_DIR / Path(self.output_name).with_suffix(f".{format_name}")
+
 
 @dataclass(frozen=True)
-class Dataset:
+class DatasetModel:
     name: str
     config: ConfigModel
+
+    @classmethod
+    def from_config(cls, config: ConfigModel) -> "DatasetModel":
+        return cls(name=config.dataset_name, config=config)
 
     @property
     def columns(self) -> tuple[str, ...]:
@@ -103,13 +118,10 @@ class Dataset:
 
     @property
     def output_file(self) -> Path:
-        return self.output_file_for("csv")
-
-    def output_file_for(self, format_name: str) -> Path:
-        return env_config.OUTPUT_DIR / output_file_name(self.config.output_name, format_name)
+        return self.config.output_file("csv")
 
 
-class DatasetMetadata(BaseModel):
+class DatasetMetadataModel(BaseModel):
     name: str
     config_file: str
     row_count: int
@@ -120,7 +132,7 @@ class DatasetMetadata(BaseModel):
     download_url: str
 
     @classmethod
-    def from_dataset(cls, dataset: Dataset) -> "DatasetMetadata":
+    def from_dataset(cls, dataset: DatasetModel) -> "DatasetMetadataModel":
         return cls(
             name=dataset.name,
             config_file=f"{env_config.CONFIG_DIR.name}/{dataset.config.name}",
@@ -128,12 +140,12 @@ class DatasetMetadata(BaseModel):
             column_count=len(dataset.columns),
             columns=list(dataset.columns),
             destinations=list(dataset.destinations),
-            file=f"{env_config.OUTPUT_DIR.name}/{output_file_name(dataset.config.output_name, 'csv')}",
+            file=f"{env_config.OUTPUT_DIR.name}/{dataset.output_file.name}",
             download_url=f"/datasets/{dataset.name}/download",
         )
 
 
-class DatabasePage(BaseModel):
+class DatabasePageModel(BaseModel):
     page: int
     page_size: int
     total: int
