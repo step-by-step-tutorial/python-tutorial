@@ -1,0 +1,4 @@
+occupancy_status,owner_occupied
+occupied_by_owner,True
+rented,False
+vacant,False

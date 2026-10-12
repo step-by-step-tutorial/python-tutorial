@@ -1,6 +1,10 @@
 from collections.abc import Sequence
 
-from test_data.generator.column.column_generator import ColumnGenerator, NullableColumnGenerator
+from test_data.generator.column.column_generator import (
+    ColumnGenerator,
+    ConditionalColumnGenerator,
+    NullableColumnGenerator,
+)
 from test_data.generator.column.derived_columns import (
     ConcatFromSourceFieldsColumn,
     DateWithRandomDayOffsetColumn,
@@ -60,9 +64,11 @@ class ColumnGeneratorRegistry:
         require_not_blank(generator_type, f"Unsupported column generator: {generator_name}")
 
         generator = generator_type(column, self._settings, self._source_repository)
-        if not column.nullable:
-            return generator
-        return NullableColumnGenerator(generator, column.null_probability)
+        if column.nullable:
+            generator = NullableColumnGenerator(generator, column.null_probability)
+        if column.present_when:
+            generator = ConditionalColumnGenerator(generator, column.present_when)
+        return generator
 
     def get_all(self, columns: Sequence[ColumnModel]) -> dict[str, ColumnGenerator]:
         return {column.name: self.get_one(column) for column in columns}

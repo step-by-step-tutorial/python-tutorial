@@ -1,0 +1,5 @@
+new
+excellent
+good
+fair
+needs_renovation

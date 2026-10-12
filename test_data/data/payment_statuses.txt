@@ -1,4 +1,0 @@
-Paid
-Pending
-Failed
-Refunded

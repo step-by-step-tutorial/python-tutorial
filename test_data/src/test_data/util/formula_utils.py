@@ -39,3 +39,8 @@ def evaluate_formula(node: ast.expr, values: list[float]) -> float:
     if isinstance(node, ast.UnaryOp):
         return FORMULA_OPERATORS[type(node.op)](evaluate_formula(node.operand, values))
     return values[node.slice.value]  # values[<index>], validated by check_formula
+
+
+def format_number(value: float) -> str:
+    """Write a whole-number result as an integer (3, not 3.0) so integer columns stay integers."""
+    return str(int(value)) if float(value).is_integer() else str(value)

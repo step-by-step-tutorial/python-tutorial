@@ -1,0 +1,5 @@
+occupied_by_owner
+occupied_by_owner
+rented
+rented
+vacant
