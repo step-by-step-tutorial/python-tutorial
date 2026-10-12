@@ -1,4 +1,4 @@
-# Geodata Pipeline
+<h1 align="center">Geodata Pipeline</h1>
 
 Builds one CSV of real street addresses per target city from [Overture Maps](https://overturemaps.org/) address
 data, enriched with city information (GeoNames id, timezone, population) from [GeoNames](https://www.geonames.org/).
@@ -100,7 +100,15 @@ Targets are configured in [config/targets.json](config/targets.json): country, s
 file and the output file name. Relative paths are resolved against the config file's directory. To add a city,
 download its Overture addresses (step 3.2) and add a target.
 
-## 5. Run
+## 5. Test
+
+The tests use small generated fixture files, so they do not need the downloads.
+
+```shell
+pytest ./geodata_pipeline
+```
+
+## 6. Run
 
 ```shell
 python -m geodata_pipeline --config ./geodata_pipeline/config/targets.json
@@ -109,18 +117,10 @@ python -m geodata_pipeline --config ./geodata_pipeline/config/targets.json
 The CSV files are written to `./geodata_pipeline/output`. A target whose input file is missing is skipped with a
 warning.
 
-## 6. Use the Output in test_data
+## 7. Use the Output in test_data
 
 ```shell
 cp ./geodata_pipeline/output/los_angeles.csv ./test_data/data/los_angeles.csv
-```
-
-## 7. Test
-
-The tests use small generated fixture files, so they do not need the downloads.
-
-```shell
-pytest ./geodata_pipeline
 ```
 
 ## 8. Clean
