@@ -105,13 +105,24 @@
 
     { "name": "purchase_date", "type": "random_date", "date_start": "2010-01-01", "date_end": "2026-06-30", "nullable": true },
     { "name": "purchase_price", "type": "random_float", "min": 150000, "max": 1500000, "nullable": true },
-    { "name": "price_per_sqm", "type": "random_float", "min": 2500, "max": 12000 },
-    { "name": "total_price", "type": "random_float", "min": 150000, "max": 2000000 },
+    {
+      "name": "price_per_sqm",
+      "type": "derived",
+      "method": "formula",
+      "source_fields": ["distance_to_city_center_km", "construction_year"],
+      "formula": "9000 - 300 * values[0] + 15 * (values[1] - 1900)"
+    },
+    {
+      "name": "total_price",
+      "type": "derived",
+      "method": "product_of_source_fields",
+      "source_fields": ["area_sqm", "price_per_sqm"]
+    },
     { "name": "estimated_market_value", "type": "random_float", "min": 180000, "max": 2200000 },
     { "name": "monthly_rent", "type": "random_float", "min": 600, "max": 4500, "nullable": true },
     { "name": "monthly_service_cost", "type": "random_float", "min": 100, "max": 800, "nullable": true },
     { "name": "annual_property_tax", "type": "random_float", "min": 300, "max": 4000, "nullable": true },
-    { "name": "currency", "type": "fixed", "value": "EUR" },
+    { "name": "currency", "type": "fixed", "value": "USD" },
 
     { "name": "has_balcony", "type": "random_bool" },
     { "name": "balcony_area_sqm", "type": "random_float", "min": 3, "max": 30, "nullable": true },

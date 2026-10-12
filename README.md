@@ -50,7 +50,6 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 ```shell
 python -m test_data --config ./test_data/config/online_shopping.json
 python -m test_data --config ./test_data/config/house.json
-python -m test_data --config ./test_data/config/house_los_angeles.json
 ```
 
 ```shell
