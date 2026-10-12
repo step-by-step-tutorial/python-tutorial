@@ -1,0 +1,4 @@
+pyarrow>=14
+shapely>=2.0
+overturemaps
+pytest
