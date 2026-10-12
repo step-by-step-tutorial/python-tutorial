@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 
 from test_data.generator.column_generator_registry import ColumnGeneratorRegistry
-from test_data.model.schemas import ConfigModel
+from test_data.model import ConfigModel
 from test_data.util.collection_utils import topological_sort
 
 

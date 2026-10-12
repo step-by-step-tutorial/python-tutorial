@@ -1,6 +1,5 @@
-import os
 import logging
-from pathlib import Path
+import os
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -11,12 +10,12 @@ from test_data.config import settings as env_config
 from test_data.repository.database_repository import DatabaseRepository
 from test_data.generator.dataset_generator import DatasetGenerator
 from test_data.generator.dataset_registry import DatasetNotFoundError, DatasetRegistry
-from test_data.model.schemas import DatabasePage, DatasetMetadata
+from test_data.model import DatabasePageModel, DatasetMetadataModel
 from test_data.util.file_utils import check_file_exists
-from test_data.util.output_format_utils import media_type_for
 from test_data.writer.writer_registry import WriterError
 
 __version__ = "1.1.0"
+MEDIA_TYPES = {"csv": "text/csv", "json": "application/json", "xml": "application/xml"}
 logger = logging.getLogger(__name__)
 
 
@@ -55,7 +54,7 @@ def create_api() -> FastAPI:
         return {"status": "ok", "version": __version__}
 
     @app.get("/datasets", tags=["Datasets"], summary="List datasets")
-    async def get_list() -> list[DatasetMetadata]:
+    async def get_list() -> list[DatasetMetadataModel]:
         return registry.get_all_metadata()
 
     @app.get("/datasets/names", tags=["Datasets"], summary="List dataset names")
@@ -63,14 +62,14 @@ def create_api() -> FastAPI:
         return registry.get_all_names()
 
     @app.get("/datasets/{name}", tags=["Datasets"], summary="Get dataset metadata")
-    async def get_one(name: str) -> DatasetMetadata:
-        return DatasetMetadata.from_dataset(registry.get_one(name))
+    async def get_one(name: str) -> DatasetMetadataModel:
+        return DatasetMetadataModel.from_dataset(registry.get_one(name))
 
     @app.post("/datasets/{name}/generate", tags=["Datasets"], summary="Generate dataset output")
-    async def generate(name: str) -> DatasetMetadata:
+    async def generate(name: str) -> DatasetMetadataModel:
         logger.info("Dataset generation requested: dataset=%s", name)
         dataset = registry.get_one(name)
-        return DatasetMetadata.from_dataset(DatasetGenerator(config_name=dataset.config.name).write())
+        return DatasetMetadataModel.from_dataset(DatasetGenerator(config_name=dataset.config.name).write())
 
     @app.get(
         "/datasets/{name}/rows",
@@ -83,7 +82,7 @@ def create_api() -> FastAPI:
             name: str,
             page: int = Query(1, ge=1, description="One-based page number."),
             page_size: int = Query(100, ge=1, le=1_000, description="Maximum number of rows to return."),
-    ) -> DatabasePage:
+    ) -> DatabasePageModel:
         logger.info("Dataset rows requested: dataset=%s page=%s page_size=%s", name, page, page_size)
         dataset = registry.get_one(name)
         if "database" not in dataset.destinations:
@@ -93,7 +92,7 @@ def create_api() -> FastAPI:
             items, total = DatabaseRepository(
                 env_config.DATABASE_URL, schema=env_config.DATABASE_SCHEMA
             ).read_page(
-                table_name=Path(dataset.config.output_name).stem,
+                table_name=dataset.config.table_name,
                 page=page,
                 page_size=page_size,
             )
@@ -101,7 +100,7 @@ def create_api() -> FastAPI:
             raise HTTPException(status_code=404, detail=f"Database table for {name} was not found.") from error
 
         logger.info("Dataset rows returned: dataset=%s page=%s returned=%s total=%s", name, page, len(items), total)
-        return DatabasePage(page=page, page_size=page_size, total=total, items=items)
+        return DatabasePageModel(page=page, page_size=page_size, total=total, items=items)
 
     @app.get(
         "/datasets/{name}/download",
@@ -123,11 +122,11 @@ def create_api() -> FastAPI:
         if format_name not in dataset.destinations:
             raise HTTPException(status_code=404, detail=f"Format '{format_name}' is not available for {name}.")
 
-        try:
-            path = dataset.output_file_for(format_name)
-            media_type = media_type_for(format_name)
-        except KeyError as error:
-            raise HTTPException(status_code=404, detail=f"Unsupported format: {format_name}.") from error
+        media_type = MEDIA_TYPES.get(format_name)
+        if media_type is None:
+            raise HTTPException(status_code=404, detail=f"Unsupported format: {format_name}.")
+
+        path = dataset.config.output_file(format_name)
 
         try:
             check_file_exists(path)

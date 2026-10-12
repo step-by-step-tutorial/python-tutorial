@@ -6,11 +6,12 @@ from random import Random
 from typing import Mapping
 
 from test_data.config import settings as env_config
-from test_data.converter.data_converter import calculate_days, convert_to_email, random_date_between, random_date_from
-from test_data.repository.sources_repository import SourceRepository
-from test_data.model.schemas import ColumnModel
-from test_data.util.file_utils import absolute_project_path, list_of_directory_names
+from test_data.repository.source_repository import SourceRepository
+from test_data.model import ColumnModel
+from test_data.util.date_utils import days_between, random_date_between, random_date_from
+from test_data.util.file_utils import list_directory_names
 from test_data.util.formula_utils import check_formula, evaluate_formula
+from test_data.util.text_utils import to_email_local_part
 from test_data.util.validation_utils import (
     check_min_max,
     require_blank,
@@ -27,6 +28,7 @@ SOURCE_REPOSITORY = SourceRepository()
 
 DEFAULT_MIN_OFFSET_DAYS = 1
 DEFAULT_MAX_OFFSET_DAYS = 7
+DEFAULT_NULL_PROBABILITY = 0.2
 
 
 class ColumnGenerator(ABC):
@@ -127,7 +129,7 @@ class RandomTimestampColumn(ColumnGenerator):
         self.require("date_start", "date_end")
         self.start = require_iso_date(self.model.date_start)
         self.end = require_iso_date(self.model.date_end)
-        calculate_days(
+        days_between(
             require_not_blank(self.start),
             require_not_blank(self.end),
             error_message=f"date_start must be earlier than or equal to date_end: {self.model.name}",
@@ -152,7 +154,7 @@ class RandomDateColumn(ColumnGenerator):
         self.require("date_start", "date_end")
         self.start = require_iso_date(self.model.date_start)
         self.end = require_iso_date(self.model.date_end)
-        calculate_days(
+        days_between(
             require_not_blank(self.start),
             require_not_blank(self.end),
             error_message=f"date_start must be earlier than or equal to date_end: {self.model.name}",
@@ -176,7 +178,7 @@ class RandomFromDirectoryColumn(ColumnGenerator):
         self.require("file")
 
     def generate(self, row: Row, row_index: int) -> str:
-        directories = list_of_directory_names(absolute_project_path(require_not_blank(self.model.file)))
+        directories = list_directory_names(env_config.project_path(require_not_blank(self.model.file)))
         excluded = set(self.model.exclude_directories or ())
         directories = [directory for directory in directories if directory not in excluded]
         if not directories:
@@ -249,7 +251,6 @@ class RandomFromMappedCsvColumn(ColumnGenerator):
             source_field = require_not_blank(self.model.source_field)
             mapping_file = self.model.file_template.format(**{source_field: source_value})
         mapping_file = require_not_blank(mapping_file)
-        mapping_file = str(absolute_project_path(mapping_file))
         key_column = require_not_blank(self.model.key_column)
         candidate_cache_key = (
             mapping_file,
@@ -411,7 +412,7 @@ class EmailFromSourceFieldsColumn(ColumnGenerator):
         domain = self.model.domain or self.DEFAULT_DOMAIN
         try:
             local_part = ".".join(
-                convert_to_email(
+                to_email_local_part(
                     require_not_blank(row.get(field), f"Column {self.model.name} depends on source field {field}.")
                 )
                 for field in self._source_fields
@@ -434,3 +435,23 @@ class ConcatFromSourceFieldsColumn(ColumnGenerator):
         separator = self.model.separator or " "
         return separator.join(require_not_blank(row.get(field)) for field in self.dependencies)
 
+
+class NullableColumnGenerator(ColumnGenerator):
+    def __init__(self, delegate: ColumnGenerator, probability: float | None):
+        self.delegate = delegate
+        self.probability = DEFAULT_NULL_PROBABILITY if probability is None else probability
+        super().__init__(delegate.model)
+
+    @property
+    def seed(self) -> str:
+        # Null decisions use their own random stream, independent of the delegate's values.
+        return f"{super().seed}:null"
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return self.delegate.dependencies
+
+    def generate(self, row: Row, row_index: int) -> str:
+        if self.rand.random() < self.probability:
+            return ""
+        return self.delegate.generate(row, row_index)

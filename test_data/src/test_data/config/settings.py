@@ -9,3 +9,8 @@ DATABASE_SCHEMA = getenv("DATABASE_SCHEMA", "test_data")
 KAFKA_BOOTSTRAP_SERVERS = getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_FLUSH_TIMEOUT_SECONDS = float(getenv("KAFKA_FLUSH_TIMEOUT_SECONDS", "5"))
 RANDOM_SEED = 42
+
+
+def project_path(relative_path: str | Path) -> Path:
+    """Resolve a path from a config (such as data/countries.txt) against the project root."""
+    return (PROJECT_ROOT / relative_path).resolve()
