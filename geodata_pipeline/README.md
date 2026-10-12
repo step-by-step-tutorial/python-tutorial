@@ -26,7 +26,7 @@ geodata_pipeline
 │   ├── geo_data_repository.py   GeoNames places and postal codes, read once from the dumps
 │   ├── address_matcher.py       matches Overture addresses to a target and builds output records
 │   ├── pipeline.py              reads Parquet, matches addresses, writes CSV
-│   └── util/                    text, geometry and file helpers
+│   └── util/                    text, geometry, file (JSON, TSV, CSV) and Parquet helpers
 └── tests
 ```
 
