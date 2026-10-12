@@ -8,7 +8,7 @@ import pyarrow.parquet as pq
 from geodata_pipeline.config import PipelineConfig, Target
 from geodata_pipeline.model import OVERTURE_ADDRESS_COLUMNS, AddressRecord, OvertureAddress
 from geodata_pipeline.repository import GeoDataRepository
-from geodata_pipeline.resolver import AddressResolver
+from geodata_pipeline.matcher import AddressMatcher
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +19,10 @@ PROGRESS_LOG_INTERVAL = 100_000
 class Pipeline:
     def __init__(self, config: PipelineConfig, repository: GeoDataRepository | None = None) -> None:
         self._config = config
-        self._repository = repository or GeoDataRepository(
+        self._repository = repository or GeoDataRepository.from_files(
             config.targets, config.geonames_file, config.postal_codes_file
         )
-        self._address_resolver = AddressResolver(self._repository)
+        self._address_matcher = AddressMatcher(self._repository)
 
     def run(self) -> None:
         self._config.output_dir.mkdir(parents=True, exist_ok=True)
@@ -55,7 +55,7 @@ class Pipeline:
                 batch = batch.filter(pc.equal(batch.column("country"), target.country_code))
 
                 for row in batch.to_pylist():
-                    record = self._address_resolver.resolve(OvertureAddress.from_row(row), target)
+                    record = self._address_matcher.match(OvertureAddress.from_row(row), target)
 
                     if record is None:
                         continue

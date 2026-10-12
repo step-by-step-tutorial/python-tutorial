@@ -15,25 +15,39 @@ from geodata_pipeline.util.text_utils import normalize
 logger = logging.getLogger(__name__)
 
 StateKey = tuple[str, str]
+PlacesByName = dict[str, GeonameRecord]
+PostalCodesByCode = dict[str, PostalCodeRecord]
 
 
 class GeoDataRepository:
-    """In-memory lookups of GeoNames places and postal codes for the states the targets cover."""
+    """In-memory lookups of GeoNames populated places and postal codes, per (country, state)."""
 
-    def __init__(self, targets: Iterable[Target], geonames_file: Path, postal_codes_file: Path) -> None:
-        self._states: set[StateKey] = {target.state_key for target in targets}
-        self._geonames: dict[StateKey, dict[str, GeonameRecord]] = {state: {} for state in self._states}
-        self._postal_codes: dict[StateKey, dict[str, PostalCodeRecord]] = {state: {} for state in self._states}
-        self._load_geonames(geonames_file)
-        self._load_postal_codes(postal_codes_file)
+    def __init__(
+            self,
+            places: dict[StateKey, PlacesByName],
+            postal_codes: dict[StateKey, PostalCodesByCode],
+    ) -> None:
+        self._places = places
+        self._postal_codes = postal_codes
+
+    @classmethod
+    def from_files(cls, targets: Iterable[Target], geonames_file: Path, postal_codes_file: Path) -> "GeoDataRepository":
+        """Read the GeoNames dumps once, keeping only the states the targets cover."""
+        states = {target.state_key for target in targets}
+        return cls(
+            places=cls._read_places(geonames_file, states),
+            postal_codes=cls._read_postal_codes(postal_codes_file, states),
+        )
 
     def find_geoname(self, target: Target, name: str) -> GeonameRecord | None:
-        return self._geonames[target.state_key].get(normalize(name))
+        return self._places.get(target.state_key, {}).get(normalize(name))
 
     def find_postal_code(self, target: Target, postal_code: str) -> PostalCodeRecord | None:
-        return self._postal_codes[target.state_key].get(postal_code)
+        return self._postal_codes.get(target.state_key, {}).get(postal_code)
 
-    def _load_geonames(self, geonames_file: Path) -> None:
+    @staticmethod
+    def _read_places(geonames_file: Path, states: set[StateKey]) -> dict[StateKey, PlacesByName]:
+        places: dict[StateKey, PlacesByName] = {state: {} for state in states}
         loaded = 0
         logger.info("Loading GeoNames data from %s", geonames_file)
 
@@ -42,22 +56,25 @@ class GeoDataRepository:
                 continue
 
             record = GeonameRecord.from_values(values)
-            places = self._geonames.get(record.state_key)
+            state_places = places.get(record.state_key)
 
             # Only cities, towns and villages: other features (parks, buildings, counties) share city names.
-            if places is None or not record.is_populated_place:
+            if state_places is None or not record.is_populated_place:
                 continue
 
             for name in {normalize(record.name), normalize(record.ascii_name)}:
-                current = places.get(name)
+                current = state_places.get(name)
                 # Several places can share a name; the most populated one is the city meant.
                 if name and (current is None or record.population > current.population):
-                    places[name] = record
+                    state_places[name] = record
             loaded += 1
 
-        logger.info("Loaded %s GeoNames populated places for states=%s", loaded, sorted(self._states))
+        logger.info("Loaded %s GeoNames populated places for states=%s", loaded, sorted(states))
+        return places
 
-    def _load_postal_codes(self, postal_codes_file: Path) -> None:
+    @staticmethod
+    def _read_postal_codes(postal_codes_file: Path, states: set[StateKey]) -> dict[StateKey, PostalCodesByCode]:
+        postal_codes: dict[StateKey, PostalCodesByCode] = {state: {} for state in states}
         loaded = 0
         logger.info("Loading postal-code data from %s", postal_codes_file)
 
@@ -66,12 +83,13 @@ class GeoDataRepository:
                 continue
 
             record = PostalCodeRecord.from_values(values)
-            postal_codes = self._postal_codes.get(record.state_key)
+            state_postal_codes = postal_codes.get(record.state_key)
 
-            if postal_codes is None:
+            if state_postal_codes is None:
                 continue
 
-            postal_codes[record.postal_code] = record
+            state_postal_codes[record.postal_code] = record
             loaded += 1
 
-        logger.info("Loaded %s postal-code records for states=%s", loaded, sorted(self._states))
+        logger.info("Loaded %s postal-code records for states=%s", loaded, sorted(states))
+        return postal_codes

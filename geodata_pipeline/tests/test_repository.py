@@ -6,7 +6,7 @@ from geodata_pipeline.repository import GeoDataRepository
 
 def load(project_dir: Path) -> tuple[PipelineConfig, GeoDataRepository]:
     config = PipelineConfig.from_file(project_dir / "config" / "targets.json")
-    return config, GeoDataRepository(config.targets, config.geonames_file, config.postal_codes_file)
+    return config, GeoDataRepository.from_files(config.targets, config.geonames_file, config.postal_codes_file)
 
 
 def test_find_geoname_prefers_most_populated_place_and_ignores_other_features(project_dir: Path) -> None:
@@ -32,3 +32,12 @@ def test_find_postal_code(project_dir: Path) -> None:
 
     assert postal_code is not None
     assert postal_code.city == "Los Angeles"
+
+
+def test_find_returns_none_for_state_without_data() -> None:
+    from tests.test_config import make_target
+
+    repository = GeoDataRepository(places={}, postal_codes={})
+
+    assert repository.find_geoname(make_target(), "Los Angeles") is None
+    assert repository.find_postal_code(make_target(), "90049") is None
