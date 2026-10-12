@@ -23,8 +23,8 @@ geodata_pipeline
 ├── src/geodata_pipeline
 │   ├── cli.py                   command line entry point
 │   ├── model.py                 data models: target, pipeline config, GeoNames place, postal code, Overture address, output address
-│   ├── repository.py            GeoNames places and postal codes, read once from the dumps
-│   ├── matcher.py               matches Overture addresses to a target and builds output records
+│   ├── geo_data_repository.py   GeoNames places and postal codes, read once from the dumps
+│   ├── address_matcher.py       matches Overture addresses to a target and builds output records
 │   ├── pipeline.py              reads Parquet, matches addresses, writes CSV
 │   └── util/                    text, geometry and file helpers
 └── tests

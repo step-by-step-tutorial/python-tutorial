@@ -12,8 +12,8 @@ from geodata_pipeline.model import (
     PipelineConfigModel,
     TargetModel,
 )
-from geodata_pipeline.repository import GeoDataRepository
-from geodata_pipeline.matcher import AddressMatcher
+from geodata_pipeline.geo_data_repository import GeoDataRepository
+from geodata_pipeline.address_matcher import AddressMatcher
 
 logger = logging.getLogger(__name__)
 
