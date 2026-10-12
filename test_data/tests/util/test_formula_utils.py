@@ -2,7 +2,7 @@ import ast
 
 import pytest
 
-from test_data.util.formula_utils import check_formula, evaluate_formula
+from test_data.util.formula_utils import check_formula, evaluate_formula, format_number
 
 
 def parse(formula: str) -> ast.expr:
@@ -32,3 +32,8 @@ def test_evaluate_formula_supports_arithmetic_over_values() -> None:
 def test_check_formula_rejects_anything_but_arithmetic(formula: str) -> None:
     with pytest.raises(ValueError):
         check_formula(parse(formula), 4)
+
+
+def test_format_number_writes_whole_numbers_as_integers() -> None:
+    assert format_number(3.0) == "3"
+    assert format_number(2.5) == "2.5"

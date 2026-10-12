@@ -70,3 +70,21 @@ class NullableColumnGenerator(ColumnGenerator):
         if self.rand.random() < self.probability:
             return ""
         return self.delegate.generate(row, row_index)
+
+
+class ConditionalColumnGenerator(ColumnGenerator):
+    """Generates a value only when the flag column is True, and leaves the column blank otherwise."""
+
+    def __init__(self, delegate: ColumnGenerator, flag_field: str):
+        self.delegate = delegate
+        self.flag_field = flag_field
+        super().__init__(delegate.model, delegate.settings, delegate.source_repository)
+
+    @property
+    def dependencies(self) -> tuple[str, ...]:
+        return (*self.delegate.dependencies, self.flag_field)
+
+    def generate(self, row: Row, row_index: int) -> str:
+        if row.get(self.flag_field) != "True":
+            return ""
+        return self.delegate.generate(row, row_index)

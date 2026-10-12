@@ -205,7 +205,7 @@ def test_product_column_uses_float_conversion_for_source_fields(project_root: Pa
         ),
     )
 
-    assert generator.generate({"quantity": "2", "unit_price": "10.5"}, 0) == "21.0"
+    assert generator.generate({"quantity": "2", "unit_price": "10.25"}, 0) == "20.5"
 
 
 def test_formula_column_uses_source_fields(project_root: Path) -> None:
@@ -229,7 +229,7 @@ def test_formula_column_uses_source_fields(project_root: Path) -> None:
             },
             0,
         )
-        == "25.0"
+        == "25"
     )
 
 
@@ -435,6 +435,49 @@ def test_date_with_random_day_offset_uses_min_and_max_days(project_root: Path) -
     )
 
     assert generator.generate({"order_date": "2026-01-01"}, 0) == "2026-01-04"
+
+
+def test_date_with_random_day_offset_keeps_the_time_of_a_timestamp(project_root: Path) -> None:
+    generator = build(
+        ColumnModel(
+            name="updated_at",
+            type="derived",
+            method="date_with_random_day_offset",
+            source_field="created_at",
+            min=1,
+            max=1,
+        ),
+    )
+
+    assert generator.generate({"created_at": "2026-01-01T10:20:30"}, 0) == "2026-01-02T10:20:30"
+
+
+def test_random_int_reads_its_bounds_from_fields() -> None:
+    generator = build(ColumnModel(name="bedroom_count", type="random_int", min=0, max_field="room_count"))
+
+    assert generator.dependencies == ("room_count",)
+    assert all(0 <= int(generator.generate({"room_count": "2"}, index)) <= 2 for index in range(50))
+
+
+def test_random_float_reads_its_bounds_from_fields() -> None:
+    generator = build(ColumnModel(name="living_area", type="random_float", min=10, max_field="area"))
+
+    assert all(10 <= float(generator.generate({"area": "20.5"}, index)) <= 20.5 for index in range(50))
+
+
+def test_random_int_requires_each_bound_or_its_field() -> None:
+    with pytest.raises(Exception):
+        build(ColumnModel(name="floor", type="random_int", min=1))
+
+
+def test_present_when_leaves_the_column_blank_unless_the_flag_is_true() -> None:
+    generator = build(
+        ColumnModel(name="garage_capacity", type="random_int", min=1, max=1, present_when="has_garage")
+    )
+
+    assert "has_garage" in generator.dependencies
+    assert generator.generate({"has_garage": "True"}, 0) == "1"
+    assert generator.generate({"has_garage": "False"}, 0) == ""
 
 
 def test_mapped_csv_columns_of_one_record_share_the_selected_row(project_root: Path, write_lines) -> None:

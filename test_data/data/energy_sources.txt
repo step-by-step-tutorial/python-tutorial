@@ -1,0 +1,3 @@
+electricity
+natural_gas
+solar

@@ -115,8 +115,24 @@
       "source_fields": ["subtotal", "discount_percent", "shipping_cost", "tax_amount"],
       "formula": "values[0] - values[0] * values[1] / 100 + values[2] + values[3]"
     },
-    { "name": "payment_status", "type": "random_from_file", "file": "data/payment_statuses.txt" },
-    { "name": "fulfillment_status", "type": "random_from_file", "file": "data/fulfillment_statuses.txt" },
+    {
+      "name": "payment_status",
+      "type": "derived",
+      "method": "lookup_from_csv",
+      "source_field": "order_status",
+      "mapping_file": "data/order_status_map.csv",
+      "key_column": "order_status",
+      "value_column": "payment_status"
+    },
+    {
+      "name": "fulfillment_status",
+      "type": "derived",
+      "method": "lookup_from_csv",
+      "source_field": "order_status",
+      "mapping_file": "data/order_status_map.csv",
+      "key_column": "order_status",
+      "value_column": "fulfillment_status"
+    },
     {
       "name": "estimated_delivery_date",
       "type": "derived",

@@ -15,6 +15,8 @@ class ColumnModel:
     step: int | None = None
     min: int | None = None
     max: int | None = None
+    min_field: str | None = None
+    max_field: str | None = None
     date_start: str | None = None
     date_end: str | None = None
     source_field: str | None = None
@@ -33,6 +35,7 @@ class ColumnModel:
     file_column: str | None = None
     file_columns: tuple[str, ...] | None = None
     separator: str | None = None
+    present_when: str | None = None
     nullable: bool = False
     null_probability: float | None = None
 

@@ -1,0 +1,13 @@
+order_status,payment_status,fulfillment_status
+Pending Payment,Pending,Processing
+On Hold,Failed,Processing
+Paid,Paid,Processing
+Processing,Paid,Processing
+Packed,Paid,Packed
+Awaiting Pickup,Paid,Packed
+Shipped,Paid,Shipped
+Out for Delivery,Paid,Shipped
+Delivered,Paid,Delivered
+Returned,Refunded,Delivered
+Refunded,Refunded,Cancelled
+Cancelled,Failed,Cancelled

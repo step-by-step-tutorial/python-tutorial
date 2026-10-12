@@ -67,7 +67,9 @@ HOUSE = DatasetProfileModel(
     data_lake_prefix="enriched/house/",
 )
 
-# Identifiers, personal data and raw dates are left out: they do not generalize and only add noise.
+# Identifiers, personal data and raw dates are left out: they do not generalize and only add noise. So are country
+# and currency, which are the same in every order, and product_name, which is almost unique per order; category and
+# unit_price carry what the product says.
 ONLINE_SHOPPING = DatasetProfileModel(
     name="online_shopping",
     task_type=TaskType.CLASSIFICATION,
@@ -86,10 +88,7 @@ ONLINE_SHOPPING = DatasetProfileModel(
         ),
         categorical=(
             "sales_channel",
-            "country",
-            "currency",
             "warehouse",
-            "product_name",
             "category",
             "payment_status",
             "fulfillment_status",

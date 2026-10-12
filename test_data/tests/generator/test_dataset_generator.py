@@ -340,7 +340,7 @@ def test_generate_dataset_supports_online_shopping_pricing_fields(tmp_path: Path
     output_path = tmp_path / "output" / "online.csv"
     assert output_path.read_text(encoding="utf-8").splitlines() == [
         "order_id,order_date,product_name,quantity,unit_price,subtotal,discount_percent,shipping_cost,tax_amount,total_amount,payment_status,fulfillment_status,estimated_delivery_date",
-        "1,2026-01-10,Laptop,2,10,20.0,10,5,2.0,25.0,Paid,Shipped,2026-01-12",
+        "1,2026-01-10,Laptop,2,10,20,10,5,2,25,Paid,Shipped,2026-01-12",
     ]
     assert (tmp_path / "output" / "online.json").is_file()
     assert database_repository.return_value.write_rows.call_count == 1
@@ -411,7 +411,7 @@ def test_generate_rows_supports_sequence_random_int_and_lookup(tmp_path: Path, t
 
 @pytest.mark.parametrize(
     ("factor", "expected"),
-    [(None, "20.0"), (0.2, "5.0"), (0.0, "0.0")],
+    [(None, "20"), (0.2, "5"), (0.0, "0")],
 )
 def test_product_of_source_fields(tmp_path: Path, temp_project_env, factor: float | None, expected: str) -> None:
     source_fields = ("qty", "price") if factor is None else ("net_total",)

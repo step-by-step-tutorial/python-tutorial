@@ -1,5 +1,5 @@
 import ast
-from datetime import date
+from datetime import date, datetime
 from math import prod
 
 from test_data.generator.column.column_generator import ColumnGenerator, Row
@@ -7,7 +7,7 @@ from test_data.model.column_model import ColumnModel
 from test_data.model.settings_model import SettingsModel
 from test_data.repository.source_repository import SourceRepository
 from test_data.util.date_utils import random_date_from
-from test_data.util.formula_utils import check_formula, evaluate_formula
+from test_data.util.formula_utils import check_formula, evaluate_formula, format_number
 from test_data.util.text_utils import to_email_local_part
 from test_data.util.validation_utils import default_if_blank, require_not_blank, require_not_greater, require_not_negative
 
@@ -33,7 +33,7 @@ class ProductColumn(ColumnGenerator):
         values = [float(row[field]) for field in self._source_fields]
         if self.model.value is not None:
             values.append(float(self.model.value))
-        return str(prod(values))
+        return format_number(prod(values))
 
 
 class FormulaColumn(ColumnGenerator):
@@ -59,11 +59,11 @@ class FormulaColumn(ColumnGenerator):
 
     def generate(self, row: Row, row_index: int) -> str:
         values = [float(row[field]) for field in self._source_fields]
-        return str(evaluate_formula(self._expression, values))
+        return format_number(evaluate_formula(self._expression, values))
 
 
 class DateWithRandomDayOffsetColumn(ColumnGenerator):
-    """A date between min and max days after the source field's date."""
+    """A date, or a timestamp for a timestamp source, between min and max days after the source field."""
 
     def validate(self) -> None:
         self.require("source_field")
@@ -78,7 +78,9 @@ class DateWithRandomDayOffsetColumn(ColumnGenerator):
         return (self.model.source_field,)  # type: ignore[return-value]
 
     def generate(self, row: Row, row_index: int) -> str:
-        base_date = date.fromisoformat(self.get_by_source(row))
+        source = self.get_by_source(row)
+        # A timestamp source keeps its time of day.
+        base_date = datetime.fromisoformat(source) if "T" in source else date.fromisoformat(source)
         return random_date_from(base_date, self._min_days, self._max_days, self.rand)
 
 
