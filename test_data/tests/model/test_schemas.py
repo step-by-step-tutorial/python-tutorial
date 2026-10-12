@@ -6,17 +6,11 @@ from pathlib import Path
 
 import pytest
 from test_data.config import settings as env_config
-from test_data.config.config_utils import (
-    convert_to_column,
-    convert_to_columns,
-    convert_to_config,
-    read_config,
-)
-from test_data.model.schemas import ColumnModel
+from test_data.model.schemas import ColumnModel, ConfigModel, Dataset, DatasetMetadata
 
 
 def test_load_config_reads_columns(project_root: Path) -> None:
-    config = read_config("demo.json")
+    config = ConfigModel.from_file("demo.json")
 
     assert config.name == "demo.json"
     assert config.row_count == 5
@@ -26,7 +20,7 @@ def test_load_config_reads_columns(project_root: Path) -> None:
 
 
 def test_column_config_converts_file_columns_to_tuple() -> None:
-    column = convert_to_column(
+    column = ColumnModel.from_dict(
         {
             "name": "customer_name",
             "type": "random_from_mapped_file",
@@ -38,15 +32,13 @@ def test_column_config_converts_file_columns_to_tuple() -> None:
 
 
 def test_column_model_list_converter_returns_models() -> None:
-    columns = convert_to_columns(
-        [{"name": "country", "type": "fixed", "value": "USA"}]
-    )
+    column = ColumnModel.from_dict({"name": "country", "type": "fixed", "value": "USA"})
 
-    assert columns == (ColumnModel(name="country", type="fixed", value="USA"),)
+    assert column == ColumnModel(name="country", type="fixed", value="USA")
 
 
 def test_generator_config_reads_destinations() -> None:
-    config = convert_to_config(
+    config = ConfigModel.from_dict(
         {
             "row_count": 1,
             "output_name": "x",
@@ -61,7 +53,7 @@ def test_generator_config_reads_destinations() -> None:
 
 
 def test_generator_config_reads_kafka_key_column() -> None:
-    config = convert_to_config(
+    config = ConfigModel.from_dict(
         {
             "row_count": 1,
             "output_name": "x",
@@ -78,7 +70,7 @@ def test_load_config_reports_missing_file(tmp_path: Path, monkeypatch) -> None:
     importlib.reload(env_config)
     try:
         with pytest.raises(Exception):
-            read_config("config_absent.json")
+            ConfigModel.from_file("config_absent.json")
     finally:
         monkeypatch.delenv("CONFIG_DIR", raising=False)
         importlib.reload(env_config)
@@ -91,7 +83,7 @@ def test_load_config_reports_invalid_json(tmp_path: Path, monkeypatch) -> None:
     importlib.reload(env_config)
     try:
         with pytest.raises(Exception):
-            read_config("config_broken.json")
+            ConfigModel.from_file("config_broken.json")
     finally:
         monkeypatch.delenv("CONFIG_DIR", raising=False)
         importlib.reload(env_config)
@@ -104,14 +96,14 @@ def test_load_config_reports_non_object_json(tmp_path: Path, monkeypatch) -> Non
     importlib.reload(env_config)
     try:
         with pytest.raises(TypeError):
-            read_config("config_list.json")
+            ConfigModel.from_file("config_list.json")
     finally:
         monkeypatch.delenv("CONFIG_DIR", raising=False)
         importlib.reload(env_config)
 
 
 def test_online_shopping_config_includes_extended_fields() -> None:
-    config = read_config("online_shopping.json")
+    config = ConfigModel.from_file("online_shopping.json")
 
     assert config.destinations == ("csv", "json", "database", "kafka")
     assert "subtotal" in config.column_names
@@ -125,6 +117,37 @@ def test_online_shopping_config_includes_extended_fields() -> None:
 
 
 def test_read_config_resolves_dataset_name_without_json_suffix() -> None:
-    config = read_config("online_shopping")
+    config = ConfigModel.from_file("online_shopping")
 
     assert config.output_name == "online_shopping"
+
+
+def test_load_config_accepts_name_without_extension(project_root: Path) -> None:
+    assert ConfigModel.from_file("demo").name == "demo.json"
+
+
+def test_load_config_accepts_path_outside_config_dir(tmp_path: Path) -> None:
+    path = tmp_path / "custom.json"
+    path.write_text(json.dumps({
+        "row_count": 1,
+        "output_name": "custom",
+        "kafka_topic": "test-events",
+        "kafka_key_column": "id",
+        "destinations": ["csv"],
+        "columns": [{"name": "id", "type": "sequence"}],
+    }), encoding="utf-8")
+
+    config = ConfigModel.from_file(path)
+
+    assert config.name == "custom.json"
+    assert config.output_name == "custom"
+
+
+def test_dataset_metadata_from_dataset(project_root: Path) -> None:
+    metadata = DatasetMetadata.from_dataset(Dataset(name="demo", config=ConfigModel.from_file("demo.json")))
+
+    assert metadata.name == "demo"
+    assert metadata.config_file == "config/demo.json"
+    assert metadata.file == "output_test/demo.csv"
+    assert metadata.download_url == "/datasets/demo/download"
+    assert metadata.row_count == 5

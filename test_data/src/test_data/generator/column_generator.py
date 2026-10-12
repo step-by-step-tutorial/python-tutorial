@@ -6,22 +6,27 @@ from random import Random
 from typing import Mapping
 
 from test_data.config import settings as env_config
-from test_data.converter.data_converter import convert_to_email, random_date_between, random_date_from
+from test_data.converter.data_converter import calculate_days, convert_to_email, random_date_between, random_date_from
 from test_data.repository.sources_repository import SourceRepository
 from test_data.model.schemas import ColumnModel
 from test_data.util.file_utils import absolute_project_path, list_of_directory_names
+from test_data.util.formula_utils import check_formula, evaluate_formula
 from test_data.util.validation_utils import (
     check_min_max,
-    check_negative_days,
     require_blank,
     require_not_blank,
     require_or_default,
     require_or_raise_map,
     require_iso_date,
-    require_xor, should_not_be_negative, )
+    require_xor,
+    should_not_be_negative,
+)
 
 Row = Mapping[str, str]
 SOURCE_REPOSITORY = SourceRepository()
+
+DEFAULT_MIN_OFFSET_DAYS = 1
+DEFAULT_MAX_OFFSET_DAYS = 7
 
 
 class ColumnGenerator(ABC):
@@ -29,8 +34,13 @@ class ColumnGenerator(ABC):
     def __init__(self, model: ColumnModel) -> None:
         self.model = model
         self.source_repository = SOURCE_REPOSITORY
-        self.rand = Random(env_config.RANDOM_SEED)
+        self.rand = Random(self.seed)
         self.validate()
+
+    @property
+    def seed(self) -> str:
+        # One random stream per column: a shared seed would make columns of the same shape move together.
+        return f"{env_config.RANDOM_SEED}:{self.model.name}"
 
     @property
     def dependencies(self) -> tuple[str, ...]:
@@ -80,7 +90,8 @@ class RandomIntColumn(ColumnGenerator):
             minimum=self.model.min,
             maximum=self.model.max,
             error_message=f"Column {self.model.name}: 'min' must not be greater than 'max'."
-)
+        )
+
     def generate(self, row: Row, row_index: int) -> str:
         return str(self.rand.randint(self.model.min, self.model.max))  # type: ignore[arg-type]
 
@@ -116,7 +127,7 @@ class RandomTimestampColumn(ColumnGenerator):
         self.require("date_start", "date_end")
         self.start = require_iso_date(self.model.date_start)
         self.end = require_iso_date(self.model.date_end)
-        check_negative_days(
+        calculate_days(
             require_not_blank(self.start),
             require_not_blank(self.end),
             error_message=f"date_start must be earlier than or equal to date_end: {self.model.name}",
@@ -141,7 +152,7 @@ class RandomDateColumn(ColumnGenerator):
         self.require("date_start", "date_end")
         self.start = require_iso_date(self.model.date_start)
         self.end = require_iso_date(self.model.date_end)
-        check_negative_days(
+        calculate_days(
             require_not_blank(self.start),
             require_not_blank(self.end),
             error_message=f"date_start must be earlier than or equal to date_end: {self.model.name}",
@@ -169,7 +180,7 @@ class RandomFromDirectoryColumn(ColumnGenerator):
         excluded = set(self.model.exclude_directories or ())
         directories = [directory for directory in directories if directory not in excluded]
         if not directories:
-            raise Exception(f"No directories found for column {self.model.name}.")
+            raise ValueError(f"No directories found for column {self.model.name}.")
         return self.rand.choice(directories)
 
 
@@ -280,16 +291,14 @@ class RandomFromMappedCsvColumn(ColumnGenerator):
                     )
                 self._candidate_rows[candidate_cache_key] = rows
             if not rows:
-                raise Exception(f"No rows found for '{source_value}' in mapping for column {self.model.name}.")
+                raise ValueError(f"No rows found for '{source_value}' in mapping for column {self.model.name}.")
             selected = self.rand.choice(rows)
             self._selected_rows[selected_cache_key] = selected
         if self.model.value_template is not None:
             try:
                 return self.model.value_template.format_map(selected)
             except (KeyError, ValueError) as error:
-                raise Exception(
-                    f"Column {self.model.name} has an invalid value template."
-                ) from error
+                raise ValueError(f"Column {self.model.name} has an invalid value template.") from error
 
         return require_or_raise_map(
             selected,
@@ -338,17 +347,21 @@ class ProductColumn(ColumnGenerator):
 
 
 class FormulaColumn(ColumnGenerator):
+    """Arithmetic over the source fields, which the formula reads as values[0], values[1], ..."""
 
     def __init__(self, model: ColumnModel) -> None:
         self._source_fields: tuple[str, ...] = ()
-        self._formula = ""
+        self._expression: ast.expr | None = None
         super().__init__(model)
 
     def validate(self) -> None:
         self.require("source_fields", "formula")
         self._source_fields = require_not_blank(self.model.source_fields)
-        self._formula = require_not_blank(self.model.formula)
-        self._validate_formula()
+        try:
+            self._expression = ast.parse(require_not_blank(self.model.formula), mode="eval").body
+            check_formula(self._expression, len(self._source_fields))
+        except (SyntaxError, ValueError) as error:
+            raise ValueError(f"Column {self.model.name} has an invalid formula: {error}") from error
 
     @property
     def dependencies(self) -> tuple[str, ...]:
@@ -356,21 +369,16 @@ class FormulaColumn(ColumnGenerator):
 
     def generate(self, row: Row, row_index: int) -> str:
         values = [float(row[field]) for field in self._source_fields]
-        return str(eval(self._formula, {"__builtins__": {}}, {"values": values}))
-
-    def _validate_formula(self) -> None:
-        try:
-            ast.parse(self._formula, mode="eval")
-        except SyntaxError as error:
-            raise Exception(f"Column {self.model.name} has an invalid formula.") from error
+        return str(evaluate_formula(self._expression, values))
 
 
 class DateWithRandomDayOffsetColumn(ColumnGenerator):
+    """A date between min and max days after the source field's date."""
 
     def validate(self) -> None:
         self.require("source_field")
-        self._min_days = require_or_default(self.model.start, 1)
-        self._max_days = require_or_default(self.model.step, 7)
+        self._min_days = require_or_default(self.model.min, DEFAULT_MIN_OFFSET_DAYS)
+        self._max_days = require_or_default(self.model.max, DEFAULT_MAX_OFFSET_DAYS)
         should_not_be_negative(int(self._min_days), int(self._max_days),
                                error_message=f"Column {self.model.name} needs non-negative day offsets.")
         check_min_max(self._min_days, self._max_days)
@@ -409,7 +417,7 @@ class EmailFromSourceFieldsColumn(ColumnGenerator):
                 for field in self._source_fields
             )
         except ValueError as error:
-            raise Exception(f"Column {self.model.name}: {error}") from error
+            raise ValueError(f"Column {self.model.name}: {error}") from error
         return f"{local_part}@{domain}"
 
 
@@ -425,3 +433,4 @@ class ConcatFromSourceFieldsColumn(ColumnGenerator):
     def generate(self, row: Row, row_index: int) -> str:
         separator = self.model.separator or " "
         return separator.join(require_not_blank(row.get(field)) for field in self.dependencies)
+

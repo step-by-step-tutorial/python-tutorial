@@ -20,13 +20,13 @@ def is_blank(obj: Any) -> bool:
 
 def require_blank(value: Any, error_message: str = "Value must be empty.") -> Any:
     if not is_blank(value):
-        raise Exception(error_message)
+        raise ValueError(error_message)
     return value
 
 
 def require_not_blank(obj: Any, error_message="Object cannot be None.") -> Any:
     if is_blank(obj):
-        raise Exception(error_message)
+        raise ValueError(error_message)
     return obj
 
 
@@ -38,46 +38,30 @@ def require_or_default(obj: Any, default: Any) -> Any:
 
 def require_or_raise_map(mapping: Mapping[str, Any], key: str, error_message: str = "Key not found.") -> Any:
     if key not in mapping:
-        raise Exception(error_message)
+        raise KeyError(error_message)
     return mapping[key]
-
-
-def require_or_raise_tuple(collection: tuple[str, ...], key: str, error_message: str = "Key not found.") -> str:
-    if key not in collection:
-        raise Exception(error_message)
-    return collection[collection.index(key)]
-
-def require_absent(collection: tuple[str, ...], key: str, error_message: str = "Key not found."):
-    if key in collection:
-        raise Exception(error_message)
 
 
 def check_min_max(minimum: int | None, maximum: int | None, error_message: str = "min must be less than max"):
     if require_not_blank(minimum) > require_not_blank(maximum):
-        raise Exception(error_message)
-
-
-def check_negative_days(start: date, end: date, error_message: str = "Invalid period") -> int:
-    if start > end:
-        raise Exception(error_message)
-    return (end - start).days
+        raise ValueError(error_message)
 
 
 def require_iso_date(value, error_message: str = "Column needs ISO dates (YYYY-MM-DD)"):
     try:
         parsed = date.fromisoformat(require_not_blank(value))
-    except ValueError:
-        raise Exception(error_message)
+    except ValueError as error:
+        raise ValueError(error_message) from error
 
     return parsed
 
 
 def require_xor(obj1: Any, obj2: Any, error_message: str = "Exactly one of the objects must be not None"):
     if (is_blank(obj1) and is_blank(obj2)) or (not is_blank(obj1) and not is_blank(obj2)):
-        raise Exception(error_message)
+        raise ValueError(error_message)
 
 
 def should_not_be_negative(*numbers: int, error_message: str = "Value must not be negative"):
     for number in numbers:
         if number < 0:
-            raise Exception(error_message)
+            raise ValueError(error_message)

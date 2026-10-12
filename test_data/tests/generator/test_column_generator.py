@@ -378,3 +378,57 @@ def test_filtered_mapped_rows_use_configured_fallback(project_root: Path, write_
 def test_unknown_types_are_rejected(column: ColumnModel) -> None:
     with pytest.raises(Exception):
         build(column)
+
+
+def test_formula_column_rejects_code(project_root: Path) -> None:
+    with pytest.raises(ValueError, match="invalid formula"):
+        build(
+            ColumnModel(
+                name="total_amount",
+                type="derived",
+                method="formula",
+                source_fields=("base",),
+                formula="__import__('os').getcwd()",
+            ),
+        )
+
+
+def test_columns_of_the_same_shape_get_independent_values(project_root: Path) -> None:
+    first = build(ColumnModel(name="first", type="random_int", min=1, max=1_000_000))
+    second = build(ColumnModel(name="second", type="random_int", min=1, max=1_000_000))
+
+    first_values = [first.generate({}, index) for index in range(20)]
+    second_values = [second.generate({}, index) for index in range(20)]
+
+    assert first_values != second_values
+
+
+def test_columns_are_reproducible_across_runs(project_root: Path) -> None:
+    model = ColumnModel(name="amount", type="random_int", min=1, max=1_000_000)
+
+    assert [build(model).generate({}, 0) for _ in range(2)] == [build(model).generate({}, 0)] * 2
+
+
+def test_nullable_columns_are_null_in_different_rows(project_root: Path) -> None:
+    first = build(ColumnModel(name="first", type="fixed", value="x", nullable=True, null_probability=0.5))
+    second = build(ColumnModel(name="second", type="fixed", value="x", nullable=True, null_probability=0.5))
+
+    first_nulls = [first.generate({}, index) == "" for index in range(50)]
+    second_nulls = [second.generate({}, index) == "" for index in range(50)]
+
+    assert first_nulls != second_nulls
+
+
+def test_date_with_random_day_offset_uses_min_and_max_days(project_root: Path) -> None:
+    generator = build(
+        ColumnModel(
+            name="delivery_date",
+            type="derived",
+            method="date_with_random_day_offset",
+            source_field="order_date",
+            min=3,
+            max=3,
+        ),
+    )
+
+    assert generator.generate({"order_date": "2026-01-01"}, 0) == "2026-01-04"
