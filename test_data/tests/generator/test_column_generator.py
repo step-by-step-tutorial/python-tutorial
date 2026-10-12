@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from test_data.generator.column_generator_registry import ColumnGeneratorRegistry
-from test_data.model import ColumnModel
+from test_data.model.column_model import ColumnModel
 
 
 def build(column: ColumnModel):

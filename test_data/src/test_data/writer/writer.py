@@ -5,7 +5,7 @@ from collections.abc import Mapping, Sequence
 
 from test_data.config import settings as env_config
 from test_data.connector.kafka_connector import create_producer
-from test_data.model import ConfigModel
+from test_data.model.config_model import ConfigModel
 from test_data.repository.database_repository import DatabaseRepository
 from test_data.util.csv_utils import write_csv
 from test_data.util.json_utils import write_json

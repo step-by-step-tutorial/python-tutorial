@@ -2,7 +2,8 @@ import logging
 from pathlib import Path
 
 from test_data.generator.row_generator import RowGenerator
-from test_data.model import ConfigModel, DatasetModel
+from test_data.model.config_model import ConfigModel
+from test_data.model.dataset_model import DatasetModel
 from test_data.writer.writer_registry import WriterRegistry
 
 logger = logging.getLogger(__name__)

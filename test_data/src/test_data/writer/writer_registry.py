@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Iterable, Mapping
 
-from test_data.model import ConfigModel
+from test_data.model.config_model import ConfigModel
 from test_data.writer.writer import CsvWriter, DatabaseWriter, JsonWriter, KafkaWriter, XmlWriter
 
 logger = logging.getLogger(__name__)
