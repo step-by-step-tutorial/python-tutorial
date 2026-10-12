@@ -1,35 +1,36 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 import pytest
 
-from data_platform.model.endpoints import (
-    AuditEndpoint,
-    DataLakeEndpoint,
-    WarehouseEndpoint,
-    DatabaseEndpoint,
-    FileEndpoint,
-    MessagingEndpoint,
-    RestApiEndpoint,
+from data_platform.model.endpoint_model import (
+    AuditEndpointModel,
+    DataLakeEndpointModel,
+    WarehouseEndpointModel,
+    DatabaseEndpointModel,
+    FileEndpointModel,
+    MessagingEndpointModel,
+    RestApiEndpointModel,
 )
 from data_platform.model.dataframe_model import DataFrameModel
-from data_platform.model.dataset import Dataset
-from data_platform.registry.dataset_registry import dataset_registry
+from data_platform.model.dataset_model import DatasetModel
+from data_platform.config.key import Key
+from data_platform.config.pipeline_type import PipelineType
 from data_platform.registry.bootstrap import initialize_registries
+from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.registry.endpoint_registry import endpoint_registry
-from data_platform.config.main_settings import settings
-initialize_registries()
 
-from data_platform.domain.house.dataset import house_dataset
-from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
+initialize_registries()
+house_dataset = dataset_registry.create_dataset("house", PipelineType.INMEMORY)
+ONLINE_SHOPPING_DATASET = dataset_registry.create_dataset("online_shopping", PipelineType.INMEMORY)
 
 
 class TestDataset:
 
     def test_should_lookup_sources_and_destinations(self) -> None:
-        given_dataset = Dataset(
+        given_dataset = DatasetModel(
             name="example",
             dataframe=DataFrameModel(schema=None, required_columns=frozenset({"id"})),
-            audit=AuditEndpoint(
+            audit=AuditEndpointModel(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",
                 datalake_connection_name="audit.datalake",
@@ -39,35 +40,31 @@ class TestDataset:
                 write_sql_files={"write": "database/audit/insert_event.sql"},
             ),
             endpoints={
-                "example.file.csv": FileEndpoint(file_name="example.csv", file_path="/tmp/example.csv"),
-                "example.kafka.listener": MessagingEndpoint(connection_name="example.kafka.listener",
+                "example.file.csv": FileEndpointModel(file_name="example.csv", file_path="/tmp/example.csv"),
+                "example.kafka.listener": MessagingEndpointModel(connection_name="example.kafka.listener",
                                                          channel_name="example-events"),
-                "example.datalake": DataLakeEndpoint(connection_name="example.datalake", bucket_name="example-bucket"),
-                "example.database": DatabaseEndpoint(
+                "example.datalake": DataLakeEndpointModel(connection_name="example.datalake", bucket_name="example-bucket"),
+                "example.database": DatabaseEndpointModel(
                     connection_name="example.database",
                     schema="example",
                     stage_table_name="example_stage",
-                    full_stage_table_name="example.example_stage",
-                    table_names=["example.example_stage"],
                 ),
-                "example.warehouse": WarehouseEndpoint(
+                "example.warehouse": WarehouseEndpointModel(
                     connection_name="example.warehouse",
                     schema="app_warehouse",
                     table_name="example_table",
-                    full_table_name="app_warehouse.example_table",
                 ),
             },
         )
 
-        assert given_dataset.get_endpoint("example.file.csv", FileEndpoint).file_name == "example.csv"
-        assert given_dataset.get_endpoint("example.datalake", DataLakeEndpoint).bucket_name == "example-bucket"
-        assert given_dataset.get_endpoint("example.database", DatabaseEndpoint).schema == "example"
-        assert given_dataset.get_endpoint("example.database", DatabaseEndpoint).stage_table_name == "example_stage"
+        assert given_dataset.get_endpoint("example.file.csv", FileEndpointModel).file_name == "example.csv"
+        assert given_dataset.get_endpoint("example.datalake", DataLakeEndpointModel).bucket_name == "example-bucket"
+        assert given_dataset.get_endpoint("example.database", DatabaseEndpointModel).schema == "example"
+        assert given_dataset.get_endpoint("example.database", DatabaseEndpointModel).stage_table_name == "example_stage"
         assert given_dataset.get_endpoint("example.database",
-                                          DatabaseEndpoint).full_stage_table_name == "example.example_stage"
-        assert given_dataset.get_endpoint("example.database", DatabaseEndpoint).table_names == ["example.example_stage"]
+                                          DatabaseEndpointModel).full_stage_table_name == "example.example_stage"
         assert given_dataset.get_endpoint("example.warehouse",
-                                          WarehouseEndpoint).full_table_name == "app_warehouse.example_table"
+                                          WarehouseEndpointModel).full_table_name == "app_warehouse.example_table"
         assert given_dataset.dataframe.schema is None
         assert given_dataset.dataframe.required_columns == frozenset({"id"})
         assert given_dataset.audit.database_connection_name == "audit.database"
@@ -79,22 +76,26 @@ class TestDataset:
         assert given_dataset.audit.write_sql_files == {"write": "database/audit/insert_event.sql"}
         assert not hasattr(given_dataset, "event")
 
-        with pytest.raises(TypeError, match="not a DatabaseEndpoint"):
-            given_dataset.get_endpoint("example.file.csv", DatabaseEndpoint)
+        with pytest.raises(TypeError, match="not a DatabaseEndpointModel"):
+            given_dataset.get_endpoint("example.file.csv", DatabaseEndpointModel)
 
     def test_should_raise_error_for_missing_endpoint(self) -> None:
-        given_dataset = Dataset(name="example", audit=endpoint_registry.get_item("audit"))
+        given_dataset = DatasetModel(name="example", audit=endpoint_registry.get_item(Key.AUDIT))
 
         with pytest.raises(KeyError):
-            given_dataset.get_endpoint("missing", FileEndpoint)
+            given_dataset.get_endpoint("missing", FileEndpointModel)
 
         with pytest.raises(KeyError):
-            given_dataset.get_endpoint("missing", DatabaseEndpoint)
+            given_dataset.get_endpoint("missing", DatabaseEndpointModel)
 
 
 class TestDatasetRegistry:
-    def test_should_return_house_dataset(self) -> None:
-        assert dataset_registry.get_item("house") is house_dataset
+    def test_should_create_a_fresh_dataset_per_pipeline_type(self) -> None:
+        first = dataset_registry.create_dataset("house", PipelineType.INMEMORY)
+        second = dataset_registry.create_dataset("house", PipelineType.INMEMORY)
+
+        assert first.name == "house"
+        assert first is not second
 
     def test_should_raise_error_for_unsupported_dataset(self) -> None:
         with pytest.raises(ValueError):
@@ -121,24 +122,23 @@ class TestConcreteDatasetConfiguration:
         for endpoint_name, endpoint in house_dataset.endpoints.items():
             assert endpoint.name == endpoint_name
 
-        assert Path(house_dataset.get_endpoint("house.file.csv", FileEndpoint).file_path).name == "house.csv"
-        house_api = house_dataset.get_endpoint("house.rest.api", RestApiEndpoint)
+        assert Path(house_dataset.get_endpoint("house.file.csv", FileEndpointModel).file_path).name == "house.csv"
+        house_api = house_dataset.get_endpoint("house.rest.api", RestApiEndpointModel)
         assert house_api.url.endswith("/datasets/house/download?format=csv")
-        assert house_dataset.get_endpoint("house.kafka.listener", MessagingEndpoint).channel_name == "house.events.v1"
+        assert house_dataset.get_endpoint("house.kafka.listener", MessagingEndpointModel).channel_name == "house.events.v1"
         assert house_dataset.get_endpoint("house.kafka.listener",
-                                          MessagingEndpoint).connection_name == "house.kafka.listener"
-        assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).schema == "house"
-        assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).stage_table_name == "house_stage"
+                                          MessagingEndpointModel).connection_name == "house.kafka.listener"
+        assert house_dataset.get_endpoint("house.database", DatabaseEndpointModel).schema == "house"
+        assert house_dataset.get_endpoint("house.database", DatabaseEndpointModel).stage_table_name == "house_stage"
         assert house_dataset.get_endpoint("house.database",
-                                          DatabaseEndpoint).full_stage_table_name == "house.house_stage"
-        assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).table_names == ["house.house_stage"]
-        assert house_dataset.get_endpoint("house.database", DatabaseEndpoint).connection_name == "house.database"
-        assert house_dataset.get_endpoint("house.datalake", DataLakeEndpoint).connection_name == "house.datalake"
-        assert house_dataset.get_endpoint("house.warehouse", WarehouseEndpoint).schema == "app_warehouse"
+                                          DatabaseEndpointModel).full_stage_table_name == "house.house_stage"
+        assert house_dataset.get_endpoint("house.database", DatabaseEndpointModel).connection_name == "house.database"
+        assert house_dataset.get_endpoint("house.datalake", DataLakeEndpointModel).connection_name == "house.datalake"
+        assert house_dataset.get_endpoint("house.warehouse", WarehouseEndpointModel).schema == "app_warehouse"
         assert house_dataset.get_endpoint("house.warehouse",
-                                          WarehouseEndpoint).connection_name == "house.warehouse"
+                                          WarehouseEndpointModel).connection_name == "house.warehouse"
         assert house_dataset.get_endpoint("house.warehouse",
-                                          WarehouseEndpoint).full_table_name == "app_warehouse.house_table"
+                                          WarehouseEndpointModel).full_table_name == "app_warehouse.house_table"
         assert house_dataset.audit.database_connection_name == "audit.database"
         assert house_dataset.audit.messaging_connection_name == "audit.kafka.producer"
         assert house_dataset.audit.datalake_connection_name == "audit.datalake"

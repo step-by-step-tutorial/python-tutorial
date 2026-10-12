@@ -1,17 +1,15 @@
 import pandas as pd
 import pytest
 
-from data_platform.model.endpoints import DatabaseEndpoint
+from data_platform.model.endpoint_model import DatabaseEndpointModel
 from data_platform.repository.inmemory_database_repository import InmemoryDatabaseRepository
 
 
-def build_endpoint() -> DatabaseEndpoint:
-    return DatabaseEndpoint(
+def build_endpoint() -> DatabaseEndpointModel:
+    return DatabaseEndpointModel(
         connection_name="house.database",
         schema="house",
         stage_table_name="example_stage",
-        full_stage_table_name="house.example_stage",
-        table_names=["house.example_stage"],
         create_sql_files={},
         truncate_sql_files={"truncate": "before.sql"},
         write_sql_files={"after": "after.sql"},

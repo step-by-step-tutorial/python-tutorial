@@ -1,5 +1,4 @@
-﻿import logging
-from collections.abc import Callable
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -24,11 +23,3 @@ def csv_to_dataframe(path: str) -> pd.DataFrame:
 
     return df
 
-
-def read_csv_file(path: str, consumer: Callable[[dict[str, str]], None]) -> int:
-    dataframe = csv_to_dataframe(path)
-    for row in dataframe.to_dict(orient="records"):
-        consumer(row)
-
-    logger.info("Read %s CSV rows from %s", len(dataframe), path)
-    return len(dataframe)

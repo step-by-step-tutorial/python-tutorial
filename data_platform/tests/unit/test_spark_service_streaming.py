@@ -1,7 +1,11 @@
-from pyspark.sql import DataFrame, SparkSession
+import pytest
 
-from data_platform.model.endpoints import MessagingEndpoint, DataLakeEndpoint
-from data_platform.repository import spark_streaming_repository as system_under_test
+pytest.importorskip("pyspark")
+
+from pyspark.sql import DataFrame, SparkSession  # noqa: E402
+
+from data_platform.model.endpoint_model import MessagingEndpointModel, DataLakeEndpointModel  # noqa: E402
+from data_platform.repository import spark_streaming_repository as system_under_test  # noqa: E402
 
 
 class TestReadStream:
@@ -18,12 +22,12 @@ class TestReadStream:
 
         actual = system_under_test.SparkStreamingRepository(
             session=given_session,
-            messaging_endpoint=MessagingEndpoint(
+            messaging_endpoint=MessagingEndpointModel(
                 channel_name="house-topic",
                 bootstrap_servers="localhost:9092",
                 starting_offsets="earliest",
             ),
-            data_lake_endpoint=DataLakeEndpoint(bucket_name="bucket"),
+            data_lake_endpoint=DataLakeEndpointModel(bucket_name="bucket"),
         ).read()
 
         assert actual is given_dataframe
@@ -44,8 +48,8 @@ class TestReadStream:
         given_writer.start.return_value = mocker.Mock()
         service = system_under_test.SparkStreamingRepository(
             session=mocker.MagicMock(spec=SparkSession),
-            messaging_endpoint=MessagingEndpoint(channel_name="topic", bootstrap_servers="localhost:9092"),
-            data_lake_endpoint=DataLakeEndpoint(bucket_name="bucket"),
+            messaging_endpoint=MessagingEndpointModel(channel_name="topic", bootstrap_servers="localhost:9092"),
+            data_lake_endpoint=DataLakeEndpointModel(bucket_name="bucket"),
         )
         mock_append_batch = mocker.patch.object(service, "write_batch")
 

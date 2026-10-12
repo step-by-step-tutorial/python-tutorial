@@ -1,4 +1,4 @@
-﻿import logging
+import logging
 
 from collections.abc import Callable
 
@@ -6,14 +6,19 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
 from pyspark.sql.types import StructType
 
-from data_platform.model.dataset_ingestor import DatasetIngestor
-from data_platform.model.endpoints import MessagingEndpoint
+from data_platform.ingestion.dataset_ingestor import DatasetIngestor
+from data_platform.model.endpoint_model import MessagingEndpointModel
 
 logger = logging.getLogger(__name__)
 
 
 class SparkKafkaIngestor(DatasetIngestor):
-    def __init__(self, endpoint: MessagingEndpoint, session: SparkSession | Callable[[], SparkSession], schema: StructType) -> None:
+    def __init__(
+            self,
+            endpoint: MessagingEndpointModel,
+            session: SparkSession | Callable[[], SparkSession],
+            schema: StructType,
+    ) -> None:
         self._endpoint = endpoint
         self._session = session
         self._schema = schema

@@ -1,33 +1,31 @@
 from datetime import UTC, datetime
 from pathlib import Path
-from types import SimpleNamespace
-from uuid import UUID
 
 import pandas as pd
 import pytest
 
-from data_platform.config.main_settings import settings
-from data_platform.config.data_lake_environment import StorageEnvironment
-from data_platform.util.kafka_utils import handle_kafka_response
+from data_platform.config.storage_environment import StorageEnvironment
+from data_platform.connector.kafka_connector import handle_delivery_report
 from data_platform.converter.value_converter import (
     convert_to_integer,
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.validators.validator_impl import RequiredColumnsValidator
-from data_platform.util import csv_utils, database_utils, file_utils, log_utils, pipeline_utils, string_utils, \
+from data_platform.validator.inmemory_validator import RequiredColumnsValidator
+from data_platform.model.settings_model import ApiSettingsModel
+from data_platform.util import csv_utils, database_utils, file_utils, log_utils, validation_utils, \
     time_utils, path_utils as datalake_path_utils, dataframe_utils
 
 
-class TestStringUtils:
+class TestValidationUtils:
 
-    def test_should_be_not_none_rejects_none_value(self) -> None:
+    def test_require_not_none_rejects_none_value(self) -> None:
         with pytest.raises(ValueError):
-            string_utils.should_not_be_none(None, "value")
+            validation_utils.require_not_none(None, "value")
 
-    def test_should_not_be_none_or_empty_rejects_blank_text(self) -> None:
+    def test_require_not_empty_rejects_blank_text(self) -> None:
         with pytest.raises(ValueError):
-            string_utils.should_not_be_none_or_empty("   ", "value")
+            validation_utils.require_not_empty("   ", "value")
 
 
 class TestTimeUtils:
@@ -43,14 +41,6 @@ class TestTimeUtils:
         actual = time_utils.elapsed_milliseconds(1.0)
 
         assert actual == 2500
-
-
-class TestPipelineUtils:
-
-    def test_should_create_uuid_string(self) -> None:
-        actual = pipeline_utils.create_pipeline_id()
-
-        UUID(actual)
 
 
 class TestDatalakeUtils:
@@ -79,9 +69,7 @@ class TestDatalakeUtils:
         assert actual_checkpoint == "s3a://online-shopping/checkpoints/house.events.v1"
 
     def test_should_generate_dataset_download_url(self) -> None:
-        actual = datalake_path_utils.generate_dataset_download_url(
-            "http://test-data:8080/", "Online_Shopping"
-        )
+        actual = ApiSettingsModel("http://test-data:8080/").dataset_download_url("Online_Shopping")
 
         assert actual == "http://test-data:8080/datasets/online_shopping/download?format=csv"
 
@@ -100,7 +88,7 @@ class TestDatalakeUtils:
 
     def test_should_raise_for_missing_paths(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError):
-            file_utils.generate_full_file_path(tmp_path / "missing")
+            file_utils.require_exists(tmp_path / "missing")
 
 
 class TestDatabaseUtils:
@@ -249,12 +237,12 @@ class TestLoggingAndStreaming:
         # Given
         given_message = mocker.Mock()
         given_message.topic.return_value = "house.events.v1"
-        mock_logger_info = mocker.patch.object(handle_kafka_response.__globals__["logger"], "info")
-        mock_logger_error = mocker.patch.object(handle_kafka_response.__globals__["logger"], "error")
+        mock_logger_info = mocker.patch.object(handle_delivery_report.__globals__["logger"], "info")
+        mock_logger_error = mocker.patch.object(handle_delivery_report.__globals__["logger"], "error")
 
         # When
-        handle_kafka_response(None, given_message, "event-001")
-        handle_kafka_response(RuntimeError("boom"), given_message, "event-002")
+        handle_delivery_report(None, given_message, "event-001")
+        handle_delivery_report(RuntimeError("boom"), given_message, "event-002")
 
         # Then
         assert mock_logger_info.call_count == 1

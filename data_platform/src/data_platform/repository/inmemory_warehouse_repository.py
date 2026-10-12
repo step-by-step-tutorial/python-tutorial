@@ -1,12 +1,12 @@
-﻿from pandas import DataFrame
+from pandas import DataFrame
 
-from data_platform.model.endpoints import WarehouseEndpoint
+from data_platform.model.endpoint_model import WarehouseEndpointModel
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.file_utils import read_text_file
 
 
 class InmemoryWarehouseRepository:
-    def __init__(self, endpoint: WarehouseEndpoint) -> None:
+    def __init__(self, endpoint: WarehouseEndpointModel) -> None:
         self._endpoint = endpoint
         self._connection_name = endpoint.connection_name
 

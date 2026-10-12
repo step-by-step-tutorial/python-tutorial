@@ -1,29 +1,23 @@
-﻿import csv
+import csv
 import logging
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from data_platform.config.main_settings import settings as main_settings
-from data_platform.util.path_utils import generate_project_path
-from data_platform.util.string_utils import should_not_be_none
+from data_platform.config.settings import settings
+from data_platform.util.validation_utils import require_not_none
 
 logger = logging.getLogger(__name__)
 
 
-def should_be_exists(path: Path) -> None:
+def require_exists(path: Path) -> Path:
     if not path.exists():
         raise FileNotFoundError(f"File {path} does not exist")
-
-
-def generate_full_file_path(path: Path) -> Path:
-    full_path = generate_project_path(main_settings.app.root, path)
-    should_be_exists(full_path)
-    return full_path
+    return path
 
 
 def read_text_file(file_name: str) -> str:
-    path = generate_project_path(main_settings.app.root, main_settings.app.scripts_dir, file_name)
+    path = settings.app.script_path(file_name)
     logger.info("Reading SQL file from %s", path)
     return path.read_text(encoding="utf-8")
 
@@ -33,17 +27,14 @@ def read_text_files(file_names: tuple[str, ...]) -> tuple[str, ...]:
 
 
 def read_csv_file(path_str: str, consumer: Callable[[dict[str, Any]], None]) -> int:
-    should_not_be_none(path_str, "CSV file path")
-    should_not_be_none(consumer, "CSV row consumer")
-    path = Path(path_str)
-    should_be_exists(path)
+    require_not_none(path_str, "CSV file path")
+    require_not_none(consumer, "CSV row consumer")
+    path = require_exists(Path(path_str))
     logger.info("Reading CSV file from %s", path_str)
 
     row_counter = 0
-
     with path.open(mode="r", encoding="utf-8", newline="") as file:
-        reader = csv.DictReader(file)
-        for row in reader:
+        for row in csv.DictReader(file):
             consumer(row)
             row_counter += 1
 

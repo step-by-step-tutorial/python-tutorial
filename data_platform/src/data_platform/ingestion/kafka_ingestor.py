@@ -1,16 +1,16 @@
-﻿import json
+import json
 import logging
 
 import pandas as pd
 
-from data_platform.model.endpoints import MessagingEndpoint
+from data_platform.model.endpoint_model import MessagingEndpointModel
 from data_platform.registry.connection_registry import connection_registry
 
 logger = logging.getLogger(__name__)
 
 
 class KafkaIngestor:
-    def __init__(self, endpoint: MessagingEndpoint) -> None:
+    def __init__(self, endpoint: MessagingEndpointModel) -> None:
         self._endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:

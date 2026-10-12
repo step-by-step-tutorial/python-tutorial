@@ -1,23 +1,16 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 import pytest
 
 
-@pytest.mark.parametrize("dag_file, dataset_name", [
-    ("house_dag.py", "HOUSE_DATASET"),
-    ("online_shopping_dag.py", "ONLINE_SHOPPING_DATASET"),
+@pytest.mark.parametrize("dag_file, pipeline", [
+    ("house_dag.py", 'InmemoryPipeline(dataset_registry.create_dataset("house", PipelineType.INMEMORY))'),
+    ("online_shopping_dag.py", 'InmemoryPipeline(dataset_registry.create_dataset("online_shopping", PipelineType.INMEMORY))'),
+    ("online_shopping_spark_dag.py", 'SparkPipeline(dataset_registry.create_dataset("online_shopping", PipelineType.SPARK))'),
 ])
-def test_dag_declares_its_dataset_pipeline_adapter_and_standard_chain(dag_file, dataset_name) -> None:
+def test_dag_declares_its_dataset_pipeline_adapter_and_standard_chain(dag_file, pipeline) -> None:
     source = (Path(__file__).resolve().parents[2] / "dags" / dag_file).read_text(encoding="utf-8")
-    dataset_variable = {"HOUSE_DATASET": "house_dataset", "ONLINE_SHOPPING_DATASET": "ONLINE_SHOPPING_DATASET"}[dataset_name]
-    assert f"DataPipeline({dataset_variable})" in source
+    assert "initialize_registries()" in source
+    assert pipeline in source
     assert "DagPipelineAdapter(pipeline)" in source
-    assert 'prepare >> ingest >> clean >> validate >> enrich >> expose >> analyze >> cleanup >> verify' in source
-
-
-def test_dag_factory_and_task_runner_are_removed() -> None:
-    airflow_source = Path(__file__).resolve().parents[2] / "src" / "data_platform" / "airflow"
-    assert not (airflow_source / "dag_factory.py").exists()
-    assert not (airflow_source / "task_runner.py").exists()
-
-
+    assert "prepare >> ingest >> clean >> validate >> enrich >> expose >> analyze >> cleanup >> verify" in source

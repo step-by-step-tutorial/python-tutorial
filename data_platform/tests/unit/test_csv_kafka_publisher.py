@@ -1,12 +1,12 @@
-from data_platform.model.endpoints import FileEndpoint, MessagingEndpoint
-from data_platform.service.csv_kafka_publisher import CsvKafkaPublisher
+from data_platform.model.endpoint_model import FileEndpointModel, MessagingEndpointModel
+from data_platform.repository.csv_kafka_publisher import CsvKafkaPublisher
 
 
 class TestCsvKafkaPublisher:
 
     def test_should_read_csv_rows_and_publish_them_to_kafka(self, mocker) -> None:
-        given_file_endpoint = FileEndpoint(name="house.file.csv", file_path="/tmp/house.csv")
-        given_messaging_endpoint = MessagingEndpoint(
+        given_file_endpoint = FileEndpointModel(name="house.file.csv", file_path="/tmp/house.csv")
+        given_messaging_endpoint = MessagingEndpointModel(
             connection_name="house.kafka.producer",
             channel_name="house.events.v1",
             bootstrap_servers="localhost:9092",
@@ -17,10 +17,10 @@ class TestCsvKafkaPublisher:
             consumer({"order_id": "2"})
             return 2
 
-        mock_read_csv = mocker.patch("data_platform.service.csv_kafka_publisher.read_csv_file", side_effect=_read_csv)
+        mock_read_csv = mocker.patch("data_platform.repository.csv_kafka_publisher.read_csv_file", side_effect=_read_csv)
         given_producer = mocker.Mock()
-        mock_ensure_topic = mocker.patch("data_platform.service.csv_kafka_publisher.ensure_topic_exists")
-        mocker.patch("data_platform.service.csv_kafka_publisher.connection_registry.get_item", return_value=given_producer)
+        mock_ensure_topic = mocker.patch("data_platform.repository.csv_kafka_publisher.ensure_topic_exists")
+        mocker.patch("data_platform.repository.csv_kafka_publisher.connection_registry.get_item", return_value=given_producer)
 
         actual = CsvKafkaPublisher(
             file_endpoint=given_file_endpoint,

@@ -1,7 +1,11 @@
-﻿from pyspark.sql import DataFrame, SparkSession
+import pytest
 
-from data_platform.model.endpoints import DataLakeEndpoint
-from data_platform.repository import spark_datalake_repository as system_under_test
+pytest.importorskip("pyspark")
+
+from pyspark.sql import DataFrame, SparkSession  # noqa: E402
+
+from data_platform.model.endpoint_model import DataLakeEndpointModel  # noqa: E402
+from data_platform.repository import spark_datalake_repository as system_under_test  # noqa: E402
 
 
 class TestAppendBatchToObjectStorage:
@@ -17,7 +21,7 @@ class TestAppendBatchToObjectStorage:
 
         service = system_under_test.SparkDatalakeRepository(
             session=given_session,
-            datalake_endpoint=DataLakeEndpoint(bucket_name="bucket"),
+            datalake_endpoint=DataLakeEndpointModel(bucket_name="bucket"),
         )
         mock_persisted_dataframes = mocker.patch(
             "data_platform.repository.spark_datalake_repository.persisted_dataframes",

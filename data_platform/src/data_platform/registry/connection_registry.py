@@ -1,4 +1,4 @@
-﻿import atexit
+import atexit
 from typing import Any
 
 from data_platform.registry.registry import Registry

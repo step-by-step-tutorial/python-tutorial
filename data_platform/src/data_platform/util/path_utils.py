@@ -1,9 +1,7 @@
 from datetime import datetime
-from pathlib import Path
 from uuid import UUID, uuid4
 
-from data_platform.config.data_lake_environment import StorageEnvironment
-from data_platform.model.endpoints import DataLakeEndpoint
+from data_platform.config.storage_environment import StorageEnvironment
 
 
 def join_path(*parts: object) -> str:
@@ -11,16 +9,8 @@ def join_path(*parts: object) -> str:
     return "/".join(str(part).strip("/") for part in parts if str(part).strip("/"))
 
 
-def generate_project_path(root: Path, *parts: str | Path) -> Path:
-    return root.joinpath(*parts)
-
-
 def normalize_relative_path(path: str) -> str:
     return join_path(path)
-
-
-def generate_dataset_download_url(api_url: str, dataset_name: str, file_format: str = "csv") -> str:
-    return f"{api_url.rstrip('/')}/datasets/{dataset_name.lower()}/download?format={file_format}"
 
 
 def generate_relative_path(env: StorageEnvironment, ingestion_time: datetime, dataset_name: str) -> str:
@@ -76,13 +66,5 @@ def generate_full_path(bucket_name: str, relative_path: str, scheme: str = "s3a"
     return f"{scheme}://{join_path(bucket_name, relative_path)}"
 
 
-def generate_datalake_path(endpoint: DataLakeEndpoint, relative_path: str) -> str:
-    return generate_full_path(endpoint.bucket_name, relative_path, endpoint.scheme)
-
-
 def generate_checkpoint_path(bucket_name: str, checkpoint_name: str, scheme: str = "s3a") -> str:
     return generate_full_path(bucket_name, join_path("checkpoints", checkpoint_name), scheme)
-
-
-def extract_filename(path: str) -> str:
-    return path.rstrip("/").split("/")[-1]

@@ -1,11 +1,11 @@
-﻿import json
+import json
 import logging
 from datetime import datetime
 from typing import Any
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
-from data_platform.audit.audit_event import AuditEvent
-from data_platform.model.endpoints import AuditEndpoint
+from data_platform.model.audit_event_model import AuditEventModel
+from data_platform.model.endpoint_model import AuditEndpointModel
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.path_utils import (
     generate_audit_event_key,
@@ -18,11 +18,11 @@ logger = logging.getLogger(__name__)
 
 class AuditArchiveService(AbstractAuditService):
 
-    def __init__(self, audit_endpoint: AuditEndpoint) -> None:
+    def __init__(self, audit_endpoint: AuditEndpointModel) -> None:
         self._client = connection_registry.get_item(audit_endpoint.datalake_connection_name)
         self._bucket_name = audit_endpoint.bucket_name
 
-    def save(self, event: AuditEvent) -> None:
+    def save(self, event: AuditEventModel) -> None:
         self._ensure_bucket_exists()
         object_key = generate_audit_event_key(
             event.event_time, event.pipeline_name, event.pipeline_id, event.event_id

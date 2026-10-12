@@ -1,15 +1,14 @@
-from data_platform.audit.audit_event_factory import DatasetReadAuditRequest
-from data_platform.audit.audit_event_factory import DatasetWrittenAuditRequest
-from data_platform.audit.audit_event_factory import PipelineCompletedAuditRequest
-from data_platform.audit.audit_event_factory import PipelineFailedAuditRequest
-from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
-from data_platform.audit.audit_event_factory import TaskCompletedAuditRequest
-from data_platform.audit.audit_event_factory import TaskFailedAuditRequest
-from data_platform.audit.audit_event_factory import TaskStartedAuditRequest
-from data_platform.audit.audit_event_factory import AuditEventFactory
+from data_platform.model.audit_request_model import DatasetReadAuditRequestModel
+from data_platform.model.audit_request_model import DatasetWrittenAuditRequestModel
+from data_platform.model.audit_request_model import PipelineCompletedAuditRequestModel
+from data_platform.model.audit_request_model import PipelineFailedAuditRequestModel
+from data_platform.model.audit_request_model import PipelineStartedAuditRequestModel
+from data_platform.model.audit_request_model import TaskCompletedAuditRequestModel
+from data_platform.model.audit_request_model import TaskFailedAuditRequestModel
+from data_platform.model.audit_request_model import TaskStartedAuditRequestModel
 from data_platform.audit.audit_service import AuditService
-from data_platform.model.endpoints import AuditEndpoint
-from data_platform.audit.audit_event import AuditEventType
+from data_platform.model.endpoint_model import AuditEndpointModel
+from data_platform.model.audit_event_model import AuditEventModel
 
 
 class TestAuditService:
@@ -37,7 +36,7 @@ class TestAuditService:
         )
 
         given_service = AuditService(
-            AuditEndpoint(
+            AuditEndpointModel(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",
                 datalake_connection_name="audit.datalake",
@@ -50,8 +49,8 @@ class TestAuditService:
         given_service.emit = mocker.Mock(wraps=given_service.emit)
 
         given_service.emit(
-            AuditEventFactory.create_pipeline_started_event(
-                PipelineStartedAuditRequest(
+            AuditEventModel.from_pipeline_started(
+                PipelineStartedAuditRequestModel(
                     pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                 )
@@ -59,8 +58,8 @@ class TestAuditService:
         )
         actual_task_id = "task-001"
         given_service.emit(
-            AuditEventFactory.create_task_started_event(
-                TaskStartedAuditRequest(
+            AuditEventModel.from_task_started(
+                TaskStartedAuditRequestModel(
                     pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     task_name="expose_database",
@@ -70,8 +69,8 @@ class TestAuditService:
             )
         )
         given_service.emit(
-            AuditEventFactory.create_task_completed_event(
-                TaskCompletedAuditRequest(
+            AuditEventModel.from_task_completed(
+                TaskCompletedAuditRequestModel(
                     pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     task_name="expose_database",
@@ -82,8 +81,8 @@ class TestAuditService:
             )
         )
         given_service.emit(
-            AuditEventFactory.create_task_failed_event(
-                TaskFailedAuditRequest(
+            AuditEventModel.from_task_failed(
+                TaskFailedAuditRequestModel(
                     pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     task_name="expose_database",
@@ -95,8 +94,8 @@ class TestAuditService:
             )
         )
         given_service.emit(
-            AuditEventFactory.create_pipeline_completed_event(
-                PipelineCompletedAuditRequest(
+            AuditEventModel.from_pipeline_completed(
+                PipelineCompletedAuditRequestModel(
                     pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     duration_ms=0,
@@ -104,8 +103,8 @@ class TestAuditService:
             )
         )
         given_service.emit(
-            AuditEventFactory.create_pipeline_failed_event(
-                PipelineFailedAuditRequest(
+            AuditEventModel.from_pipeline_failed(
+                PipelineFailedAuditRequestModel(
                     pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                     duration_ms=0,
@@ -114,8 +113,8 @@ class TestAuditService:
             )
         )
         given_service.emit(
-            AuditEventFactory.create_dataset_read_event(
-                DatasetReadAuditRequest(
+            AuditEventModel.from_dataset_read(
+                DatasetReadAuditRequestModel(
                     source_system="datalake",
                     source_uri="s3://bucket/path",
                     row_count=10,
@@ -123,8 +122,8 @@ class TestAuditService:
             )
         )
         given_service.emit(
-            AuditEventFactory.create_dataset_written_event(
-                DatasetWrittenAuditRequest(
+            AuditEventModel.from_dataset_written(
+                DatasetWrittenAuditRequestModel(
                     source_system="datalake",
                     source_uri="s3://bucket/path",
                     destination_system="database",
@@ -159,7 +158,7 @@ class TestAuditService:
         mocker.patch("data_platform.audit.audit_service.AuditArchiveService", return_value=given_archive_service)
 
         given_service = AuditService(
-            AuditEndpoint(
+            AuditEndpointModel(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",
                 datalake_connection_name="audit.datalake",
@@ -171,8 +170,8 @@ class TestAuditService:
         )
         given_service.emit = mocker.Mock(wraps=given_service.emit)
         given_service.emit(
-            AuditEventFactory.create_pipeline_started_event(
-                PipelineStartedAuditRequest(
+            AuditEventModel.from_pipeline_started(
+                PipelineStartedAuditRequestModel(
                     pipeline_name="house_pipeline",
                     pipeline_id="pipeline-001",
                 )
@@ -183,8 +182,8 @@ class TestAuditService:
             raise RuntimeError("boom")
         except RuntimeError as error:
             given_service.emit(
-                AuditEventFactory.create_task_failed_event(
-                    TaskFailedAuditRequest(
+                AuditEventModel.from_task_failed(
+                    TaskFailedAuditRequestModel(
                         pipeline_name="house_pipeline",
                         pipeline_id="pipeline-001",
                         task_name="expose_database",
@@ -196,8 +195,8 @@ class TestAuditService:
                 )
             )
             given_service.emit(
-                AuditEventFactory.create_pipeline_failed_event(
-                    PipelineFailedAuditRequest(
+                AuditEventModel.from_pipeline_failed(
+                    PipelineFailedAuditRequestModel(
                         pipeline_name="house_pipeline",
                         pipeline_id="pipeline-001",
                         duration_ms=0,

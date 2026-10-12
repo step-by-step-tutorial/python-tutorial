@@ -1,29 +1,26 @@
-﻿import logging
+import logging
 from functools import partial
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
-from data_platform.audit.audit_event import AuditEvent
-from data_platform.config.main_settings import settings as main_settings
-from data_platform.model.endpoints import AuditEndpoint
+from data_platform.model.audit_event_model import AuditEventModel
+from data_platform.model.endpoint_model import AuditEndpointModel
 from data_platform.registry.connection_registry import connection_registry
-from data_platform.util.kafka_admin import ensure_topic_exists
-from data_platform.util.kafka_utils import handle_kafka_response
+from data_platform.connector.kafka_connector import ensure_topic_exists
+from data_platform.connector.kafka_connector import handle_delivery_report
 
 logger = logging.getLogger(__name__)
 
 
 class AuditMessagingService(AbstractAuditService):
 
-    def __init__(self, audit_endpoint: AuditEndpoint) -> None:
+    def __init__(self, audit_endpoint: AuditEndpointModel) -> None:
         self._connection_name = audit_endpoint.messaging_connection_name
         self._channel_name = audit_endpoint.channel_name
+        self._bootstrap_servers = audit_endpoint.bootstrap_servers
         self._producer = connection_registry.get_item(self._connection_name)
 
-    def save(self, event: AuditEvent) -> None:
-        ensure_topic_exists(
-            main_settings.messaging[self._connection_name].bootstrap_servers,
-            self._channel_name,
-        )
+    def save(self, event: AuditEventModel) -> None:
+        ensure_topic_exists(self._bootstrap_servers, self._channel_name)
         logger.info(
             "Publishing audit event: event_id=%s type=%s status=%s topic=%s",
             event.event_id,
@@ -41,7 +38,7 @@ class AuditMessagingService(AbstractAuditService):
                     "event_type": event.event_type.value,
                     "event_version": str(event.event_version)
                 },
-                on_delivery=partial(handle_kafka_response, event_id=str(event.event_id))
+                on_delivery=partial(handle_delivery_report, event_id=str(event.event_id))
             )
             self._producer.poll(0)
         except Exception as error:

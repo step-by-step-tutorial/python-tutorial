@@ -7,15 +7,20 @@ from urllib.request import Request, build_opener
 
 from pyspark.sql import DataFrame, SparkSession
 
-from data_platform.model.dataset_ingestor import DatasetIngestor
-from data_platform.model.endpoints import RestApiEndpoint
-from data_platform.util.string_utils import should_not_be_none
+from data_platform.ingestion.dataset_ingestor import DatasetIngestor
+from data_platform.model.endpoint_model import RestApiEndpointModel
+from data_platform.util.validation_utils import require_not_none
 
 logger = logging.getLogger(__name__)
 
 
 class SparkRestApiCsvIngestor(DatasetIngestor):
-    def __init__(self, endpoint: RestApiEndpoint, session: SparkSession | Callable[[], SparkSession], schema) -> None:
+    def __init__(
+            self,
+            endpoint: RestApiEndpointModel,
+            session: SparkSession | Callable[[], SparkSession],
+            schema,
+    ) -> None:
         self._endpoint = endpoint
         self._session = session
         self._schema = schema
@@ -29,7 +34,7 @@ class SparkRestApiCsvIngestor(DatasetIngestor):
         return self._session
 
     def ingest(self) -> DataFrame:
-        should_not_be_none(self._schema, "schema")
+        require_not_none(self._schema, "schema")
         logger.info("Downloading CSV resource into Spark: url=%s", self._endpoint.url)
         request = Request(self._endpoint.url, method=self._endpoint.method, headers=self._endpoint.headers)
         with build_opener().open(request) as response:

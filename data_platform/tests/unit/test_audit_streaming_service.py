@@ -1,15 +1,15 @@
-from data_platform.audit.audit_event_factory import AuditEventFactory
-from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
+from data_platform.model.audit_request_model import PipelineStartedAuditRequestModel
 from data_platform.audit.audit_messaging_service import AuditMessagingService
-from data_platform.model.endpoints import AuditEndpoint
+from data_platform.model.endpoint_model import AuditEndpointModel
+from data_platform.model.audit_event_model import AuditEventModel
 
 
 class TestAuditMessagingService:
 
     def test_should_publish_audit_event_to_messaging_channel(self, mocker) -> None:
         # Given
-        given_event = AuditEventFactory.create_pipeline_started_event(
-            PipelineStartedAuditRequest(
+        given_event = AuditEventModel.from_pipeline_started(
+            PipelineStartedAuditRequestModel(
                 pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
             )
@@ -22,7 +22,7 @@ class TestAuditMessagingService:
 
         # When
         actual = AuditMessagingService(
-            AuditEndpoint(
+            AuditEndpointModel(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",
                 datalake_connection_name="audit.datalake",
@@ -42,8 +42,8 @@ class TestAuditMessagingService:
 
     def test_should_propagate_publish_errors(self, mocker) -> None:
         # Given
-        given_event = AuditEventFactory.create_pipeline_started_event(
-            PipelineStartedAuditRequest(
+        given_event = AuditEventModel.from_pipeline_started(
+            PipelineStartedAuditRequestModel(
                 pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
             )
@@ -55,7 +55,7 @@ class TestAuditMessagingService:
             return_value=given_producer,
         )
         service = AuditMessagingService(
-            AuditEndpoint(
+            AuditEndpointModel(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",
                 datalake_connection_name="audit.datalake",
@@ -81,7 +81,7 @@ class TestAuditMessagingService:
         )
 
         service = AuditMessagingService(
-            AuditEndpoint(
+            AuditEndpointModel(
                 database_connection_name="audit.database",
                 messaging_connection_name="audit.kafka.producer",
                 datalake_connection_name="audit.datalake",

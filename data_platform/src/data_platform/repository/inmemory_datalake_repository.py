@@ -1,9 +1,9 @@
-﻿import logging
+import logging
 from io import BytesIO
 
 import pandas as pd
 
-from data_platform.model.endpoints import DataLakeEndpoint
+from data_platform.model.endpoint_model import DataLakeEndpointModel
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.repository.storage_repository import StorageRepository
 from data_platform.util.path_utils import generate_data_object_key, normalize_relative_path
@@ -11,8 +11,8 @@ from data_platform.util.path_utils import generate_data_object_key, normalize_re
 logger = logging.getLogger(__name__)
 
 
-class DataLakeRepository(StorageRepository):
-    def __init__(self, endpoint: DataLakeEndpoint) -> None:
+class InmemoryDatalakeRepository(StorageRepository):
+    def __init__(self, endpoint: DataLakeEndpointModel) -> None:
         self._endpoint = endpoint
         self._connection_name = endpoint.connection_name
         self._bucket_name = endpoint.bucket_name

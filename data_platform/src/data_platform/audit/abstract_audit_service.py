@@ -1,10 +1,10 @@
-﻿from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
 
-from data_platform.audit.audit_event import AuditEvent
+from data_platform.model.audit_event_model import AuditEventModel
 
 
 class AbstractAuditService(ABC):
 
     @abstractmethod
-    def save(self, event: AuditEvent) -> None:
+    def save(self, event: AuditEventModel) -> None:
         raise NotImplementedError

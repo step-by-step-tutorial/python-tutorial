@@ -1,16 +1,16 @@
-﻿import json
+import json
 import logging
 from urllib.request import Request, build_opener
 
 import pandas as pd
 
-from data_platform.model.endpoints import RestApiEndpoint
+from data_platform.model.endpoint_model import RestApiEndpointModel
 
 logger = logging.getLogger(__name__)
 
 
 class RestApiIngestor:
-    def __init__(self, endpoint: RestApiEndpoint) -> None:
+    def __init__(self, endpoint: RestApiEndpointModel) -> None:
         self._endpoint = endpoint
 
     def ingest(self) -> pd.DataFrame:

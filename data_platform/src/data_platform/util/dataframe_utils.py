@@ -1,9 +1,10 @@
-﻿from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from typing import Any
 
-import pandas as pd
-import pyspark
+
+def find_missing_columns(dataframe: Any, columns: Iterable[str]) -> tuple[str, ...]:
+    return tuple(column for column in columns if column not in dataframe.columns)
 
 
 def row_to_dict(row: Any) -> dict[str, Any]:
@@ -12,18 +13,13 @@ def row_to_dict(row: Any) -> dict[str, Any]:
     return dict(row)
 
 
-def dataframe_to_list(dataframe: pyspark.sql.DataFrame) -> list[tuple[Any, ...]]:
+def dataframe_to_list(dataframe: Any) -> list[tuple[Any, ...]]:
     column_names = list(dataframe.columns)
     rows = []
     for row in dataframe.collect():
         row_dict = row_to_dict(row)
-        row_values = tuple(row_dict.get(column) for column in column_names)
-        rows.append(row_values)
+        rows.append(tuple(row_dict.get(column) for column in column_names))
     return rows
-
-
-def empty_compatible_dataframe(dataframe) -> Any:
-    return dataframe.limit(0) if isinstance(dataframe, pyspark.sql.DataFrame) else pd.DataFrame()
 
 
 @contextmanager

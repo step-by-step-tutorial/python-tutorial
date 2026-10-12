@@ -1,13 +1,13 @@
-from data_platform.audit.audit_event_factory import AuditEventFactory
-from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
+from data_platform.model.audit_request_model import PipelineStartedAuditRequestModel
 from data_platform.audit.audit_log_service import AuditLogService
+from data_platform.model.audit_event_model import AuditEventModel
 
 
 class TestAuditLogService:
 
     def test_should_log_audit_event_to_console(self, mocker) -> None:
-        given_event = AuditEventFactory.create_pipeline_started_event(
-            PipelineStartedAuditRequest(
+        given_event = AuditEventModel.from_pipeline_started(
+            PipelineStartedAuditRequestModel(
                 pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
             )
