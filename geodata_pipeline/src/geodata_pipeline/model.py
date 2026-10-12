@@ -1,29 +1,12 @@
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from geodata_pipeline.util.file_utils import read_json, resolve_path
 from geodata_pipeline.util.geometry_utils import wkb_point_to_lat_lon
 from geodata_pipeline.util.text_utils import normalize
 
-# Column layout of the GeoNames dump files, see https://download.geonames.org/export/dump/readme.txt
-GEONAMES_COLUMN_COUNT = 19
-POSTAL_CODES_MIN_COLUMN_COUNT = 11
-
-POPULATED_PLACE_FEATURE_CLASS = "P"
-
-# Only the Overture address columns the pipeline reads, so the rest of the file is never decoded.
-OVERTURE_ADDRESS_COLUMNS = (
-    "id",
-    "geometry",
-    "country",
-    "postcode",
-    "street",
-    "number",
-    "unit",
-    "postal_city",
-    "address_levels",
-)
+StateKey = tuple[str, str]
 
 
 @dataclass(frozen=True)
@@ -49,7 +32,7 @@ class TargetModel:
         )
 
     @property
-    def state_key(self) -> tuple[str, str]:
+    def state_key(self) -> StateKey:
         return self.country_code, self.state_code
 
     def is_state(self, value: str) -> bool:
@@ -80,13 +63,16 @@ class PipelineConfigModel:
             targets=tuple(TargetModel.from_dict(item, base_dir, output_dir) for item in raw["targets"]),
         )
 
-    @property
-    def source_files(self) -> tuple[Path, ...]:
-        return self.geonames_file, self.postal_codes_file
+    def missing_source_files(self) -> list[Path]:
+        return [path for path in (self.geonames_file, self.postal_codes_file) if not path.is_file()]
 
 
 @dataclass(frozen=True)
 class GeonameModel:
+    """One row of the GeoNames allCountries dump, see https://download.geonames.org/export/dump/readme.txt"""
+    COLUMN_COUNT: ClassVar[int] = 19
+    POPULATED_PLACE_FEATURE_CLASS: ClassVar[str] = "P"
+
     geoname_id: str
     name: str
     ascii_name: str
@@ -95,6 +81,10 @@ class GeonameModel:
     state_code: str
     population: int
     timezone: str
+
+    @classmethod
+    def is_valid_row(cls, values: list[str]) -> bool:
+        return len(values) == cls.COLUMN_COUNT
 
     @classmethod
     def from_values(cls, values: list[str]) -> "GeonameModel":
@@ -110,16 +100,19 @@ class GeonameModel:
         )
 
     @property
-    def state_key(self) -> tuple[str, str]:
+    def state_key(self) -> StateKey:
         return self.country_code, self.state_code
 
     @property
     def is_populated_place(self) -> bool:
-        return self.feature_class == POPULATED_PLACE_FEATURE_CLASS
+        return self.feature_class == self.POPULATED_PLACE_FEATURE_CLASS
 
 
 @dataclass(frozen=True)
 class PostalCodeModel:
+    """One row of the GeoNames postal-code dump."""
+    MIN_COLUMN_COUNT: ClassVar[int] = 11
+
     country_code: str
     postal_code: str
     city: str
@@ -127,6 +120,10 @@ class PostalCodeModel:
     state_code: str
     latitude: str
     longitude: str
+
+    @classmethod
+    def is_valid_row(cls, values: list[str]) -> bool:
+        return len(values) >= cls.MIN_COLUMN_COUNT
 
     @classmethod
     def from_values(cls, values: list[str]) -> "PostalCodeModel":
@@ -141,13 +138,26 @@ class PostalCodeModel:
         )
 
     @property
-    def state_key(self) -> tuple[str, str]:
+    def state_key(self) -> StateKey:
         return self.country_code, self.state_code
 
 
 @dataclass(frozen=True)
 class OvertureAddressModel:
     """One row of an Overture Maps address Parquet file."""
+    # Only the columns the pipeline reads, so the rest of the file is never decoded.
+    COLUMNS: ClassVar[tuple[str, ...]] = (
+        "id",
+        "geometry",
+        "country",
+        "postcode",
+        "street",
+        "number",
+        "unit",
+        "postal_city",
+        "address_levels",
+    )
+
     overture_id: str
     country: str
     postcode: str
@@ -158,6 +168,11 @@ class OvertureAddressModel:
     address_levels: tuple[str, ...]
     latitude: float | None
     longitude: float | None
+
+    @classmethod
+    def columns_in(cls, column_names: list[str]) -> list[str]:
+        """Return the address columns a file actually has."""
+        return [column for column in cls.COLUMNS if column in column_names]
 
     @classmethod
     def from_row(cls, row: dict[str, Any]) -> "OvertureAddressModel":
@@ -177,8 +192,13 @@ class OvertureAddressModel:
             longitude=longitude,
         )
 
-    def is_in_state(self, target: TargetModel) -> bool:
-        return any(target.is_state(level) for level in self.address_levels)
+    @property
+    def most_specific_level(self) -> str | None:
+        return self.address_levels[-1] if self.address_levels else None
+
+    def is_in(self, target: TargetModel) -> bool:
+        """Whether the address is in the target's country and state."""
+        return self.country == target.country_code and any(target.is_state(level) for level in self.address_levels)
 
 
 @dataclass(frozen=True)
@@ -221,7 +241,3 @@ class AddressModel:
             population=geoname.population if geoname else None,
             overture_id=address.overture_id,
         )
-
-    @classmethod
-    def column_names(cls) -> list[str]:
-        return [field.name for field in fields(cls)]

@@ -7,6 +7,7 @@ from geodata_pipeline.model import (
     GeonameModel,
     OvertureAddressModel,
     PipelineConfigModel,
+    PostalCodeModel,
     TargetModel,
 )
 
@@ -70,17 +71,24 @@ def test_overture_address_from_row_reads_levels_and_coordinates() -> None:
     assert (address.latitude, address.longitude) == (34.05, -118.24)
 
 
-def test_overture_address_is_in_state() -> None:
+def test_overture_address_is_in_target_country_and_state() -> None:
     target = make_target()
 
-    assert OvertureAddressModel.from_row({"address_levels": [{"value": "CA"}]}).is_in_state(target)
-    assert not OvertureAddressModel.from_row({"address_levels": [{"value": "NV"}]}).is_in_state(target)
-    assert not OvertureAddressModel.from_row({}).is_in_state(target)
+    assert OvertureAddressModel.from_row({"country": "US", "address_levels": [{"value": "CA"}]}).is_in(target)
+    assert not OvertureAddressModel.from_row({"country": "MX", "address_levels": [{"value": "CA"}]}).is_in(target)
+    assert not OvertureAddressModel.from_row({"country": "US", "address_levels": [{"value": "NV"}]}).is_in(target)
+    assert not OvertureAddressModel.from_row({"country": "US"}).is_in(target)
 
 
-def test_address_record_column_names_follow_field_order() -> None:
-    assert AddressModel.column_names()[:3] == ["country", "country_code", "state"]
-    assert AddressModel.column_names()[-1] == "overture_id"
+def test_overture_address_most_specific_level() -> None:
+    levels = [{"value": "CA"}, {"value": "Pasadena"}]
+
+    assert OvertureAddressModel.from_row({"address_levels": levels}).most_specific_level == "Pasadena"
+    assert OvertureAddressModel.from_row({}).most_specific_level is None
+
+
+def test_overture_address_columns_in_keeps_known_columns_in_model_order() -> None:
+    assert OvertureAddressModel.columns_in(["extra", "country", "id"]) == ["id", "country"]
 
 
 def test_address_record_from_overture_address_without_geoname() -> None:
@@ -103,3 +111,18 @@ def test_geoname_record_from_values() -> None:
     assert record.population == 0
     assert record.is_populated_place
     assert record.state_key == ("US", "CA")
+
+
+def test_geoname_and_postal_code_is_valid_row() -> None:
+    assert GeonameModel.is_valid_row([""] * 19)
+    assert not GeonameModel.is_valid_row([""] * 18)
+    assert PostalCodeModel.is_valid_row([""] * 12)
+    assert not PostalCodeModel.is_valid_row([""] * 10)
+
+
+def test_missing_source_files(project_dir: Path) -> None:
+    config = PipelineConfigModel.from_file(project_dir / "config" / "targets.json")
+    assert config.missing_source_files() == []
+
+    config.geonames_file.unlink()
+    assert config.missing_source_files() == [config.geonames_file]

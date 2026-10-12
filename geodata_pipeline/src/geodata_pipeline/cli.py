@@ -27,7 +27,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = create_parser().parse_args(argv)
 
     config = PipelineConfigModel.from_file(args.config)
-    missing_files = [path for path in config.source_files if not path.is_file()]
+    missing_files = config.missing_source_files()
 
     if missing_files:
         logger.error("GeoNames files not found, see README.md for downloads: %s", [str(path) for path in missing_files])

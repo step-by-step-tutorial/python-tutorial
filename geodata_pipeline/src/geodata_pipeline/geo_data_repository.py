@@ -2,19 +2,12 @@ import logging
 from collections.abc import Iterable
 from pathlib import Path
 
-from geodata_pipeline.model import (
-    GEONAMES_COLUMN_COUNT,
-    POSTAL_CODES_MIN_COLUMN_COUNT,
-    GeonameModel,
-    PostalCodeModel,
-    TargetModel,
-)
+from geodata_pipeline.model import GeonameModel, PostalCodeModel, StateKey, TargetModel
 from geodata_pipeline.util.file_utils import read_tsv
 from geodata_pipeline.util.text_utils import normalize
 
 logger = logging.getLogger(__name__)
 
-StateKey = tuple[str, str]
 PlacesByName = dict[str, GeonameModel]
 PostalCodesByCode = dict[str, PostalCodeModel]
 
@@ -39,7 +32,7 @@ class GeoDataRepository:
             postal_codes=cls._read_postal_codes(postal_codes_file, states),
         )
 
-    def find_geoname(self, target: TargetModel, name: str) -> GeonameModel | None:
+    def find_geoname(self, target: TargetModel, name: str | None) -> GeonameModel | None:
         return self._places.get(target.state_key, {}).get(normalize(name))
 
     def find_postal_code(self, target: TargetModel, postal_code: str) -> PostalCodeModel | None:
@@ -52,7 +45,7 @@ class GeoDataRepository:
         logger.info("Loading GeoNames data from %s", geonames_file)
 
         for values in read_tsv(geonames_file):
-            if len(values) != GEONAMES_COLUMN_COUNT:
+            if not GeonameModel.is_valid_row(values):
                 continue
 
             record = GeonameModel.from_values(values)
@@ -79,7 +72,7 @@ class GeoDataRepository:
         logger.info("Loading postal-code data from %s", postal_codes_file)
 
         for values in read_tsv(postal_codes_file):
-            if len(values) < POSTAL_CODES_MIN_COLUMN_COUNT:
+            if not PostalCodeModel.is_valid_row(values):
                 continue
 
             record = PostalCodeModel.from_values(values)
