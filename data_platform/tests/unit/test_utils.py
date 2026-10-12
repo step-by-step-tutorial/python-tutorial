@@ -1,17 +1,19 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 import pandas as pd
 import pytest
 
-from data_platform.domain.online_shopping.attribute import attribute
+from data_platform.domain.online_shopping.online_shopping_attribute_model import OnlineShoppingAttributeModel
 from data_platform.converter.value_converter import (
     convert_to_integer,
     convert_to_float,
     convert_to_optional_float,
     normalize_optional_text,
 )
-from data_platform.validators.validator_impl import RequiredColumnsValidator
+from data_platform.validator.inmemory_validator import RequiredColumnsValidator
 from data_platform.util import file_utils
+
+attribute = OnlineShoppingAttributeModel()
 
 
 class TestFileUtils:

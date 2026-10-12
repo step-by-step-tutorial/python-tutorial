@@ -3,16 +3,15 @@ import logging
 import sys
 from collections.abc import Sequence
 
-from data_platform.pipeline.data_pipeline import DataPipeline
-from data_platform.pipeline.spark_pipeline import SparkPipeline
+from data_platform.config.pipeline_type import PipelineType
+from data_platform.pipeline.inmemory_pipeline import InmemoryPipeline
+from data_platform.pipeline.pipeline import Pipeline
 from data_platform.registry.bootstrap import initialize_registries
 from data_platform.registry.dataset_registry import dataset_registry
 
 logger = logging.getLogger(__name__)
 
-PIPELINE_TYPES = ("inmemory", "spark")
-
-initialize_registries()
+PIPELINE_TYPES = tuple(PipelineType)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -22,34 +21,22 @@ def create_parser() -> argparse.ArgumentParser:
         "pipeline_type",
         nargs="?",
         choices=PIPELINE_TYPES,
+        type=PipelineType,
         help="Pipeline type: inmemory or spark.",
     )
     return parser
 
 
-def get_spark_dataset(dataset_name: str):
-    from data_platform.domain.house.spark_dataset import spark_house_dataset
-    from data_platform.domain.online_shopping.spark_dataset import spark_online_shopping_dataset
-
-    datasets = {
-        spark_house_dataset.name: spark_house_dataset,
-        spark_online_shopping_dataset.name: spark_online_shopping_dataset,
-    }
-    try:
-        return datasets[dataset_name.lower()]
-    except KeyError as error:
-        raise ValueError(f"Unsupported Spark dataset: {dataset_name}") from error
+def create_pipeline(dataset_name: str, pipeline_type: PipelineType) -> Pipeline:
+    dataset = dataset_registry.create_dataset(dataset_name, pipeline_type)
+    if pipeline_type == PipelineType.SPARK:
+        from data_platform.pipeline.spark_pipeline import SparkPipeline
+        return SparkPipeline(dataset)
+    return InmemoryPipeline(dataset)
 
 
-def get_dataset(dataset_name: str, pipeline_type: str):
-    if pipeline_type == "inmemory":
-        return dataset_registry.get_item(dataset_name.lower())
-    return get_spark_dataset(dataset_name)
-
-
-def run_pipeline(dataset_name: str, pipeline_type: str) -> None:
-    dataset = get_dataset(dataset_name, pipeline_type)
-    pipeline = DataPipeline(dataset) if pipeline_type == "inmemory" else SparkPipeline(dataset)
+def run_pipeline(dataset_name: str, pipeline_type: PipelineType) -> None:
+    pipeline = create_pipeline(dataset_name, pipeline_type)
     logger.info("Running pipeline: dataset=%s type=%s", dataset_name, pipeline_type)
     pipeline.run()
 
@@ -73,7 +60,7 @@ def select_dataset() -> str | None:
         print(f"Select a number between 1 and {len(names)}, or 0 to exit.")
 
 
-def select_pipeline_type() -> str | None:
+def select_pipeline_type() -> PipelineType | None:
     print("Available pipeline types:")
     for index, pipeline_type in enumerate(PIPELINE_TYPES, start=1):
         print(f"  {index}. {pipeline_type}")
@@ -95,6 +82,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     args = create_parser().parse_args(argv)
+    initialize_registries()
 
     if (args.dataset is None) != (args.pipeline_type is None):
         raise SystemExit("dataset and pipeline_type must be provided together")

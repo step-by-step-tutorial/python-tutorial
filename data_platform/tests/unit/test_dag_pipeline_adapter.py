@@ -1,4 +1,4 @@
-﻿from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
+from data_platform.pipeline.dag_pipeline_adapter import DagPipelineAdapter
 
 
 def test_adapter_delegates_explicit_dag_stages_through_the_pipeline_wrapper(mocker) -> None:

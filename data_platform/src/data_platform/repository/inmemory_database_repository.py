@@ -2,14 +2,14 @@ from typing import Any
 
 from pandas import DataFrame
 
-from data_platform.model.endpoints import DatabaseEndpoint
+from data_platform.model.endpoint_model import DatabaseEndpointModel
 from data_platform.registry.connection_registry import connection_registry
 from data_platform.util.collection_utils import to_values
 from data_platform.util.database_utils import execute_query_files, execute_select_query
 
 
 class InmemoryDatabaseRepository:
-    def __init__(self, endpoint: DatabaseEndpoint) -> None:
+    def __init__(self, endpoint: DatabaseEndpointModel) -> None:
         self._endpoint = endpoint
         self._connection_name = endpoint.connection_name
 

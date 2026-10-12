@@ -1,15 +1,14 @@
 import pandas as pd
 
-from data_platform.model.endpoints import WarehouseEndpoint
+from data_platform.model.endpoint_model import WarehouseEndpointModel
 from data_platform.repository.inmemory_warehouse_repository import InmemoryWarehouseRepository
 
 
-def build_endpoint() -> WarehouseEndpoint:
-    return WarehouseEndpoint(
+def build_endpoint() -> WarehouseEndpointModel:
+    return WarehouseEndpointModel(
         connection_name="house.warehouse",
         schema="warehouse",
         table_name="example",
-        full_table_name="warehouse.example",
         create_sql_files={},
         truncate_sql_files={"truncate": "truncate.sql"},
         write_sql_files={},

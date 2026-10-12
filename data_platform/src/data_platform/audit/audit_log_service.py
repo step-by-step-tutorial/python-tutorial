@@ -1,14 +1,14 @@
-﻿import logging
+import logging
 
 from data_platform.audit.abstract_audit_service import AbstractAuditService
-from data_platform.audit.audit_event import AuditEvent
+from data_platform.model.audit_event_model import AuditEventModel
 
 logger = logging.getLogger(__name__)
 
 
 class AuditLogService(AbstractAuditService):
 
-    def save(self, event: AuditEvent) -> None:
+    def save(self, event: AuditEventModel) -> None:
         logger.info(
             "Audit event: %s",
             {

@@ -1,13 +1,16 @@
-from data_platform.model.endpoints import WarehouseEndpoint
-from data_platform.repository.spark_warehouse_repository import SparkWarehouseRepository
+import pytest
+
+pytest.importorskip("pyspark")
+
+from data_platform.model.endpoint_model import WarehouseEndpointModel  # noqa: E402
+from data_platform.repository.spark_warehouse_repository import SparkWarehouseRepository  # noqa: E402
 
 
-def build_endpoint() -> WarehouseEndpoint:
-    return WarehouseEndpoint(
+def build_endpoint() -> WarehouseEndpointModel:
+    return WarehouseEndpointModel(
         connection_name="house.warehouse",
         schema="warehouse",
         table_name="example",
-        full_table_name="warehouse.example",
         create_sql_files={},
         truncate_sql_files={"truncate": "truncate.sql"},
         write_sql_files={},

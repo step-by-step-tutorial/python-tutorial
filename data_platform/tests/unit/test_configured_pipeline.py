@@ -1,18 +1,18 @@
-﻿from dataclasses import replace
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import pandas as pd
 
-from data_platform.model.endpoints import AuditEndpoint
-from data_platform.model.dataset import Dataset
-from data_platform.model.pipeline_flow import PipelineFlow
-from data_platform.validators.assessment import Assessment
-from data_platform.validators.violation import Violation
-from data_platform.cleaners.cleaner_impl import CleanerChain
-from data_platform.enrichers.enricher_impl import EnricherChain
-from data_platform.validators.validator_chain import ValidatorChain
-from data_platform.pipeline.data_pipeline import DataPipeline
-from data_platform.analyzers.report import Report
+from data_platform.model.endpoint_model import AuditEndpointModel
+from data_platform.model.dataset_model import DatasetModel
+from data_platform.model.pipeline_flow_model import PipelineFlowModel
+from data_platform.model.assessment_model import AssessmentModel
+from data_platform.model.violation_model import ViolationModel
+from data_platform.cleaner.cleaner_chain import CleanerChain
+from data_platform.enricher.enricher_chain import EnricherChain
+from data_platform.validator.validator_chain import ValidatorChain
+from data_platform.pipeline.inmemory_pipeline import InmemoryPipeline
+from data_platform.model.report_model import ReportModel
 
 
 def _factory(service):
@@ -32,10 +32,10 @@ class _Transformer:
 
 class _Validator:
     def validate(self, frame):
-        return Assessment(
+        return AssessmentModel(
             accepted=frame.iloc[1:],
             rejected=frame.iloc[:1],
-            errors=(Violation("first_row", "The first row is invalid"),),
+            errors=(ViolationModel("first_row", "The first row is invalid"),),
         )
 
 
@@ -75,14 +75,14 @@ class _Analyzer:
     def __init__(self, consumer, lake): self.name = "analyze"; self.consumer = consumer; self.storage_service = lake; self.storage_service_name = "storage"
     def analyze(self, value):
         self.consumer.analyze(value)
-        return (Report("summary", pd.DataFrame({"value": [1]})),)
+        return (ReportModel("summary", pd.DataFrame({"value": [1]})),)
 
 
-def _dataset(lake, exposer, analyzer) -> Dataset:
-    return Dataset(
+def _dataset(lake, exposer, analyzer) -> DatasetModel:
+    return DatasetModel(
         name="example",
-        audit=AuditEndpoint("audit.database", "audit.kafka", "audit.datalake"),
-        flow=PipelineFlow(
+        audit=AuditEndpointModel("audit.database", "audit.kafka", "audit.datalake"),
+        flow=PipelineFlowModel(
             repository=lake,
             ingestors=(_ingestor_stage("first", "one", lake), _ingestor_stage("second", "two", lake)),
             cleaners=CleanerChain((
@@ -103,7 +103,7 @@ def test_configured_pipeline_executes_explicit_stages_without_merging_ingestors(
     lake, exposer, analyzer = _Lake(), _Consumer(), _Consumer()
     audit = mocker.Mock()
     mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=audit)
-    pipeline = DataPipeline(_dataset(lake, exposer, analyzer))
+    pipeline = InmemoryPipeline(_dataset(lake, exposer, analyzer))
     pipeline.ingestion_time = datetime(2026, 1, 2, tzinfo=UTC)
     pipeline.run()
 
@@ -122,7 +122,7 @@ def test_configured_pipeline_executes_explicit_stages_without_merging_ingestors(
 def test_pipeline_can_complete_when_created_in_a_later_airflow_task(mocker) -> None:
     audit = mocker.Mock()
     mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=audit)
-    pipeline = DataPipeline(_dataset(_Lake(), _Consumer(), _Consumer()))
+    pipeline = InmemoryPipeline(_dataset(_Lake(), _Consumer(), _Consumer()))
 
     pipeline.complete_pipeline()
 
@@ -135,7 +135,7 @@ def test_configured_pipeline_persists_invalid_rows_and_logs_validation_errors(mo
     mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=mocker.Mock())
     dataset = _dataset(lake, exposer, analyzer)
     dataset = replace(dataset, flow=replace(dataset.flow, validators=ValidatorChain((_Validator(),))))
-    pipeline = DataPipeline(dataset)
+    pipeline = InmemoryPipeline(dataset)
     lake.data["raw/input"] = pd.DataFrame({"value": ["invalid", "valid"]})
 
     validated_path = pipeline.validate("raw/input")

@@ -1,8 +1,8 @@
-from data_platform.model.endpoints import Endpoint
+from data_platform.model.endpoint_model import EndpointModel
 from data_platform.registry.registry import Registry
 
 
-class EndpointRegistry(Registry[Endpoint]):
+class EndpointRegistry(Registry[EndpointModel]):
     def __init__(self) -> None:
         super().__init__("endpoint")
 

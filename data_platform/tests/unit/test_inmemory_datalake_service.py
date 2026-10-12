@@ -1,5 +1,5 @@
 from data_platform.repository import inmemory_datalake_repository as system_under_test
-from data_platform.model.endpoints import DataLakeEndpoint
+from data_platform.model.endpoint_model import DataLakeEndpointModel
 
 
 def create_connection_context(mocker):
@@ -17,8 +17,8 @@ class TestUploadParquet:
         # Given
         given_dataframe = mocker.Mock()
         given_client, mock_create_connection = create_connection_context(mocker)
-        repository = system_under_test.DataLakeRepository(
-            DataLakeEndpoint(connection_name="house.datalake", bucket_name="app_datalake")
+        repository = system_under_test.InmemoryDatalakeRepository(
+            DataLakeEndpointModel(connection_name="house.datalake", bucket_name="app_datalake")
         )
         given_client.put_object.return_value = None
 

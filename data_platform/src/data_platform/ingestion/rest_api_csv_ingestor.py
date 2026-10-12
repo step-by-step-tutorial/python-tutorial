@@ -1,17 +1,17 @@
-﻿import logging
+import logging
 from io import StringIO
 from urllib.request import Request, build_opener
 
 import pandas as pd
 
-from data_platform.model.dataset_ingestor import DatasetIngestor
-from data_platform.model.endpoints import RestApiEndpoint
+from data_platform.ingestion.dataset_ingestor import DatasetIngestor
+from data_platform.model.endpoint_model import RestApiEndpointModel
 
 logger = logging.getLogger(__name__)
 
 
 class RestApiCsvIngestor(DatasetIngestor):
-    def __init__(self, endpoint: RestApiEndpoint) -> None:
+    def __init__(self, endpoint: RestApiEndpointModel) -> None:
         self._endpoint = endpoint
         self.name = "api"
 

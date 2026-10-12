@@ -1,4 +1,4 @@
-﻿from data_platform.registry.connection_registry import connection_registry
+from data_platform.registry.connection_registry import connection_registry
 
 
 class TestConnectionRegistry:

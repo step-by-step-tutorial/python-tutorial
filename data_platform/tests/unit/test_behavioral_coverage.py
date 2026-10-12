@@ -3,13 +3,11 @@ from datetime import date
 import pandas as pd
 import pytest
 
-from data_platform.analyzers.aggregate_model import AggregateSpecification
-from data_platform.analyzers.analyzer_impl import GroupAggregateAnalyzer, RepositoryQueryAnalyzer
-from data_platform.audit.audit_event import AuditEvent
-from data_platform.cleaners.cleaner_impl import (
+from data_platform.model.aggregate_model import AggregateModel
+from data_platform.analyzer.inmemory_analyzer import GroupAggregateAnalyzer, RepositoryQueryAnalyzer
+from data_platform.cleaner.inmemory_cleaner import (
     BooleanColumnCleaner,
     CastColumnCleaner,
-    CleanerChain,
     DropDuplicatesCleaner,
     FillMissingByColumnAverageCleaner,
     FillMissingByGroupAverageCleaner,
@@ -18,25 +16,26 @@ from data_platform.cleaners.cleaner_impl import (
     StripColumnCleaner,
     ToDatetimeCleaner,
 )
-from data_platform.enrichers.enricher_impl import (
+from data_platform.enricher.inmemory_enricher import (
     CalculateColumnEnricher,
     CopyColumnEnricher,
     DatetimePartEnricher,
     DivideColumnsEnricher,
-    EnricherChain,
     HashColumnsEnricher,
     MultiplyColumnsEnricher,
     PercentageEnricher,
 )
-from data_platform.model.dataset import Dataset
+from data_platform.cleaner.cleaner_chain import CleanerChain
+from data_platform.enricher.enricher_chain import EnricherChain
+from data_platform.model.dataset_model import DatasetModel
 from data_platform.model.dataframe_model import DataFrameModel
-from data_platform.model.pipeline_flow import PipelineFlow
-from data_platform.pipeline.data_pipeline import DataPipeline
+from data_platform.model.pipeline_flow_model import PipelineFlowModel
+from data_platform.pipeline.inmemory_pipeline import InmemoryPipeline
 from data_platform.repository.data_exposer import DataExposer
 from data_platform.repository.storage_repository import StorageRepository
-from data_platform.validators.data_validator_utils import (
-    check_min_max,
-    check_negative_days,
+from data_platform.util.validation_utils import (
+    require_min_max,
+    require_period_days,
     is_blank,
     is_empty_collection,
     is_empty_text,
@@ -47,14 +46,14 @@ from data_platform.validators.data_validator_utils import (
     require_columns,
     require_iso_date,
     require_not_blank,
-    require_or_default,
-    require_or_raise_map,
-    require_or_raise_tuple,
+    default_if_blank,
+    require_key,
+    require_item,
     require_xor,
-    should_not_be_negative,
+    require_not_negative,
 )
-from data_platform.validators.validator_chain import ValidatorChain
-from data_platform.validators.validator_impl import NonNegativeValidator, NotNullValidator, PositiveValidator
+from data_platform.validator.validator_chain import ValidatorChain
+from data_platform.validator.inmemory_validator import NonNegativeValidator, NotNullValidator, PositiveValidator
 
 
 class MemoryRepository(StorageRepository):
@@ -141,15 +140,15 @@ def test_validator_utility_contracts() -> None:
     assert is_blank(None) and is_not_blank([1])
     assert require_blank([]) == []
     assert require_not_blank("value") == "value"
-    assert require_or_default([], "fallback") == "fallback"
-    assert require_or_raise_map({"a": 1}, "a") == 1
-    assert require_or_raise_tuple(("a",), "a") == "a"
+    assert default_if_blank([], "fallback") == "fallback"
+    assert require_key({"a": 1}, "a") == 1
+    assert require_item(("a",), "a") == "a"
     assert require_absent(("a",), "b") is None
-    assert check_min_max(1, 2) is None
-    assert check_negative_days(date(2026, 1, 1), date(2026, 1, 3)) == 2
+    assert require_min_max(1, 2) is None
+    assert require_period_days(date(2026, 1, 1), date(2026, 1, 3)) == 2
     assert require_iso_date("2026-01-02") == date(2026, 1, 2)
     assert require_xor("value", None) is None
-    assert should_not_be_negative(0, 2) is None
+    assert require_not_negative(0, 2) is None
     with pytest.raises(Exception):
         require_columns(pd.DataFrame({"id": [1]}), ("id", "missing"))
     with pytest.raises(Exception):
@@ -159,7 +158,7 @@ def test_validator_utility_contracts() -> None:
 def test_analyzers_return_reports_with_data() -> None:
     frame = pd.DataFrame({"city": ["A", "A", "B"], "price": [10, 20, 5]})
     report = GroupAggregateAnalyzer(
-        "average", AggregateSpecification("city", "price", "mean", "average_price")
+        "average", AggregateModel("city", "price", "mean", "average_price")
     ).analyze(frame)
     assert report.name == "average"
     assert report.data.to_dict("records") == [
@@ -191,11 +190,11 @@ def test_complete_pipeline_persists_each_stage_and_exposes_valid_data(mocker) ->
             return type("Report", (), {"name": self.name, "data": frame})()
 
     mocker.patch("data_platform.pipeline.pipeline.AuditService", return_value=mocker.Mock())
-    dataset = Dataset(
+    dataset = DatasetModel(
         name="example",
         audit=mocker.Mock(),
         dataframe=DataFrameModel(required_columns=frozenset({"id", "value"})),
-        flow=PipelineFlow(
+        flow=PipelineFlowModel(
             repository=repository,
             ingestors=(Ingestor(),),
             cleaners=CleanerChain(),
@@ -206,11 +205,11 @@ def test_complete_pipeline_persists_each_stage_and_exposes_valid_data(mocker) ->
             before_pipeline=lambda _: lifecycle.append("before_pipeline"),
             after_pipeline=lambda _: lifecycle.append("after_pipeline"),
             before_step=lambda step: lifecycle.append(f"before:{step}"),
-            after_stage=lambda step: lifecycle.append(f"after:{step}"),
+            after_step=lambda step: lifecycle.append(f"after:{step}"),
         ),
     )
 
-    DataPipeline(dataset).run()
+    InmemoryPipeline(dataset).run()
 
     assert len(repository.paths) == 6
     report_paths = tuple(path for path in repository.paths if path.startswith("reports/example/"))

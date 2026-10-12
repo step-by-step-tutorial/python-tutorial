@@ -1,14 +1,13 @@
-﻿from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame
 
-from data_platform.config.keys import Key
-from data_platform.config.main_settings import settings
-from data_platform.model.endpoints import DatabaseEndpoint
+from data_platform.config.settings import settings
+from data_platform.model.endpoint_model import DatabaseEndpointModel
 from data_platform.util.collection_utils import to_values
 from data_platform.util.database_utils import execute_query_files
 
 
 class SparkDatabaseRepository:
-    def __init__(self, endpoint: DatabaseEndpoint) -> None:
+    def __init__(self, endpoint: DatabaseEndpointModel) -> None:
         self._endpoint = endpoint
         self._connection_name = endpoint.connection_name
 
@@ -19,7 +18,7 @@ class SparkDatabaseRepository:
         execute_query_files(self._connection_name, file_names)
 
     def write(self, dataframe: DataFrame) -> None:
-        database_settings = settings.database[Key(self._connection_name)]
+        database_settings = settings.database[self._connection_name]
         (
             dataframe.write
             .format("jdbc")

@@ -4,16 +4,16 @@ from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
 from airflow.task.trigger_rule import TriggerRule
 
-from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
+from data_platform.config.pipeline_type import PipelineType
+from data_platform.pipeline.dag_pipeline_adapter import DagPipelineAdapter
 from data_platform.pipeline.spark_pipeline import SparkPipeline
 from data_platform.registry.bootstrap import initialize_registries
+from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.util.airflow_utils import ensure_pipeline_success
 
 initialize_registries()
 
-from data_platform.domain.online_shopping.spark_dataset import spark_online_shopping_dataset
-
-pipeline = SparkPipeline(spark_online_shopping_dataset)
+pipeline = SparkPipeline(dataset_registry.create_dataset("online_shopping", PipelineType.SPARK))
 adapter = DagPipelineAdapter(pipeline)
 
 with DAG(

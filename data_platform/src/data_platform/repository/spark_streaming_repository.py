@@ -2,17 +2,17 @@ import logging
 
 from pyspark.sql import DataFrame, SparkSession
 
-from data_platform.model.endpoints import DataLakeEndpoint, MessagingEndpoint
+from data_platform.model.endpoint_model import DataLakeEndpointModel, MessagingEndpointModel
 from data_platform.repository.spark_datalake_repository import SparkDatalakeRepository
-from data_platform.util.kafka_admin import ensure_topic_exists
-from data_platform.util.string_utils import should_not_be_none
+from data_platform.connector.kafka_connector import ensure_topic_exists
+from data_platform.util.validation_utils import require_not_none
 
 logger = logging.getLogger(__name__)
 
 
 class SparkStreamingRepository:
-    def __init__(self, session: SparkSession, messaging_endpoint: MessagingEndpoint,
-                 data_lake_endpoint: DataLakeEndpoint) -> None:
+    def __init__(self, session: SparkSession, messaging_endpoint: MessagingEndpointModel,
+                 data_lake_endpoint: DataLakeEndpointModel) -> None:
         self._session = session
         self._messaging_endpoint = messaging_endpoint
         self._datalake_repository = SparkDatalakeRepository(session, data_lake_endpoint)
@@ -30,7 +30,7 @@ class SparkStreamingRepository:
         )
 
     def write(self, dataframe: DataFrame, path: str, checkpoint_path: str) -> None:
-        should_not_be_none(dataframe, "dataframe")
+        require_not_none(dataframe, "dataframe")
         query = (
             dataframe.writeStream.foreachBatch(lambda batch, _: self.write_batch(batch, path))
             .option("checkpointLocation", checkpoint_path)

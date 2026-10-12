@@ -3,32 +3,30 @@ from datetime import date
 import pandas as pd
 import pytest
 
-from data_platform.cleaners.cleaner_impl import BooleanColumnCleaner, FillMissingByColumnAverageCleaner, NumericColumnCleaner
-from data_platform.config.keys import Key
-from data_platform.connector import database_connections, datalake_connections, kafka_connections, warehouse_connections
+from data_platform.cleaner.inmemory_cleaner import BooleanColumnCleaner, FillMissingByColumnAverageCleaner, NumericColumnCleaner
+from data_platform.config.key import Key
+from data_platform.config.settings import settings
+from data_platform.connector import database_connector, datalake_connector, kafka_connector
 from data_platform.converter.value_converter import (
     convert_to_float,
     convert_to_integer,
     convert_to_optional_boolean,
     convert_to_optional_float,
 )
-from data_platform.ingestion.spark_datalake_ingestor import SparkDatalakeIngestor
-from data_platform.pipeline.data_pipeline import DataPipeline
-from data_platform.repository.spark_datalake_repository import SparkDatalakeRepository
+from data_platform.pipeline.inmemory_pipeline import InmemoryPipeline
 from data_platform.util import database_utils, dataframe_utils
 from data_platform.util.airflow_utils import ensure_pipeline_success
-from data_platform.util.dataframe_utils import empty_compatible_dataframe
-from data_platform.util.kafka_admin import ensure_topic_exists
-from data_platform.validators.data_validator_utils import (
-    check_min_max,
-    check_negative_days,
+from data_platform.connector.kafka_connector import ensure_topic_exists
+from data_platform.util.validation_utils import (
+    require_min_max,
+    require_period_days,
     require_absent,
     require_blank,
     require_iso_date,
-    require_or_raise_map,
-    require_or_raise_tuple,
+    require_key,
+    require_item,
     require_xor,
-    should_not_be_negative,
+    require_not_negative,
 )
 
 
@@ -60,31 +58,30 @@ def test_cleaner_error_and_boolean_default_behavior() -> None:
 
 def test_connector_factories_return_configured_clients(mocker) -> None:
     engine = object()
-    mocker.patch("data_platform.connector.database_connections.create_engine", return_value=engine)
-    assert database_connections.create_house_connection() is engine
-    assert database_connections.create_online_shopping_connection() is engine
-    assert database_connections.create_audit_connection() is engine
+    create_engine = mocker.patch("data_platform.connector.database_connector.create_engine", return_value=engine)
+    assert database_connector.create_database_engine(settings.database[Key.HOUSE_DATABASE]) is engine
+    assert create_engine.call_args.args == (settings.database[Key.HOUSE_DATABASE].sqlalchemy_url,)
 
     s3 = object()
-    mocker.patch("data_platform.connector.datalake_connections.boto3.client", return_value=s3)
-    assert datalake_connections.create_house_connection() is s3
-    assert datalake_connections.create_audit_connection() is s3
-    assert datalake_connections.create_online_shopping_connection() is s3
+    client = mocker.patch("data_platform.connector.datalake_connector.boto3.client", return_value=s3)
+    assert datalake_connector.create_datalake_client(settings.data_lake[Key.AUDIT_DATA_LAKE]) is s3
+    assert client.call_args.kwargs["endpoint_url"] == settings.data_lake[Key.AUDIT_DATA_LAKE].endpoint
 
     producer = object()
     consumer = object()
-    mocker.patch("data_platform.connector.kafka_connections.Producer", return_value=producer)
-    mocker.patch("data_platform.connector.kafka_connections.Consumer", return_value=consumer)
-    assert kafka_connections.create_house_publisher_connection() is producer
-    assert kafka_connections.create_audit_publisher_connection() is producer
-    assert kafka_connections.create_house_listener_connection() is consumer
-    assert kafka_connections.create_audit_listener_connection() is consumer
+    mocker.patch("data_platform.connector.kafka_connector.Producer", return_value=producer)
+    mocker.patch("data_platform.connector.kafka_connector.Consumer", return_value=consumer)
+    assert kafka_connector.create_producer(settings.messaging[Key.HOUSE_MESSAGING]) is producer
+    assert kafka_connector.create_consumer(settings.messaging[Key.AUDIT_MESSAGING]) is consumer
+
+
+def test_warehouse_connector_returns_configured_client(mocker) -> None:
+    pytest.importorskip("clickhouse_connect")
+    from data_platform.connector import warehouse_connector
 
     client = object()
-    mocker.patch("data_platform.connector.warehouse_connections.clickhouse_connect.get_client", return_value=client)
-    assert warehouse_connections.create_house_connection() is client
-    assert warehouse_connections.create_online_shopping_connection() is client
-    assert warehouse_connections.create_audit_connection() is client
+    mocker.patch("data_platform.connector.warehouse_connector.clickhouse_connect.get_client", return_value=client)
+    assert warehouse_connector.create_warehouse_client(settings.warehouse[Key.HOUSE_WAREHOUSE]) is client
 
 
 def test_database_utilities_execute_and_return_rows(mocker) -> None:
@@ -103,34 +100,16 @@ def test_database_utilities_execute_and_return_rows(mocker) -> None:
     assert connection.execute.call_args_list[-1].args[0].text == "two"
 
 
-def test_spark_data_lake_components_use_canonical_uri(mocker) -> None:
-    endpoint = type("Endpoint", (), {"scheme": "s3a", "bucket_name": "bucket"})()
-    session = mocker.MagicMock()
-    expected = object()
-    session.read.parquet.return_value = expected
-    assert SparkDatalakeIngestor(endpoint, session).ingest("/raw/data/") is expected
-    assert session.read.parquet.call_args.args[0] == "s3a://bucket/raw/data"
-
-    dataframe = mocker.MagicMock()
-    service = SparkDatalakeRepository(session, endpoint)
-    service.write(dataframe, "/raw/data/")
-    assert dataframe.write.mode.return_value.parquet.call_args.args[0] == "s3a://bucket/raw/data"
-    service.overwrite(dataframe, "raw/data")
-    assert dataframe.write.mode.return_value.parquet.call_args.args[0] == "s3a://bucket/raw/data"
-    assert service.read("raw/data") is expected
-
-
 def test_dataframe_helpers_handle_dict_rows_and_pandas_frames() -> None:
     assert dataframe_utils.row_to_dict({"id": 1}) == {"id": 1}
-    assert dataframe_utils.empty_compatible_dataframe(pd.DataFrame({"id": [1]})).empty
     with dataframe_utils.persisted_dataframes() as values:
         first, second = type("Frame", (), {"unpersist": lambda self: None})(), type("Frame", (), {"unpersist": lambda self: None})()
         values.extend([first, second])
 
 
-def test_kafka_admin_and_airflow_helpers_handle_noop_and_failures(mocker) -> None:
+def test_kafka_topic_and_airflow_helpers_handle_noop_and_failures(mocker) -> None:
     ensure_topic_exists("", "topic")
-    admin = mocker.patch("data_platform.util.kafka_admin.AdminClient")
+    admin = mocker.patch("data_platform.connector.kafka_connector.AdminClient")
     ensure_topic_exists("broker", "topic")
     assert admin.return_value.create_topics.return_value["topic"] is not None
 
@@ -161,21 +140,21 @@ def test_validator_utility_rejects_invalid_contracts() -> None:
     with pytest.raises(Exception):
         require_blank("value")
     with pytest.raises(Exception):
-        require_or_raise_map({}, "missing")
+        require_key({}, "missing")
     with pytest.raises(Exception):
-        require_or_raise_tuple((), "missing")
+        require_item((), "missing")
     with pytest.raises(Exception):
         require_absent(("present",), "present")
     with pytest.raises(Exception):
-        check_min_max(2, 1)
+        require_min_max(2, 1)
     with pytest.raises(Exception):
-        check_negative_days(date(2026, 1, 2), date(2026, 1, 1))
+        require_period_days(date(2026, 1, 2), date(2026, 1, 1))
     with pytest.raises(Exception):
         require_iso_date("invalid")
     with pytest.raises(Exception):
         require_xor(None, None)
     with pytest.raises(Exception):
-        should_not_be_negative(-1)
+        require_not_negative(-1)
 
 
 def test_pipeline_reports_failure_and_still_cleans_up(mocker) -> None:
@@ -188,10 +167,10 @@ def test_pipeline_reports_failure_and_still_cleans_up(mocker) -> None:
     flow.before_pipeline = lambda pipeline: None
     flow.after_pipeline = lambda pipeline: None
     flow.before_step = lambda step: None
-    flow.after_stage = lambda step: None
+    flow.after_step = lambda step: None
     dataset.flow = flow
 
-    pipeline = DataPipeline(dataset)
+    pipeline = InmemoryPipeline(dataset)
     pipeline.ingest = lambda: (_ for _ in ()).throw(RuntimeError("ingest failed"))
     with pytest.raises(RuntimeError, match="ingest failed"):
         pipeline.run()

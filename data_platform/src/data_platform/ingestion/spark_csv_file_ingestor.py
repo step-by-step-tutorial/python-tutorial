@@ -1,9 +1,9 @@
-﻿from typing import Any
+from typing import Any
 
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
 
-from data_platform.util.string_utils import should_not_be_none, should_not_be_none_or_empty
+from data_platform.util.validation_utils import require_not_none, require_not_empty
 
 
 class SparkCsvFileIngestor:
@@ -11,8 +11,8 @@ class SparkCsvFileIngestor:
         self._session = session
 
     def ingest(self, file_path: str, schema: Any) -> DataFrame:
-        should_not_be_none_or_empty(file_path, "file_path")
-        should_not_be_none(schema, "schema")
+        require_not_empty(file_path, "file_path")
+        require_not_none(schema, "schema")
         file_path = str(file_path)
         return (
             self._session

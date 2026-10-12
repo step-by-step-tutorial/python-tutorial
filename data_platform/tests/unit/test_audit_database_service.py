@@ -1,15 +1,15 @@
 from data_platform.audit.audit_database_service import AuditDatabaseService
-from data_platform.audit.audit_event_factory import AuditEventFactory
-from data_platform.audit.audit_event_factory import PipelineStartedAuditRequest
-from data_platform.model.endpoints import AuditEndpoint
+from data_platform.model.audit_request_model import PipelineStartedAuditRequestModel
+from data_platform.model.endpoint_model import AuditEndpointModel
+from data_platform.model.audit_event_model import AuditEventModel
 
 
 class TestAuditDatabaseService:
 
     def test_should_save_audit_event_to_single_table(self, mocker) -> None:
         # Given
-        given_event = AuditEventFactory.create_pipeline_started_event(
-            PipelineStartedAuditRequest(
+        given_event = AuditEventModel.from_pipeline_started(
+            PipelineStartedAuditRequestModel(
                 pipeline_name="house_pipeline",
                 pipeline_id="pipeline-001",
                 metadata={"airflow_dag_id": "dag-001"},
@@ -31,7 +31,7 @@ class TestAuditDatabaseService:
         )
 
         # When
-        given_endpoint = AuditEndpoint(
+        given_endpoint = AuditEndpointModel(
             database_connection_name="audit.database",
             messaging_connection_name="audit.kafka.producer",
             datalake_connection_name="audit.datalake",

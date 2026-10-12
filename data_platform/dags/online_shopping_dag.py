@@ -1,19 +1,19 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.sdk import DAG
 from airflow.task.trigger_rule import TriggerRule
 
-from data_platform.adapter.dag_pipeline_adapter import DagPipelineAdapter
-from data_platform.pipeline.data_pipeline import DataPipeline
+from data_platform.config.pipeline_type import PipelineType
+from data_platform.pipeline.dag_pipeline_adapter import DagPipelineAdapter
+from data_platform.pipeline.inmemory_pipeline import InmemoryPipeline
 from data_platform.registry.bootstrap import initialize_registries
+from data_platform.registry.dataset_registry import dataset_registry
 from data_platform.util.airflow_utils import ensure_pipeline_success
 
 initialize_registries()
 
-from data_platform.domain.online_shopping.dataset import ONLINE_SHOPPING_DATASET
-
-pipeline = DataPipeline(ONLINE_SHOPPING_DATASET)
+pipeline = InmemoryPipeline(dataset_registry.create_dataset("online_shopping", PipelineType.INMEMORY))
 adapter = DagPipelineAdapter(pipeline)
 
 with DAG(dag_id="online_shopping", start_date=datetime(2026, 1, 1, tzinfo=UTC), schedule=None, catchup=False, tags={"online_shopping", "etl", "datalake"}) as dag:
