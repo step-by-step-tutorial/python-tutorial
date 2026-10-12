@@ -17,6 +17,8 @@ pip install -r ./data_platform/requirements.txt
 pip install -e ./data_platform
 pip install -r ./test_data/requirements.txt
 pip install -e ./test_data
+pip install -r ./geodata_pipeline/requirements.txt
+pip install -e ./geodata_pipeline
 ```
 
 ```shell
@@ -29,6 +31,7 @@ docker --version
 pytest ./data_platform
 pytest ./ml_prediction
 pytest ./test_data
+pytest ./geodata_pipeline
 ```
 
 ```shell

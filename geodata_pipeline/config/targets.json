@@ -1,0 +1,25 @@
+{
+  "geonames_file": "../data/allCountries.txt",
+  "postal_codes_file": "../data/postalCodes_allCountries.txt",
+  "output_dir": "../output",
+  "targets": [
+    {
+      "country_code": "US",
+      "country": "United States",
+      "state_code": "CA",
+      "state": "California",
+      "cities": ["los angeles"],
+      "input_file": "../data/overture_los_angeles_addresses.parquet",
+      "output_file": "los_angeles.csv"
+    },
+    {
+      "country_code": "US",
+      "country": "United States",
+      "state_code": "NY",
+      "state": "New York",
+      "cities": ["new york", "brooklyn", "bronx", "queens", "staten island"],
+      "input_file": "../data/overture_nyc_addresses.parquet",
+      "output_file": "new_york.csv"
+    }
+  ]
+}
