@@ -2,98 +2,129 @@
 
 Builds one CSV of real street addresses per target city from [Overture Maps](https://overturemaps.org/) address
 data, enriched with city information (GeoNames id, timezone, population) from [GeoNames](https://www.geonames.org/).
-The output is the address source that `test_data` uses to generate realistic house data
-(`test_data/data/los_angeles.csv`).
+The output is the address source that `test_data` uses to generate realistic house data.
 
 ```text
 Geodata Pipeline
     load GeoNames populated places and postal codes for the target states
-    read Overture addresses of each target (Parquet)
-    keep addresses in the target country, state and cities
-    enrich with GeoNames city data
+    read the Overture addresses of each target (Parquet)
+    keep the addresses in the target country, state and cities
+    enrich them with GeoNames city data
     write output/<city>.csv
 ```
 
-Targets (country, state, cities, input and output files) are configured in [config/targets.json](config/targets.json).
-Relative paths in the config are resolved against the config file's directory.
+## Project Structure
 
-## Prerequisite
+```text
+geodata_pipeline
+├── config/targets.json          targets and input/output files
+├── data/                        downloaded input files (not committed)
+├── output/                      generated CSV files (not committed)
+├── src/geodata_pipeline
+│   ├── cli.py                   command line entry point
+│   ├── config.py                Target, PipelineConfig
+│   ├── model.py                 GeoNames, postal code, Overture address and output records
+│   ├── repository.py            GeoNames and postal code lookups
+│   ├── resolver.py              decides city and target of an Overture address
+│   ├── pipeline.py              reads Parquet, resolves addresses, writes CSV
+│   └── util/                    text, geometry and file helpers
+└── tests
+```
 
-* Python
+All commands below run from the repository root.
 
-## Prepare Environment
+## 1. Prerequisite
+
+* Python 3.10+
+* `curl` and `unzip` for the GeoNames downloads
 
 ```shell
 python --version
 pip --version
+```
+
+## 2. Install
+
+```shell
 python -m pip install --upgrade pip
 pip install -r ./geodata_pipeline/requirements.txt
 pip install -e ./geodata_pipeline
 ```
 
-## Test
-
-```shell
-cd ./geodata_pipeline
-pytest
-```
-
-## Download
+## 3. Download Input Data
 
 All input files go to `./geodata_pipeline/data`.
 
-From [GeoNames](https://www.geonames.org/export/):
+### 3.1. GeoNames
 
-* [All Countries (places)](https://download.geonames.org/export/dump/allCountries.zip), unzipped as `allCountries.txt`
-* [All Countries (postal codes)](https://download.geonames.org/export/zip/allCountries.zip), unzipped as
-  `postalCodes_allCountries.txt`. This archive also contains a file named `allCountries.txt`, so rename it to avoid
-  overwriting the places file.
+Download from [GeoNames](https://www.geonames.org/export/):
+
+* [All Countries (places)](https://download.geonames.org/export/dump/allCountries.zip), saved as `allCountries.txt`
+* [All Countries (postal codes)](https://download.geonames.org/export/zip/allCountries.zip), saved as
+  `postalCodes_allCountries.txt`
+
+Both archives contain a file named `allCountries.txt`, so the postal codes are extracted under another name:
 
 ```shell
-cd ./geodata_pipeline
-mkdir -p data
-curl -L -o data/places.zip https://download.geonames.org/export/dump/allCountries.zip
-curl -L -o data/postal_codes.zip https://download.geonames.org/export/zip/allCountries.zip
-unzip -p data/places.zip allCountries.txt > data/allCountries.txt
-unzip -p data/postal_codes.zip allCountries.txt > data/postalCodes_allCountries.txt
-rm data/places.zip data/postal_codes.zip
+mkdir -p ./geodata_pipeline/data
+curl -L -o ./geodata_pipeline/data/places.zip https://download.geonames.org/export/dump/allCountries.zip
+curl -L -o ./geodata_pipeline/data/postal_codes.zip https://download.geonames.org/export/zip/allCountries.zip
+unzip -p ./geodata_pipeline/data/places.zip allCountries.txt > ./geodata_pipeline/data/allCountries.txt
+unzip -p ./geodata_pipeline/data/postal_codes.zip allCountries.txt > ./geodata_pipeline/data/postalCodes_allCountries.txt
+rm ./geodata_pipeline/data/places.zip ./geodata_pipeline/data/postal_codes.zip
 ```
 
-From [Overture Maps](https://docs.overturemaps.org/getting-data/), using the `overturemaps` CLI:
+### 3.2. Overture Maps
+
+Download the address data of each target city with the
+[overturemaps CLI](https://docs.overturemaps.org/getting-data/), installed by `requirements.txt`:
 
 ```shell
-cd ./geodata_pipeline
-
-## Los Angeles
+# Los Angeles
 overturemaps download \
   --bbox=-118.70,33.70,-117.60,34.35 \
   --type=address \
   -f geoparquet \
-  -o data/overture_los_angeles_addresses.parquet
+  -o ./geodata_pipeline/data/overture_los_angeles_addresses.parquet
 
-## New York
+# New York
 overturemaps download \
   --bbox=-74.30,40.45,-73.65,40.95 \
   --type=address \
   -f geoparquet \
-  -o data/overture_nyc_addresses.parquet
+  -o ./geodata_pipeline/data/overture_nyc_addresses.parquet
 ```
 
-## Run
+## 4. Configure
+
+Targets are configured in [config/targets.json](config/targets.json): country, state, cities, the Overture input
+file and the output file name. Relative paths are resolved against the config file's directory. To add a city,
+download its Overture addresses (step 3.2) and add a target.
+
+## 5. Run
 
 ```shell
-cd ./geodata_pipeline
-python -m geodata_pipeline --config ./config/targets.json
+python -m geodata_pipeline --config ./geodata_pipeline/config/targets.json
 ```
 
-The CSV files are written to `./geodata_pipeline/output`. To use a new address file in `test_data`, copy it to
-`./test_data/data`:
+The CSV files are written to `./geodata_pipeline/output`. A target whose input file is missing is skipped with a
+warning.
+
+## 6. Use the Output in test_data
 
 ```shell
 cp ./geodata_pipeline/output/los_angeles.csv ./test_data/data/los_angeles.csv
 ```
 
-## Clean Directory
+## 7. Test
+
+The tests use small generated fixture files, so they do not need the downloads.
+
+```shell
+pytest ./geodata_pipeline
+```
+
+## 8. Clean
 
 ```shell
 rm -rf ./geodata_pipeline/output
