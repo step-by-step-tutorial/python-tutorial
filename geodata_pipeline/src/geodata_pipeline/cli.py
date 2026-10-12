@@ -3,7 +3,7 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
-from geodata_pipeline.config import PipelineConfig
+from geodata_pipeline.model import PipelineConfigModel
 from geodata_pipeline.pipeline import Pipeline
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     args = create_parser().parse_args(argv)
 
-    config = PipelineConfig.from_file(args.config)
+    config = PipelineConfigModel.from_file(args.config)
     missing_files = [path for path in config.source_files if not path.is_file()]
 
     if missing_files:

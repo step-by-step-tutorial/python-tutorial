@@ -1,8 +1,10 @@
 from dataclasses import dataclass, fields
+from pathlib import Path
 from typing import Any
 
-from geodata_pipeline.config import Target
+from geodata_pipeline.util.file_utils import read_json, resolve_path
 from geodata_pipeline.util.geometry_utils import wkb_point_to_lat_lon
+from geodata_pipeline.util.text_utils import normalize
 
 # Column layout of the GeoNames dump files, see https://download.geonames.org/export/dump/readme.txt
 GEONAMES_COLUMN_COUNT = 19
@@ -25,7 +27,66 @@ OVERTURE_ADDRESS_COLUMNS = (
 
 
 @dataclass(frozen=True)
-class GeonameRecord:
+class TargetModel:
+    country_code: str
+    country: str
+    state_code: str
+    state: str
+    cities: frozenset[str]
+    input_file: Path
+    output_file: Path
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any], base_dir: Path, output_dir: Path) -> "TargetModel":
+        return cls(
+            country_code=raw["country_code"],
+            country=raw["country"],
+            state_code=raw["state_code"],
+            state=raw["state"],
+            cities=frozenset(normalize(city) for city in raw["cities"]),
+            input_file=resolve_path(base_dir, raw["input_file"]),
+            output_file=output_dir / raw["output_file"],
+        )
+
+    @property
+    def state_key(self) -> tuple[str, str]:
+        return self.country_code, self.state_code
+
+    def is_state(self, value: str) -> bool:
+        return normalize(value) in {normalize(self.state), normalize(self.state_code)}
+
+    def is_city(self, city: str | None) -> bool:
+        return bool(city) and normalize(city) in self.cities
+
+
+@dataclass(frozen=True)
+class PipelineConfigModel:
+    geonames_file: Path
+    postal_codes_file: Path
+    output_dir: Path
+    targets: tuple[TargetModel, ...]
+
+    @classmethod
+    def from_file(cls, config_file: Path) -> "PipelineConfigModel":
+        """Load the config; relative paths are resolved against the config file's directory."""
+        base_dir = config_file.resolve().parent
+        raw = read_json(config_file)
+        output_dir = resolve_path(base_dir, raw["output_dir"])
+
+        return cls(
+            geonames_file=resolve_path(base_dir, raw["geonames_file"]),
+            postal_codes_file=resolve_path(base_dir, raw["postal_codes_file"]),
+            output_dir=output_dir,
+            targets=tuple(TargetModel.from_dict(item, base_dir, output_dir) for item in raw["targets"]),
+        )
+
+    @property
+    def source_files(self) -> tuple[Path, ...]:
+        return self.geonames_file, self.postal_codes_file
+
+
+@dataclass(frozen=True)
+class GeonameModel:
     geoname_id: str
     name: str
     ascii_name: str
@@ -36,7 +97,7 @@ class GeonameRecord:
     timezone: str
 
     @classmethod
-    def from_values(cls, values: list[str]) -> "GeonameRecord":
+    def from_values(cls, values: list[str]) -> "GeonameModel":
         return cls(
             geoname_id=values[0],
             name=values[1],
@@ -58,7 +119,7 @@ class GeonameRecord:
 
 
 @dataclass(frozen=True)
-class PostalCodeRecord:
+class PostalCodeModel:
     country_code: str
     postal_code: str
     city: str
@@ -68,7 +129,7 @@ class PostalCodeRecord:
     longitude: str
 
     @classmethod
-    def from_values(cls, values: list[str]) -> "PostalCodeRecord":
+    def from_values(cls, values: list[str]) -> "PostalCodeModel":
         return cls(
             country_code=values[0],
             postal_code=values[1],
@@ -85,7 +146,7 @@ class PostalCodeRecord:
 
 
 @dataclass(frozen=True)
-class OvertureAddress:
+class OvertureAddressModel:
     """One row of an Overture Maps address Parquet file."""
     overture_id: str
     country: str
@@ -99,7 +160,7 @@ class OvertureAddress:
     longitude: float | None
 
     @classmethod
-    def from_row(cls, row: dict[str, Any]) -> "OvertureAddress":
+    def from_row(cls, row: dict[str, Any]) -> "OvertureAddressModel":
         latitude, longitude = wkb_point_to_lat_lon(row.get("geometry"))
         levels = row.get("address_levels") or []
 
@@ -116,12 +177,12 @@ class OvertureAddress:
             longitude=longitude,
         )
 
-    def is_in_state(self, target: Target) -> bool:
+    def is_in_state(self, target: TargetModel) -> bool:
         return any(target.is_state(level) for level in self.address_levels)
 
 
 @dataclass(frozen=True)
-class AddressRecord:
+class AddressModel:
     """One row of the output CSV."""
     country: str
     country_code: str
@@ -141,8 +202,8 @@ class AddressRecord:
 
     @classmethod
     def from_overture_address(
-            cls, address: OvertureAddress, target: Target, city: str, geoname: GeonameRecord | None
-    ) -> "AddressRecord":
+            cls, address: OvertureAddressModel, target: TargetModel, city: str, geoname: GeonameModel | None
+    ) -> "AddressModel":
         return cls(
             country=target.country,
             country_code=target.country_code,

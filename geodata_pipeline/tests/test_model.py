@@ -1,11 +1,62 @@
+from pathlib import Path
+
 from shapely.geometry import Point
 
-from geodata_pipeline.model import AddressRecord, GeonameRecord, OvertureAddress
-from tests.test_config import make_target
+from geodata_pipeline.model import (
+    AddressModel,
+    GeonameModel,
+    OvertureAddressModel,
+    PipelineConfigModel,
+    TargetModel,
+)
+
+
+def make_target(**overrides) -> TargetModel:
+    values = {
+        "country_code": "US",
+        "country": "United States",
+        "state_code": "CA",
+        "state": "California",
+        "cities": frozenset({"los angeles"}),
+        "input_file": Path("in.parquet"),
+        "output_file": Path("out.csv"),
+    }
+    return TargetModel(**(values | overrides))
+
+
+def test_from_file_resolves_paths_against_config_directory(project_dir: Path) -> None:
+    config = PipelineConfigModel.from_file(project_dir / "config" / "targets.json")
+
+    assert config.geonames_file == (project_dir / "data" / "allCountries.txt").resolve()
+    assert config.output_dir == (project_dir / "output").resolve()
+    assert config.targets[0].input_file == (project_dir / "data" / "addresses.parquet").resolve()
+    assert config.targets[0].output_file == (project_dir / "output" / "los_angeles.csv").resolve()
+
+
+def test_from_file_normalizes_city_names(project_dir: Path) -> None:
+    config = PipelineConfigModel.from_file(project_dir / "config" / "targets.json")
+
+    assert config.targets[0].cities == frozenset({"los angeles"})
+
+
+def test_target_is_state_accepts_state_name_or_code() -> None:
+    target = make_target()
+
+    assert target.is_state("ca")
+    assert target.is_state(" California ")
+    assert not target.is_state("NV")
+
+
+def test_target_is_city() -> None:
+    target = make_target()
+
+    assert target.is_city("Los  Angeles")
+    assert not target.is_city(None)
+    assert not target.is_city("San Diego")
 
 
 def test_overture_address_from_row_reads_levels_and_coordinates() -> None:
-    address = OvertureAddress.from_row({
+    address = OvertureAddressModel.from_row({
         "id": "a1",
         "geometry": Point(-118.24, 34.05).wkb,
         "country": "US",
@@ -22,20 +73,20 @@ def test_overture_address_from_row_reads_levels_and_coordinates() -> None:
 def test_overture_address_is_in_state() -> None:
     target = make_target()
 
-    assert OvertureAddress.from_row({"address_levels": [{"value": "CA"}]}).is_in_state(target)
-    assert not OvertureAddress.from_row({"address_levels": [{"value": "NV"}]}).is_in_state(target)
-    assert not OvertureAddress.from_row({}).is_in_state(target)
+    assert OvertureAddressModel.from_row({"address_levels": [{"value": "CA"}]}).is_in_state(target)
+    assert not OvertureAddressModel.from_row({"address_levels": [{"value": "NV"}]}).is_in_state(target)
+    assert not OvertureAddressModel.from_row({}).is_in_state(target)
 
 
 def test_address_record_column_names_follow_field_order() -> None:
-    assert AddressRecord.column_names()[:3] == ["country", "country_code", "state"]
-    assert AddressRecord.column_names()[-1] == "overture_id"
+    assert AddressModel.column_names()[:3] == ["country", "country_code", "state"]
+    assert AddressModel.column_names()[-1] == "overture_id"
 
 
 def test_address_record_from_overture_address_without_geoname() -> None:
-    address = OvertureAddress.from_row({"id": "a1", "postcode": "90049"})
+    address = OvertureAddressModel.from_row({"id": "a1", "postcode": "90049"})
 
-    record = AddressRecord.from_overture_address(address, make_target(), "Los Angeles", None)
+    record = AddressModel.from_overture_address(address, make_target(), "Los Angeles", None)
 
     assert record.city == "Los Angeles"
     assert record.postal_code == "90049"
@@ -47,7 +98,7 @@ def test_geoname_record_from_values() -> None:
     values = [""] * 19
     values[0], values[1], values[6], values[8], values[10], values[14] = "1", "Los Angeles", "P", "US", "CA", ""
 
-    record = GeonameRecord.from_values(values)
+    record = GeonameModel.from_values(values)
 
     assert record.population == 0
     assert record.is_populated_place

@@ -2,7 +2,7 @@ import csv
 from pathlib import Path
 
 from geodata_pipeline.cli import main
-from geodata_pipeline.model import AddressRecord
+from geodata_pipeline.model import AddressModel
 
 
 def read_output(project_dir: Path) -> list[dict[str, str]]:
@@ -16,7 +16,7 @@ def test_pipeline_writes_addresses_of_target_city(project_dir: Path) -> None:
     rows = read_output(project_dir)
 
     assert [row["overture_id"] for row in rows] == ["a1", "a2", "a6"]
-    assert list(rows[0]) == AddressRecord.column_names()
+    assert list(rows[0]) == AddressModel.column_names()
     assert rows[0] == {
         "country": "United States",
         "country_code": "US",

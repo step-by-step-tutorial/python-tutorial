@@ -22,8 +22,7 @@ geodata_pipeline
 ├── output/                      generated CSV files (not committed)
 ├── src/geodata_pipeline
 │   ├── cli.py                   command line entry point
-│   ├── config.py                Target, PipelineConfig
-│   ├── model.py                 GeoNames, postal code, Overture address and output records
+│   ├── model.py                 data models: target, pipeline config, GeoNames place, postal code, Overture address, output address
 │   ├── repository.py            GeoNames places and postal codes, read once from the dumps
 │   ├── matcher.py               matches Overture addresses to a target and builds output records
 │   ├── pipeline.py              reads Parquet, matches addresses, writes CSV
