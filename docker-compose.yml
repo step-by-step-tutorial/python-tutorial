@@ -491,6 +491,29 @@ services:
         condition: service_healthy
       datalake-init:
         condition: service_completed_successfully
+  dl-platform:
+    image: ${DL_PLATFORM_IMAGE}
+    build:
+      context: dl_platform
+      dockerfile: Dockerfile
+    container_name: ${DL_PLATFORM_CONTAINER_NAME}
+    hostname: ${DL_PLATFORM_HOSTNAME}
+    stdin_open: true
+    tty: true
+    environment:
+      PROJECT_ROOT: /app
+      DL_PLATFORM_DATA_DIR: ${DL_PLATFORM_DATA_DIR}
+      DL_PLATFORM_MODEL_DIR: ${DL_PLATFORM_MODEL_DIR}
+      DL_PLATFORM_AUDIT_DIR: ${DL_PLATFORM_AUDIT_DIR}
+      DL_PLATFORM_OUTPUT_DIR: ${DL_PLATFORM_OUTPUT_DIR}
+      DL_PLATFORM_MODEL_TYPE: ${DL_PLATFORM_MODEL_TYPE}
+      DL_PLATFORM_DEVICE: ${DL_PLATFORM_DEVICE}
+      DL_PLATFORM_SCORE_THRESHOLD: ${DL_PLATFORM_SCORE_THRESHOLD}
+    volumes:
+      - ./dl_platform/data:/app/data
+      - ./dl_platform/models:/app/models
+      - ./dl_platform/audit_log:/app/audit_log
+      - ./dl_platform/output:/app/output
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
     container_name: mlflow
