@@ -509,6 +509,7 @@ services:
       DL_PLATFORM_MODEL_TYPE: ${DL_PLATFORM_MODEL_TYPE}
       DL_PLATFORM_DEVICE: ${DL_PLATFORM_DEVICE}
       DL_PLATFORM_SCORE_THRESHOLD: ${DL_PLATFORM_SCORE_THRESHOLD}
+      DL_PLATFORM_EVALUATION_IMAGES: ${DL_PLATFORM_EVALUATION_IMAGES}
     volumes:
       - ./dl_platform/data:/app/data
       - ./dl_platform/models:/app/models
