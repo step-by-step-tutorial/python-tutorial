@@ -107,7 +107,7 @@ x-data-platform-env: &data_platform_env
   DATA_PLATFORM_ONLINE_SHOPPING_AUDIT_CHANNEL_NAME: ${DATA_PLATFORM_ONLINE_SHOPPING_AUDIT_CHANNEL_NAME}
   DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS: ${DATA_PLATFORM_AUDIT_STREAMING_BOOTSTRAP_SERVERS}
   DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME: ${DATA_PLATFORM_AUDIT_STREAM_CHANNEL_NAME}
-  DATA_SIMULATOR_API_URL: ${DATA_SIMULATOR_API_URL:-http://test-data:8080}
+  DATA_SIMULATOR_API_URL: ${DATA_SIMULATOR_API_URL:-http://testdata-platform:8080}
 services:
   database:
     image: ${DATABASE_IMAGE}
@@ -124,7 +124,7 @@ services:
       - ./data_platform/scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
       - ./data_platform/scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
       - ./data_platform/scripts/database/online_shopping/create_tables.sql:/docker-entrypoint-initdb.d/40_online_shopping_create_tables.sql
-      - ./test_data/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/50_test_data_create_schema.sql:ro
+      - ./testdata_platform/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/50_test_data_create_schema.sql:ro
     healthcheck:
       test:
         [
@@ -387,30 +387,30 @@ services:
     environment:
       KAFKA_BROKERCONNECT: kafka:9094
       JVM_OPTS: "-Xms32M -Xmx64M"
-  test-data:
-    image: ${TEST_DATA_IMAGE}
+  testdata-platform:
+    image: ${TESTDATA_PLATFORM_IMAGE}
     build:
-      context: test_data
+      context: testdata_platform
       dockerfile: Dockerfile
-    hostname: ${TEST_DATA_HOST}
-    container_name: ${TEST_DATA_CONTAINER_NAME}
-    command: ["sh", "-c", "python -m test_data && exec python -m test_data.api.dataset_api"]
+    hostname: ${TESTDATA_PLATFORM_HOST}
+    container_name: ${TESTDATA_PLATFORM_CONTAINER_NAME}
+    command: ["sh", "-c", "python -m testdata_platform.main && exec python -m testdata_platform.api.dataset_api"]
     environment:
       PROJECT_ROOT: /app
       CONFIG_DIR: /app/config
       OUTPUT_DIR: /app/output
       HOST: 0.0.0.0
       PORT: 8080
-      DATABASE_URL: postgresql+psycopg2://${TEST_DATA_DATABASE_USER}:${TEST_DATA_DATABASE_PASSWORD}@${TEST_DATA_DATABASE_HOST}:${TEST_DATA_DATABASE_PORT}/${TEST_DATA_DATABASE_NAME}
+      DATABASE_URL: postgresql+psycopg2://${TESTDATA_PLATFORM_DATABASE_USER}:${TESTDATA_PLATFORM_DATABASE_PASSWORD}@${TESTDATA_PLATFORM_DATABASE_HOST}:${TESTDATA_PLATFORM_DATABASE_PORT}/${TESTDATA_PLATFORM_DATABASE_NAME}
       DATABASE_SCHEMA: test_data
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
     ports:
-      - "${TEST_DATA_API_PORT}:8080"
+      - "${TESTDATA_PLATFORM_API_PORT}:8080"
     volumes:
-      - ./test_data/config:/app/config:ro
-      - ./test_data/data:/app/data:ro
-      - ./test_data/output:/app/output
-      - ./test_data/scripts:/app/scripts:ro
+      - ./testdata_platform/config:/app/config:ro
+      - ./testdata_platform/data:/app/data:ro
+      - ./testdata_platform/output:/app/output
+      - ./testdata_platform/scripts:/app/scripts:ro
     healthcheck:
       test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://localhost:8080/health')"]
       interval: 5s

@@ -15,7 +15,7 @@ services:
       - ./data_platform/scripts/database/audit/create_tables.sql:/docker-entrypoint-initdb.d/10_audit_create_tables.sql
       - ./data_platform/scripts/database/house/create_tables.sql:/docker-entrypoint-initdb.d/30_house_create_tables.sql
       - ./data_platform/scripts/database/online_shopping/create_tables.sql:/docker-entrypoint-initdb.d/40_online_shopping_create_tables.sql
-      - ./test_data/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/50_test_data_create_schema.sql:ro
+      - ./testdata_platform/scripts/database/create_schema.sql:/docker-entrypoint-initdb.d/50_test_data_create_schema.sql:ro
     healthcheck:
       test:
         [
