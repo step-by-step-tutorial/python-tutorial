@@ -21,6 +21,8 @@ class SettingsModel:
     device: str = "cpu"
     score_threshold: float = 0.5
     execution_log_enabled: bool = True
+    coco_dir: Path | None = None
+    evaluation_images: int = 100
 
     @classmethod
     def from_env(cls, task: DetectionTaskModel, environ: Mapping[str, str] | None = None) -> "SettingsModel":
@@ -36,6 +38,8 @@ class SettingsModel:
             device=environ.get("DL_PLATFORM_DEVICE", "cpu"),
             score_threshold=float(environ.get("DL_PLATFORM_SCORE_THRESHOLD", task.score_threshold)),
             execution_log_enabled=to_bool(environ.get("EXECUTION_LOG_ENABLED"), default=True),
+            coco_dir=Path(environ["DL_PLATFORM_COCO_DIR"]) if "DL_PLATFORM_COCO_DIR" in environ else None,
+            evaluation_images=int(environ.get("DL_PLATFORM_EVALUATION_IMAGES", 100)),
         )
 
     @property
@@ -50,5 +54,13 @@ class SettingsModel:
     def detections_path(self) -> Path:
         return self.output_dir / f"{self.task.name}_detections.csv"
 
-    def execution_log_path(self, run_id: str) -> Path:
-        return self.audit_dir / f"{self.task.name}_detect_{run_id}.csv"
+    @property
+    def coco_path(self) -> Path:
+        return self.coco_dir if self.coco_dir is not None else self.data_dir / "coco"
+
+    @property
+    def evaluation_path(self) -> Path:
+        return self.output_dir / f"{self.task.name}_evaluation.csv"
+
+    def execution_log_path(self, run_id: str, operation: str = "detect") -> Path:
+        return self.audit_dir / f"{self.task.name}_{operation}_{run_id}.csv"

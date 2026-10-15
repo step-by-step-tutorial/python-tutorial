@@ -7,10 +7,10 @@ from dl_platform.util.csv_utils import append_rows
 
 
 class AuditService:
-    def __init__(self, settings: SettingsModel) -> None:
+    def __init__(self, settings: SettingsModel, operation: str = "detect") -> None:
         self._settings = settings
         self.run_id = str(uuid4())
-        self.execution_log_path = settings.execution_log_path(self.run_id)
+        self.execution_log_path = settings.execution_log_path(self.run_id, operation)
 
     def log_step(self, step: str, *, rows: int | None = None, details: str = "") -> None:
         if not self._settings.execution_log_enabled:
