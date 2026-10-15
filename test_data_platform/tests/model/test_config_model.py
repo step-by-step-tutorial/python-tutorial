@@ -1,0 +1,132 @@
+import json
+from pathlib import Path
+
+import pytest
+
+from test_data_platform.model.config_model import ConfigModel
+from test_data_platform.model.settings_model import SettingsModel
+
+
+def test_load_config_reads_columns(project_root: Path) -> None:
+    config = ConfigModel.from_file("demo.json", SettingsModel.from_env())
+
+    assert config.name == "demo.json"
+    assert config.row_count == 5
+    assert config.output_name == "demo"
+    assert config.column_names == ("order_id", "customer_name", "product_name", "category", "country")
+    assert config.destinations == ("csv",)
+
+
+def test_generator_config_reads_destinations() -> None:
+    config = ConfigModel.from_dict(
+        {
+            "row_count": 1,
+            "output_name": "x",
+            "kafka_topic": "test-events",
+            "kafka_key_column": "country",
+            "destinations": ["csv", "json", "database"],
+            "columns": [{"name": "country", "type": "fixed", "value": "USA"}],
+        },
+        "x.json",
+        Path("output"),
+    )
+
+    assert config.destinations == ("csv", "json", "database")
+
+
+def test_generator_config_reads_kafka_key_column() -> None:
+    config = ConfigModel.from_dict(
+        {
+            "row_count": 1,
+            "output_name": "x",
+            "kafka_topic": "test-events",
+            "kafka_key_column": "record_id",
+            "destinations": ["kafka"],
+            "columns": [{"name": "record_id", "type": "sequence", "start": 1, "step": 1}],
+        },
+        "x.json",
+        Path("output"),
+    )
+
+    assert config.kafka_key_column == "record_id"
+
+
+def test_load_config_reports_missing_file(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
+    try:
+        with pytest.raises(Exception):
+            ConfigModel.from_file("config_absent.json", SettingsModel.from_env())
+    finally:
+        monkeypatch.delenv("CONFIG_DIR", raising=False)
+
+
+def test_load_config_reports_invalid_json(tmp_path: Path, monkeypatch) -> None:
+    path = tmp_path / "config_broken.json"
+    path.write_text("{not json", encoding="utf-8")
+    monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
+    try:
+        with pytest.raises(Exception):
+            ConfigModel.from_file("config_broken.json", SettingsModel.from_env())
+    finally:
+        monkeypatch.delenv("CONFIG_DIR", raising=False)
+
+
+def test_load_config_reports_non_object_json(tmp_path: Path, monkeypatch) -> None:
+    path = tmp_path / "config_list.json"
+    path.write_text(json.dumps([1, 2, 3]), encoding="utf-8")
+    monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
+    try:
+        with pytest.raises(TypeError):
+            ConfigModel.from_file("config_list.json", SettingsModel.from_env())
+    finally:
+        monkeypatch.delenv("CONFIG_DIR", raising=False)
+
+
+def test_online_shopping_config_includes_extended_fields() -> None:
+    config = ConfigModel.from_file("online_shopping.json", SettingsModel.from_env())
+
+    assert config.destinations == ("csv", "json", "database", "kafka")
+    assert "subtotal" in config.column_names
+    assert "discount_percent" in config.column_names
+    assert "shipping_cost" in config.column_names
+    assert "tax_amount" in config.column_names
+    assert "total_amount" in config.column_names
+    assert "payment_status" in config.column_names
+    assert "fulfillment_status" in config.column_names
+    assert "estimated_delivery_date" in config.column_names
+
+
+def test_read_config_resolves_dataset_name_without_json_suffix() -> None:
+    config = ConfigModel.from_file("online_shopping", SettingsModel.from_env())
+
+    assert config.output_name == "online_shopping"
+
+
+def test_load_config_accepts_name_without_extension(project_root: Path) -> None:
+    assert ConfigModel.from_file("demo", SettingsModel.from_env()).name == "demo.json"
+
+
+def test_load_config_accepts_path_outside_config_dir(tmp_path: Path) -> None:
+    path = tmp_path / "custom.json"
+    path.write_text(json.dumps({
+        "row_count": 1,
+        "output_name": "custom",
+        "kafka_topic": "test-events",
+        "kafka_key_column": "id",
+        "destinations": ["csv"],
+        "columns": [{"name": "id", "type": "sequence"}],
+    }), encoding="utf-8")
+
+    config = ConfigModel.from_file(path, SettingsModel.from_env())
+
+    assert config.name == "custom.json"
+    assert config.output_name == "custom"
+
+
+def test_config_derives_dataset_name_table_name_and_output_files(project_root: Path) -> None:
+    config = ConfigModel.from_file("demo.json", SettingsModel.from_env())
+
+    assert config.dataset_name == "demo"
+    assert config.table_name == "demo"
+    assert config.output_file("json") == SettingsModel.from_env().output_dir / "demo.json"
+    assert config.column_names == ("order_id", "customer_name", "product_name", "category", "country")

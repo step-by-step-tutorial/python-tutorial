@@ -12,7 +12,7 @@ class TestRestApiCsvIngestor:
         mocker.patch("data_platform.ingestion.rest_api_csv_ingestor.build_opener", return_value=rest_connection)
 
         actual = RestApiCsvIngestor(
-            RestApiEndpointModel(url="http://test-data:8080/datasets/online_shopping/download?format=csv")
+            RestApiEndpointModel(url="http://test-data-platform:8080/datasets/online_shopping/download?format=csv")
         ).ingest()
 
         assert actual.to_dict("records") == [{"order_id": 1, "total_amount": 12.5}]

@@ -163,8 +163,8 @@ cython_debug/
 report/
 **/output/*.*
 **/output_test/*.*
-**/geodata_pipeline/data/**
-**/geodata_pipeline/output/**
+**/geodata_platform/data/**
+**/geodata_platform/output/**
 **/ml_platform/data/**predictions**
 **/ml_platform/models/**
 **/ml_platform/audit_log/**
