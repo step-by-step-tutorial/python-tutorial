@@ -169,4 +169,8 @@ report/
 **/ml_platform/models/**
 **/ml_platform/audit_log/**
 **/ml_platform/mlruns/**
+**/dl_platform/data/**
+**/dl_platform/models/**
+**/dl_platform/audit_log/**
+**/dl_platform/output/**
 **/mlflow.db
