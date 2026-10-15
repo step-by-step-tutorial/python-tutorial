@@ -1,7 +1,7 @@
 <h1 align="center">Python Tutorial</h1>
 
-Four Python projects that together take generated data from an API, through a data platform, to a machine learning
-model.
+Five Python projects. Four of them take generated data from an API, through a data platform, to a machine learning
+model. The fifth runs deep learning vision tasks on images.
 
 ```text
 Python Tutorial
@@ -9,6 +9,7 @@ Python Tutorial
     test_data           generates test datasets and serves them through a REST API
     data_platform       ingests, cleans, validates, enriches and exposes each dataset
     ml_platform         trains and runs a model on the enriched data
+    dl_platform         detects vehicles, people and animals in images with a pre-trained model
 ```
 
 ## Project Structure
@@ -19,6 +20,7 @@ python-tutorial
 ├── test_data/                           test data generator and REST API
 ├── data_platform/                       data platform pipelines and Airflow DAGs
 ├── ml_platform/                         model training and prediction
+├── dl_platform/                         object detection on images
 ├── docker-compose-infrastructure.yml    database, data lake, warehouse and Kafka
 └── docker-compose.yml                   the infrastructure plus every project, Airflow, Spark and MLflow
 ```
@@ -40,6 +42,15 @@ docker --version
 
 ## 2. Install
 
+Download the code:
+
+```shell
+git clone https://github.com/step-by-step-tutorial/python-tutorial.git
+cd python-tutorial
+```
+
+Install the projects:
+
 ```shell
 python -m pip install --upgrade pip
 pip install -r ./geodata_pipeline/requirements.txt
@@ -50,6 +61,8 @@ pip install -r ./data_platform/requirements.txt
 pip install -e ./data_platform
 pip install -r ./ml_platform/requirements.txt
 pip install -e ./ml_platform
+pip install -r ./dl_platform/requirements.txt
+pip install -e ./dl_platform
 ```
 
 ## 3. Test
@@ -59,6 +72,7 @@ pytest ./geodata_pipeline
 pytest ./test_data
 pytest ./data_platform
 pytest ./ml_platform
+pytest ./dl_platform
 ```
 
 ## 4. Start the Infrastructure
@@ -84,6 +98,12 @@ ML_PLATFORM_DATASET_SOURCE=download python -m ml_platform.main house train
 ML_PLATFORM_DATASET_SOURCE=download python -m ml_platform.main house predict
 ```
 
+The deep learning platform needs no infrastructure. Add images as its README shows, then run a task:
+
+```shell
+python -m dl_platform.main vehicle_detection
+```
+
 ## 6. Stop the Infrastructure
 
 ```shell
@@ -96,11 +116,18 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev up --build -d
 ```
 
+Run a deep learning task in its container:
+
+```shell
+docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev run --rm dl-platform vehicle_detection
+```
+
 ```shell
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
 docker rmi samanalishiri/test-data:latest
 docker rmi samanalishiri/data-platform:latest
 docker rmi samanalishiri/ml-platform:latest
+docker rmi samanalishiri/dl-platform:latest
 ```
 
 ## 8. Services
@@ -139,4 +166,5 @@ rm -rf ./test_data/output ./test_data/output_test ./test_data/src/*.egg-info
 rm -rf ./data_platform/report ./data_platform/.coverage ./data_platform/src/*.egg-info
 rm -rf ./ml_platform/models/* ./ml_platform/audit_log/* ./ml_platform/output/* ./ml_platform/mlruns/*
 rm -rf ./ml_platform/src/*.egg-info
+rm -rf ./dl_platform/output ./dl_platform/audit_log ./dl_platform/models ./dl_platform/src/*.egg-info
 ```
