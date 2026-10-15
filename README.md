@@ -5,8 +5,8 @@ model. The fifth runs deep learning vision tasks on images.
 
 ```text
 Python Tutorial
-    geodata_platform      builds real street addresses per city for test_data_platform
-    test_data_platform    generates test datasets and serves them through a REST API
+    geodata_platform      builds real street addresses per city for testdata_platform
+    testdata_platform     generates test datasets and serves them through a REST API
     data_platform         ingests, cleans, validates, enriches and exposes each dataset
     ml_platform           trains and runs a model on the enriched data
     dl_platform           detects vehicles, people and animals in images with a pre-trained model
@@ -16,8 +16,8 @@ Python Tutorial
 
 ```text
 python-tutorial
-├── geodata_platform/                    address source for test_data_platform
-├── test_data_platform/                  test data generator and REST API
+├── geodata_platform/                    address source for testdata_platform
+├── testdata_platform/                   test data generator and REST API
 ├── data_platform/                       data platform pipelines and Airflow DAGs
 ├── ml_platform/                         model training and prediction
 ├── dl_platform/                         object detection on images
@@ -55,8 +55,8 @@ Install the projects:
 python -m pip install --upgrade pip
 pip install -r ./geodata_platform/requirements.txt
 pip install -e ./geodata_platform
-pip install -r ./test_data_platform/requirements.txt
-pip install -e ./test_data_platform
+pip install -r ./testdata_platform/requirements.txt
+pip install -e ./testdata_platform
 pip install -r ./data_platform/requirements.txt
 pip install -e ./data_platform
 pip install -r ./ml_platform/requirements.txt
@@ -69,7 +69,7 @@ pip install -e ./dl_platform
 
 ```shell
 pytest ./geodata_platform
-pytest ./test_data_platform
+pytest ./testdata_platform
 pytest ./data_platform
 pytest ./ml_platform
 pytest ./dl_platform
@@ -86,8 +86,8 @@ docker compose --file docker-compose-infrastructure.yml --project-name test --en
 Generate the datasets and serve them through the API:
 
 ```shell
-python -m test_data_platform.main
-PORT=8084 python -m test_data_platform.api.dataset_api
+python -m testdata_platform.main
+PORT=8084 python -m testdata_platform.api.dataset_api
 ```
 
 In a second terminal, run a data platform pipeline, then train and run the model on its output:
@@ -124,7 +124,7 @@ docker compose --file docker-compose.yml --project-name dev --env-file ./.env.de
 
 ```shell
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
-docker rmi samanalishiri/test-data-platform:latest
+docker rmi samanalishiri/testdata-platform:latest
 docker rmi samanalishiri/data-platform:latest
 docker rmi samanalishiri/ml-platform:latest
 docker rmi samanalishiri/dl-platform:latest
@@ -162,7 +162,7 @@ docker rmi samanalishiri/dl-platform:latest
 
 ```shell
 rm -rf ./geodata_platform/output ./geodata_platform/src/*.egg-info
-rm -rf ./test_data_platform/output ./test_data_platform/output_test ./test_data_platform/src/*.egg-info
+rm -rf ./testdata_platform/output ./testdata_platform/output_test ./testdata_platform/src/*.egg-info
 rm -rf ./data_platform/report ./data_platform/.coverage ./data_platform/src/*.egg-info
 rm -rf ./ml_platform/models/* ./ml_platform/audit_log/* ./ml_platform/output/* ./ml_platform/mlruns/*
 rm -rf ./ml_platform/src/*.egg-info

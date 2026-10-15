@@ -2,7 +2,7 @@
 
 Builds one CSV of real street addresses per target city from [Overture Maps](https://overturemaps.org/) address
 data, enriched with city information (GeoNames id, timezone, population) from [GeoNames](https://www.geonames.org/).
-The output is the address source that `test_data_platform` uses to generate realistic house data.
+The output is the address source that `testdata_platform` uses to generate realistic house data.
 
 ```text
 Geodata Platform
@@ -117,10 +117,10 @@ python -m geodata_platform.main --config ./geodata_platform/config/targets.json
 The CSV files are written to `./geodata_platform/output`. A target whose input file is missing is skipped with a
 warning.
 
-## 7. Use the Output in test_data_platform
+## 7. Use the Output in testdata_platform
 
 ```shell
-cp ./geodata_platform/output/los_angeles.csv ./test_data_platform/data/los_angeles.csv
+cp ./geodata_platform/output/los_angeles.csv ./testdata_platform/data/los_angeles.csv
 ```
 
 ## 8. Clean

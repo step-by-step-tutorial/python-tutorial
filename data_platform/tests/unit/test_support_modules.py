@@ -69,9 +69,9 @@ class TestDatalakeUtils:
         assert actual_checkpoint == "s3a://online-shopping/checkpoints/house.events.v1"
 
     def test_should_generate_dataset_download_url(self) -> None:
-        actual = ApiSettingsModel("http://test-data-platform:8080/").dataset_download_url("Online_Shopping")
+        actual = ApiSettingsModel("http://testdata-platform:8080/").dataset_download_url("Online_Shopping")
 
-        assert actual == "http://test-data-platform:8080/datasets/online_shopping/download?format=csv"
+        assert actual == "http://testdata-platform:8080/datasets/online_shopping/download?format=csv"
 
     def test_should_unpersist_persisted_dataframes_in_reverse_order(self, mocker) -> None:
         # Given
