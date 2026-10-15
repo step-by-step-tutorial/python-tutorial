@@ -1,0 +1,104 @@
+from ml_platform.config.task_type import TaskType
+from ml_platform.model.dataset_profile_model import DatasetProfileModel
+from ml_platform.model.feature_set_model import FeatureSetModel
+
+HOUSE = DatasetProfileModel(
+    name="house",
+    task_type=TaskType.REGRESSION,
+    target_column="total_price",
+    prediction_column="predicted_total_price",
+    features=FeatureSetModel(
+        numeric=(
+            "latitude",
+            "longitude",
+            "construction_year",
+            "renovation_year",
+            "area_sqm",
+            "living_area_sqm",
+            "land_area_sqm",
+            "room_count",
+            "bedroom_count",
+            "bathroom_count",
+            "toilet_count",
+            "floor_number",
+            "total_floors",
+            "balcony_area_sqm",
+            "garden_area_sqm",
+            "garage_capacity",
+            "parking_spaces",
+            "basement_area_sqm",
+            "annual_energy_consumption_kwh",
+            "internet_speed_mbps",
+            "distance_to_city_center_km",
+            "distance_to_school_km",
+            "distance_to_supermarket_km",
+            "distance_to_public_transport_km",
+        ),
+        boolean=(
+            "owner_occupied",
+            "has_balcony",
+            "has_garden",
+            "has_garage",
+            "has_basement",
+            "has_elevator",
+            "has_storage_room",
+            "has_fireplace",
+            "has_swimming_pool",
+            "has_solar_panels",
+            "furnished",
+            "internet_available",
+        ),
+        categorical=(
+            "property_type",
+            "city",
+            "state",
+            "country",
+            "owner_type",
+            "occupancy_status",
+            "ownership_status",
+            "currency",
+            "heating_type",
+            "energy_source",
+            "energy_efficiency_class",
+            "condition",
+        ),
+    ),
+    data_lake_bucket="house",
+    data_lake_prefix="enriched/house/",
+)
+
+# Identifiers, personal data and raw dates are left out: they do not generalize and only add noise. So are country
+# and currency, which are the same in every order, and product_name, which is almost unique per order; category and
+# unit_price carry what the product says.
+ONLINE_SHOPPING = DatasetProfileModel(
+    name="online_shopping",
+    task_type=TaskType.CLASSIFICATION,
+    target_column="order_status",
+    prediction_column="predicted_order_status",
+    features=FeatureSetModel(
+        numeric=(
+            "unit_price",
+            "quantity",
+            "subtotal",
+            "discount_percent",
+            "shipping_cost",
+            "tax_amount",
+            "total_amount",
+            "delivery_days",
+        ),
+        categorical=(
+            "sales_channel",
+            "warehouse",
+            "category",
+            "payment_status",
+            "fulfillment_status",
+            "coupon_code",
+            "payment_method",
+            "shipping_method",
+        ),
+    ),
+    data_lake_bucket="online-shopping",
+    data_lake_prefix="enriched/online_shopping/",
+)
+
+DATASET_PROFILES: dict[str, DatasetProfileModel] = {profile.name: profile for profile in (HOUSE, ONLINE_SHOPPING)}

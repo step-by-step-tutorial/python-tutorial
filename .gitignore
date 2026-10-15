@@ -165,8 +165,8 @@ report/
 **/output_test/*.*
 **/geodata_pipeline/data/**
 **/geodata_pipeline/output/**
-**/ml_prediction/data/**predictions**
-**/ml_prediction/models/**
-**/ml_prediction/audit_log/**
-**/ml_prediction/mlruns/**
+**/ml_platform/data/**predictions**
+**/ml_platform/models/**
+**/ml_platform/audit_log/**
+**/ml_platform/mlruns/**
 **/mlflow.db

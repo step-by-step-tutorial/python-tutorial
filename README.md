@@ -8,7 +8,7 @@ Python Tutorial
     geodata_pipeline    builds real street addresses per city for test_data
     test_data           generates test datasets and serves them through a REST API
     data_platform       ingests, cleans, validates, enriches and exposes each dataset
-    ml_prediction       trains and runs a model on the enriched data
+    ml_platform       trains and runs a model on the enriched data
 ```
 
 ## Project Structure
@@ -18,7 +18,7 @@ python-tutorial
 ├── geodata_pipeline/                    address source for test_data
 ├── test_data/                           test data generator and REST API
 ├── data_platform/                       data platform pipelines and Airflow DAGs
-├── ml_prediction/                       model training and prediction
+├── ml_platform/                       model training and prediction
 ├── docker-compose-infrastructure.yml    database, data lake, warehouse and Kafka
 └── docker-compose.yml                   the infrastructure plus every project, Airflow, Spark and MLflow
 ```
@@ -48,8 +48,8 @@ pip install -r ./test_data/requirements.txt
 pip install -e ./test_data
 pip install -r ./data_platform/requirements.txt
 pip install -e ./data_platform
-pip install -r ./ml_prediction/requirements.txt
-pip install -e ./ml_prediction
+pip install -r ./ml_platform/requirements.txt
+pip install -e ./ml_platform
 ```
 
 ## 3. Test
@@ -58,7 +58,7 @@ pip install -e ./ml_prediction
 pytest ./geodata_pipeline
 pytest ./test_data
 pytest ./data_platform
-pytest ./ml_prediction
+pytest ./ml_platform
 ```
 
 ## 4. Start the Infrastructure
@@ -80,8 +80,8 @@ In a second terminal, run a data platform pipeline, then train and run the model
 
 ```shell
 DATA_SIMULATOR_API_URL=http://localhost:8084 python -m data_platform.main house inmemory
-ML_PREDICTION_DATASET_SOURCE=download python -m ml_prediction.main house train
-ML_PREDICTION_DATASET_SOURCE=download python -m ml_prediction.main house predict
+ML_PLATFORM_DATASET_SOURCE=download python -m ml_platform.main house train
+ML_PLATFORM_DATASET_SOURCE=download python -m ml_platform.main house predict
 ```
 
 ## 6. Stop the Infrastructure
@@ -100,7 +100,7 @@ docker compose --file docker-compose.yml --project-name dev --env-file ./.env.de
 docker compose --file docker-compose.yml --project-name dev --env-file ./.env.dev down -v
 docker rmi samanalishiri/test-data:latest
 docker rmi samanalishiri/data-platform:latest
-docker rmi samanalishiri/ml-prediction:latest
+docker rmi samanalishiri/ml-platform:latest
 ```
 
 ## 8. Services
@@ -137,6 +137,6 @@ docker rmi samanalishiri/ml-prediction:latest
 rm -rf ./geodata_pipeline/output ./geodata_pipeline/src/*.egg-info
 rm -rf ./test_data/output ./test_data/output_test ./test_data/src/*.egg-info
 rm -rf ./data_platform/report ./data_platform/.coverage ./data_platform/src/*.egg-info
-rm -rf ./ml_prediction/models/* ./ml_prediction/audit_log/* ./ml_prediction/output/* ./ml_prediction/mlruns/*
-rm -rf ./ml_prediction/src/*.egg-info
+rm -rf ./ml_platform/models/* ./ml_platform/audit_log/* ./ml_platform/output/* ./ml_platform/mlruns/*
+rm -rf ./ml_platform/src/*.egg-info
 ```
