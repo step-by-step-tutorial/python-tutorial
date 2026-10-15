@@ -454,36 +454,36 @@ services:
         condition: service_started
       kafka-init:
         condition: service_completed_successfully
-  ml-prediction:
-    image: ${ML_PREDICTION_IMAGE}
+  ml-platform:
+    image: ${ML_PLATFORM_IMAGE}
     build:
-      context: ml_prediction
+      context: ml_platform
       dockerfile: Dockerfile
-    container_name: ${ML_PREDICTION_CONTAINER_NAME}
-    hostname: ${ML_PREDICTION_HOSTNAME}
+    container_name: ${ML_PLATFORM_CONTAINER_NAME}
+    hostname: ${ML_PLATFORM_HOSTNAME}
     stdin_open: true
     tty: true
     environment:
       PROJECT_ROOT: /app
-      ML_PREDICTION_DATA_DIR: ${ML_PREDICTION_DATA_DIR}
-      ML_PREDICTION_MODEL_DIR: ${ML_PREDICTION_MODEL_DIR}
-      ML_PREDICTION_AUDIT_DIR: ${ML_PREDICTION_AUDIT_DIR}
-      ML_PREDICTION_OUTPUT_DIR: ${ML_PREDICTION_OUTPUT_DIR}
-      ML_PREDICTION_VALIDATION_SIZE: ${ML_PREDICTION_VALIDATION_SIZE}
-      ML_PREDICTION_TEST_SIZE: ${ML_PREDICTION_TEST_SIZE}
-      ML_PREDICTION_RANDOM_STATE: ${ML_PREDICTION_RANDOM_STATE}
-      ML_PREDICTION_DATASET_SOURCE: ${ML_PREDICTION_DATASET_SOURCE}
-      ML_PREDICTION_DATALAKE_ENDPOINT: ${ML_PREDICTION_DATALAKE_ENDPOINT}
-      ML_PREDICTION_DATALAKE_ACCESS_KEY: ${ML_PREDICTION_DATALAKE_ACCESS_KEY}
-      ML_PREDICTION_DATALAKE_SECRET_KEY: ${ML_PREDICTION_DATALAKE_SECRET_KEY}
+      ML_PLATFORM_DATA_DIR: ${ML_PLATFORM_DATA_DIR}
+      ML_PLATFORM_MODEL_DIR: ${ML_PLATFORM_MODEL_DIR}
+      ML_PLATFORM_AUDIT_DIR: ${ML_PLATFORM_AUDIT_DIR}
+      ML_PLATFORM_OUTPUT_DIR: ${ML_PLATFORM_OUTPUT_DIR}
+      ML_PLATFORM_VALIDATION_SIZE: ${ML_PLATFORM_VALIDATION_SIZE}
+      ML_PLATFORM_TEST_SIZE: ${ML_PLATFORM_TEST_SIZE}
+      ML_PLATFORM_RANDOM_STATE: ${ML_PLATFORM_RANDOM_STATE}
+      ML_PLATFORM_DATASET_SOURCE: ${ML_PLATFORM_DATASET_SOURCE}
+      ML_PLATFORM_DATALAKE_ENDPOINT: ${ML_PLATFORM_DATALAKE_ENDPOINT}
+      ML_PLATFORM_DATALAKE_ACCESS_KEY: ${ML_PLATFORM_DATALAKE_ACCESS_KEY}
+      ML_PLATFORM_DATALAKE_SECRET_KEY: ${ML_PLATFORM_DATALAKE_SECRET_KEY}
       MLFLOW_ENABLED: ${MLFLOW_ENABLED:-true}
       MLFLOW_TRACKING_URI: http://mlflow:5000
-      MLFLOW_EXPERIMENT_PREFIX: ${MLFLOW_EXPERIMENT_PREFIX:-ml_prediction}
+      MLFLOW_EXPERIMENT_PREFIX: ${MLFLOW_EXPERIMENT_PREFIX:-ml_platform}
     volumes:
-      - ./ml_prediction/data:/app/data
-      - ./ml_prediction/models:/app/models
-      - ./ml_prediction/audit_log:/app/audit_log
-      - ./ml_prediction/output:/app/output
+      - ./ml_platform/data:/app/data
+      - ./ml_platform/models:/app/models
+      - ./ml_platform/audit_log:/app/audit_log
+      - ./ml_platform/output:/app/output
     depends_on:
       mlflow:
         condition: service_healthy
@@ -504,7 +504,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./ml_prediction/mlruns:/mlruns
+      - ./ml_platform/mlruns:/mlruns
     healthcheck:
       test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://localhost:5000/health')"]
       interval: 5s
