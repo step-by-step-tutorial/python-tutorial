@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dl_platform"
+version = "0.1.0"
+description = "Runs deep learning vision tasks, such as vehicle, person and animal detection, on image folders."
+requires-python = ">=3.12"
+dependencies = [
+    "pillow",
+    "torch",
+    "torchvision",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-mock",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["dl_platform*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
