@@ -9,7 +9,7 @@ Python Tutorial
     testdata_platform     generates test datasets and serves them through a REST API
     data_platform         ingests, cleans, validates, enriches and exposes each dataset
     ml_platform           trains and runs a model on the enriched data
-    dl_platform           detects vehicles, people and animals in images with a pre-trained model
+    dl_platform           detects vehicles, people and animals in images with a pre-trained model and evaluates it on COCO
 ```
 
 ## Project Structure
@@ -102,6 +102,7 @@ The deep learning platform needs no infrastructure. Add images as its README sho
 
 ```shell
 python -m dl_platform.main vehicle_detection
+python -m dl_platform.main vehicle_detection evaluate
 ```
 
 ## 6. Stop the Infrastructure

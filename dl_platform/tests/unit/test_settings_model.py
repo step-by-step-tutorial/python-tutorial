@@ -13,6 +13,9 @@ def test_defaults_are_read_from_the_project_root() -> None:
     assert settings.annotated_dir == Path("/project/output/person_detection")
     assert settings.detections_path == Path("/project/output/person_detection_detections.csv")
     assert settings.execution_log_path("run") == Path("/project/audit_log/person_detection_detect_run.csv")
+    assert settings.coco_path == Path("/project/data/coco")
+    assert settings.evaluation_path == Path("/project/output/person_detection_evaluation.csv")
+    assert settings.evaluation_images == 100
     assert settings.model_type == ModelType.FASTER_RCNN_MOBILENET
     assert settings.score_threshold == PERSON_DETECTION.score_threshold
     assert settings.execution_log_enabled
@@ -25,6 +28,8 @@ def test_environment_overrides_the_defaults() -> None:
         "DL_PLATFORM_DEVICE": "cuda",
         "DL_PLATFORM_SCORE_THRESHOLD": "0.8",
         "EXECUTION_LOG_ENABLED": "false",
+        "DL_PLATFORM_COCO_DIR": "/coco",
+        "DL_PLATFORM_EVALUATION_IMAGES": "20",
     })
 
     assert settings.input_dir == Path("/images/person_detection")
@@ -32,3 +37,5 @@ def test_environment_overrides_the_defaults() -> None:
     assert settings.device == "cuda"
     assert settings.score_threshold == 0.8
     assert not settings.execution_log_enabled
+    assert settings.coco_path == Path("/coco")
+    assert settings.evaluation_images == 20
