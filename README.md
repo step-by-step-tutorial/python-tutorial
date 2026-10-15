@@ -8,7 +8,7 @@ Python Tutorial
     geodata_pipeline    builds real street addresses per city for test_data
     test_data           generates test datasets and serves them through a REST API
     data_platform       ingests, cleans, validates, enriches and exposes each dataset
-    ml_platform       trains and runs a model on the enriched data
+    ml_platform         trains and runs a model on the enriched data
 ```
 
 ## Project Structure
@@ -18,7 +18,7 @@ python-tutorial
 ├── geodata_pipeline/                    address source for test_data
 ├── test_data/                           test data generator and REST API
 ├── data_platform/                       data platform pipelines and Airflow DAGs
-├── ml_platform/                       model training and prediction
+├── ml_platform/                         model training and prediction
 ├── docker-compose-infrastructure.yml    database, data lake, warehouse and Kafka
 └── docker-compose.yml                   the infrastructure plus every project, Airflow, Spark and MLflow
 ```
